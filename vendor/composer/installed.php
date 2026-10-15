@@ -3,7 +3,7 @@
         'name' => 'nuers/platform',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'c13ecb2df89ad65d5e2adff78e1decab84fe8cae',
+        'reference' => 'e799b09b32f281925e76990f01941b3c513cd28e',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -613,7 +613,7 @@
         'nuers/platform' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'c13ecb2df89ad65d5e2adff78e1decab84fe8cae',
+            'reference' => 'e799b09b32f281925e76990f01941b3c513cd28e',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
