@@ -125,7 +125,8 @@ export function LoginPage() {
           <div className="nuers-login__content">
             <h1 id="login-title">Welcome Back</h1>
             <p className="nuers-login__subtitle">Sign in to your NUERS account</p>
-            <form className="nuers-login__form" onSubmit={handleSubmit} aria-label="Sign in to NUERS">
+            {searchParams.get('session')==='invalid'&&<p className="nl-session-notice" role="status">Your session is no longer valid. Please sign in again.</p>}
+          <form className="nuers-login__form" onSubmit={handleSubmit} aria-label="Sign in to NUERS">
               {error && <div className="nuers-login__error" role="alert">{error}</div>}
               <div className="nuers-login__field">
                 <Mail aria-hidden="true" />

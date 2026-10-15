@@ -35,7 +35,7 @@ function dashboardPathForRole(role: string | null | undefined, isAuthenticated: 
 
 export function ReceiptVerificationPortal() {
   const { user, profile, loading: authLoading } = useAuth();
-  const [receiptNumber, setReceiptNumber] = useState("OR-2026-0000001");
+  const [receiptNumber, setReceiptNumber] = useState(() => new URLSearchParams(window.location.search).get("receipt") || "");
   const [result, setResult] = useState<VerificationResult | null>(null);
   const [message, setMessage] = useState("Enter a receipt number or scan a QR code to validate authenticity.");
   const [loading, setLoading] = useState(false);
@@ -52,7 +52,7 @@ export function ReceiptVerificationPortal() {
       const payload = await readJsonResponse<{ receipt: VerificationResult }>(response, "Receipt could not be verified.");
 
       setResult(payload.receipt);
-      setMessage("Receipt is authentic, digitally signed, and present in the NUERS archive.");
+      setMessage(payload.receipt.authenticity);
     } catch (err) {
       setResult(null);
       setMessage(err instanceof Error ? err.message : "Verification service is unavailable. Please try again.");
@@ -105,7 +105,7 @@ export function ReceiptVerificationPortal() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Receipt Number Validation</CardTitle>
-              <p className="text-xs text-muted-foreground">Try the seeded receipt number OR-2026-0000001.</p>
+              <p className="text-xs text-muted-foreground">Enter the document number printed on your receipt.</p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-col gap-2 sm:flex-row">

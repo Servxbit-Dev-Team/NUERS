@@ -31,6 +31,17 @@ class TableController extends Controller
     {
         abort_unless(isset(self::TABLES[$table]), 404, 'Unknown table.');
 
+        if ($table === 'merchants') {
+            $actor = $this->userFromRequest($request);
+            abort_unless($actor, 401);
+            abort_unless($request->method() === 'GET', 409, 'Use the audited business registry workflow. Registry records cannot be deleted or modified through the generic endpoint.');
+            $role = DB::table('profiles')->where('id', $actor->id)->value('role');
+            abort_unless(in_array($role, ['admin', 'super_admin', 'bir', 'merchant']), 403);
+            if ($role === 'merchant') {
+                $request->attributes->set('merchant_registry_owner', $actor->id);
+            }
+        }
+
         if ($table === 'profiles' && $request->method() !== 'GET') {
             $actor = $this->userFromRequest($request);
             abort_unless($actor, 401, 'An authenticated session is required.');
@@ -66,6 +77,9 @@ class TableController extends Controller
     {
         /** @var Builder $query */
         $query = $model::query();
+        if ($request->attributes->has('merchant_registry_owner')) {
+            $query->where('merchant_account_id', $request->attributes->get('merchant_registry_owner'));
+        }
         $this->applyFilters($query, $request);
 
         $count = null;
@@ -111,7 +125,9 @@ class TableController extends Controller
         $query = $model::query();
         $this->applyFilters($query, $request);
 
-        if ($model === Profile::class && $request->attributes->has('profile_scope_id')) $query->where('id', $request->attributes->get('profile_scope_id'));
+        if ($model === Profile::class && $request->attributes->has('profile_scope_id')) {
+            $query->where('id', $request->attributes->get('profile_scope_id'));
+        }
         $payload = $this->normalizePayload($request->input('values', []));
         $affected = (clone $query)->update($payload);
 

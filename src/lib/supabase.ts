@@ -1,3 +1,4 @@
+import {storedToken,browserDevice,invalidateToken,TOKEN_KEY} from "./session-store";
 export type LaravelUser = {
   id: string;
   email: string;
@@ -14,18 +15,8 @@ type ApiError = { message: string };
 type ApiResult<T> = { data: T | null; error: ApiError | null; count?: number | null };
 type AuthListener = (event: string, session: LaravelSession | null) => void;
 
-const TOKEN_KEY = "nuers_api_token";
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 const listeners = new Set<AuthListener>();
-
-function storedToken() {
-  try {
-    if (typeof window === "undefined" || !window.localStorage) return null;
-    return window.localStorage.getItem(TOKEN_KEY);
-  } catch {
-    return null;
-  }
-}
 
 function storeSession(session: LaravelSession | null) {
   try {
@@ -47,10 +38,11 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<ApiResu
   headers.set("Accept", "application/json");
 
   const token = storedToken();
+  const device=browserDevice();if(device)headers.set("X-NUERS-Device",device);
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
   try {
-    const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
+    const response = await fetch(`${API_BASE_URL}${path}`, { cache:"no-store", ...init, headers });
     const contentType = response.headers.get("Content-Type") ?? "";
 
     if (!contentType.toLowerCase().includes("application/json")) {
@@ -62,6 +54,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<ApiResu
 
     const payload = await response.json().catch(() => ({}));
 
+    if(response.status===401&&!path.startsWith("/api/auth/login")&&!path.startsWith("/auth/google"))invalidateToken(token);
     if (!response.ok) {
       const message =
         payload?.message ||
@@ -217,10 +210,15 @@ export const supabase = {
     },
 
     async getSession() {
-      const { data, error } = await request<{ session: LaravelSession | null }>("/api/auth/session");
-      const session = data?.session ?? null;
-      storeSession(session);
-      return { data: { session }, error };
+      const token=storedToken();
+      if(!token)return {data:{session:null},error:null,stale:false};
+      const {data,error}=await request<{session:LaravelSession|null}>("/api/auth/session");
+      if(storedToken()!==token)return {data:{session:null},error:null,stale:true};
+      if(error)return {data:{session:null},error,stale:false};
+      const session=data?.session??null;
+      if(!session)invalidateToken(token);
+      else storeSession(session);
+      return {data:{session},error:null,stale:false};
     },
 
     onAuthStateChange(callback: AuthListener) {
@@ -243,8 +241,7 @@ export const supabase = {
       );
 
       const session = data?.session ?? null;
-      storeSession(session);
-      if (session) notify("SIGNED_IN", session);
+      if (session) {storeSession(session);notify("SIGNED_IN", session);}
 
       return { data: { session, user: data?.user ?? null }, error };
     },
@@ -256,16 +253,15 @@ export const supabase = {
       );
 
       const session = data?.session ?? null;
-      storeSession(session);
-      if (session) notify("SIGNED_IN", session);
+      if (session) {storeSession(session);notify("SIGNED_IN", session);}
 
       return { data: { session, user: data?.user ?? null }, error };
     },
 
     async signOut() {
+      const token=storedToken();
       await request("/api/auth/logout", { method: "POST", body: "{}" });
-      storeSession(null);
-      notify("SIGNED_OUT", null);
+      if(!storedToken()||storedToken()===token){storeSession(null);notify("SIGNED_OUT", null);}
     },
   },
 

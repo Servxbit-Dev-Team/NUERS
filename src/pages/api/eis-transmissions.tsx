@@ -121,7 +121,7 @@ function ValidationPanel({ validation }: { validation: EisValidationResult | nul
   );
 }
 
-export function EisTransmissions() {
+export function EisTransmissionTools() {
   const navigate = useNavigate();
   const [payload, setPayload] = useState<EisTransmissionsPayload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -537,3 +537,5 @@ export function EisTransmissions() {
     </div>
   );
 }
+
+export { BirTransmissionCenter as EisTransmissions } from "@/pages/operations/routes";

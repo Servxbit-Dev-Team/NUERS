@@ -5,11 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Services\BirCompliance;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Throwable;
@@ -65,7 +66,7 @@ class EisController extends Controller
             'kpis' => [
                 ['key' => 'transmissions', 'label' => 'EIS Transmissions', 'value' => $this->compactNumber($totalTransmissions), 'subtext' => "{$queued} queued, {$failed} failed/rejected", 'status' => 'database'],
                 ['key' => 'payloads', 'label' => 'Validated Payloads', 'value' => $this->compactNumber($this->count('eis_invoice_payloads')), 'subtext' => 'Canonical JSON hash stored', 'status' => 'database'],
-                ['key' => 'success_rate', 'label' => 'Recorded Acknowledgements', 'value' => number_format($successRate, 2) . '%', 'subtext' => "{$acknowledged} recorded (includes certification tests)", 'status' => $successRate >= 95 ? 'ready' : 'monitor'],
+                ['key' => 'success_rate', 'label' => 'Recorded Acknowledgements', 'value' => number_format($successRate, 2).'%', 'subtext' => "{$acknowledged} recorded (includes certification tests)", 'status' => $successRate >= 95 ? 'ready' : 'monitor'],
                 ['key' => 'production_gate', 'label' => 'Production Gate', 'value' => $productionBlocked ? 'Blocked' : 'Ready', 'subtext' => $productionBlocked ? 'Certification/PTT/credentials required' : 'Credentials and controls registered', 'status' => $productionBlocked ? 'blocked' : 'ready'],
             ],
             'checks' => $checks->map(fn ($row) => [
@@ -135,18 +136,34 @@ class EisController extends Controller
         }
 
         if ($request->filled('search')) {
-            $search = '%' . $request->string('search')->value() . '%';
+            $search = '%'.$request->string('search')->value().'%';
             $query->where(function ($inner) use ($search) {
                 $inner->where('t.id', 'like', $search)
                     ->orWhere('t.payload_hash', 'like', $search)
                     ->orWhere('t.bir_reference_number', 'like', $search)
                     ->orWhere('m.business_name', 'like', $search)
-                    ->orWhere('m.tin', 'like', $search);
+                    ->orWhere('m.tin', 'like', $search)->orWhere('p.invoice_number', 'like', $search)->orWhere('t.bir_acknowledgement', 'like', $search);
             });
         }
 
-        $transmissions = $query->limit(100)->get()->map(fn ($row) => $this->formatTransmission($row))->values();
-        $counts = DB::table('eis_transmissions')
+        $request->validate(['page' => 'nullable|integer|min:1', 'per_page' => 'nullable|integer|min:1|max:100', 'from' => 'nullable|date_format:Y-m-d', 'to' => 'nullable|date_format:Y-m-d', 'environment' => 'nullable|in:all,production,certification,sandbox', 'document' => 'nullable|string|max:80']);
+        if ($request->filled('from')) {
+            $query->where('t.created_at', '>=', $request->input('from').' 00:00:00');
+        }
+        if ($request->filled('to')) {
+            $query->where('t.created_at', '<=', $request->input('to').' 23:59:59');
+        }
+        if ($request->filled('environment') && $request->input('environment') !== 'all') {
+            $query->where('t.environment', $request->input('environment'));
+        }
+        if ($request->filled('document') && $request->input('document') !== 'all') {
+            $query->where('p.document_type', $request->input('document'));
+        }
+        $total = (clone $query)->count();
+        $scope = clone $query;
+        $perPage = (int) $request->input('per_page', 100);
+        $transmissions = $query->offset(((int) $request->input('page', 1) - 1) * $perPage)->limit($perPage)->get()->map(fn ($row) => $this->formatTransmission($row))->values();
+        $counts = DB::query()->fromSub((clone $scope)->reorder(), 'filtered')
             ->select('status', DB::raw('COUNT(*) as total'))
             ->groupBy('status')
             ->pluck('total', 'status');
@@ -154,12 +171,18 @@ class EisController extends Controller
         return response()->json([
             'summary' => [
                 'total' => (int) $counts->sum(),
+                'transmitted' => (int) (($counts['submitted'] ?? 0) + ($counts['acknowledged'] ?? 0) + ($counts['recovered'] ?? 0)),
                 'acknowledged' => (int) ($counts['acknowledged'] ?? 0),
                 'failed' => (int) (($counts['failed'] ?? 0) + ($counts['rejected'] ?? 0)),
                 'queued' => (int) (($counts['queued'] ?? 0) + ($counts['submitting'] ?? 0) + ($counts['submitted'] ?? 0)),
                 'duplicates' => (int) ($counts['duplicate'] ?? 0),
-                'retry_queue' => $this->count('eis_retry_queue', ['result' => 'scheduled']),
+                'retry_queue' => DB::table('eis_retry_queue')->where('result', 'scheduled')->whereIn('transmission_id', (clone $scope)->reorder()->select('t.id'))->count(),
             ],
+            'total' => $total,
+            'last_page' => max(1, (int) ceil($total / $perPage)),
+            'generated_at' => now()->toIso8601String(),
+            'trend' => DB::query()->fromSub((clone $scope)->reorder(), 'filtered')->selectRaw('DATE(created_at) as date, COUNT(*) as total')->groupByRaw('DATE(created_at)')->orderByDesc('date')->limit(7)->get()->reverse()->values(),
+            'environments' => DB::table('eis_transmissions')->select('environment')->selectRaw('COUNT(*) as total')->groupBy('environment')->get(),
             'transmissions' => $transmissions,
             'retry_queue' => DB::table('eis_retry_queue as r')
                 ->join('eis_transmissions as t', 't.id', '=', 'r.transmission_id')
@@ -232,6 +255,7 @@ class EisController extends Controller
 
         if ($duplicate) {
             abort_unless(hash_equals($duplicate->payload_hash, $hash), 409, 'This document identity already exists with different content. Preserve the original and use a traceable correction document.');
+
             return response()->json(['duplicate' => true, 'message' => 'Existing transmission returned; no second document or retry was created.', 'transmission' => $this->formatTransmission($this->transmissionQuery()->where('t.id', $duplicate->id)->first())]);
         }
         $payloadId = (string) Str::uuid();
@@ -244,92 +268,95 @@ class EisController extends Controller
             : 'Validated and queued inside NUERS. Certification test queue only. Production requires verified ESP accreditation, taxpayer PTI, written authority, EIS certification, PTT and verified BIR transport.';
 
         try {
-        DB::transaction(function () use ($payload, $canonical, $hash, $validation, $integration, $duplicate, $merchant, $payloadId, $transmissionId, $now, $status, $responseCode, $responseMessage, $request, $identity, $environment) {
-            DB::table('eis_invoice_payloads')->insert([
-                'id' => $payloadId,
-                'merchant_id' => $merchant?->id,
-                'receipt_id' => $payload['receipt_id'] ?? null,
-                'invoice_number' => $this->invoiceNumber($payload),
-                'document_type' => $payload['document_type'] ?? $payload['type'] ?? 'invoice',
-                'issue_date' => $this->issueDate($payload)?->toDateString(),
-                'due_at' => $validation['due_at'],
-                'payload' => json_encode(['encrypted' => Crypt::encryptString($canonical)]),
-                'payload_hash' => $hash,
-                'payload_size' => strlen($canonical),
-                'validation_status' => 'valid',
-                'validation_errors' => json_encode($validation),
-                'signature_algorithm' => 'SHA256',
-                'digital_signature_hash' => $payload['digital_signature_hash'] ?? $payload['signature_hash'] ?? null,
-                'encrypted_payload_hash' => $payload['encrypted_payload_hash'] ?? null,
-                'source' => $request->input('source', 'manual'),
-                'status' => 'ready_for_queue',
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-
-            DB::table('eis_transmissions')->insert([
-                'id' => $transmissionId,
-                'integration_id' => $integration?->id,
-                'merchant_id' => $merchant?->id,
-                'payload_id' => $payloadId,
-                'transmission_type' => $request->input('transmission_type', 'invoice_submission'),
-                'status' => $status,
-                'invoice_count' => $this->payloadInvoiceCount($payload),
-                'payload_hash' => $hash,
-                'duplicate_of' => $duplicate?->id,
-                'response_code' => $responseCode,
-                'response_message' => $responseMessage,
-                'attempt_number' => 1,
-                'max_attempts' => 5,
-                'next_retry_at' => $duplicate ? null : $now->copy()->addMinutes(15),
-                'due_at' => $validation['due_at'],
-                'environment' => $environment,
-                'document_identity_hash' => $identity,
-                'api_version' => $request->input('api_version', $integration?->api_version ?? 'v2'),
-                'endpoint_url' => rtrim($integration?->endpoint_base_url ?? 'https://eis.bir.gov.ph', '/') . '/api/eis/transmissions',
-                'request_id' => (string) Str::uuid(),
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-
-            DB::table('eis_transmission_payloads')->insert([
-                'id' => (string) Str::uuid(),
-                'transmission_id' => $transmissionId,
-                'payload_format' => 'encrypted_json',
-                'payload' => Crypt::encryptString($canonical),
-                'payload_size' => strlen($canonical),
-                'payload_hash' => $hash,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-
-            if (! $duplicate) {
-                DB::table('eis_retry_queue')->insert([
-                    'id' => (string) Str::uuid(),
-                    'transmission_id' => $transmissionId,
+            DB::transaction(function () use ($payload, $canonical, $hash, $validation, $integration, $duplicate, $merchant, $payloadId, $transmissionId, $now, $status, $responseCode, $responseMessage, $request, $identity, $environment) {
+                DB::table('eis_invoice_payloads')->insert([
+                    'id' => $payloadId,
                     'merchant_id' => $merchant?->id,
-                    'attempt_number' => 1,
-                    'scheduled_at' => $now->copy()->addMinutes(15),
-                    'result' => 'scheduled',
-                    'error_message' => 'Waiting for production EIS credentials/certification gate.',
+                    'receipt_id' => $payload['receipt_id'] ?? null,
+                    'invoice_number' => $this->invoiceNumber($payload),
+                    'document_type' => $payload['document_type'] ?? $payload['type'] ?? 'invoice',
+                    'issue_date' => $this->issueDate($payload)?->toDateString(),
+                    'due_at' => $validation['due_at'],
+                    'payload' => json_encode(['encrypted' => Crypt::encryptString($canonical)]),
+                    'payload_hash' => $hash,
+                    'payload_size' => strlen($canonical),
+                    'validation_status' => 'valid',
+                    'validation_errors' => json_encode($validation),
+                    'signature_algorithm' => 'SHA256',
+                    'digital_signature_hash' => $payload['digital_signature_hash'] ?? $payload['signature_hash'] ?? null,
+                    'encrypted_payload_hash' => $payload['encrypted_payload_hash'] ?? null,
+                    'source' => $request->input('source', 'manual'),
+                    'status' => 'ready_for_queue',
                     'created_at' => $now,
                     'updated_at' => $now,
                 ]);
-            }
 
-            $this->logApiRequest($integration?->id, $transmissionId, $request, 202, $responseCode, $responseMessage, strlen($canonical));
-            $this->audit('eis.transmission.queued', 'eis_transmissions', $transmissionId, $request, [
-                'payload_hash' => $hash,
-                'status' => $status,
-                'duplicate_of' => $duplicate?->id,
-            ]);
-        });
+                DB::table('eis_transmissions')->insert([
+                    'id' => $transmissionId,
+                    'integration_id' => $integration?->id,
+                    'merchant_id' => $merchant?->id,
+                    'payload_id' => $payloadId,
+                    'transmission_type' => $request->input('transmission_type', 'invoice_submission'),
+                    'status' => $status,
+                    'invoice_count' => $this->payloadInvoiceCount($payload),
+                    'payload_hash' => $hash,
+                    'duplicate_of' => $duplicate?->id,
+                    'response_code' => $responseCode,
+                    'response_message' => $responseMessage,
+                    'attempt_number' => 1,
+                    'max_attempts' => 5,
+                    'next_retry_at' => $duplicate ? null : $now->copy()->addMinutes(15),
+                    'due_at' => $validation['due_at'],
+                    'environment' => $environment,
+                    'document_identity_hash' => $identity,
+                    'api_version' => $request->input('api_version', $integration?->api_version ?? 'v2'),
+                    'endpoint_url' => rtrim($integration?->endpoint_base_url ?? 'https://eis.bir.gov.ph', '/').'/api/eis/transmissions',
+                    'request_id' => (string) Str::uuid(),
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
 
-        } catch (\Illuminate\Database\QueryException $exception) {
+                DB::table('eis_transmission_payloads')->insert([
+                    'id' => (string) Str::uuid(),
+                    'transmission_id' => $transmissionId,
+                    'payload_format' => 'encrypted_json',
+                    'payload' => Crypt::encryptString($canonical),
+                    'payload_size' => strlen($canonical),
+                    'payload_hash' => $hash,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+
+                if (! $duplicate) {
+                    DB::table('eis_retry_queue')->insert([
+                        'id' => (string) Str::uuid(),
+                        'transmission_id' => $transmissionId,
+                        'merchant_id' => $merchant?->id,
+                        'attempt_number' => 1,
+                        'scheduled_at' => $now->copy()->addMinutes(15),
+                        'result' => 'scheduled',
+                        'error_message' => 'Waiting for production EIS credentials/certification gate.',
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                }
+
+                $this->logApiRequest($integration?->id, $transmissionId, $request, 202, $responseCode, $responseMessage, strlen($canonical));
+                $this->audit('eis.transmission.queued', 'eis_transmissions', $transmissionId, $request, [
+                    'payload_hash' => $hash,
+                    'status' => $status,
+                    'duplicate_of' => $duplicate?->id,
+                ]);
+            });
+
+        } catch (QueryException $exception) {
             // The unique identity constraint resolves concurrent submissions after rollback.
             $existing = DB::table('eis_transmissions')->where('environment', $environment)->where('document_identity_hash', $identity)->first();
-            if (! $existing) throw $exception;
+            if (! $existing) {
+                throw $exception;
+            }
             abort_unless(hash_equals($existing->payload_hash, $hash), 409, 'This document identity already exists with different content. Preserve the original and use a traceable correction document.');
+
             return response()->json(['duplicate' => true, 'message' => 'Existing concurrent transmission returned.', 'transmission' => $this->formatTransmission($this->transmissionQuery()->where('t.id', $existing->id)->first())]);
         }
 
@@ -354,7 +381,9 @@ class EisController extends Controller
                 $gate = $policy->gate(DB::table('eis_integrations')->where('id', $t->integration_id)->first());
                 abort_unless($gate['can_transmit'], 409, implode(' ', $gate['blockers']));
             }
-            if ($t->status === 'queued' && DB::table('eis_retry_queue')->where('transmission_id', $id)->where('result', 'scheduled')->exists()) return;
+            if ($t->status === 'queued' && DB::table('eis_retry_queue')->where('transmission_id', $id)->where('result', 'scheduled')->exists()) {
+                return;
+            }
             abort_if((int) $t->attempt_number >= (int) $t->max_attempts, 409, 'Retry limit reached. Preserve the record for investigation and reconciliation.');
             abort_if(preg_match('/^(400|401|403|422)/', $t->response_code ?? ''), 409, 'Correct the validation or authorization failure before retrying.');
             $attempt = (int) $t->attempt_number + 1;
@@ -372,6 +401,7 @@ class EisController extends Controller
             DB::table('eis_retry_queue')->insert(['id' => (string) Str::uuid(), 'transmission_id' => $id, 'merchant_id' => $t->merchant_id, 'attempt_number' => $attempt, 'scheduled_at' => $scheduled, 'result' => 'scheduled', 'error_message' => 'Administrative retry; authorization gates still apply.', 'created_at' => now(), 'updated_at' => now()]);
             $policy->audit('eis.retry.scheduled', $id, (string) $actor->id, ['attempt' => $attempt, 'scheduled_at' => $scheduled->toIso8601String(), 'original_due_at' => $t->due_at, 'recovery_due_at' => $recoveryDue]);
         });
+
         return response()->json(['message' => 'Retry queue checked.', 'transmission' => $this->formatTransmission($this->transmissionQuery()->where('t.id', $id)->first())]);
     }
 
@@ -384,7 +414,9 @@ class EisController extends Controller
             abort_unless($t, 404, 'EIS transmission not found.');
             abort_unless($t->environment === 'certification', 409, 'Production acknowledgement can only come from verified BIR transport, never this manual certification action.');
             abort_unless($request->boolean('is_test'), 422, 'Explicit synthetic certification acknowledgement is required.');
-            if ($t->status === 'acknowledged') return;
+            if ($t->status === 'acknowledged') {
+                return;
+            }
             abort_if(in_array($t->status, ['duplicate', 'cancelled', 'rejected'], true), 409, 'This record cannot be acknowledged.');
             $ack = 'CERT-ACK-'.strtoupper(Str::random(8));
             $reference = 'CERT-BIR-'.now()->format('YmdHis');
@@ -393,6 +425,7 @@ class EisController extends Controller
             DB::table('eis_retry_queue')->where('transmission_id', $id)->where('result', 'scheduled')->update(['result' => 'superseded', 'updated_at' => now()]);
             $policy->audit('eis.certification.acknowledged', $id, (string) $actor->id, ['simulated' => true, 'reference' => $reference]);
         });
+
         return response()->json(['message' => 'Certification simulation recorded; not a BIR production acceptance.', 'transmission' => $this->formatTransmission($this->transmissionQuery()->where('t.id', $id)->first())]);
     }
 
@@ -442,8 +475,9 @@ class EisController extends Controller
                 'p.invoice_number',
                 'p.document_type',
                 'p.issue_date',
+                'p.payload as payload_envelope',
             ])
-            ->orderByDesc('t.created_at');
+            ->orderByDesc('t.created_at')->orderBy('t.id');
     }
 
     private function formatTransmission(?object $row): ?array
@@ -452,7 +486,20 @@ class EisController extends Controller
             return null;
         }
 
+        $amount = null;
+        try {
+            $body = json_decode($row->payload_envelope ?? '{}', true);
+            if (isset($body['encrypted'])) {
+                $body = json_decode(Crypt::decryptString($body['encrypted']), true);
+            }$v = $body['total_due'] ?? $body['gross_amount'] ?? $body['total_amount'] ?? null;
+            if (is_numeric($v)) {
+                $amount = (float) $v;
+            }
+        } catch (Throwable $e) {
+        }
+
         return [
+            'amount' => $amount,
             'id' => $row->id,
             'type' => $row->transmission_type,
             'status' => $row->status,
@@ -465,10 +512,10 @@ class EisController extends Controller
             'response_message' => $row->response_message,
             'attempt_number' => (int) $row->attempt_number,
             'max_attempts' => (int) $row->max_attempts,
-            'next_retry_at' => $row->next_retry_at,
-            'submitted_at' => $row->submitted_at,
-            'acknowledged_at' => $row->acknowledged_at,
-            'due_at' => $row->due_at,
+            'next_retry_at' => $row->next_retry_at ? Carbon::parse($row->next_retry_at, config('app.timezone'))->toIso8601String() : null,
+            'submitted_at' => $row->submitted_at ? Carbon::parse($row->submitted_at, config('app.timezone'))->toIso8601String() : null,
+            'acknowledged_at' => $row->acknowledged_at ? Carbon::parse($row->acknowledged_at, config('app.timezone'))->toIso8601String() : null,
+            'due_at' => $row->due_at ? Carbon::parse($row->due_at, config('app.timezone'))->toIso8601String() : null,
             'recovery_due_at' => $row->recovery_due_at ?? null,
             'simulated' => $row->environment !== 'production',
             'latency_ms' => $row->latency_ms === null ? null : (int) $row->latency_ms,
@@ -481,7 +528,7 @@ class EisController extends Controller
             'invoice_number' => $row->invoice_number,
             'document_type' => $row->document_type,
             'issue_date' => $row->issue_date,
-            'created_at' => $row->created_at,
+            'created_at' => $row->created_at ? Carbon::parse($row->created_at, config('app.timezone'))->toIso8601String() : null,
         ];
     }
 
@@ -652,7 +699,7 @@ class EisController extends Controller
     private function hourlyTransmissionSeries(): array
     {
         $rows = DB::table('eis_transmissions')
-            ->selectRaw("SUBSTR(created_at, 1, 13) as label")
+            ->selectRaw('SUBSTR(created_at, 1, 13) as label')
             ->selectRaw('COUNT(*) as submitted')
             ->selectRaw("SUM(CASE WHEN status = 'acknowledged' THEN 1 ELSE 0 END) as acknowledged")
             ->selectRaw("SUM(CASE WHEN status IN ('failed', 'rejected') THEN 1 ELSE 0 END) as failed")
@@ -672,7 +719,7 @@ class EisController extends Controller
     private function weeklyTransmissionSeries(): array
     {
         $rows = DB::table('eis_transmissions')
-            ->selectRaw("SUBSTR(created_at, 1, 10) as label")
+            ->selectRaw('SUBSTR(created_at, 1, 10) as label')
             ->selectRaw('COUNT(*) as submitted')
             ->selectRaw("SUM(CASE WHEN status = 'acknowledged' THEN 1 ELSE 0 END) as acknowledged")
             ->selectRaw("SUM(CASE WHEN status IN ('failed', 'rejected') THEN 1 ELSE 0 END) as failed")
@@ -706,11 +753,11 @@ class EisController extends Controller
     private function compactNumber(int $value): string
     {
         if ($value >= 1_000_000) {
-            return round($value / 1_000_000, 1) . 'M';
+            return round($value / 1_000_000, 1).'M';
         }
 
         if ($value >= 1_000) {
-            return round($value / 1_000, 1) . 'K';
+            return round($value / 1_000, 1).'K';
         }
 
         return (string) $value;

@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 
 import "./index.css";
 import App from "./App.tsx";
+import "./typography.css";
 import { ThemeProvider } from "@/components/theme-provider.tsx";
 import { AuthProvider } from "@/lib/auth.tsx";
 import { Toaster } from "@/components/ui/sonner.tsx";

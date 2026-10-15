@@ -1,0 +1,1460 @@
+{
+  "source": "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf",
+  "offices": {
+    "001": {
+      "rdo_code": "001",
+      "rdo_name": "Laoag City, Ilocos Norte"
+    },
+    "002": {
+      "rdo_code": "002",
+      "rdo_name": "Vigan City, Ilocos Sur"
+    },
+    "003": {
+      "rdo_code": "003",
+      "rdo_name": "San Fernando, La Union"
+    },
+    "004": {
+      "rdo_code": "004",
+      "rdo_name": "Calasiao, Central Pangasinan"
+    },
+    "005": {
+      "rdo_code": "005",
+      "rdo_name": "Alaminos City, West Pangasinan"
+    },
+    "006": {
+      "rdo_code": "006",
+      "rdo_name": "Urdaneta City, East Pangasinan"
+    },
+    "007": {
+      "rdo_code": "007",
+      "rdo_name": "Bangued, Abra"
+    },
+    "008": {
+      "rdo_code": "008",
+      "rdo_name": "Baguio City"
+    },
+    "009": {
+      "rdo_code": "009",
+      "rdo_name": "La Trinidad, Benguet"
+    },
+    "010": {
+      "rdo_code": "010",
+      "rdo_name": "Bontoc, Mt. Province"
+    },
+    "011": {
+      "rdo_code": "011",
+      "rdo_name": "Tabuk City, Kalinga"
+    },
+    "012": {
+      "rdo_code": "012",
+      "rdo_name": "Lagawe, Ifugao"
+    },
+    "013": {
+      "rdo_code": "013",
+      "rdo_name": "Tuguegarao City, Cagayan"
+    },
+    "014": {
+      "rdo_code": "014",
+      "rdo_name": "Bayombong, Nueva Vizcaya"
+    },
+    "015": {
+      "rdo_code": "015",
+      "rdo_name": "Naguilian, Isabela"
+    },
+    "016": {
+      "rdo_code": "016",
+      "rdo_name": "Cabarroguis, Quirino"
+    },
+    "017A": {
+      "rdo_code": "017A",
+      "rdo_name": "Tarlac City, Tarlac"
+    },
+    "017B": {
+      "rdo_code": "017B",
+      "rdo_name": "Paniqui, Tarlac"
+    },
+    "018": {
+      "rdo_code": "018",
+      "rdo_name": "Olongapo City, Zambales"
+    },
+    "019": {
+      "rdo_code": "019",
+      "rdo_name": "Subic Bay Freeport Zone"
+    },
+    "020": {
+      "rdo_code": "020",
+      "rdo_name": "Balanga City, Bataan"
+    },
+    "021A": {
+      "rdo_code": "021A",
+      "rdo_name": "Angeles City, North Pampanga"
+    },
+    "021B": {
+      "rdo_code": "021B",
+      "rdo_name": "City of San Fernando, South Pampanga"
+    },
+    "021C": {
+      "rdo_code": "021C",
+      "rdo_name": "Clark Freeport and Special Economic Zone (CFEZ)"
+    },
+    "022": {
+      "rdo_code": "022",
+      "rdo_name": "Baler, Aurora"
+    },
+    "023A": {
+      "rdo_code": "023A",
+      "rdo_name": "Talavera, North Nueva Ecija"
+    },
+    "023B": {
+      "rdo_code": "023B",
+      "rdo_name": "Cabanatuan City, South Nueva Ecija"
+    },
+    "024": {
+      "rdo_code": "024",
+      "rdo_name": "Valenzuela City"
+    },
+    "025A": {
+      "rdo_code": "025A",
+      "rdo_name": "West Bulacan"
+    },
+    "025B": {
+      "rdo_code": "025B",
+      "rdo_name": "East Bulacan"
+    },
+    "026": {
+      "rdo_code": "026",
+      "rdo_name": "Malabon City/Navotas City"
+    },
+    "027": {
+      "rdo_code": "027",
+      "rdo_name": "Caloocan City"
+    },
+    "029": {
+      "rdo_code": "029",
+      "rdo_name": "Tondo - San Nicolas"
+    },
+    "030": {
+      "rdo_code": "030",
+      "rdo_name": "Binondo"
+    },
+    "031": {
+      "rdo_code": "031",
+      "rdo_name": "Sta. Cruz"
+    },
+    "032": {
+      "rdo_code": "032",
+      "rdo_name": "Quiapo-Sampaloc-San Miguel-Sta. Mesa"
+    },
+    "033": {
+      "rdo_code": "033",
+      "rdo_name": "Ermita-Intramuros-Malate"
+    },
+    "034": {
+      "rdo_code": "034",
+      "rdo_name": "Paco-Pandacan-Sta. Ana-San Andres"
+    },
+    "036": {
+      "rdo_code": "036",
+      "rdo_name": "Puerto Princesa City, Palawan"
+    },
+    "028": {
+      "rdo_code": "028",
+      "rdo_name": "Novaliches"
+    },
+    "038": {
+      "rdo_code": "038",
+      "rdo_name": "North Quezon City"
+    },
+    "039": {
+      "rdo_code": "039",
+      "rdo_name": "South Quezon City"
+    },
+    "040": {
+      "rdo_code": "040",
+      "rdo_name": "Cubao"
+    },
+    "041": {
+      "rdo_code": "041",
+      "rdo_name": "Mandaluyong City"
+    },
+    "042": {
+      "rdo_code": "042",
+      "rdo_name": "San Juan City"
+    },
+    "043": {
+      "rdo_code": "043",
+      "rdo_name": "Pasig City"
+    },
+    "045": {
+      "rdo_code": "045",
+      "rdo_name": "SMART (San Mateo–Marikina–Antipolo–Rodriguez–Teresa)"
+    },
+    "046": {
+      "rdo_code": "046",
+      "rdo_name": "Cainta-Taytay"
+    },
+    "047": {
+      "rdo_code": "047",
+      "rdo_name": "East Makati City"
+    },
+    "048": {
+      "rdo_code": "048",
+      "rdo_name": "West Makati City"
+    },
+    "049": {
+      "rdo_code": "049",
+      "rdo_name": "North Makati City"
+    },
+    "050": {
+      "rdo_code": "050",
+      "rdo_name": "South Makati City"
+    },
+    "044": {
+      "rdo_code": "044",
+      "rdo_name": "Taguig City-Pateros"
+    },
+    "051": {
+      "rdo_code": "051",
+      "rdo_name": "Pasay City"
+    },
+    "052": {
+      "rdo_code": "052",
+      "rdo_name": "Parañaque City"
+    },
+    "053A": {
+      "rdo_code": "053A",
+      "rdo_name": "Las Piñas City"
+    },
+    "053B": {
+      "rdo_code": "053B",
+      "rdo_name": "Muntinlupa City"
+    },
+    "035": {
+      "rdo_code": "035",
+      "rdo_name": "Odiongan, Romblon"
+    },
+    "037": {
+      "rdo_code": "037",
+      "rdo_name": "San Jose, Occidental Mindoro"
+    },
+    "054A": {
+      "rdo_code": "054A",
+      "rdo_name": "Trece Martires City, East Cavite"
+    },
+    "054B": {
+      "rdo_code": "054B",
+      "rdo_name": "Kawit, West Cavite"
+    },
+    "058": {
+      "rdo_code": "058",
+      "rdo_name": "Batangas City, West Batangas"
+    },
+    "059": {
+      "rdo_code": "059",
+      "rdo_name": "Lipa City, East Batangas"
+    },
+    "063": {
+      "rdo_code": "063",
+      "rdo_name": "Calapan City, Oriental Mindoro"
+    },
+    "055": {
+      "rdo_code": "055",
+      "rdo_name": "San Pablo City, East Laguna"
+    },
+    "056": {
+      "rdo_code": "056",
+      "rdo_name": "Calamba City, Central Laguna"
+    },
+    "057": {
+      "rdo_code": "057",
+      "rdo_name": "Biñan City, West Laguna"
+    },
+    "060": {
+      "rdo_code": "060",
+      "rdo_name": "Lucena City, North Quezon"
+    },
+    "061": {
+      "rdo_code": "061",
+      "rdo_name": "Gumaca, South Quezon"
+    },
+    "062": {
+      "rdo_code": "062",
+      "rdo_name": "Boac, Marinduque"
+    },
+    "064": {
+      "rdo_code": "064",
+      "rdo_name": "Talisay City, Camarines Norte"
+    },
+    "065": {
+      "rdo_code": "065",
+      "rdo_name": "Naga City, Camarines Sur"
+    },
+    "066": {
+      "rdo_code": "066",
+      "rdo_name": "Iriga City, Camarines Sur"
+    },
+    "067": {
+      "rdo_code": "067",
+      "rdo_name": "Legazpi City, Albay"
+    },
+    "068": {
+      "rdo_code": "068",
+      "rdo_name": "Sorsogon City, Sorsogon"
+    },
+    "069": {
+      "rdo_code": "069",
+      "rdo_name": "Virac, Catanduanes"
+    },
+    "070": {
+      "rdo_code": "070",
+      "rdo_name": "Masbate City, Masbate"
+    },
+    "071": {
+      "rdo_code": "071",
+      "rdo_name": "Kalibo, Aklan"
+    },
+    "072": {
+      "rdo_code": "072",
+      "rdo_name": "Roxas City, Capiz"
+    },
+    "073": {
+      "rdo_code": "073",
+      "rdo_name": "San Jose, Antique"
+    },
+    "074": {
+      "rdo_code": "074",
+      "rdo_name": "Iloilo City, Iloilo"
+    },
+    "075": {
+      "rdo_code": "075",
+      "rdo_name": "Zarraga, Iloilo"
+    },
+    "076": {
+      "rdo_code": "076",
+      "rdo_name": "Victorias City, Negros Occidental"
+    },
+    "077": {
+      "rdo_code": "077",
+      "rdo_name": "Bacolod City, Negros Occidental"
+    },
+    "078": {
+      "rdo_code": "078",
+      "rdo_name": "Binalbagan, Negros Occidental"
+    },
+    "079": {
+      "rdo_code": "079",
+      "rdo_name": "Dumaguete City, Negros Oriental"
+    },
+    "080": {
+      "rdo_code": "080",
+      "rdo_name": "Mandaue City, Cebu"
+    },
+    "081": {
+      "rdo_code": "081",
+      "rdo_name": "Cebu City North"
+    },
+    "082": {
+      "rdo_code": "082",
+      "rdo_name": "Cebu City South"
+    },
+    "083": {
+      "rdo_code": "083",
+      "rdo_name": "Talisay City, Cebu"
+    },
+    "084": {
+      "rdo_code": "084",
+      "rdo_name": "Tagbilaran City, Bohol"
+    },
+    "085": {
+      "rdo_code": "085",
+      "rdo_name": "Catarman, Northern Samar"
+    },
+    "086": {
+      "rdo_code": "086",
+      "rdo_name": "Borongan City, Eastern Samar"
+    },
+    "087": {
+      "rdo_code": "087",
+      "rdo_name": "Calbayog City, Samar"
+    },
+    "088": {
+      "rdo_code": "088",
+      "rdo_name": "Tacloban City, Leyte"
+    },
+    "089": {
+      "rdo_code": "089",
+      "rdo_name": "Ormoc City, Leyte"
+    },
+    "090": {
+      "rdo_code": "090",
+      "rdo_name": "Maasin City, Southern Leyte"
+    },
+    "091": {
+      "rdo_code": "091",
+      "rdo_name": "Dipolog City, Zamboanga del Norte"
+    },
+    "092": {
+      "rdo_code": "092",
+      "rdo_name": "Pagadian City, Zamboanga del Sur"
+    },
+    "093A": {
+      "rdo_code": "093A",
+      "rdo_name": "Zamboanga City, Zamboanga del Sur"
+    },
+    "093B": {
+      "rdo_code": "093B",
+      "rdo_name": "Ipil, Zamboanga Sibugay"
+    },
+    "094": {
+      "rdo_code": "094",
+      "rdo_name": "Isabela City, Basilan"
+    },
+    "095": {
+      "rdo_code": "095",
+      "rdo_name": "Jolo, Sulu"
+    },
+    "096": {
+      "rdo_code": "096",
+      "rdo_name": "Bongao, Tawi-Tawi"
+    },
+    "097": {
+      "rdo_code": "097",
+      "rdo_name": "Gingoog City, Misamis Oriental"
+    },
+    "098": {
+      "rdo_code": "098",
+      "rdo_name": "Cagayan de Oro City, Misamis Oriental"
+    },
+    "099": {
+      "rdo_code": "099",
+      "rdo_name": "Malaybalay City, Bukidnon"
+    },
+    "100": {
+      "rdo_code": "100",
+      "rdo_name": "Ozamis City, Misamis Occidental"
+    },
+    "101": {
+      "rdo_code": "101",
+      "rdo_name": "Iligan City, Lanao del Norte"
+    },
+    "102": {
+      "rdo_code": "102",
+      "rdo_name": "Marawi City, Lanao del Sur"
+    },
+    "103": {
+      "rdo_code": "103",
+      "rdo_name": "Butuan City, Agusan del Norte"
+    },
+    "104": {
+      "rdo_code": "104",
+      "rdo_name": "Bayugan City, Agusan del Sur"
+    },
+    "105": {
+      "rdo_code": "105",
+      "rdo_name": "Surigao City, Surigao del Norte"
+    },
+    "106": {
+      "rdo_code": "106",
+      "rdo_name": "Tandag City, Surigao del Sur"
+    },
+    "107": {
+      "rdo_code": "107",
+      "rdo_name": "Cotabato City, Maguindanao"
+    },
+    "108": {
+      "rdo_code": "108",
+      "rdo_name": "Kidapawan City, North Cotabato"
+    },
+    "109": {
+      "rdo_code": "109",
+      "rdo_name": "Tacurong City, Sultan Kudarat"
+    },
+    "110": {
+      "rdo_code": "110",
+      "rdo_name": "General Santos City, South Cotabato"
+    },
+    "111": {
+      "rdo_code": "111",
+      "rdo_name": "Koronadal City, South Cotabato"
+    },
+    "112": {
+      "rdo_code": "112",
+      "rdo_name": "Tagum City, Davao del Norte"
+    },
+    "113A": {
+      "rdo_code": "113A",
+      "rdo_name": "West Davao City"
+    },
+    "113B": {
+      "rdo_code": "113B",
+      "rdo_name": "East Davao City"
+    },
+    "114": {
+      "rdo_code": "114",
+      "rdo_name": "Mati City, Davao Oriental"
+    },
+    "115": {
+      "rdo_code": "115",
+      "rdo_name": "Digos City, Davao del Sur"
+    }
+  },
+  "city_rules": {
+    "1380500000": "041",
+    "1381400000": "042",
+    "1381200000": "043",
+    "1381500000": "044",
+    "1381701000": "044",
+    "1380700000": "045",
+    "1381100000": "051",
+    "1381000000": "052",
+    "1380200000": "053A",
+    "1380800000": "053B",
+    "1380100000": "027",
+    "0405802000": "045",
+    "0405808000": "045",
+    "0405811000": "045",
+    "0405814000": "045",
+    "1380400000": "026",
+    "1380900000": "026",
+    "1381600000": "024",
+    "0102812000": "001",
+    "0102934000": "002",
+    "0103314000": "003",
+    "0105517000": "004",
+    "0105503000": "005",
+    "0105546000": "006",
+    "1400101000": "007",
+    "1430300000": "008",
+    "1401110000": "009",
+    "1404404000": "010",
+    "1403213000": "011",
+    "1402704000": "012",
+    "0201529000": "013",
+    "0205005000": "014",
+    "0203120000": "015",
+    "0205702000": "016",
+    "0306916000": "017A",
+    "0306910000": "017B",
+    "0300803000": "020",
+    "0305416000": "021B",
+    "0307701000": "022",
+    "0304930000": "023A",
+    "0304903000": "023B",
+    "1705909000": "035",
+    "1705110000": "037",
+    "0402122000": "054A",
+    "0402111000": "054B",
+    "0401005000": "058",
+    "0401014000": "059",
+    "1705205000": "063",
+    "0403424000": "055",
+    "0403405000": "056",
+    "0403403000": "057",
+    "0405619000": "061",
+    "1704001000": "062",
+    "0501611000": "064",
+    "0501724000": "065",
+    "0501716000": "066",
+    "0500506000": "067",
+    "0506216000": "068",
+    "0502011000": "069",
+    "0504111000": "070",
+    "0600407000": "071",
+    "0601914000": "072",
+    "0603047000": "075",
+    "1804531000": "076",
+    "1804503000": "078",
+    "1804610000": "079",
+    "0702250000": "083",
+    "0701242000": "084",
+    "0804805000": "085",
+    "0802604000": "086",
+    "0806003000": "087",
+    "0803738000": "089",
+    "0806407000": "090",
+    "0907202000": "091",
+    "0907322000": "092",
+    "0908305000": "093B",
+    "0906602000": "095",
+    "1907002000": "096",
+    "1004308000": "097",
+    "1001312000": "099",
+    "1004210000": "100",
+    "1903617000": "102",
+    "1600301000": "104",
+    "1606724000": "105",
+    "1606819000": "106",
+    "1204704000": "108",
+    "1206511000": "109",
+    "1206306000": "111",
+    "1102319000": "112",
+    "1102509000": "114",
+    "1102403000": "115",
+    "1731500000": "036",
+    "0431200000": "060",
+    "0600613000": "073",
+    "0631000000": "074",
+    "1830200000": "077",
+    "0731300000": "080",
+    "0831600000": "088",
+    "0931700000": "093A",
+    "0990101000": "094",
+    "1030500000": "098",
+    "1030900000": "101",
+    "1630400000": "103",
+    "1908703000": "107",
+    "1230800000": "110"
+  },
+  "barangay_rules": {
+    "1380300006": "050",
+    "1380300008": "050",
+    "1380300009": "050",
+    "1380300017": "050",
+    "1380300030": "050"
+  },
+  "barangay_source": "https://bir-cdn.bir.gov.ph/BIR/pdf/Digest%20RAO%201-2024.pdf",
+  "city_rule_sources": {
+    "1380100000": {
+      "rdo_code": "027",
+      "scope": "City of Caloocan, including Barangay 179",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf",
+        "https://bir-cdn.bir.gov.ph/local/pdf/2024-bir-tax-calendar.pdf",
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/RAO%20No.%206-2025.pdf"
+      ],
+      "reviewed_at": "2026-10-15"
+    },
+    "0405802000": {
+      "rdo_code": "045",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/RAO%20No.%202-2024.pdf"
+      ],
+      "reviewed_at": "2026-10-15"
+    },
+    "0405808000": {
+      "rdo_code": "045",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/RAO%20No.%202-2024.pdf"
+      ],
+      "reviewed_at": "2026-10-15"
+    },
+    "0405811000": {
+      "rdo_code": "045",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/RAO%20No.%202-2024.pdf"
+      ],
+      "reviewed_at": "2026-10-15"
+    },
+    "0405814000": {
+      "rdo_code": "045",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/RAO%20No.%202-2024.pdf"
+      ],
+      "reviewed_at": "2026-10-15"
+    },
+    "1380400000": {
+      "rdo_code": "026",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15"
+    },
+    "1380900000": {
+      "rdo_code": "026",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15"
+    },
+    "1381600000": {
+      "rdo_code": "024",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15"
+    },
+    "0102812000": {
+      "rdo_code": "001",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0102934000": {
+      "rdo_code": "002",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0103314000": {
+      "rdo_code": "003",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0105517000": {
+      "rdo_code": "004",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0105503000": {
+      "rdo_code": "005",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0105546000": {
+      "rdo_code": "006",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1400101000": {
+      "rdo_code": "007",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1430300000": {
+      "rdo_code": "008",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1401110000": {
+      "rdo_code": "009",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1404404000": {
+      "rdo_code": "010",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1403213000": {
+      "rdo_code": "011",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1402704000": {
+      "rdo_code": "012",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0201529000": {
+      "rdo_code": "013",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0205005000": {
+      "rdo_code": "014",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0203120000": {
+      "rdo_code": "015",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0205702000": {
+      "rdo_code": "016",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0306916000": {
+      "rdo_code": "017A",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0306910000": {
+      "rdo_code": "017B",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0300803000": {
+      "rdo_code": "020",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0305416000": {
+      "rdo_code": "021B",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0307701000": {
+      "rdo_code": "022",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0304930000": {
+      "rdo_code": "023A",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0304903000": {
+      "rdo_code": "023B",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1705909000": {
+      "rdo_code": "035",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1705110000": {
+      "rdo_code": "037",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0402122000": {
+      "rdo_code": "054A",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0402111000": {
+      "rdo_code": "054B",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0401005000": {
+      "rdo_code": "058",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0401014000": {
+      "rdo_code": "059",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1705205000": {
+      "rdo_code": "063",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0403424000": {
+      "rdo_code": "055",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0403405000": {
+      "rdo_code": "056",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0403403000": {
+      "rdo_code": "057",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0405619000": {
+      "rdo_code": "061",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1704001000": {
+      "rdo_code": "062",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0501611000": {
+      "rdo_code": "064",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0501724000": {
+      "rdo_code": "065",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0501716000": {
+      "rdo_code": "066",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0500506000": {
+      "rdo_code": "067",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0506216000": {
+      "rdo_code": "068",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0502011000": {
+      "rdo_code": "069",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0504111000": {
+      "rdo_code": "070",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0600407000": {
+      "rdo_code": "071",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0601914000": {
+      "rdo_code": "072",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0603047000": {
+      "rdo_code": "075",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1804531000": {
+      "rdo_code": "076",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1804503000": {
+      "rdo_code": "078",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1804610000": {
+      "rdo_code": "079",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0702250000": {
+      "rdo_code": "083",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0701242000": {
+      "rdo_code": "084",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0804805000": {
+      "rdo_code": "085",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0802604000": {
+      "rdo_code": "086",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0806003000": {
+      "rdo_code": "087",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0803738000": {
+      "rdo_code": "089",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0806407000": {
+      "rdo_code": "090",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0907202000": {
+      "rdo_code": "091",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0907322000": {
+      "rdo_code": "092",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0908305000": {
+      "rdo_code": "093B",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0906602000": {
+      "rdo_code": "095",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1907002000": {
+      "rdo_code": "096",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1004308000": {
+      "rdo_code": "097",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1001312000": {
+      "rdo_code": "099",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1004210000": {
+      "rdo_code": "100",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1903617000": {
+      "rdo_code": "102",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1600301000": {
+      "rdo_code": "104",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1606724000": {
+      "rdo_code": "105",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1606819000": {
+      "rdo_code": "106",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1204704000": {
+      "rdo_code": "108",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1206511000": {
+      "rdo_code": "109",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1206306000": {
+      "rdo_code": "111",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1102319000": {
+      "rdo_code": "112",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1102509000": {
+      "rdo_code": "114",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1102403000": {
+      "rdo_code": "115",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1731500000": {
+      "rdo_code": "036",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0431200000": {
+      "rdo_code": "060",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0600613000": {
+      "rdo_code": "073",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0631000000": {
+      "rdo_code": "074",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1830200000": {
+      "rdo_code": "077",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0731300000": {
+      "rdo_code": "080",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0831600000": {
+      "rdo_code": "088",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0931700000": {
+      "rdo_code": "093A",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "0990101000": {
+      "rdo_code": "094",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1030500000": {
+      "rdo_code": "098",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1030900000": {
+      "rdo_code": "101",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1630400000": {
+      "rdo_code": "103",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1908703000": {
+      "rdo_code": "107",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    },
+    "1230800000": {
+      "rdo_code": "110",
+      "scope": "Named city / municipality only; not a province-wide inference",
+      "sources": [
+        "https://bir-cdn.bir.gov.ph/BIR/pdf/citizens-charter-rr-rdo-2024-v3.pdf"
+      ],
+      "reviewed_at": "2026-10-15",
+      "basis": "Unique PSGC locality explicitly named in the official RDO directory"
+    }
+  }
+}

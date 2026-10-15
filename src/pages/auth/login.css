@@ -97,19 +97,19 @@
 .nuers-login__register { margin: 42px -10px 0; text-align: center; font-size: 18px; line-height: 1.5; }
 .nuers-login__register a { font-weight: 600; color: #005be3; white-space: nowrap; }
 .nuers-login__register a:hover { text-decoration: underline; }
-.nuers-login__card-footer { margin-top: 48px; display: flex; align-items: center; justify-content: space-between; gap: 14px; font-size: 12px; line-height: 1.4; color: #64728a; }
+.nuers-login__card-footer { margin-top: 48px; display: flex; align-items: center; justify-content: space-between; gap: 14px; font-size: var(--nuers-font-caption, 12px); line-height: 1.4; color: #64728a; }
 .nuers-login__card-footer > span { white-space: nowrap; }
 .nuers-login__card-footer > div { display: flex; align-items: center; gap: 12px; }
 .nuers-login__card-footer > div > span { white-space: nowrap; }
 .nuers-login__card-footer img { width: 125px; height: auto; object-fit: contain; }
-.nuers-login__mission { position: absolute; left: max(calc((100vw - 1536px) / 2 + 88px), 5.73vw); bottom: 26px; margin: 0; font-size: 14px; letter-spacing: 4px; line-height: 1.6; text-transform: uppercase; color: #b3bfd6; }
-.nuers-login__error { margin-bottom: 16px; border: 1px solid #f3b8b8; border-radius: 8px; background: #fff2f2; color: #b21e2b; padding: 12px 14px; font-size: 14px; line-height: 1.4; }
+.nuers-login__mission { position: absolute; left: max(calc((100vw - 1536px) / 2 + 88px), 5.73vw); bottom: 26px; margin: 0; font-size: var(--nuers-font-body, 14px); letter-spacing: 4px; line-height: 1.6; text-transform: uppercase; color: #b3bfd6; }
+.nuers-login__error { margin-bottom: 16px; border: 1px solid #f3b8b8; border-radius: 8px; background: #fff2f2; color: #b21e2b; padding: 12px 14px; font-size: var(--nuers-font-body, 14px); line-height: 1.4; }
 .nuers-login__dialog-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 24px; background: #001638a6; backdrop-filter: blur(5px); }
 .nuers-login__dialog { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51; font-family: "NuersLogin", ui-sans-serif, system-ui, sans-serif; max-width: 450px; width: 100%; border-radius: 16px; padding: 40px 30px 30px; background: white; color: #53617a; box-shadow: 0 20px 60px #00163840; }
 .nuers-login__dialog > button { position: absolute; top: 12px; right: 12px; border: 0; border-radius: 6px; background: none; color: #53617a; padding: 5px; }
 .nuers-login__dialog h2 { color: #0b2e60; font-size: 23px; line-height: 1.2; font-weight: 700; margin: 0 0 14px; }
 .nuers-login__dialog p { font-size: 15px; line-height: 1.6; }
-.nuers-login__dialog a { display: inline-flex; gap: 8px; align-items: center; margin-top: 20px; font-size: 14px; color: #005be3; }
+.nuers-login__dialog a { display: inline-flex; gap: 8px; align-items: center; margin-top: 20px; font-size: var(--nuers-font-body, 14px); color: #005be3; }
 .nuers-login__dialog a svg { width: 17px; }
 @media (min-width: 1537px) { .nuers-login__stage { gap: 134px; padding-left: 102px; padding-right: 44px; } }
 @media (max-height: 900px) and (min-width: 1024px) {
@@ -124,7 +124,7 @@
   .nuers-login__card { padding-left: 32px; padding-right: 32px; }
   .nuers-login__assurances { gap: 12px; margin-left: 0; }
   .nuers-login__assurance { min-height: 120px; }
-  .nuers-login__assurance span { font-size: 14px; }
+  .nuers-login__assurance span { font-size: var(--nuers-font-body, 14px); }
   .nuers-login__card-footer { flex-wrap: wrap; justify-content: center; }
 }
 @media (max-width: 899px) {
@@ -137,14 +137,14 @@
   .nuers-login__assurances { margin: 24px 0 0; gap: 10px; }
   .nuers-login__assurance { min-height: 100px; gap: 8px; border-radius: 12px; }
   .nuers-login__assurance img { width: 35px; height: 35px; }
-  .nuers-login__assurance span { font-size: 12px; }
+  .nuers-login__assurance span { font-size: var(--nuers-font-caption, 12px); }
   .nuers-login__card { width: 100%; max-width: 560px; min-height: 0; padding: 74px 30px 28px; }
-  .nuers-login__help { top: 26px; right: 28px; font-size: 14px; }
+  .nuers-login__help { top: 26px; right: 28px; font-size: var(--nuers-font-body, 14px); }
   .nuers-login__content h1 { font-size: 32px; }
   .nuers-login__subtitle { font-size: 18px; }
   .nuers-login__register { margin-top: 40px; font-size: 16px; }
   .nuers-login__card-footer { margin-top: 54px; flex-wrap: wrap; justify-content: center; row-gap: 14px; }
-  .nuers-login__mission { left: 24px; right: 24px; bottom: 20px; text-align: center; font-size: 11px; letter-spacing: 3px; }
+  .nuers-login__mission { left: 24px; right: 24px; bottom: 20px; text-align: center; font-size: var(--nuers-font-caption, 12px); letter-spacing: 3px; }
 }
 @media (max-width: 420px) {
   .nuers-login__stage { padding-left: 16px; padding-right: 16px; }
@@ -152,17 +152,18 @@
   .nuers-login__card { padding-left: 23px; padding-right: 23px; }
   .nuers-login__field input { font-size: 17px; padding-left: 51px; }
   .nuers-login__field > svg { left: 16px; width: 21px; height: 21px; }
-  .nuers-login__options { font-size: 13px; gap: 8px; }
+  .nuers-login__options { font-size: var(--nuers-font-control, 13px); gap: 8px; }
   .nuers-login__options label { gap: 8px; }
   .nuers-login__submit { font-size: 20px; }
 }
 @media (prefers-reduced-motion: reduce) { .nuers-login * { transition: none !important; } }
 
 .nuers-login__social { margin-top: 32px; }
-.nuers-login__divider { display: flex; align-items: center; gap: 20px; color: #8390a4; font-size: 14px; line-height: 20px; }
+.nuers-login__divider { display: flex; align-items: center; gap: 20px; color: #8390a4; font-size: var(--nuers-font-body, 14px); line-height: 20px; }
 .nuers-login__divider::before, .nuers-login__divider::after { content: ''; height: 1px; flex: 1; background: #d9dfe7; }
 .nuers-login__divider span { white-space: nowrap; }
 .nuers-login__google { margin-top: 22px; display: flex; justify-content: center; align-items: center; gap: 17px; width: 100%; min-height: 61px; padding: 12px 18px; border: 1px solid #d9dde5; border-bottom-width: 2px; border-radius: 12px; background: #f8f9fa; color: #475570; font-size: 16px; font-weight: 500; transition: background .15s,box-shadow .15s; }
 .nuers-login__google img { width: 27px; height: 27px; flex-shrink: 0; }
 .nuers-login__google:hover:not(:disabled) { background: #edf3fc; box-shadow: 0 2px 8px #183d7320; }
 .nuers-login__google:disabled { opacity: .6; cursor: wait; }
+.nl-session-notice{background:#edf4ff;border:1px solid #cddffb;border-radius:6px;color:#2c5487;font-size:13px;padding:12px 14px;margin:14px 0}.ne-session-loading{display:grid;place-items:center;min-height:100dvh;background:#f5f9ff;color:#315683;font:14px Inter,sans-serif}

@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from "react";
+import {storedToken,TOKEN_KEY,SESSION_INVALID_EVENT} from "./session-store";
 import { supabase } from "./supabase";
 import type { LaravelSession as Session, LaravelUser as User } from "./supabase";
 
@@ -14,6 +15,8 @@ interface AuthContextType {
     profile_photo_url?: string | null;
   } | null;
   loading: boolean;
+  sessionError: string | null;
+  sessionInvalid: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null; role: string | null }>;
   completeGoogleSignIn: () => Promise<{ error: string | null; role: string | null }>;
   signUp: (email: string, password: string, meta?: Record<string, string>) => Promise<{ error: string | null }>;
@@ -28,51 +31,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionError,setSessionError]=useState<string|null>(null);
+  const [sessionInvalid,setSessionInvalid]=useState(false);
+  const activeSession=useRef<Session|null>(null),profileGeneration=useRef(0),profileLoaded=useRef(false);
 
   useEffect(() => {
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          fetchProfile(session.user.id);
-        } else {
-          setLoading(false);
-        }
-      })
-      .catch(() => {
-        setSession(null);
-        setUser(null);
-        setProfile(null);
-        setLoading(false);
-      });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setProfile(null);
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    let mounted=true,checking=false;
+    function apply(next:Session|null){
+      if(!mounted)return;
+      const previous=activeSession.current;
+      activeSession.current=next;
+      setSession(next);setUser(next?.user??null);
+      if(!next){profileLoaded.current=false;profileGeneration.current++;setProfile(null);setLoading(false)}
+      else {setSessionInvalid(false);setSessionError(null);if(previous?.user.id!==next.user.id||previous.access_token!==next.access_token||!profileLoaded.current)fetchProfile(next.user.id);else setLoading(false)}
+    }
+    async function verify(){
+      if(checking||!mounted)return;
+      checking=true;
+      try{
+        const result=await supabase.auth.getSession();
+        if(!mounted||result.stale)return;
+        if(result.error){setSessionError('Unable to reach NUERS. Retrying your session check…');return;}
+        setSessionError(null);apply(result.data.session);
+      } finally {checking=false}
+    }
+    const invalid=()=>{setSessionInvalid(true);setSessionError(null);apply(null)};
+    const storage=(e:StorageEvent)=>{if(e.key===TOKEN_KEY||e.key===null){if(!storedToken())apply(null);else {profileGeneration.current++;setProfile(null);setLoading(true);verify()}}};
+    const resume=()=>{if(!document.hidden)verify()};
+    window.addEventListener(SESSION_INVALID_EVENT,invalid);
+    window.addEventListener('storage',storage);
+    window.addEventListener('focus',resume);
+    window.addEventListener('online',resume);
+    document.addEventListener('visibilitychange',resume);
+    const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,next)=>apply(next));
+    verify();
+    const interval=window.setInterval(verify,15000);
+    return()=>{mounted=false;profileGeneration.current++;window.clearInterval(interval);subscription.unsubscribe();window.removeEventListener(SESSION_INVALID_EVENT,invalid);window.removeEventListener('storage',storage);window.removeEventListener('focus',resume);window.removeEventListener('online',resume);document.removeEventListener('visibilitychange',resume)};
   }, []);
 
   async function fetchProfile(userId: string) {
+    const generation=++profileGeneration.current;
     try {
-      const { data } = await supabase
+      const { data,error } = await supabase
         .from<Profile>("profiles")
         .select("role, full_name, organization, tin, tin_bound_at, profile_photo_url")
         .eq("id", userId)
         .maybeSingle();
-      setProfile(data);
+      if(generation===profileGeneration.current&&activeSession.current?.user.id===userId){profileLoaded.current=!!data&&!error;setProfile(data);if(error)setSessionError('Unable to verify account permissions. Retrying…');}
     } catch {
-      setProfile(null);
+      if(generation===profileGeneration.current)setProfile(null);
     } finally {
-      setLoading(false);
+      if(generation===profileGeneration.current)setLoading(false);
     }
   }
 
@@ -107,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, signIn, completeGoogleSignIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, sessionError, sessionInvalid, signIn, completeGoogleSignIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

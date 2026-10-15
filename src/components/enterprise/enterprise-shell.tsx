@@ -1,6 +1,6 @@
 import { useEffect, useState, type ElementType, type FormEvent } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Activity, Bell, Building2, ChevronDown, ChevronRight, CircleHelp, CircleX, CloudUpload, Database, FileCheck2, FileText, Files, Fingerprint, Home, LogOut, Menu, Network, ReceiptText, Search, Server, Settings, ShieldCheck, ShieldAlert, Users, Wallet, X, ChartColumn, Plug, BadgeCheck, Barcode } from "lucide-react";
+import { Headphones, Activity, Bell, Building2, ChevronDown, ChevronRight, CircleHelp, CircleX, CloudUpload, Database, FileCheck2, FileText, Files, Fingerprint, Home, LogOut, Menu, Network, ReceiptText, Search, Server, Settings, ShieldCheck, ShieldAlert, Users, Wallet, X, ChartColumn, Plug, BadgeCheck, Barcode } from "lucide-react";
 import "./enterprise.css";
 
 export type EnterprisePortal = "admin" | "merchant" | "citizen";
@@ -19,8 +19,8 @@ function navigation(portal: EnterprisePortal, root: string, active: boolean): Gr
     ] },
     { label: "Taxpayer Management", items: [
       item("Registered Businesses", "/super-admin/merchants", Building2, [{ label: "Business Registry", href: "/super-admin/merchants" }, { label: "Business Registration", href: "/taxpayer/businesses" }]),
-      item("Taxpayer Onboarding", "/super-admin/citizen-approval", Users, [{ label: "Citizen Approvals", href: "/super-admin/citizen-approval" }, { label: "Client Accounts", href: "/super-admin/client-accounts" }]),
-      item("PTI / PTT Management", "/super-admin/eis-readiness", ShieldCheck, [{ label: "EIS Readiness", href: "/super-admin/eis-readiness" }, { label: "Certificates", href: "/super-admin/certificates" }]),
+      item("Taxpayer Onboarding", "/super-admin/taxpayer-onboarding", Users, [{ label: "Taxpayer Applications", href: "/super-admin/taxpayer-onboarding" }, { label: "Citizen Approvals", href: "/super-admin/citizen-approval" }, { label: "Client Accounts", href: "/super-admin/client-accounts" }]),
+      item("PTI / PTT Management", "/super-admin/pti-ptt", ShieldCheck, [{ label: "EIS Readiness", href: "/super-admin/eis-readiness" }, { label: "Certificates", href: "/super-admin/certificates" }]),
       item("API Integrations", "/super-admin/api-platform", Plug),
     ] },
     { label: "Compliance & Security", items: [
@@ -37,7 +37,9 @@ function navigation(portal: EnterprisePortal, root: string, active: boolean): Gr
       item("Infrastructure Health", "/super-admin/system-health", Server, [{ label: "System Health", href: "/super-admin/system-health" }, { label: "API Monitoring", href: "/api/monitoring" }]), item("Backup & Disaster Recovery", "/super-admin/backups", Database),
       item("Configurations & Changes", "/system", Settings, [{ label: "System Configuration", href: "/system" }, { label: "API Keys", href: "/super-admin/api-keys" }]),
       item("Users & Permissions", "/super-admin/users-rbac", Users, [{ label: "User Management", href: "/super-admin/users-rbac" }, { label: "BIR Accounts", href: "/super-admin/bir-accounts" }]),
-      item("Client Support & SLA", "/super-admin/notifications", CircleHelp, [{ label: "Notification Center", href: "/super-admin/notifications" }, { label: "Service Monitoring", href: "/super-admin/system-health" }]),
+      item("Support Inbox", "/super-admin/support", Headphones),
+      item("Website Subscriptions", "/super-admin/subscriptions", Wallet),
+      item("Client Support & SLA", "/super-admin/support", CircleHelp, [{ label: "Support Inbox", href: "/super-admin/support" }, { label: "Notification Center", href: "/super-admin/notifications" }, { label: "Service Monitoring", href: "/super-admin/system-health" }]),
     ] },
   ];
   if (portal === "merchant") return [
@@ -66,6 +68,8 @@ export function EnterpriseShell({ portal, root = "/super-admin", accountName, ac
   const [search, setSearch] = useState("");
   const [notifications, setNotifications] = useState(0);
   const isMonitor = location.pathname === "/monitoring";
+  const isOperations = /\/(transactions|reconciliation|tax-filings|eis-transmissions|merchants|business-accounts|taxpayer-onboarding|pti-ptt|api-platform)$/.test(location.pathname) && portal === "admin";
+  const isInvoices = location.pathname === "/invoices";
   const [monitorMeta, setMonitorMeta] = useState({ live: false, status: "loading", generatedAt: "", gateway: "not_connected", version: "" });
   useEffect(() => {
     const listener = (event: Event) => { const detail = (event as CustomEvent<typeof monitorMeta>).detail; setMonitorMeta(current => ({ ...detail, generatedAt: detail.generatedAt || current.generatedAt, version: detail.version || current.version })); };
@@ -86,12 +90,12 @@ export function EnterpriseShell({ portal, root = "/super-admin", accountName, ac
   }, []);
   function submitSearch(event: FormEvent) {
     event.preventDefault();
-    const target = isMonitor ? "/monitoring" : portal === "admin" ? "/super-admin/transactions" : portal === "merchant" ? "/merchant/transactions" : "/client/transactions";
+    const target = isOperations ? location.pathname : isInvoices ? "/invoices" : isMonitor ? "/monitoring" : portal === "admin" ? "/super-admin/transactions" : portal === "merchant" ? "/merchant/transactions" : "/client/transactions";
     navigate(`${target}?search=${encodeURIComponent(search.trim())}`);
   }
   const groups = navigation(portal, root, accountActive);
   const overview = ["/super-admin", "/admin", "/merchant", "/client", "/consumer"].includes(location.pathname);
-  return <div className={`nuers-enterprise ${collapsed ? "ne-collapsed" : ""} ${mobileOpen ? "ne-mobile-open" : ""}`}>
+  return <div className={`nuers-enterprise ${isInvoices ? "ne-invoices" : ""} ${isOperations ? "ne-operations" : ""} ${collapsed ? "ne-collapsed" : ""} ${mobileOpen ? "ne-mobile-open" : ""}`}>
     {mobileOpen && <button className="ne-scrim" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />}
     <aside className="ne-sidebar" aria-label={`${portal} navigation`}>
       <div className="ne-brand"><Link to={portal === "admin" ? root : portal === "merchant" ? "/merchant" : "/client"} aria-label="NUERS dashboard"><span className="ne-brand-wide"><img src="/auth-assets/nuers-digital-white.png" alt="NUERS — National Unified Electronic Receipt System" /></span><img className="ne-brand-small" src="/nuers-favicon.png" alt="NUERS" /></Link><button title="Collapse navigation" aria-label="Collapse navigation" onClick={() => setCollapsed(!collapsed)}><ChevronRight size={14} /></button><button className="ne-mobile-close" aria-label="Close navigation" onClick={() => setMobileOpen(false)}><X size={20} /></button></div>
@@ -107,12 +111,12 @@ export function EnterpriseShell({ portal, root = "/super-admin", accountName, ac
     <div className="ne-workspace">
       <header className="ne-topbar">
         <button className="ne-menu" aria-label="Toggle navigation" aria-expanded={window.matchMedia("(max-width: 900px)").matches ? mobileOpen : !collapsed} onClick={() => { if (window.matchMedia("(max-width: 900px)").matches) { setCollapsed(false); setMobileOpen(!mobileOpen); } else setCollapsed(!collapsed); }}><Menu size={24} /></button>
-        <form className="ne-search" onSubmit={submitSearch}><Search size={19} /><input type="search" aria-label="Search transactions" placeholder={isMonitor ? "Search transactions, TIN, receipt number, business name..." : portal === "admin" ? "Search transactions, taxpayers, receipts, etc..." : "Search your transactions and receipts..."} value={search} onChange={event => setSearch(event.target.value)} /></form>
+        <form className="ne-search" onSubmit={submitSearch}><Search size={19} /><input type="search" aria-label="Search transactions" placeholder={isInvoices ? "Search receipts, TIN, business name, OR number..." : isMonitor ? "Search transactions, TIN, receipt number, business name..." : portal === "admin" ? "Search transactions, taxpayers, receipts, etc..." : "Search your transactions and receipts..."} value={search} onChange={event => setSearch(event.target.value)} /></form>
         <div className="ne-topbar-actions">{isMonitor && <span className={`lm-header-live ${monitorMeta.live ? "" : "lm-header-paused"}`}><i />{monitorMeta.live ? "LIVE" : monitorMeta.status === "paused" ? "PAUSED" : monitorMeta.status === "loading" ? "CONNECTING" : "OFFLINE"}</span>}<Link className="ne-notifications" to={notificationPath} aria-label={`Notifications${notifications ? `, ${notifications} unread` : ""}`}><Bell size={23} />{notifications > 0 && <span>{notifications > 99 ? "99+" : notifications}</span>}</Link><Link className="ne-settings" to={portal === "admin" ? "/system" : profilePath} aria-label="Settings"><Settings size={23} /></Link>
           <details className="ne-account"><summary><span className="ne-avatar">{accountLogo ? <img src={accountLogo} alt="" /> : initials}</span><span className="ne-account-text"><strong>{accountName}</strong><small>{roleLabel}</small></span><ChevronDown size={18} /></summary><div className="ne-account-menu"><strong>{accountName}</strong><small>{accountEmail}</small><Link to={profilePath}><Users size={16} />Account profile</Link><Link to={notificationPath}><Bell size={16} />Notifications</Link><button onClick={onSignOut}><LogOut size={16} />Sign out</button></div></details>
         </div>
       </header>
-      <div className="ne-scroll"><main className={isMonitor ? "ne-monitor-main" : overview ? "ne-main" : "ne-subpage"}><Outlet /></main><footer className="ne-footer">{isMonitor ? <div className="lm-footer-status"><span className={monitorMeta.live ? "lm-footer-good" : "lm-footer-neutral"}><i />{monitorMeta.live ? "Monitor Online" : monitorMeta.status === "paused" ? "Refresh Paused" : "Monitor Offline"}</span><span className="lm-footer-neutral"><i />BIR Gateway: Not Connected</span><span>Last Sync: {monitorMeta.generatedAt ? new Date(monitorMeta.generatedAt).toLocaleTimeString("en-PH", { timeZone: "Asia/Manila", hour12: false }) : "—"} PHT</span><span className="lm-footer-version">NUERS v{monitorMeta.version || "0.0.1"}</span></div> : <span>© {new Date().getFullYear()} NUERS. All rights reserved.</span>}<div><span>Powered By</span><img src="/auth-assets/ok-technology-transparent.png" alt="OK Technology Software Solutions" /></div></footer></div>
+      <div className="ne-scroll"><main className={isMonitor ? "ne-monitor-main" : overview ? "ne-main" : "ne-subpage"}><Outlet /></main><footer className="ne-footer">{isMonitor ? <div className="lm-footer-status"><span className={monitorMeta.live ? "lm-footer-good" : "lm-footer-neutral"}><i />{monitorMeta.live ? "Monitor Online" : monitorMeta.status === "paused" ? "Refresh Paused" : "Monitor Offline"}</span><span className="lm-footer-neutral"><i />BIR Gateway: Not Connected</span><span>Last Sync: {monitorMeta.generatedAt ? new Date(monitorMeta.generatedAt).toLocaleTimeString("en-PH", { timeZone: "Asia/Manila", hour12: false }) : "—"} PHT</span><span className="lm-footer-version">NUERS v{monitorMeta.version || "0.0.1"}</span></div> : <span>© {new Date().getFullYear()} NUERS. All rights reserved.</span>}<div><span>Powered By</span><img src="/auth-assets/ok-technology-logo.png" alt="OK Technology Software Solutions" /></div></footer></div>
     </div>
   </div>;
 }

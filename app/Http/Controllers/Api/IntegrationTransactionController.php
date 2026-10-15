@@ -3,26 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\BirCompliance;
+use App\Services\IntegrationContract;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 
 class IntegrationTransactionController extends Controller
 {
-    private const DOCUMENT_TYPES = [
-        'vat_invoice',
-        'non_vat_invoice',
-        'vat_exempt_invoice',
-        'zero_rated_invoice',
-        'mixed_sales_invoice',
-        'payment_receipt',
-        'sales_invoice',
-        'official_receipt',
-    ];
-
     public function store(Request $request): JsonResponse
     {
         $started = microtime(true);
@@ -36,27 +26,7 @@ class IntegrationTransactionController extends Controller
             $this->enforceScope($apiKey, 'transactions:write');
             $this->enforceRateLimit($apiKey);
 
-            $validated = $request->validate([
-                'external_reference' => ['required', 'string', 'max:120'],
-                'source_system' => ['nullable', 'string', 'max:120'],
-                'channel' => ['nullable', 'string', 'max:80'],
-                'transaction_type' => ['nullable', 'string', 'max:80'],
-                'payment_method' => ['nullable', 'string', 'max:80'],
-                'document_type' => ['nullable', Rule::in(self::DOCUMENT_TYPES)],
-                'amount' => ['required_without:gross_amount', 'nullable', 'numeric', 'min:0'],
-                'gross_amount' => ['required_without:amount', 'nullable', 'numeric', 'min:0'],
-                'tax_type' => ['required', Rule::in(['vatable', 'vat_exempt', 'zero_rated', 'non_vat'])],
-                'vat_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
-                'vat_inclusive' => ['nullable', 'boolean'],
-                'customer_name' => ['nullable', 'string', 'max:255'],
-                'customer_tin' => ['nullable', 'string', 'max:80'],
-                'branch' => ['nullable', 'string', 'max:255'],
-                'branch_name' => ['nullable', 'string', 'max:255'],
-                'branch_code' => ['nullable', 'string', 'max:80'],
-                'branch_type' => ['nullable', Rule::in(['main', 'branch'])],
-                'receipt_number' => ['nullable', 'string', 'max:120'],
-                'items' => ['nullable', 'array'],
-            ]);
+            $validated = $request->validate(app(IntegrationContract::class)->rules());
 
             $this->resolveCustomerTinFromBarcode($validated);
 
@@ -68,6 +38,7 @@ class IntegrationTransactionController extends Controller
 
             if ($existing) {
                 $statusCode = 200;
+
                 return response()->json([
                     'duplicate' => true,
                     'transaction_id' => $existing->id,
@@ -75,10 +46,10 @@ class IntegrationTransactionController extends Controller
                 ]);
             }
 
-            $authority = app(\App\Services\BirCompliance::class)->assertCanIssue((string) $merchant->id);
+            $authority = app(BirCompliance::class)->assertCanIssue((string) $merchant->id);
 
             $amount = (float) ($validated['gross_amount'] ?? $validated['amount'] ?? 0);
-            $tax = $this->computeTax($amount, $validated['tax_type'], (float) ($validated['vat_rate'] ?? 12), (bool) ($validated['vat_inclusive'] ?? true));
+            $tax = app(IntegrationContract::class)->computeTax($amount, $validated['tax_type'], (float) ($validated['vat_rate'] ?? 12), (bool) ($validated['vat_inclusive'] ?? true));
             $transactionId = (string) Str::uuid();
             $receiptId = (string) Str::uuid();
             $documentType = $this->resolveDocumentType($validated, $merchant, $tax);
@@ -195,7 +166,7 @@ class IntegrationTransactionController extends Controller
                 }
 
                 DB::table('transaction_receipts')->insert($receipt);
-                app(\App\Services\BirCompliance::class)->audit('invoice.api.issued', $receiptId, 'api-key:'.$apiKey->id, ['merchant_id' => $merchant->id, 'authority' => $authority, 'document_hash' => hash('sha256', json_encode($receipt, JSON_THROW_ON_ERROR))]);
+                app(BirCompliance::class)->audit('invoice.api.issued', $receiptId, 'api-key:'.$apiKey->id, ['merchant_id' => $merchant->id, 'authority' => $authority, 'document_hash' => hash('sha256', json_encode($receipt, JSON_THROW_ON_ERROR))]);
             });
 
             DB::table('merchant_api_keys')->where('id', $apiKey->id)->update([
@@ -264,6 +235,7 @@ class IntegrationTransactionController extends Controller
 
         if ($this->isValidTin($explicitTin)) {
             $payload['customer_tin'] = $this->formatTin($explicitTin);
+
             return;
         }
 
@@ -346,39 +318,6 @@ class IntegrationTransactionController extends Controller
             ->count();
 
         abort_if($count >= (int) $apiKey->rate_limit_per_day, 429, 'Daily API key rate limit exceeded.');
-    }
-
-    private function computeTax(float $amount, string $taxType, float $vatRate, bool $vatInclusive): array
-    {
-        $gross = round($amount, 2);
-        $vatable = 0.0;
-        $vatExempt = 0.0;
-        $zeroRated = 0.0;
-        $vat = 0.0;
-
-        if ($taxType === 'vatable') {
-            if ($vatInclusive) {
-                $vatable = round($gross / (1 + ($vatRate / 100)), 2);
-                $vat = round($gross - $vatable, 2);
-            } else {
-                $vatable = round($gross, 2);
-                $vat = round($vatable * ($vatRate / 100), 2);
-                $gross = round($vatable + $vat, 2);
-            }
-        } elseif ($taxType === 'zero_rated') {
-            $zeroRated = $gross;
-        } else {
-            $vatExempt = $gross;
-        }
-
-        return [
-            'gross_amount' => $gross,
-            'vatable_sales' => $vatable,
-            'vat_exempt_sales' => $vatExempt,
-            'zero_rated_sales' => $zeroRated,
-            'vat_amount' => $vat,
-            'net_amount' => $vatable ?: $vatExempt ?: $zeroRated,
-        ];
     }
 
     private function logRequest(Request $request, ?object $apiKey, ?object $merchant, int $statusCode, float $started, ?string $error): void

@@ -7,6 +7,9 @@ Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->middleware('throttle:20,1');
 Route::get('/auth/google/session', [GoogleAuthController::class, 'session'])->middleware('throttle:20,1');
 
+Route::view('/api/docs', 'app');
+Route::view('/api/sandbox', 'app');
+
 Route::view('/{path?}', 'app')->where('path', '^(?!api).*$');
 
 

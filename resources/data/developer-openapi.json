@@ -1,0 +1,949 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "NUERS Developer API",
+    "version": "2026-10-15",
+    "description": "Implemented NUERS application routes. This is not an official BIR EIS API specification. Live BIR transport remains unavailable."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Current NUERS deployment origin; use its actual HTTPS origin outside localhost."
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "User-session token for workspace/admin routes; merchant API key may be used as Bearer only on merchant integration ingestion."
+      },
+      "MerchantKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-NUERS-API-Key"
+      }
+    }
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "health",
+        "summary": "API health",
+        "description": "Basic application response. This is not database, queue or BIR gateway health.\n\n",
+        "tags": [
+          "Public utilities"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          }
+        }
+      }
+    },
+    "/api/integrations/transactions": {
+      "post": {
+        "operationId": "ingest",
+        "summary": "Ingest a business transaction",
+        "description": "Tenant-bound transaction ingestion with transactions:write scope, active-key and exact-IP policy checks, daily quota and taxpayer issuance gate.\n\nResponse shown is illustrative; successful issuance requires the actual current authority gates. Inspect the returned record, not this sample, for its state.\nMerchant is resolved from the API key; there is no caller-selected merchant_id. X-NUERS-API-Key takes precedence over Authorization: Bearer.\nA repeated merchant + external_reference returns HTTP 200 with duplicate=true and the existing transaction_id. Current replay handling does not compare a content hash; reconcile changed content and never reuse a reference for another transaction.\nNo Idempotency-Key header or public 1,000-item batch route is implemented for this endpoint.\nThe sandbox/live key label does not create an isolated financial ledger. Use the public developer sandbox for tests.\nThis endpoint enforces the issuance gate. It does not establish live BIR transmission or automatic authoritative acknowledgment.",
+        "tags": [
+          "Merchant integration"
+        ],
+        "security": [
+          {
+            "MerchantKeyHeader": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden scope/role/IP"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "State or authority conflict"
+          },
+          "422": {
+            "description": "Validation failed"
+          },
+          "429": {
+            "description": "Quota exceeded"
+          },
+          "500": {
+            "description": "Server error"
+          },
+          "201": {
+            "description": "Created record when the required gates pass."
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "external_reference": {
+                    "type": "string",
+                    "description": "Stable source reference, up to 120 characters. Duplicate lookup is scoped to the API key\u2019s merchant.",
+                    "maxLength": 120
+                  },
+                  "amount": {
+                    "type": "number",
+                    "description": "PHP units, >= 0. Required when gross_amount is absent.",
+                    "minimum": 0
+                  },
+                  "gross_amount": {
+                    "type": "number",
+                    "description": "PHP units, >= 0. Required when amount is absent; takes precedence if both are sent.",
+                    "minimum": 0
+                  },
+                  "tax_type": {
+                    "type": "string",
+                    "description": "vatable | vat_exempt | zero_rated | non_vat.",
+                    "enum": [
+                      "vatable",
+                      "vat_exempt",
+                      "zero_rated",
+                      "non_vat"
+                    ]
+                  },
+                  "vat_rate": {
+                    "type": "number",
+                    "description": "0\u2013100; defaults to 12 in the current calculation. Tax applicability must be independently approved.",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "vat_inclusive": {
+                    "type": "boolean",
+                    "description": "Defaults to true. For VAT-exclusive input, VAT is added to the supplied amount."
+                  },
+                  "source_system": {
+                    "type": "string",
+                    "description": "Source label, maximum 120 characters.",
+                    "maxLength": 120
+                  },
+                  "channel": {
+                    "type": "string",
+                    "description": "Maximum 80 characters; defaults to api.",
+                    "maxLength": 80
+                  },
+                  "transaction_type": {
+                    "type": "string",
+                    "description": "Maximum 80 characters; defaults to sale.",
+                    "maxLength": 80
+                  },
+                  "payment_method": {
+                    "type": "string",
+                    "description": "Maximum 80 characters; defaults to cash. Payment metadata is separate from BIR acceptance.",
+                    "maxLength": 80
+                  },
+                  "document_type": {
+                    "type": "string",
+                    "description": "vat_invoice | non_vat_invoice | vat_exempt_invoice | zero_rated_invoice | mixed_sales_invoice | payment_receipt | sales_invoice | official_receipt. These are NUERS identifiers, not a legal classification ruling.",
+                    "enum": [
+                      "vat_invoice",
+                      "non_vat_invoice",
+                      "vat_exempt_invoice",
+                      "zero_rated_invoice",
+                      "mixed_sales_invoice",
+                      "payment_receipt",
+                      "sales_invoice",
+                      "official_receipt"
+                    ]
+                  },
+                  "customer_name": {
+                    "type": "string",
+                    "description": "Up to 255 characters; omit in synthetic examples. Real data requires authorized handling.",
+                    "maxLength": 255
+                  },
+                  "customer_tin": {
+                    "type": "string",
+                    "description": "Optional, up to 80 characters. Current request rule is string validation, not official BIR verification.",
+                    "maxLength": 80
+                  },
+                  "branch": {
+                    "type": "string",
+                    "description": "Branch label, up to 255 characters.",
+                    "maxLength": 255
+                  },
+                  "branch_name": {
+                    "type": "string",
+                    "description": "Branch name, up to 255 characters.",
+                    "maxLength": 255
+                  },
+                  "branch_code": {
+                    "type": "string",
+                    "description": "Up to 80 characters. Confirm key-bound branch policy with the administrator.",
+                    "maxLength": 80
+                  },
+                  "branch_type": {
+                    "type": "string",
+                    "description": "main | branch.",
+                    "enum": [
+                      "main",
+                      "branch"
+                    ]
+                  },
+                  "receipt_number": {
+                    "type": "string",
+                    "description": "Optional source document number, up to 120 characters; do not bypass approved numbering controls.",
+                    "maxLength": 120
+                  },
+                  "items": {
+                    "type": "array",
+                    "description": "Accepted as an array. Current ingestion does not validate per-line schema or reconcile line totals; confirm supported item structure before production.",
+                    "items": {}
+                  }
+                },
+                "required": [
+                  "external_reference",
+                  "tax_type"
+                ],
+                "anyOf": [
+                  {
+                    "required": [
+                      "amount"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "gross_amount"
+                    ]
+                  }
+                ]
+              },
+              "example": {
+                "external_reference": "TEST-POS-000001",
+                "source_system": "demo_pos",
+                "channel": "pos",
+                "amount": 1120,
+                "tax_type": "vatable",
+                "vat_rate": 12,
+                "vat_inclusive": true,
+                "document_type": "sales_invoice",
+                "payment_method": "cash",
+                "branch_code": "MAIN",
+                "items": [
+                  {
+                    "description": "Synthetic example item",
+                    "quantity": 1,
+                    "unit_price": 1120
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/business-accounts/current": {
+      "get": {
+        "operationId": "account",
+        "summary": "Current business account",
+        "description": "Retrieve the business linked to the authenticated user. Use the user session token, not a merchant integration key.\n\n",
+        "tags": [
+          "Merchant workspace"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/api/merchant/transactions": {
+      "get": {
+        "operationId": "transactions",
+        "summary": "List merchant transactions",
+        "description": "Tenant-scoped transaction list and recorded summaries.\n\n",
+        "tags": [
+          "Merchant workspace"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Default 1.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "description": "5\u2013100; default 15.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "Search the supported transaction fields.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "Filter by stored transaction status.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "description": "Filter by source channel.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "branch",
+            "in": "query",
+            "required": false,
+            "description": "Filter by branch label.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "payment",
+            "in": "query",
+            "required": false,
+            "description": "Filter by payment method.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/merchant/api-keys": {
+      "get": {
+        "operationId": "keys",
+        "summary": "List merchant API keys",
+        "description": "List masked key metadata for the authenticated merchant. Stored plaintext keys are not returned.\n\n",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "post": {
+        "operationId": "create-key",
+        "summary": "Create merchant API key",
+        "description": "Create a tenant-bound machine credential. The response contains plain_key once; store it in approved secret storage.\n\nUser-session authorization and an existing merchant association are required. This operation creates access; the public sandbox does not execute it.\nKey management is available through the merchant API-key dashboard. Never paste a real key into the public sandbox.",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          },
+          "201": {
+            "description": "Created record when the required gates pass."
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Maximum 255 characters."
+                  },
+                  "environment": {
+                    "type": "string",
+                    "description": "live | sandbox. Label alone is not sandbox isolation."
+                  },
+                  "scopes": {
+                    "type": "array",
+                    "description": "Explicit scope strings; transactions:write is required for transaction ingestion.",
+                    "items": {}
+                  },
+                  "ip_whitelist": {
+                    "type": "array",
+                    "description": "Exact source IP strings. CIDR matching is not implemented in ingestion.",
+                    "items": {}
+                  },
+                  "rate_limit_per_day": {
+                    "type": "integer",
+                    "description": "100\u20131,000,000. Defaults are 50,000 live / 5,000 sandbox."
+                  },
+                  "branch_type": {
+                    "type": "string",
+                    "description": "main | branch."
+                  },
+                  "branch_code": {
+                    "type": "string",
+                    "description": "Maximum 80 characters."
+                  },
+                  "branch_name": {
+                    "type": "string",
+                    "description": "Maximum 255 characters."
+                  },
+                  "branch_location": {
+                    "type": "string",
+                    "description": "Maximum 255 characters."
+                  }
+                },
+                "required": [
+                  "name",
+                  "environment"
+                ]
+              },
+              "example": {
+                "name": "Example POS connector",
+                "environment": "sandbox",
+                "scopes": [
+                  "transactions:write"
+                ],
+                "ip_whitelist": [],
+                "rate_limit_per_day": 5000
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/merchant/api-keys/{id}": {
+      "patch": {
+        "operationId": "key-update",
+        "summary": "Update merchant API key policy",
+        "description": "Update permitted metadata and access policy for an owned key. No rotate flag is implemented.\n\nFor replacement: create a new key, update authorized consumers, verify readiness and then revoke the old key. There is no atomic rotate endpoint.",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Updated key name."
+                  },
+                  "active": {
+                    "type": "boolean",
+                    "description": "true enables; false makes the owned key inactive."
+                  },
+                  "scopes": {
+                    "type": "array",
+                    "description": "Replacement scope strings.",
+                    "items": {}
+                  },
+                  "ip_whitelist": {
+                    "type": "array",
+                    "description": "Replacement exact-IP allowlist.",
+                    "items": {}
+                  },
+                  "rate_limit_per_day": {
+                    "type": "integer",
+                    "description": "100\u20131,000,000."
+                  },
+                  "branch_type": {
+                    "type": "string",
+                    "description": "main | branch."
+                  },
+                  "branch_code": {
+                    "type": "string",
+                    "description": "Maximum 80 characters."
+                  },
+                  "branch_name": {
+                    "type": "string",
+                    "description": "Maximum 255 characters."
+                  },
+                  "branch_location": {
+                    "type": "string",
+                    "description": "Maximum 255 characters."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "key-revoke",
+        "summary": "Revoke a merchant API key",
+        "description": "Deactivate an owned API key through the controlled key-management route.\n\nThis changes access. The documentation and public sandbox never execute it automatically.",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/bir-eis/readiness": {
+      "get": {
+        "operationId": "readiness",
+        "summary": "EIS readiness",
+        "description": "Inspect recorded accreditation/taxpayer gates, checks and queue metadata. Authorized roles: admin, super_admin, bir.\n\nLocal readiness and registered credentials do not constitute BIR approval.",
+        "tags": [
+          "Administrative EIS"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden scope/role/IP"
+          }
+        }
+      }
+    },
+    "/api/bir-eis/validate": {
+      "post": {
+        "operationId": "eis-validate",
+        "summary": "Validate internal EIS payload",
+        "description": "Validate the current NUERS structural payload requirements and return its canonical hash and deadline. This is not official BIR schema conformance.\n\nDefault timezone/display rules and the actual returned due_at govern this internal check. The example is dated and illustrative.\nValidation does not create a document, transmit it or establish tax correctness.",
+        "tags": [
+          "Administrative EIS"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden scope/role/IP"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "payload": {
+                    "type": [
+                      "object",
+                      "string"
+                    ],
+                    "description": "Object or JSON string. Current checker requires a document identifier, parseable issue/transaction date, Philippine-format seller TIN and a positive total."
+                  }
+                },
+                "required": [
+                  "payload"
+                ]
+              },
+              "example": {
+                "payload": {
+                  "is_test": true,
+                  "invoice_number": "TEST-INV-000001",
+                  "issue_date": "2026-10-15",
+                  "seller_tin": "999999999000",
+                  "total_due": 1120,
+                  "document_type": "sales_invoice"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bir-eis/transmissions": {
+      "post": {
+        "operationId": "eis-queue",
+        "summary": "Queue certification payload",
+        "description": "Record an eligible internal transmission intent. Certification requires payload.is_test=true; production is blocked until the separate authority and transport gates pass.\n\nThis endpoint writes queue and audit records. The public sandbox does not call it.\nDocument identity includes seller, branch, document type and number within an environment. Same identity/hash returns the original; changed content is rejected with 409.\nA queued or simulated certification acknowledgment is not BIR acceptance.",
+        "tags": [
+          "Administrative EIS"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden scope/role/IP"
+          },
+          "409": {
+            "description": "State or authority conflict"
+          },
+          "422": {
+            "description": "Validation failed"
+          },
+          "201": {
+            "description": "Created record when the required gates pass."
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "environment": {
+                    "type": "string",
+                    "description": "certification | production; default certification."
+                  },
+                  "payload": {
+                    "type": [
+                      "object",
+                      "string"
+                    ],
+                    "description": "Internal EIS payload. Use explicit synthetic test data only in certification."
+                  }
+                },
+                "required": [
+                  "payload"
+                ]
+              },
+              "example": {
+                "environment": "certification",
+                "payload": {
+                  "is_test": true,
+                  "invoice_number": "TEST-INV-000001",
+                  "issue_date": "2026-10-15",
+                  "seller_tin": "999999999000",
+                  "total_due": 1120,
+                  "document_type": "sales_invoice"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "eis-list",
+        "summary": "List recorded transmissions",
+        "description": "Search recorded queue states and attempts.\n\n",
+        "tags": [
+          "Administrative EIS"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden scope/role/IP"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Positive page number.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "description": "1\u2013100.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "environment",
+            "in": "query",
+            "required": false,
+            "description": "all | production | certification | sandbox.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "Transaction/document/taxpayer search.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "Stored transmission status.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/developer/sandbox": {
+      "post": {
+        "operationId": "sandbox",
+        "summary": "Run an isolated contract preview",
+        "description": "Validate synthetic transaction fields using the same shared NUERS field rules/calculation service. No financial database writes or BIR network requests.\n\nActual HTTP 200 carries simulated_http_status for a scenario. It does not emit a real API 401/429 or authorize retry against a production system.\n20 requests/minute per limiter identity; 64 KB maximum request size; preview amount maximum PHP 1 billion.\nNo Authorization or X-NUERS-API-Key header is accepted. Synthetic customer TIN, if used, must be 999999999000.",
+        "tags": [
+          "Developer tools"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "413": {
+            "description": "Payload too large"
+          },
+          "422": {
+            "description": "Validation failed"
+          },
+          "429": {
+            "description": "Quota exceeded"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "is_test": {
+                    "type": "boolean",
+                    "description": "Must be true.",
+                    "const": true
+                  },
+                  "action": {
+                    "type": "string",
+                    "description": "validate | preview | scenario.",
+                    "enum": [
+                      "validate",
+                      "preview",
+                      "scenario"
+                    ]
+                  },
+                  "payload": {
+                    "type": "object",
+                    "description": "Required for validate/preview. external_reference must start TEST-, DEMO- or SAMPLE-. No credentials or private keys."
+                  },
+                  "scenario": {
+                    "type": "string",
+                    "description": "For scenario: duplicate | conflict | unauthorized | forbidden | rate_limit | timeout | production_gate."
+                  }
+                },
+                "required": [
+                  "is_test",
+                  "action"
+                ],
+                "allOf": [
+                  {
+                    "if": {
+                      "properties": {
+                        "action": {
+                          "enum": [
+                            "validate",
+                            "preview"
+                          ]
+                        }
+                      }
+                    },
+                    "then": {
+                      "required": [
+                        "payload"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "example": {
+                "is_test": true,
+                "action": "preview",
+                "payload": {
+                  "external_reference": "TEST-POS-000001",
+                  "source_system": "demo_pos",
+                  "channel": "pos",
+                  "amount": 1120,
+                  "tax_type": "vatable",
+                  "vat_rate": 12,
+                  "vat_inclusive": true,
+                  "document_type": "sales_invoice",
+                  "payment_method": "cash",
+                  "branch_code": "MAIN",
+                  "items": [
+                    {
+                      "description": "Synthetic example item",
+                      "quantity": 1,
+                      "unit_price": 1120
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

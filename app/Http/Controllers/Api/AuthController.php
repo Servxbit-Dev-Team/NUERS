@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Merchant;
 use App\Models\Profile;
 use App\Models\User;
+use App\Services\BirCompliance;
+use App\Services\DeviceSession;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -21,7 +24,7 @@ class AuthController extends Controller
         return response()->json([
             'session' => $user ? $this->sessionPayload($user) : null,
             'user' => $user ? $this->userPayload($user) : null,
-        ]);
+        ])->header('Cache-Control', 'private, no-store');
     }
 
     public function login(Request $request): JsonResponse
@@ -39,12 +42,15 @@ class AuthController extends Controller
             ]);
         }
 
-        $user->forceFill(['api_token' => Str::random(64)])->save();
+        if (Profile::where('id', $user->id)->value('role') === 'merchant') {
+            abort_if(Merchant::where('merchant_account_id', $user->id)->whereIn('status', ['suspended', 'inactive'])->exists(), 403, 'Business access is suspended or inactive. Contact NUERS support.');
+        }
+        $user = app(DeviceSession::class)->issue($user, $request);
 
         return response()->json([
             'session' => $this->sessionPayload($user),
             'user' => $this->userPayload($user),
-        ]);
+        ])->header('Cache-Control', 'private, no-store');
     }
 
     public function signup(Request $request): JsonResponse
@@ -53,7 +59,7 @@ class AuthController extends Controller
             'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6'],
             'meta' => ['array'],
-            'meta.role' => ['sometimes', \Illuminate\Validation\Rule::in(['merchant', 'client', 'consumer'])],
+            'meta.role' => ['sometimes', Rule::in(['merchant', 'client', 'consumer'])],
         ]);
 
         $meta = $payload['meta'] ?? [];
@@ -76,64 +82,29 @@ class AuthController extends Controller
             'tin_bound_at' => ! empty($meta['tin']) ? now() : null,
         ]);
 
+        $user = app(DeviceSession::class)->issue($user, $request);
+
         return response()->json([
             'session' => $this->sessionPayload($user),
             'user' => $this->userPayload($user),
-        ], 201);
+        ], 201)->header('Cache-Control', 'private, no-store');
     }
 
     public function logout(Request $request): JsonResponse
     {
         $user = $this->userFromRequest($request);
-        $user?->forceFill(['api_token' => null])->save();
+        if ($user) {
+            User::whereKey($user->id)->where('api_token', $request->bearerToken())->update(['api_token' => null]);
+        }
 
         return response()->json(['success' => true]);
     }
 
     public function createMerchantAccount(Request $request): JsonResponse
     {
-        $payload = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string', 'min:6'],
-            'merchantId' => ['required', 'string'],
-            'businessName' => ['required', 'string'],
-        ]);
-
-        $user = User::firstOrCreate(
-            ['email' => $payload['email']],
-            [
-                'name' => $payload['businessName'],
-                'password' => Hash::make($payload['password']),
-                'api_token' => null,
-            ],
-        );
-
-        if (! $user->wasRecentlyCreated) {
-            $user->forceFill([
-                'name' => $user->name ?: $payload['businessName'],
-                'password' => Hash::make($payload['password']),
-            ])->save();
-        }
-
-        Profile::updateOrCreate(
-            ['id' => $user->id],
-            [
-                'email' => $user->email,
-                'role' => 'merchant',
-                'full_name' => $payload['businessName'],
-                'organization' => $payload['businessName'],
-            ],
-        );
-
-        Merchant::whereKey($payload['merchantId'])->update([
-            'merchant_account_id' => $user->id,
-            'merchant_account_email' => $user->email,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'userId' => (string) $user->id,
-        ]);
+        $actor = app(BirCompliance::class)->administrativeUser($request);
+        abort_unless(in_array(Profile::where('id', $actor->id)->value('role'), ['admin', 'super_admin']), 403);
+        abort(410, 'Direct credential provisioning is retired. Generate a secure account-setup invitation from the business registry.');
     }
 
     private function userFromRequest(Request $request): ?User
@@ -144,7 +115,12 @@ class AuthController extends Controller
             return null;
         }
 
-        return User::where('api_token', $token)->first();
+        $user = User::where('api_token', $token)->first();
+        if ($user && Profile::where('id', $user->id)->value('role') === 'merchant' && Merchant::where('merchant_account_id', $user->id)->whereIn('status', ['suspended', 'inactive'])->exists()) {
+            return null;
+        }
+
+        return $user;
     }
 
     private function sessionPayload(User $user): array

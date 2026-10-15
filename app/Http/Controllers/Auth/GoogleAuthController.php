@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Profile;
 use App\Models\User;
+use App\Services\DeviceSession;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -110,11 +111,11 @@ class GoogleAuthController extends Controller
         $pending = $request->session()->pull('google_login');
         abort_unless(is_array($pending) && ($pending['expires_at'] ?? 0) > now()->timestamp, 401, 'Google sign-in expired. Please try again.');
 
-        $payload = DB::transaction(function () use ($pending) {
+        $payload = DB::transaction(function () use ($pending, $request) {
             $user = User::whereKey($pending['user_id'])->lockForUpdate()->first();
             $profile = $user ? Profile::find($user->id) : null;
             abort_unless($user && $profile && in_array($profile->role, self::ROLES, true), 401, 'This NUERS account is unavailable.');
-            $user->forceFill(['api_token' => Str::random(64)])->save();
+            $user = app(DeviceSession::class)->issue($user, $request);
             $userPayload = ['id' => (string) $user->id, 'email' => $user->email, 'user_metadata' => ['name' => $user->name]];
 
             return ['session' => ['access_token' => $user->api_token, 'token_type' => 'bearer', 'user' => $userPayload], 'user' => $userPayload, 'role' => $profile->role];

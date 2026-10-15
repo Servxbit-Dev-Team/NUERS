@@ -1,3 +1,12 @@
+import { IntegrationWorkspace } from "@/pages/integrations";
+import { PermitManagement } from "@/pages/authorizations";
+import { RdoMappings } from "@/pages/business-registry/rdo-mappings";
+import { BusinessRegistry } from "@/pages/business-registry";
+import { BusinessActivation } from "@/pages/business-registry/activation";
+import { TransactionsCenter, ReconciliationCenter, SalesSummaryCenter } from "@/pages/operations/routes";
+import { LegalPolicyPage } from "@/pages/legal/policy";
+import { SupportChatWidget } from "@/components/support/chat";
+import { AdminSupportInbox } from "@/pages/admin/support-inbox";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { LandingPage } from "@/pages/landing";
 import { LoginPage } from "@/pages/auth/login";
@@ -25,8 +34,6 @@ import { BirRdoManagement } from "@/pages/bir/rdo-management";
 import { CitizenApprovalPage } from "@/pages/citizen/approval";
 import { RdoPortal } from "@/pages/rdo/portal";
 import { AdminRiskDetection } from "@/pages/admin/fraud";
-import { AdminTransactions } from "@/pages/admin/transactions";
-import { AdminMerchants } from "@/pages/admin/merchants";
 import { AdminTaxFilings } from "@/pages/admin/tax-filings";
 import { AdminCompliance } from "@/pages/admin/compliance";
 import { AdminAudit } from "@/pages/admin/audit";
@@ -52,8 +59,9 @@ import { ApiKeys } from "@/pages/api/keys";
 import { ApiWebhooks } from "@/pages/api/webhooks";
 import { ApiSdks } from "@/pages/api/sdks";
 import { ApiGuides } from "@/pages/api/guides";
-import { ApiSandbox } from "@/pages/api/sandbox";
-import { ApiDocs } from "@/pages/api/docs";
+import { DeveloperSandbox as ApiSandbox } from "@/pages/developers/sandbox";
+import { IntegrationOverview } from "@/pages/developers/overview";
+import { DeveloperDocs as ApiDocs } from "@/pages/developers/docs";
 import { ApiMonitoring } from "@/pages/api/monitoring";
 import { EisGateway } from "@/pages/api/eis-gateway";
 import { EisTransmissions } from "@/pages/api/eis-transmissions";
@@ -72,6 +80,7 @@ import { AnalyticsCenter } from "@/pages/analytics/center";
 import { ElectronicInvoicingEngine } from "@/pages/engine";
 // New Modules
 import { EisHub } from "@/pages/eis/hub";
+import { AdminSubscriptionPlans } from "@/pages/admin/subscription-plans";
 import { InvoiceManagementCenter } from "@/pages/invoices/center";
 import { TransmissionMonitoringCenter } from "@/pages/monitoring/transmissions";
 import { ComplianceCenter } from "@/pages/compliance/center";
@@ -110,24 +119,25 @@ function roleSidebarPortal(role: string | null | undefined): React.ComponentProp
 }
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  if (loading) return null;
-  if (!user) return <Navigate to="/login" replace />;
+  const { user, loading, sessionError, sessionInvalid } = useAuth();
+  if (loading) return <div role="status" className="ne-session-loading">{sessionError||"Checking your session…"}</div>;
+  if (!user) return <Navigate to={sessionInvalid?"/login?session=invalid":"/login"} replace />;
   return <>{children}</>;
 }
 
 function RequireRole({ role, children }: { role: string | string[]; children: React.ReactNode }) {
-  const { user, profile, loading } = useAuth();
-  if (loading) return null;
-  if (!user) return <Navigate to="/login" replace />;
+  const { user, profile, loading, sessionError, sessionInvalid } = useAuth();
+  if (loading) return <div role="status" className="ne-session-loading">{sessionError||"Checking your session…"}</div>;
+  if (!user) return <Navigate to={sessionInvalid?"/login?session=invalid":"/login"} replace />;
   const allowedRoles = Array.isArray(role) ? role : [role];
-  if (profile && !allowedRoles.includes(profile.role)) return <Navigate to={roleDefaultPath(profile.role)} replace />;
+  if (!profile) return <div role="status" className="ne-session-loading">{sessionError||"Verifying account permissions…"}</div>;
+  if (!allowedRoles.includes(profile.role)) return <Navigate to={roleDefaultPath(profile.role)} replace />;
   return <>{children}</>;
 }
 
 function GuestOnly({ children }: { children: React.ReactNode }) {
-  const { user, profile, loading } = useAuth();
-  if (loading) return null;
+  const { user, profile, loading, sessionError } = useAuth();
+  if (loading) return <div role="status" className="ne-session-loading">{sessionError||"Checking your session…"}</div>;
   if (user) return <Navigate to={roleDefaultPath(profile?.role)} replace />;
   return <>{children}</>;
 }
@@ -140,34 +150,46 @@ function RoleScopedDashboardLayout() {
 
 export default function App() {
   return (
+    <>
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/developers/integration" element={<IntegrationOverview />} />
+      <Route path="/api/docs" element={<ApiDocs />} />
+      <Route path="/api/sandbox" element={<ApiSandbox />} />
       <Route path="/verify" element={<ReceiptVerificationPortal />} />
+      <Route path="/activate-business" element={<BusinessActivation />} />
       <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/terms-of-service" element={<LegalPolicyPage kind="terms" />} />
+      <Route path="/privacy-notice" element={<LegalPolicyPage kind="privacy" />} />
+      <Route path="/terms" element={<Navigate to="/terms-of-service" replace />} />
+      <Route path="/privacy" element={<Navigate to="/privacy-notice" replace />} />
 
       {/* Super Admin Portal */}
       <Route path="/super-admin" element={<RequireRole role={["admin", "super_admin"]}><DashboardLayout portal="super-admin" /></RequireRole>}>
         <Route index element={<SuperAdminDashboard />} />
-        <Route path="transactions" element={<AdminTransactions />} />
+        <Route path="transactions" element={<TransactionsCenter />} />
         <Route path="revenue-analytics" element={<ExecutiveAnalytics />} />
         <Route path="blueprint" element={<PlatformArchitecture />} />
-        <Route path="merchants" element={<AdminMerchants />} />
+        <Route path="merchants" element={<BusinessRegistry />} />
         <Route path="bir-accounts" element={<AdminUsers title="BIR Accounts" description="Manage BIR regulator and RDO officer profiles backed by the live NUERS database." allowedRoles={["bir", "rdo"]} />} />
         <Route path="client-accounts" element={<AdminClientAccounts />} />
         <Route path="citizen-approval" element={<CitizenApprovalPage scope="super-admin" />} />
+        <Route path="taxpayer-onboarding" element={<BusinessRegistry onboarding />} />
+        <Route path="rdo-mappings" element={<RdoMappings />} />
         <Route path="users-rbac" element={<AdminUsers />} />
-        <Route path="subscriptions" element={<MerchantBilling />} />
+        <Route path="subscriptions" element={<AdminSubscriptionPlans />} />
+        <Route path="support" element={<AdminSupportInbox />} />
         <Route path="compliance" element={<AdminCompliance />} />
         <Route path="fraud" element={<AdminRiskDetection />} />
-        <Route path="tax-filings" element={<AdminTaxFilings />} />
+        <Route path="tax-filings" element={<SalesSummaryCenter />} />
         <Route path="reports" element={<AdminReports />} />
         <Route path="ai-recommendations" element={<AIAssistant />} />
         <Route path="tax-operations" element={<SuperAdminTaxOperationsCenter />} />
         <Route path="tax-intelligence" element={<SuperAdminTaxOperationsCenter />} />
         <Route path="tax-rules" element={<SuperAdminTaxOperationsCenter />} />
         <Route path="fraud-models" element={<SuperAdminTaxOperationsCenter />} />
-        <Route path="reconciliation" element={<SuperAdminTaxOperationsCenter />} />
+        <Route path="reconciliation" element={<ReconciliationCenter />} />
         <Route path="tax-analytics" element={<SuperAdminTaxOperationsCenter />} />
         <Route path="graph" element={<SuperAdminTaxOperationsCenter />} />
         <Route path="security" element={<SocDashboard />} />
@@ -175,7 +197,8 @@ export default function App() {
         <Route path="audit" element={<AuditLogManagement />} />
         <Route path="certificates" element={<CertificateManagement />} />
         <Route path="mfa-device-trust" element={<SystemAdmin />} />
-        <Route path="api-platform" element={<ApiPortal />} />
+        <Route path="pti-ptt" element={<PermitManagement />} />
+        <Route path="api-platform" element={<IntegrationWorkspace />} />
         <Route path="eis-readiness" element={<EisHub />} />
         <Route path="eis-transmissions" element={<EisTransmissions />} />
         <Route path="eis-gateway" element={<EisGateway />} />
@@ -193,8 +216,8 @@ export default function App() {
         <Route index element={<BirDashboard />} />
         <Route path="rdo-registration" element={<BirRdoManagement />} />
         <Route path="citizen-approval" element={<CitizenApprovalPage scope="bir" />} />
-        <Route path="transactions" element={<AdminTransactions />} />
-        <Route path="business-accounts" element={<AdminMerchants />} />
+        <Route path="transactions" element={<TransactionsCenter />} />
+        <Route path="business-accounts" element={<BusinessRegistry />} />
         <Route path="compliance" element={<AdminCompliance />} />
         <Route path="reports" element={<AdminReports />} />
         <Route path="tax-filings" element={<AdminTaxFilings />} />
@@ -243,9 +266,9 @@ export default function App() {
       {/* Admin / BIR Console */}
       <Route path="/admin" element={<RequireRole role={["admin", "super_admin"]}><DashboardLayout portal="admin" /></RequireRole>}>
         <Route index element={<AdminDashboard />} />
-        <Route path="transactions" element={<AdminTransactions />} />
+        <Route path="transactions" element={<TransactionsCenter />} />
         <Route path="fraud" element={<AdminRiskDetection />} />
-        <Route path="merchants" element={<AdminMerchants />} />
+        <Route path="merchants" element={<BusinessRegistry />} />
         <Route path="tax-filings" element={<AdminTaxFilings />} />
         <Route path="compliance" element={<AdminCompliance />} />
         <Route path="audit" element={<AdminAudit />} />
@@ -276,8 +299,6 @@ export default function App() {
         <Route path="webhooks" element={<ApiWebhooks />} />
         <Route path="sdks" element={<ApiSdks />} />
         <Route path="guides" element={<ApiGuides />} />
-        <Route path="sandbox" element={<ApiSandbox />} />
-        <Route path="docs" element={<ApiDocs />} />
         <Route path="monitoring" element={<ApiMonitoring />} />
         <Route path="eis" element={<EisGateway />} />
         <Route path="eis/transmissions" element={<EisTransmissions />} />
@@ -382,5 +403,7 @@ export default function App() {
         <Route index element={<AnalyticsCenter />} />
       </Route>
     </Routes>
+    <SupportChatWidget />
+    </>
   );
 }

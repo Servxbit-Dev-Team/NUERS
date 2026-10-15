@@ -1,15 +1,5 @@
+import {storedToken,browserDevice,invalidateToken} from "./session-store";
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
-const TOKEN_KEY = "nuers_api_token";
-
-function storedToken() {
-  try {
-    if (typeof window === "undefined" || !window.localStorage) return null;
-    return window.localStorage.getItem(TOKEN_KEY);
-  } catch {
-    return null;
-  }
-}
-
 function firstValidationError(errors: unknown) {
   if (!errors || typeof errors !== "object") return null;
 
@@ -78,14 +68,20 @@ export async function readJsonResponse<T = any>(response: Response, fallbackMess
   return payload as T;
 }
 
-export function apiFetch(path: string, init: RequestInit = {}) {
+export async function apiFetch(path: string, init: RequestInit = {}) {
   const hasFormBody =
     typeof FormData !== "undefined" && init.body instanceof FormData;
 
-  return fetch(apiUrl(path), {
+  const token=storedToken();
+  const headers=apiHeaders(init.headers, { json: Boolean(init.body) && !hasFormBody, auth: true });
+  const device=browserDevice();if(device)headers.set("X-NUERS-Device",device);
+  const response=await fetch(apiUrl(path), {
+    cache:"no-store",
     ...init,
-    headers: apiHeaders(init.headers, { json: Boolean(init.body) && !hasFormBody, auth: true }),
+    headers,
   });
+  if(response.status===401&&headers.get("Authorization")===`Bearer ${token}`)invalidateToken(token);
+  return response;
 }
 
 export async function apiJson<T = any>(path: string, init: RequestInit = {}, fallbackMessage?: string) {

@@ -1,385 +1,48 @@
-import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  ArrowRight,
-  Building2,
-  CheckCircle2,
-  Eye,
-  EyeOff,
-  IdCard,
-  KeyRound,
-  Mail,
-  Phone,
-  ShieldCheck,
-  Store,
-  UserRound,
-  Wallet,
-} from "lucide-react";
-import { AuthShell } from "@/components/layouts/auth-shell";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/lib/auth";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { ArrowLeft, ArrowRight, BarChart3, Check, CircleCheck, Eye, EyeOff, FileText, Headphones, LoaderCircle, LockKeyhole, MailCheck, ShieldCheck, UserRound, Zap, Building2 } from "lucide-react";
+import { apiJson } from "@/lib/api-url";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ClientRegisterPage } from "./client-register";
+import { pesos, storageLabel, type SubscriptionPlan } from "@/components/subscriptions/pricing";
+import { SearchableSelect } from "@/components/registration/searchable-select";
+import { IndustryPicker } from "@/components/registration/industry-picker";
+import { BusinessAddress, type AddressValue } from "@/components/registration/business-address";
+import "./register.css";
 
-type AccountType = "merchant" | "client";
+type Form = AddressValue & { tin: string; business_name: string; address: string; business_type: string; industry: string; industry_other: string; rdo_code: string; contact_name: string; contact_position: string; email: string; mobile: string; password: string; password_confirmation: string; terms_accepted: boolean; privacy_accepted: boolean; vat_registered: boolean; subscription_plan_id: string };
+type Options = { business_types: Record<string,string>; industries: Record<string,string>; rdos: {rdo_code:string;rdo_name:string}[]; notice_version:string };
+const initial:Form={region_code:"",province_code:"",city_code:"",barangay_code:"",street_address:"",zip_code:"",tin:"",business_name:"",address:"",business_type:"",industry:"",industry_other:"",rdo_code:"",contact_name:"",contact_position:"",email:"",mobile:"",password:"",password_confirmation:"",terms_accepted:false,privacy_accepted:false,vat_registered:false,subscription_plan_id:""};
+const benefitItems=[{icon:ShieldCheck,title:"BIR Compliance Workflows",text:"Keep business details and authorization evidence organized."},{icon:Zap,title:"Transmission Tracking",text:"Follow submission readiness and recorded responses."},{icon:BarChart3,title:"Simplified Compliance",text:"Less manual work, clearer transaction records."},{icon:LockKeyhole,title:"Secure Account Access",text:"Protected access to your business and document records."},{icon:Headphones,title:"Onboarding Support",text:"Guidance from account setup to business review."}];
+const steps=["Business Information","Account Setup","Verification","Complete"];
+export function RegisterPage(){const[params]=useSearchParams();return params.get("type")==="client"?<ClientRegisterPage/>:<BusinessRegistration/>;}
+function BusinessRegistration(){
+ const[params]=useSearchParams();const[form,setForm]=useState<Form>(initial);const[options,setOptions]=useState<Options|null>(null);const[plans,setPlans]=useState<SubscriptionPlan[]>([]);const[loading,setLoading]=useState(true);const[step,setStep]=useState(0);const[errors,setErrors]=useState<Record<string,string>>({});const[general,setGeneral]=useState("");const[saving,setSaving]=useState(false);const[showPassword,setShowPassword]=useState(false);const[notice,setNotice]=useState<"guide"|"support"|null>(null);const[challenge,setChallenge]=useState<{challenge_id:string;development_delivery:boolean;development_code?:string}|null>(null);const[code,setCode]=useState("");const[proof,setProof]=useState("");const[verified,setVerified]=useState(false);const[cooldown,setCooldown]=useState(0);const[result,setResult]=useState<{registration_id:string;business_name:string;email_verified:boolean}|null>(null);const[reload,setReload]=useState(0);const titleRef=useRef<HTMLHeadingElement>(null);
+ useEffect(()=>{const controller=new AbortController();setLoading(true);setGeneral("");Promise.all([apiJson<Options>("/api/registration/options",{signal:controller.signal}),apiJson<{plans:SubscriptionPlan[]}>("/api/subscription-plans",{signal:controller.signal})]).then(([metadata,catalog])=>{setOptions(metadata);setPlans(catalog.plans);const selected=catalog.plans.find(p=>p.slug===params.get("plan"));if(selected)setForm(current=>({...current,subscription_plan_id:String(selected.id)}));}).catch(e=>{if(e.name!=="AbortError")setGeneral(e.message);}).finally(()=>{if(!controller.signal.aborted)setLoading(false);});return()=>controller.abort();},[reload,params]);
+ useEffect(()=>{if(!cooldown)return;const timer=setTimeout(()=>setCooldown(v=>v-1),1000);return()=>clearTimeout(timer);},[cooldown]);
+ useEffect(()=>{if(step>0)titleRef.current?.focus();},[step]);
+ useEffect(()=>{const warn=(e:BeforeUnloadEvent)=>{if(step<3&&Object.entries(form).some(([key,value])=>value!==initial[key as keyof Form])){e.preventDefault();e.returnValue="";}};window.addEventListener("beforeunload",warn);return()=>window.removeEventListener("beforeunload",warn);},[form,step]);
+ function update<K extends keyof Form>(key:K,value:Form[K]){setForm(v=>({...v,[key]:value}));setErrors(v=>({...v,[key]:""}));if(key==="email"){setChallenge(null);setVerified(false);setProof("");setCode("");}}
+ const formatTin=(value:string)=>value.replace(/\D/g,"").slice(0,12).match(/.{1,3}/g)?.join("-")||"";
+ function moveStep(value:number){setGeneral("");setErrors({});setStep(value);}
+ function validateBusiness(){const next:Record<string,string>={};for(const field of ["region_code","province_code","city_code","barangay_code","street_address","zip_code","tin","business_name","business_type","industry","rdo_code","contact_name","contact_position","email","mobile"] as const)if(!form[field].trim())next[field]="This field is required.";if(form.tin.replace(/\D/g,"").length!==12)next.tin="Enter your 9-digit TIN and 3-digit branch code.";if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))next.email="Enter a valid email address.";if(!/^9\d{9}$/.test(form.mobile.replace(/\D/g,"")))next.mobile="Enter a 10-digit Philippine mobile number starting with 9.";if(form.industry==="other"&&!form.industry_other.trim())next.industry_other="Describe your business activity.";if(!/^\d{4}$/.test(form.zip_code))next.zip_code="Enter a 4-digit ZIP code.";if(!form.terms_accepted||!form.privacy_accepted)next.terms_accepted="Please read and accept the Terms of Service and Privacy Notice.";setErrors(next);return!Object.keys(next).length;}
+ async function sendCode(){if(saving||cooldown)return;setSaving(true);setGeneral("");setErrors({});try{const data=await apiJson<{challenge_id:string;development_delivery:boolean;development_code?:string}>("/api/registration/email-code",{method:"POST",body:JSON.stringify({email:form.email.trim()})});setChallenge(data);setVerified(false);setProof("");setCode("");setCooldown(60);}catch(e){setGeneral(e instanceof Error?e.message:"Could not send code.");}finally{setSaving(false);}}
+ async function verify(){setSaving(true);setGeneral("");try{const data=await apiJson<{verification_token:string}>("/api/registration/verify-code",{method:"POST",body:JSON.stringify({challenge_id:challenge?.challenge_id,code})});setProof(data.verification_token);setVerified(true);}catch(e){setGeneral(e instanceof Error?e.message:"Could not verify code.");}finally{setSaving(false);}}
+ async function submit(e:FormEvent){e.preventDefault();setGeneral("");if(step===0){if(validateBusiness())moveStep(1);return;}if(step===1){const next:Record<string,string>={};if(form.password.length<12||!/[a-zA-Z]/.test(form.password)||!/[0-9]/.test(form.password))next.password="Use at least 12 characters, including letters and numbers.";if(form.password!==form.password_confirmation)next.password_confirmation="Passwords do not match.";setErrors(next);if(!Object.keys(next).length)moveStep(2);return;}if(!verified||!proof||saving)return;setSaving(true);try{const data=await apiJson<{registration_id:string;business_name:string;email_verified:boolean}>("/api/registration/business",{method:"POST",body:JSON.stringify({...form,email:form.email.trim(),tin:form.tin.replace(/\D/g,""),mobile:`+63${form.mobile.replace(/\D/g,"")}`,subscription_plan_id:form.subscription_plan_id?Number(form.subscription_plan_id):null,notice_version:options?.notice_version,challenge_id:challenge?.challenge_id,verification_token:proof})});setResult(data);setForm(v=>({...v,password:"",password_confirmation:""}));moveStep(3);}catch(e){setGeneral(e instanceof Error?e.message:"Registration could not be completed.");}finally{setSaving(false);}}
+ const selectedPlan=plans.find(p=>String(p.id)===form.subscription_plan_id);
+ function field(name:keyof Form,label:string,placeholder:string,extra:Record<string,unknown>={}){return <label className="rg-field" key={name}><span>{label}<b> *</b></span><input name={name} value={String(form[name])} placeholder={placeholder} onChange={e=>update(name,name==="tin"?formatTin(e.target.value):e.target.value)} aria-invalid={!!errors[name]} aria-describedby={errors[name]?`rg-${name}-error`:name==="tin"?"rg-tin-hint":undefined} {...extra}/>{name==="tin"&&<small id="rg-tin-hint">Enter your 12-digit TIN (e.g. 123-456-789-000)</small>}{errors[name]&&<small className="rg-field-error" id={`rg-${name}-error`}>{errors[name]}</small>}</label>;}
+ function select(name:"business_type"|"industry"|"rdo_code",label:string,placeholder:string,items:{value:string;label:string}[]){return <SearchableSelect label={label} placeholder={placeholder} value={form[name]} onChange={next=>update(name,next)} items={items} loading={loading} error={errors[name]}/>;}
 
-type RegisterFormState = {
-  businessName: string;
-  tin: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  password: string;
-  confirmPassword: string;
-  accepted: boolean;
-};
-
-const initialForm: RegisterFormState = {
-  businessName: "",
-  tin: "",
-  firstName: "",
-  lastName: "",
-  email: "",
-  phone: "",
-  password: "",
-  confirmPassword: "",
-  accepted: false,
-};
-
-const accountTypes = [
-  {
-    value: "merchant" as const,
-    title: "Business Account",
-    description: "Businesses, LGUs, schools, hospitals",
-    icon: Store,
-  },
-  {
-    value: "client" as const,
-    title: "Client",
-    description: "Citizens, taxpayers, students, patients",
-    icon: Wallet,
-  },
-];
-
-export function RegisterPage() {
-  const { signUp } = useAuth();
-  const navigate = useNavigate();
-  const [accountType, setAccountType] = useState<AccountType>("merchant");
-  const [form, setForm] = useState<RegisterFormState>(initialForm);
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  function updateField<K extends keyof RegisterFormState>(key: K, value: RegisterFormState[K]) {
-    setForm((current) => ({ ...current, [key]: value }));
-  }
-
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    setError("");
-
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
-    if (!form.accepted) {
-      setError("Please confirm the NUERS account terms before continuing.");
-      return;
-    }
-
-    const fullName =
-      accountType === "merchant"
-        ? form.businessName.trim()
-        : `${form.firstName.trim()} ${form.lastName.trim()}`.trim();
-    const organization = accountType === "merchant" ? form.businessName.trim() : "Citizen Account";
-
-    setLoading(true);
-    const { error: signUpError } = await signUp(form.email, form.password, {
-      role: accountType,
-      full_name: fullName,
-      organization,
-      tin: form.tin,
-      phone: form.phone,
-    });
-    setLoading(false);
-
-    if (signUpError) {
-      setError(signUpError);
-      return;
-    }
-
-    navigate(accountType === "merchant" ? "/merchant" : "/client");
-  }
-
-  return (
-    <AuthShell
-      eyebrow="NUERS onboarding"
-      title="Create your account"
-      description="Open a secure NUERS profile for electronic receipts, digital payments, receipt verification, and compliance-ready transaction records."
-      heroTitle="Join the national electronic receipt network"
-      heroDescription="Register business accounts and service recipients into a unified platform built for secure collections, transparent reporting, and digital receipt access."
-      footer={
-        <>
-          Already have an account?{" "}
-          <Link to="/login" className="font-semibold text-primary hover:underline">
-            Sign in
-          </Link>
-        </>
-      }
-    >
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Account type">
-          {accountTypes.map((type) => {
-            const Icon = type.icon;
-            const selected = accountType === type.value;
-            return (
-              <button
-                key={type.value}
-                type="button"
-                onClick={() => setAccountType(type.value)}
-                className={cn(
-                  "rounded-lg border p-4 text-left transition-colors",
-                  selected
-                    ? "border-primary bg-primary/5 shadow-[inset_0_0_0_1px_hsl(var(--primary))]"
-                    : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
-                )}
-                aria-pressed={selected}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-lg",
-                    selected ? "bg-primary text-white" : "bg-slate-100 text-slate-500",
-                  )}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  {selected && <CheckCircle2 className="h-4 w-4 text-primary" />}
-                </div>
-                <p className="mt-3 text-sm font-semibold text-slate-950">{type.title}</p>
-                <p className="mt-1 text-xs leading-5 text-slate-500">{type.description}</p>
-              </button>
-            );
-          })}
-        </div>
-
-        {error && (
-          <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs font-medium text-destructive">
-            {error}
-          </div>
-        )}
-
-        {accountType === "merchant" ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field
-              id="businessName"
-              label="Business name"
-              icon={Building2}
-              placeholder="Your Company Inc."
-              value={form.businessName}
-              onChange={(value) => updateField("businessName", value)}
-              required
-            />
-            <Field
-              id="tin"
-              label="TIN number"
-              icon={IdCard}
-              placeholder="000-000-000-000"
-              value={form.tin}
-              onChange={(value) => updateField("tin", value)}
-              required
-            />
-          </div>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field
-              id="firstName"
-              label="First name"
-              icon={UserRound}
-              placeholder="Juan"
-              value={form.firstName}
-              onChange={(value) => updateField("firstName", value)}
-              required
-            />
-            <Field
-              id="lastName"
-              label="Last name"
-              icon={UserRound}
-              placeholder="Dela Cruz"
-              value={form.lastName}
-              onChange={(value) => updateField("lastName", value)}
-              required
-            />
-          </div>
-        )}
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field
-            id="email"
-            label={accountType === "merchant" ? "Business email" : "Email address"}
-            icon={Mail}
-            type="email"
-            placeholder={accountType === "merchant" ? "finance@company.com" : "you@email.com"}
-            value={form.email}
-            onChange={(value) => updateField("email", value)}
-            autoComplete="email"
-            required
-          />
-          <Field
-            id="phone"
-            label="Contact number"
-            icon={Phone}
-            placeholder="+63 XXX XXX XXXX"
-            value={form.phone}
-            onChange={(value) => updateField("phone", value)}
-            autoComplete="tel"
-            required
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <PasswordField
-            id="password"
-            label="Password"
-            value={form.password}
-            showPassword={showPassword}
-            setShowPassword={setShowPassword}
-            onChange={(value) => updateField("password", value)}
-            autoComplete="new-password"
-          />
-          <PasswordField
-            id="confirmPassword"
-            label="Confirm password"
-            value={form.confirmPassword}
-            showPassword={showPassword}
-            setShowPassword={setShowPassword}
-            onChange={(value) => updateField("confirmPassword", value)}
-            autoComplete="new-password"
-          />
-        </div>
-
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-          <div className="flex items-start gap-3">
-            <ShieldCheck className="mt-0.5 h-5 w-5 text-primary" />
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-sm font-semibold text-slate-900">Security-ready account</p>
-                <Badge variant="secondary" className="rounded-md bg-white text-slate-600">
-                  MFA capable
-                </Badge>
-              </div>
-              <p className="mt-1 text-xs leading-5 text-slate-500">
-                Your profile is prepared for role-based access, receipt history, compliance records, and audit logging.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <label className="flex items-start gap-3 text-xs leading-5 text-slate-600">
-          <input
-            type="checkbox"
-            checked={form.accepted}
-            onChange={(event) => updateField("accepted", event.target.checked)}
-            className="mt-1 h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
-          />
-          <span>
-            I confirm that the account information is accurate and agree to NUERS electronic receipt and data processing terms.
-          </span>
-        </label>
-
-        <Button type="submit" className="h-11 w-full gap-2 bg-[#082844] text-white hover:bg-[#0b3559]" disabled={loading}>
-          {loading ? "Creating account..." : accountType === "merchant" ? "Register business account" : "Create client account"}
-          {!loading && <ArrowRight className="h-4 w-4" />}
-        </Button>
-      </form>
-    </AuthShell>
-  );
+ return <main className="rg-page"><aside className="rg-brand-panel" aria-label="About NUERS business registration"><img className="rg-background" src="/auth-assets/registration-philippines.png" alt=""/><div className="rg-brand-shade"/><div className="rg-brand-content"><div className="rg-logos"><Link to="/" aria-label="NUERS home"><img src="/auth-assets/nuers-digital-white.png" alt="NUERS National Unified Electronic Receipt System"/></Link><a className="rg-bir" href="https://www.bir.gov.ph/" target="_blank" rel="noreferrer"><img src="/auth-assets/bir-official-seal.png" alt="Official Bureau of Internal Revenue seal"/><span><strong>BUREAU OF INTERNAL REVENUE</strong><small>REPUBLIC OF THE PHILIPPINES</small><p>Official taxpayer resources<br/>and revenue information.</p></span></a></div><div className="rg-brand-heading"><h2>Register Your Business<br/><span>Go Digital with NUERS</span></h2><p>Bring your business into a connected electronic invoicing and receipt workflow for the Philippines.</p></div><ul className="rg-benefits">{benefitItems.map(item=><li key={item.title}><span><item.icon/></span><div><strong>{item.title}</strong><p>{item.text}</p></div></li>)}</ul><blockquote>“A more transparent<br/>and progressive Philippines<br/>through digital transformation.”<i/></blockquote></div><footer className="rg-brand-footer"><strong>NUERS</strong><span> | NATIONAL UNIFIED ELECTRONIC RECEIPT SYSTEM</span><p>BUSINESS REGISTRATION · PHILIPPINES</p></footer></aside>
+ <section className="rg-form-panel"><div className="rg-top-login"><span>Already have an account?</span><Link to="/login"><UserRound/>Login</Link></div><div className="rg-mobile-brand"><Link to="/"><img src="/auth-assets/nuers-digital-logo.png" alt="NUERS"/></Link><a href="https://www.bir.gov.ph/" target="_blank" rel="noreferrer"><img src="/auth-assets/bir-official-seal.png" alt="Official BIR seal"/></a></div><header className="rg-page-heading"><h1>Create Your NUERS Account</h1><p>Register your business to start using the National Unified Electronic Receipt System.</p></header><ol className="rg-stepper" aria-label="Registration progress">{steps.map((label,i)=><li key={label} className={i===step?"rg-current":i<step?"rg-finished":""} aria-current={i===step?"step":undefined}><span>{i<step?<Check/>:i+1}</span><strong>{label}</strong></li>)}</ol>
+ <div className="rg-form-card"><form onSubmit={submit} noValidate><header><h2 ref={titleRef} tabIndex={-1}>{step===0?"Business Information":step===1?"Account Setup":step===2?"Verify & Review Your Registration":"Registration Submitted"}</h2><p>{step===0?"Provide your business details as registered with the BIR.":step===1?"Secure your account and choose an optional subscription plan.":step===2?"Confirm your email access and review the information below.":"Your NUERS business account has been created for review."}</p></header>{general&&<div role="alert" className="rg-alert">{general}{!options&&<button type="button" onClick={()=>setReload(v=>v+1)}>Retry loading registration options</button>}</div>}
+ {step===0&&<><div className="rg-fields-grid">{field("tin","Taxpayer Identification Number (TIN)","000-000-000-000",{inputMode:"numeric",maxLength:15,autoComplete:"off"})}{field("business_name","Registered Business Name","As registered with BIR",{autoComplete:"organization",maxLength:255})}<BusinessAddress value={form} offices={options?.rdos||[]} errors={errors} onChange={change=>{setForm(v=>({...v,...change}));setErrors(v=>{const next={...v};for(const key of Object.keys(change))delete next[key];return next;});}}/>{select("business_type","Business Type","Select Business Type",Object.entries(options?.business_types||{}).map(([value,label])=>({value,label})))}<div className="rg-industry"><IndustryPicker value={form.industry} items={options?.industries||{}} disabled={loading} error={errors.industry} onChange={value=>update("industry",value)}/>{form.industry==="other"&&field("industry_other","Describe Your Business Activity","Describe your main products or services",{maxLength:255})}</div>{field("contact_name","Contact Person","Full Name",{autoComplete:"name",maxLength:255})}{field("contact_position","Position","e.g. Owner, Accounting Manager",{autoComplete:"organization-title",maxLength:120})}{field("email","Email Address","name@company.com",{type:"email",autoComplete:"email",maxLength:255})}<label className="rg-field"><span>Mobile Number<b> *</b></span><div className="rg-mobile-input"><span>🇵🇭 <b>+63</b><ChevronMark/></span><input name="mobile" aria-label="Mobile Number" inputMode="tel" autoComplete="tel-national" placeholder="912 345 6789" value={form.mobile} maxLength={14} onChange={e=>update("mobile",e.target.value.replace(/\D/g,"").slice(0,10))} aria-invalid={!!errors.mobile}/></div>{errors.mobile&&<small className="rg-field-error">{errors.mobile}</small>}</label></div><label className="rg-consent"><input type="checkbox" checked={form.terms_accepted&&form.privacy_accepted} onChange={e=>setForm(v=>({...v,terms_accepted:e.target.checked,privacy_accepted:e.target.checked}))}/><span>I agree to the <Link to="/terms-of-service" target="_blank" rel="noopener noreferrer">Terms of Service</Link> and acknowledge the <Link to="/privacy-notice" target="_blank" rel="noopener noreferrer">Privacy Notice</Link>. <b>*</b></span></label>{errors.terms_accepted&&<p className="rg-field-error" role="alert">{errors.terms_accepted}</p>}<div className="rg-form-actions"><Link className="rg-button-secondary" to="/">Cancel</Link><button className="rg-button-primary" disabled={loading||!options||!options.rdos.length} type="submit">Next<ArrowRight/></button></div></>}
+ {step===1&&<><div className="rg-account-identity"><MailCheck/><div><strong>{form.email}</strong><span>Your email address will be used to sign in.</span></div></div><div className="rg-fields-grid">{(["password","password_confirmation"] as const).map(key=><label key={key} className="rg-field"><span>{key==="password"?"Create Password":"Confirm Password"}<b> *</b></span><div className="rg-password"><input name={key} type={showPassword?"text":"password"} autoComplete="new-password" value={form[key]} onChange={e=>update(key,e.target.value)} placeholder={key==="password"?"At least 12 characters":"Re-enter your password"} maxLength={128} aria-invalid={!!errors[key]}/><button type="button" aria-label={showPassword?"Hide passwords":"Show passwords"} onClick={()=>setShowPassword(v=>!v)}>{showPassword?<EyeOff/>:<Eye/>}</button></div>{errors[key]&&<small className="rg-field-error">{errors[key]}</small>}</label>)}</div><p className="rg-password-help">Use 12 or more characters with letters and numbers. Choose a password you don’t use elsewhere.</p><label className="rg-vat-check"><input type="checkbox" checked={form.vat_registered} onChange={e=>update("vat_registered",e.target.checked)}/><span>This business is VAT registered.<small>Select only if this matches your business’s BIR registration.</small></span></label><fieldset className="rg-plan-options"><legend>Choose a subscription <span>(optional)</span></legend>{plans.map(plan=><label key={plan.id} className={form.subscription_plan_id===String(plan.id)?"rg-plan-selected":""}><input type="radio" name="subscription_plan_id" checked={form.subscription_plan_id===String(plan.id)} value={plan.id} onChange={e=>update("subscription_plan_id",e.target.value)}/><div><strong>{plan.name}</strong><span>{pesos(plan.fee_centavos)} per transaction at {pesos(plan.minimum_transaction_centavos)}+</span><small>{storageLabel(plan)}{plan.retention_years?` · ${plan.retention_years}-year retention`:""}</small></div></label>)}<label className={!form.subscription_plan_id?"rg-plan-selected":""}><input type="radio" name="subscription_plan_id" checked={!form.subscription_plan_id} value="" onChange={()=>update("subscription_plan_id","")}/><div><strong>Choose later</strong><small>No payment is taken during registration.</small></div></label></fieldset><div className="rg-form-actions"><button type="button" className="rg-button-secondary" onClick={()=>moveStep(0)}><ArrowLeft/>Back</button><button type="submit" className="rg-button-primary">Next<ArrowRight/></button></div></>}
+ {step===2&&<><div className="rg-review-summary"><div><span>Registered business</span><strong>{form.business_name}</strong><small>{form.tin} · RDO {form.rdo_code}</small></div><div><span>Contact person</span><strong>{form.contact_name}</strong><small>{form.contact_position} · +63 {form.mobile}</small></div><div><span>Registered address</span><strong>{form.address}</strong></div><div><span>Selected subscription</span><strong>{selectedPlan?.name||"Choose later"}</strong><small>{selectedPlan?`${pesos(selectedPlan.fee_centavos)} per eligible transaction · ${storageLabel(selectedPlan)}`:"No payment or subscription charge at registration."}</small></div></div><div className="rg-email-verification"><MailCheck/><div><h3>{verified?(challenge?.development_delivery?"Local verification completed":"Email address verified"):"Verify your email address"}</h3><p>{form.email}</p>{!challenge?<button type="button" className="rg-button-primary" disabled={saving||cooldown>0} onClick={()=>void sendCode()}>{saving?<LoaderCircle className="rg-spin"/>:null}{cooldown>0?`Wait ${cooldown}s`:"Send verification code"}</button>:verified?<p className="rg-verified"><CircleCheck/>{challenge.development_delivery?"Development check only; email is not marked verified.":"Email access confirmed. Ready to submit."}</p>:<><label className="rg-code-label">6-digit verification code<input autoComplete="one-time-code" inputMode="numeric" maxLength={6} placeholder="000000" value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))}/></label><div className="rg-code-actions"><button type="button" className="rg-button-primary" disabled={saving||code.length!==6} onClick={()=>void verify()}>{saving?<LoaderCircle className="rg-spin"/>:null}Verify code</button><button type="button" className="rg-link-button" disabled={saving||cooldown>0} onClick={()=>void sendCode()}>{cooldown?`Resend in ${cooldown}s`:"Resend code"}</button></div></>}{challenge?.development_delivery&&<div className="rg-development-note">Local development: email is logged, not delivered. Test code: <strong>{challenge.development_code}</strong></div>}</div></div><p className="rg-review-note">Email verification does not verify your TIN or grant BIR authorization. Your business remains pending review after registration.</p><div className="rg-form-actions"><button type="button" className="rg-button-secondary" disabled={saving} onClick={()=>moveStep(1)}><ArrowLeft/>Back</button><button type="submit" className="rg-button-primary" disabled={saving||!verified}>{saving?<LoaderCircle className="rg-spin"/>:<ShieldCheck/>}{saving?"Submitting...":"Create account"}</button></div></>}
+ {step===3&&result&&<div className="rg-complete"><span><CircleCheck/></span><h3>Welcome to NUERS, {result.business_name}.</h3><p>Your account and business registration are saved. An administrator will review the business information and applicable authorizations.</p><dl><div><dt>Registration reference</dt><dd>{result.registration_id}</dd></div><div><dt>Business status</dt><dd>Pending review</dd></div><div><dt>Email verification</dt><dd>{result.email_verified?"Verified":"Development check only"}</dd></div></dl><p>Sign in with your email and password to access your business account. Completing this form does not mean the business is BIR-approved or enabled for official issuance.</p><Link className="rg-button-primary" to="/login">Continue to Login<ArrowRight/></Link></div>}
+ </form></div>
+ <div className="rg-help-cards"><button onClick={()=>setNotice("guide")}><FileText/><span><strong>Need Help?</strong><small>Check our registration guide and FAQs.</small><em>View Guides<ArrowRight/></em></span></button><button onClick={()=>setNotice("support")}><Headphones/><span><strong>Contact Support</strong><small>Get help with your registration.</small><em>Get Support<ArrowRight/></em></span></button><Link to="/api/docs"><Building2/><span><strong>For Developers</strong><small>Integrate with NUERS via our API.</small><em>View API Documentation<ArrowRight/></em></span></Link></div><div className="rg-individual">Registering as an individual? <Link to="/register?type=client">Create a client account<ArrowRight/></Link></div><footer className="rg-footer"><div><Link to="/terms-of-service" target="_blank" rel="noopener noreferrer">Terms of Service</Link><i/><Link to="/privacy-notice" target="_blank" rel="noopener noreferrer">Privacy Notice</Link><i/><button onClick={()=>setNotice("support")}>Contact Us</button></div><span>Powered by<img src="/auth-assets/ok-technology-logo.png" alt="OK Technology"/></span></footer></section>
+ <Dialog open={notice!==null} onOpenChange={open=>{if(!open)setNotice(null);}}><DialogContent className="rg-notice-dialog"><DialogHeader><DialogTitle>{notice==="guide"?"Business Registration Guide":"Registration Support"}</DialogTitle><DialogDescription>Guidance for your NUERS account</DialogDescription></DialogHeader>{notice==="guide"?<ol><li>Enter the business name and TIN with branch code shown on your registration.</li><li>Select your region, province/area, city and barangay, then add your street address and ZIP code. Confirm the RDO matches your BIR registration.</li><li>Search for your principal business activity or PSIC code. Use Other business activity and describe it if needed.</li><li>Create your account, choose an optional plan, verify your email and submit for business review.</li></ol>:<div><p>Contact NUERS at <a href="mailto:nuersofficial@gmail.com">nuersofficial@gmail.com</a> or use the support chat widget. Include your registration reference if available.</p><p>Never send your password, OTP or API credentials. For official taxpayer information, visit the <a href="https://www.bir.gov.ph/" target="_blank" rel="noreferrer">BIR website</a>.</p><Link to="/#faq">Browse the NUERS FAQs<ArrowRight size={14}/></Link></div>}</DialogContent></Dialog>
+ </main>;
 }
-
-function Field({
-  id,
-  label,
-  icon: Icon,
-  value,
-  onChange,
-  type = "text",
-  placeholder,
-  autoComplete,
-  required,
-}: {
-  id: string;
-  label: string;
-  icon: React.ElementType;
-  value: string;
-  onChange: (value: string) => void;
-  type?: string;
-  placeholder: string;
-  autoComplete?: string;
-  required?: boolean;
-}) {
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={id} className="text-sm font-medium">{label}</Label>
-      <div className="relative">
-        <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-        <Input
-          id={id}
-          type={type}
-          placeholder={placeholder}
-          value={value}
-          autoComplete={autoComplete}
-          className="h-11 pl-10"
-          onChange={(event) => onChange(event.target.value)}
-          required={required}
-        />
-      </div>
-    </div>
-  );
-}
-
-function PasswordField({
-  id,
-  label,
-  value,
-  onChange,
-  showPassword,
-  setShowPassword,
-  autoComplete,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  showPassword: boolean;
-  setShowPassword: (value: boolean) => void;
-  autoComplete: string;
-}) {
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={id} className="text-sm font-medium">{label}</Label>
-      <div className="relative">
-        <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-        <Input
-          id={id}
-          type={showPassword ? "text" : "password"}
-          placeholder={id === "password" ? "Strong password" : "Repeat password"}
-          value={value}
-          autoComplete={autoComplete}
-          className="h-11 pl-10 pr-10"
-          onChange={(event) => onChange(event.target.value)}
-          required
-        />
-        <button
-          type="button"
-          onClick={() => setShowPassword(!showPassword)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
-          aria-label={showPassword ? "Hide password" : "Show password"}
-        >
-          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-        </button>
-      </div>
-    </div>
-  );
-}
+function ChevronMark(){return <svg viewBox="0 0 12 12" width="10" height="10" fill="none" aria-hidden="true"><path d="m3 4 3 3 3-3" stroke="currentColor"/></svg>;}
