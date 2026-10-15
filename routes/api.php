@@ -6,6 +6,9 @@ use App\Http\Controllers\Api\BusinessInvoiceController;
 use App\Http\Controllers\Api\CitizenApprovalController;
 use App\Http\Controllers\Api\ClientProfileController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\EnterpriseDashboardController;
+use App\Http\Controllers\Api\LiveMonitoringController;
+use App\Http\Controllers\Api\EspComplianceController;
 use App\Http\Controllers\Api\EisController;
 use App\Http\Controllers\Api\IntegrationTransactionController;
 use App\Http\Controllers\Api\LocationController;
@@ -55,6 +58,17 @@ Route::get('/merchant/transactions', [MerchantTransactionController::class, 'ind
 Route::get('/merchant/tax-center', [MerchantTaxCenterController::class, 'show']);
 Route::post('/integrations/transactions', [IntegrationTransactionController::class, 'store']);
 Route::get('/dashboards/{portal}', [DashboardController::class, 'show']);
+Route::get('/enterprise-dashboards/{portal}', [EnterpriseDashboardController::class, 'show']);
+Route::get('/live-monitoring', [LiveMonitoringController::class, 'show']);
+Route::get('/live-monitoring/audit', [LiveMonitoringController::class, 'auditLog']);
+Route::get('/live-monitoring/export', [LiveMonitoringController::class, 'export']);
+Route::get('/esp-compliance', [EspComplianceController::class, 'show']);
+Route::post('/esp-compliance/applications', [EspComplianceController::class, 'application']);
+Route::post('/esp-compliance/applications/{id}/evidence', [EspComplianceController::class, 'evidence']);
+Route::post('/esp-compliance/applications/{id}/reviews', [EspComplianceController::class, 'review']);
+Route::post('/esp-compliance/applications/{id}/certificate', [EspComplianceController::class, 'certificate']);
+Route::post('/esp-compliance/incidents', [EspComplianceController::class, 'incident']);
+Route::patch('/esp-compliance/incidents/{id}', [EspComplianceController::class, 'updateIncident']);
 Route::get('/transactions/overview', [TransactionController::class, 'overview']);
 Route::get('/tax-intelligence/{scope}', [TaxIntelligenceController::class, 'show']);
 Route::get('/bir-eis/readiness', [EisController::class, 'readiness']);
@@ -84,8 +98,8 @@ Route::get('/verify-receipt/{receiptNumber}', function (string $receiptNumber) {
         'receipt_number' => $receipt->receipt_number,
         'verification_method' => 'receipt_number',
         'verifier_ip' => request()->ip(),
-        'status' => 'verified',
-        'signature_valid' => true,
+        'status' => 'registry_match',
+        'signature_valid' => false,
         'verified_at' => now(),
         'created_at' => now(),
         'updated_at' => now(),
@@ -100,8 +114,8 @@ Route::get('/verify-receipt/{receiptNumber}', function (string $receiptNumber) {
             'total_due' => $receipt->total_due,
             'status' => $receipt->status,
             'issued_at' => $receipt->issued_at,
-            'signature_valid' => true,
-            'authenticity' => 'Verified NUERS Electronic Official Receipt',
+            'signature_valid' => null,
+            'authenticity' => 'NUERS registry match — cryptographic signature and BIR acceptance not verified',
         ],
     ];
 });

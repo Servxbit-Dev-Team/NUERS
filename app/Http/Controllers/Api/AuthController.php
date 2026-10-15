@@ -53,6 +53,7 @@ class AuthController extends Controller
             'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6'],
             'meta' => ['array'],
+            'meta.role' => ['sometimes', \Illuminate\Validation\Rule::in(['merchant', 'client', 'consumer'])],
         ]);
 
         $meta = $payload['meta'] ?? [];

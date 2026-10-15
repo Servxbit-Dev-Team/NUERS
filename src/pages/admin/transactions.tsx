@@ -1,3 +1,4 @@
+import { useLocation } from "react-router-dom";
 import { useEffect, useState, useCallback, useRef } from "react";
 import {
   Activity, Zap, Clock, Server, Search, Download, Eye,
@@ -589,6 +590,7 @@ function TaxBreakdownPanel({ transactions, taxSummary }: { transactions: Transac
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function AdminTransactions() {
+  const searchLocation = useLocation();
   const AUTO_REFRESH_MS = 5000;
   const [activeTab, setActiveTab] = useState("live");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -612,7 +614,8 @@ export function AdminTransactions() {
   });
 
   // Filters
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get("search") || "");
+  useEffect(() => { setSearch(new URLSearchParams(searchLocation.search).get("search") || ""); }, [searchLocation.search]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [regionFilter, setRegionFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");

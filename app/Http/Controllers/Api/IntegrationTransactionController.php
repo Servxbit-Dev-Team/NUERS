@@ -75,6 +75,8 @@ class IntegrationTransactionController extends Controller
                 ]);
             }
 
+            $authority = app(\App\Services\BirCompliance::class)->assertCanIssue((string) $merchant->id);
+
             $amount = (float) ($validated['gross_amount'] ?? $validated['amount'] ?? 0);
             $tax = $this->computeTax($amount, $validated['tax_type'], (float) ($validated['vat_rate'] ?? 12), (bool) ($validated['vat_inclusive'] ?? true));
             $transactionId = (string) Str::uuid();
@@ -86,7 +88,7 @@ class IntegrationTransactionController extends Controller
 
             $branch = $this->branchIdentity($apiKey, $merchant, $validated);
 
-            DB::transaction(function () use ($merchant, $apiKey, $validated, $tax, $transactionId, $receiptId, $receiptNumber, $documentType, $templateCode, $now, $branch) {
+            DB::transaction(function () use ($merchant, $apiKey, $validated, $tax, $transactionId, $receiptId, $receiptNumber, $documentType, $templateCode, $now, $branch, $authority) {
                 $transaction = [
                     'id' => $transactionId,
                     'merchant_id' => $merchant->id,
@@ -149,6 +151,7 @@ class IntegrationTransactionController extends Controller
                 DB::table('merchant_transactions')->insert($transaction);
 
                 $receipt = [
+                    ...$authority,
                     'id' => $receiptId,
                     'transaction_id' => $transactionId,
                     'merchant_id' => $merchant->id,
@@ -192,6 +195,7 @@ class IntegrationTransactionController extends Controller
                 }
 
                 DB::table('transaction_receipts')->insert($receipt);
+                app(\App\Services\BirCompliance::class)->audit('invoice.api.issued', $receiptId, 'api-key:'.$apiKey->id, ['merchant_id' => $merchant->id, 'authority' => $authority, 'document_hash' => hash('sha256', json_encode($receipt, JSON_THROW_ON_ERROR))]);
             });
 
             DB::table('merchant_api_keys')->where('id', $apiKey->id)->update([

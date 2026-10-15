@@ -1,298 +1,43 @@
-import {
-  CheckCircle2, Clock, AlertTriangle, FileText, Download,
-  Upload, Eye, Calendar, Award,
-  TrendingUp, Star,
-} from "lucide-react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { AlertTriangle, CheckCircle2, Download, FileText, RefreshCw, ShieldCheck } from "lucide-react";
+import { apiFetch, readJsonResponse } from "@/lib/api-url";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
-const accreditationInfo = {
-  espNo: "ESP-2024-00142",
-  status: "Accredited",
-  category: "Class A — Large-Scale ESP",
-  issuedDate: "January 15, 2024",
-  renewalDate: "January 15, 2027",
-  daysToRenewal: 231,
-  issuingAuthority: "Bureau of Internal Revenue — Large Taxpayers Service",
-  authorizedCapacity: "Unlimited Taxpayers",
-};
-
-const requirements = [
-  { id: "REQ-001", requirement: "Legal Entity Registration (SEC/DTI)", status: "met", doc: "SEC Cert. CS201900001", due: null },
-  { id: "REQ-002", requirement: "BIR Registration (TIN)", status: "met", doc: "TIN: 001-842-841-000", due: null },
-  { id: "REQ-003", requirement: "ISO 27001:2022 Certification", status: "met", doc: "ISO-27001-2024-PH-0089", due: null },
-  { id: "REQ-004", requirement: "SOC 2 Type II Report", status: "met", doc: "SOC2-2025-0341", due: null },
-  { id: "REQ-005", requirement: "Data Privacy Act Compliance (NPC)", status: "met", doc: "NPC-REG-2024-00891", due: null },
-  { id: "REQ-006", requirement: "BIR EIS Technical Standards Compliance", status: "met", doc: "BIR-TECH-2024-0089", due: null },
-  { id: "REQ-007", requirement: "Network Penetration Test Report", status: "met", doc: "PENTEST-2025-Q4-0042", due: null },
-  { id: "REQ-008", requirement: "Business Continuity Plan", status: "met", doc: "BCP-NUERS-v3.2", due: null },
-  { id: "REQ-009", requirement: "Anti-Money Laundering Compliance", status: "met", doc: "AMLC-REG-2024-0281", due: null },
-  { id: "REQ-010", requirement: "Annual ESP Performance Report Submission", status: "pending", doc: null, due: "Jun 30, 2026" },
-  { id: "REQ-011", requirement: "Quarterly Technical Review Meeting (BIR)", status: "scheduled", doc: null, due: "Jun 15, 2026" },
-  { id: "REQ-012", requirement: "ESP Re-accreditation Application", status: "upcoming", doc: null, due: "Aug 15, 2026" },
-];
-
-const documents = [
-  { name: "ESP Accreditation Certificate", type: "Certificate", no: "ESP-2024-00142", issued: "Jan 15, 2024", expires: "Jan 15, 2027", status: "valid" },
-  { name: "ISO 27001:2022 Certificate", type: "Certification", no: "ISO-27001-2024-PH-0089", issued: "Nov 15, 2024", expires: "Nov 15, 2027", status: "valid" },
-  { name: "SOC 2 Type II Report", type: "Audit Report", no: "SOC2-2025-0341", issued: "Aug 30, 2025", expires: "Aug 30, 2026", status: "valid" },
-  { name: "PCI DSS v4.0 Assessment", type: "Compliance", no: "PCI-2025-PH-0021", issued: "Mar 31, 2025", expires: "Mar 31, 2026", status: "expiring" },
-  { name: "Network Penetration Test Report", type: "Security", no: "PENTEST-2025-Q4-0042", issued: "Dec 15, 2025", expires: "Dec 15, 2026", status: "valid" },
-  { name: "NPC Privacy Registration", type: "Regulatory", no: "NPC-REG-2024-00891", issued: "Jun 1, 2024", expires: "Dec 31, 2026", status: "valid" },
-  { name: "DICT Digital Certificate", type: "PKI", no: "DICT-CERT-2024-0042", issued: "Aug 1, 2024", expires: "Aug 1, 2026", status: "expiring" },
-  { name: "AMLC Compliance Certificate", type: "Regulatory", no: "AMLC-REG-2024-0281", issued: "Sep 1, 2024", expires: "Sep 1, 2026", status: "valid" },
-];
-
-const kpis = [
-  { label: "Uptime SLA", target: "99.9%", actual: "99.98%", met: true },
-  { label: "Transmission Success Rate", target: "99.5%", actual: "99.89%", met: true },
-  { label: "Response Time P95", target: "< 500ms", actual: "252ms", met: true },
-  { label: "Taxpayer Onboarding TAT", target: "< 3 days", actual: "1.8 days", met: true },
-  { label: "Incident Response Time", target: "< 2 hrs", actual: "1.2 hrs", met: true },
-  { label: "Compliance Score", target: "≥ 95%", actual: "98.7%", met: true },
-];
+type Control = { code: string; title: string; status: string; passed: boolean; evidence_reference?: string; verified_at?: string };
+type Incident = { id: string; title: string; severity: string; detected_at: string; restored_at?: string; reported_at?: string; report_reference?: string };
+type Compliance = { record: { id: string; status: string; certificate_number?: string; expires_at?: string; annual_review_at?: string } | null; annex: Control[]; stages: Control[]; authorized: boolean; renewal_due_at?: string; blockers: string[]; production: { blockers: string[] }; can_record_bir_review: boolean; audit_integrity: boolean; solution: { name: string; version: string }; incidents: Incident[]; source_notes: string[] };
+const field = "h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 w-full";
+const date = (value?: string) => value ? new Date(value.includes("T") ? value : value.replace(" ", "T") + "+08:00").toLocaleString("en-PH", { timeZone: "Asia/Manila" }) : "Not recorded";
+async function request(path: string, body?: object, method = "POST") { return readJsonResponse(await apiFetch(path, body ? { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : { cache: "no-store" })); }
 
 export function ESPAccreditation() {
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">ESP Accreditation Management</h1>
-          <p className="text-sm text-muted-foreground">BIR EIS accreditation status, compliance requirements, and certification repository</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-2">
-            <Download className="h-3.5 w-3.5" /> Accreditation Report
-          </Button>
-          <Button size="sm" className="gap-2">
-            <Upload className="h-3.5 w-3.5" /> Upload Document
-          </Button>
-        </div>
-      </div>
-
-      {/* Accreditation Status Banner */}
-      <Card className="border-success/40 bg-success/5">
-        <CardContent className="p-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-success bg-success/10 shrink-0">
-                <Award className="h-8 w-8 text-success" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <Badge className="bg-success text-success-foreground text-xs">BIR Accredited ESP</Badge>
-                  <Badge variant="secondary" className="text-xs">{accreditationInfo.category}</Badge>
-                </div>
-                <p className="text-sm font-bold">NUERS — National Unified Electronic Receipt System</p>
-                <p className="text-xs text-muted-foreground">ESP No.: <span className="font-mono font-medium">{accreditationInfo.espNo}</span> · Issued by: {accreditationInfo.issuingAuthority}</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <div className="text-center bg-card rounded-lg p-2 border">
-                <p className="text-xs text-muted-foreground">Issued</p>
-                <p className="text-xs font-bold">{accreditationInfo.issuedDate}</p>
-              </div>
-              <div className="text-center bg-card rounded-lg p-2 border">
-                <p className="text-xs text-muted-foreground">Renewal</p>
-                <p className="text-xs font-bold">{accreditationInfo.renewalDate}</p>
-              </div>
-              <div className="text-center bg-card rounded-lg p-2 border">
-                <p className="text-xs text-muted-foreground">Days Left</p>
-                <p className="text-sm font-black text-success">{accreditationInfo.daysToRenewal}</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Tabs defaultValue="requirements">
-        <TabsList className="h-9">
-          <TabsTrigger value="requirements" className="text-xs">Requirements Checklist</TabsTrigger>
-          <TabsTrigger value="documents" className="text-xs">Document Repository</TabsTrigger>
-          <TabsTrigger value="kpis" className="text-xs">Performance KPIs</TabsTrigger>
-          <TabsTrigger value="audit" className="text-xs">Audit Readiness</TabsTrigger>
-          <TabsTrigger value="renewal" className="text-xs">Renewal Tracker</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="requirements" className="mt-4">
-          <div className="space-y-2">
-            {requirements.map((r) => (
-              <Card key={r.id} className={r.status === "upcoming" ? "border-warning/40" : ""}>
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      {r.status === "met" && <CheckCircle2 className="h-4 w-4 text-success shrink-0" />}
-                      {r.status === "pending" && <Clock className="h-4 w-4 text-warning shrink-0" />}
-                      {r.status === "scheduled" && <Calendar className="h-4 w-4 text-primary shrink-0" />}
-                      {r.status === "upcoming" && <AlertTriangle className="h-4 w-4 text-warning shrink-0" />}
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-mono text-muted-foreground">{r.id}</span>
-                          <p className="text-sm font-medium">{r.requirement}</p>
-                        </div>
-                        {r.doc && <p className="text-xs text-muted-foreground font-mono">{r.doc}</p>}
-                        {r.due && <p className="text-xs text-warning-foreground">Due: {r.due}</p>}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {r.status === "met" && <Badge className="bg-success/15 text-success border-success/30 text-xs">Met</Badge>}
-                      {r.status === "pending" && <Badge className="bg-warning/15 text-warning-foreground border-warning/30 text-xs">Pending</Badge>}
-                      {r.status === "scheduled" && <Badge className="bg-primary/10 text-primary border-primary/30 text-xs">Scheduled</Badge>}
-                      {r.status === "upcoming" && <Badge className="bg-warning/15 text-warning-foreground border-warning/30 text-xs">Upcoming</Badge>}
-                      {r.doc && (
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <div className="mt-4 p-4 bg-muted/40 rounded-lg border">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-semibold">Overall Readiness</p>
-              <p className="text-sm font-bold text-success">9/12 Met ({(9/12*100).toFixed(0)}%)</p>
-            </div>
-            <Progress value={75} className="h-3" />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="documents" className="mt-4">
-          <div className="space-y-3">
-            {documents.map((doc) => (
-              <Card key={doc.name} className={doc.status === "expiring" ? "border-warning/40" : ""}>
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className={`p-2 rounded-lg ${doc.status === "valid" ? "bg-success/10" : "bg-warning/10"} shrink-0`}>
-                        <FileText className={`h-4 w-4 ${doc.status === "valid" ? "text-success" : "text-warning"}`} />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                          <p className="text-sm font-semibold">{doc.name}</p>
-                          <Badge variant="secondary" className="text-xs">{doc.type}</Badge>
-                          {doc.status === "valid" ? (
-                            <Badge className="bg-success/15 text-success border-success/30 text-xs">Valid</Badge>
-                          ) : (
-                            <Badge className="bg-warning/15 text-warning-foreground border-warning/30 text-xs">Expiring Soon</Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground font-mono">No: {doc.no}</p>
-                        <p className="text-xs text-muted-foreground">Issued: {doc.issued} · Expires: {doc.expires}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0"><Eye className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0"><Download className="h-3.5 w-3.5" /></Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="kpis" className="mt-4">
-          <div className="space-y-3">
-            {kpis.map((kpi) => (
-              <Card key={kpi.label}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <TrendingUp className="h-4 w-4 text-success shrink-0" />
-                      <div>
-                        <p className="text-sm font-semibold">{kpi.label}</p>
-                        <p className="text-xs text-muted-foreground">Target: {kpi.target}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <p className="text-sm font-bold text-success">{kpi.actual}</p>
-                      <Badge className="bg-success/15 text-success border-success/30 text-xs">
-                        <CheckCircle2 className="h-2.5 w-2.5 mr-1" />
-                        Met
-                      </Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="audit" className="mt-4 space-y-4">
-          <Card className="border-success/40 bg-success/5">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Star className="h-6 w-6 text-gold" />
-                <div>
-                  <p className="text-sm font-bold">Audit Readiness Score: 98.4%</p>
-                  <p className="text-xs text-muted-foreground">All critical controls in place. 3 minor items pending completion.</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {[
-              { domain: "BIR EIS Technical Compliance", score: 99.2, items: 42 },
-              { domain: "ISO 27001 Controls", score: 98.8, items: 114 },
-              { domain: "SOC 2 Trust Criteria", score: 97.9, items: 64 },
-              { domain: "Data Privacy Act Requirements", score: 98.4, items: 36 },
-              { domain: "Business Continuity", score: 96.8, items: 28 },
-              { domain: "Cryptographic Standards", score: 100, items: 18 },
-            ].map((d) => (
-              <Card key={d.domain}>
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between text-xs mb-1.5">
-                    <span className="font-medium">{d.domain}</span>
-                    <span className={`font-bold ${d.score >= 99 ? "text-success" : d.score >= 97 ? "text-success" : "text-warning-foreground"}`}>{d.score}%</span>
-                  </div>
-                  <Progress value={d.score} className="h-2 mb-1" />
-                  <p className="text-[10px] text-muted-foreground">{d.items} controls evaluated</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="renewal" className="mt-4 space-y-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-primary" />
-                Re-accreditation Timeline (Target: Jan 15, 2027)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {[
-                  { milestone: "Initiate re-accreditation process", date: "Aug 15, 2026", status: "upcoming", daysLeft: 78 },
-                  { milestone: "Compile and submit documentation package", date: "Sep 15, 2026", status: "upcoming", daysLeft: 109 },
-                  { milestone: "BIR technical audit and site inspection", date: "Oct 15, 2026", status: "upcoming", daysLeft: 139 },
-                  { milestone: "Address audit findings", date: "Nov 15, 2026", status: "upcoming", daysLeft: 170 },
-                  { milestone: "BIR approval and certificate issuance", date: "Dec 15, 2026", status: "upcoming", daysLeft: 200 },
-                  { milestone: "Accreditation renewal complete", date: "Jan 15, 2027", status: "upcoming", daysLeft: 231 },
-                ].map((m) => (
-                  <div key={m.milestone} className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-border shrink-0" />
-                    <div className="flex-1">
-                      <p className="text-sm">{m.milestone}</p>
-                      <p className="text-xs text-muted-foreground">{m.date} ({m.daysLeft} days)</p>
-                    </div>
-                    <Badge variant="secondary" className="text-xs shrink-0">Upcoming</Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
+  const [data, setData] = useState<Compliance | null>(null);
+  const [error, setError] = useState(""); const [notice, setNotice] = useState(""); const [busy, setBusy] = useState(false);
+  const load = useCallback(async () => { try { setData(await request("/api/esp-compliance")); setError(""); } catch (e) { setError(e instanceof Error ? e.message : "Unable to load compliance evidence."); } }, []);
+  useEffect(() => { void load(); }, [load]);
+  const action = async (fn: () => Promise<unknown>, message: string) => { setBusy(true); setNotice(""); try { await fn(); setNotice(message); await load(); } catch (e) { setError(e instanceof Error ? e.message : "Unable to save evidence."); } finally { setBusy(false); } };
+  const create = () => action(() => request("/api/esp-compliance/applications", {}), "Evidence register created. External approvals remain pending.");
+  const evidence = (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); const form = e.currentTarget; const values = new FormData(form); void action(async () => { await request(`/api/esp-compliance/applications/${data?.record?.id}/evidence`, Object.fromEntries(values)); form.reset(); }, "Evidence reference saved for review."); };
+  const incident = (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); const form = e.currentTarget; const values = Object.fromEntries(new FormData(form)); if (values.detected_at) values.detected_at += "+08:00"; void action(async () => { await request("/api/esp-compliance/incidents", values); form.reset(); }, "Incident recorded. Complete written reporting through the authorized RDO/LTS channel."); };
+  const update = (e: FormEvent<HTMLFormElement>, id: string) => { e.preventDefault(); const form = e.currentTarget; const values = Object.fromEntries(new FormData(form)); for (const key of ["restored_at", "reported_at"]) { if (values[key]) values[key] += "+08:00"; else delete values[key]; } if (!values.report_reference) delete values.report_reference; void action(async () => { await request(`/api/esp-compliance/incidents/${id}`, values, "PATCH"); form.reset(); }, "Incident evidence updated; the original deadline is preserved."); };
+  const download = () => { if (!data) return; const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })); const a = document.createElement("a"); a.href = url; a.download = "nuers-compliance-evidence.json"; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); };
+  const controls = (title: string, rows: Control[]) => <Card><CardHeader><CardTitle className="text-lg">{title} <span className="text-sm font-normal text-slate-500">{rows.filter(r => r.passed).length}/{rows.length} verified</span></CardTitle></CardHeader><CardContent className="space-y-3">{rows.map(r => <div key={r.code} className="flex gap-3 border-b border-slate-100 pb-3 last:border-0"><span className="text-blue-600 font-semibold">{r.code}</span><div className="flex-1 min-w-0"><p className="text-sm font-medium">{r.title}</p><p className="text-xs text-slate-500 mt-1 break-words">{r.evidence_reference || "Evidence pending"}{r.verified_at ? ` · Reviewed ${date(r.verified_at)}` : ""}</p></div><Badge variant="outline" className="h-fit capitalize">{r.status.replaceAll("_", " ")}</Badge></div>)}</CardContent></Card>;
+  return <div className="space-y-6 text-slate-800">
+    <div className="flex flex-wrap gap-3 items-center justify-between"><div><h1 className="text-[28px] font-bold text-[#092451]">ESP Accreditation & Compliance</h1><p className="text-sm text-slate-500">RMC No. 110-2026 · Solution-specific evidence, review stages and operational deadlines</p></div><div className="flex gap-2"><Button variant="outline" onClick={() => void load()}><RefreshCw className="size-4 mr-2"/>Refresh</Button><Button variant="outline" disabled={!data} onClick={download}><Download className="size-4 mr-2"/>Export evidence</Button></div></div>
+    {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm">{error}</div>}{notice && <div role="status" className="rounded-xl bg-green-50 p-4 text-sm text-green-800">{notice}</div>}
+    {!data ? <p>Loading evidence register…</p> : <>
+      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">{[
+        ["Accreditation", data.authorized ? "Verified & current" : "Pending verification"], ["Solution", `${data.solution.name} v${data.solution.version}`], ["Certificate", data.record?.certificate_number || "No verified certificate"], ["Audit journal", data.audit_integrity ? "Hash chain intact" : "Integrity check failed"],
+      ].map(([label, value]) => <Card key={label}><CardContent className="pt-5"><p className="text-xs text-slate-500 mb-2">{label}</p><p className="text-lg font-semibold">{value}</p></CardContent></Card>)}</div>
+      <Card><CardContent className="pt-5"><div className="flex gap-3"><AlertTriangle className="size-5 shrink-0 text-amber-600"/><div><h2 className="font-semibold text-lg">Production authorization</h2><ul className="list-disc pl-5 text-sm space-y-1 mt-2">{data.production.blockers.map(b => <li key={b}>{b}</li>)}</ul><p className="text-xs text-slate-500 mt-3">PTI, taxpayer EIS certification, PTT and ESP accreditation are separate approvals. Recording evidence does not issue a government permit.</p></div></div></CardContent></Card>
+      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">{[["Transmission", "Within 3 calendar days", "From the transaction date; original due date retained."], ["Outage recovery", "3 calendar days", "From recorded restoration; separate recovery deadline."], ["Critical incident report", "Within 24 hours", "Written report to the concerned RDO/LTS."], ["Accreditation lifecycle", "5 years · annual review", `Renewal at least 60 days before expiry. ${data.renewal_due_at ? `Renewal due ${data.renewal_due_at}.` : "Certificate evidence pending."}`]].map(([label, value, note]) => <Card key={label}><CardContent className="pt-5"><p className="text-xs text-slate-500">{label}</p><p className="font-semibold mt-1">{value}</p><p className="text-xs text-slate-500 mt-2">{note}</p></CardContent></Card>)}</div>
+      {!data.record ? <Card><CardContent className="pt-5 flex items-center justify-between gap-4"><p className="text-sm">Start the local evidence register for this solution version. All requirements begin as pending.</p><Button disabled={busy} onClick={() => void create()}><FileText className="size-4 mr-2"/>Start evidence register</Button></CardContent></Card> : <Card><CardHeader><CardTitle className="text-lg">Submit an evidence reference</CardTitle></CardHeader><CardContent><form onSubmit={evidence} className="grid sm:grid-cols-4 gap-3"><label className="text-xs">Category<select name="category" className={field}><option value="annex">Annex A</option><option value="stages">Mandatory stage</option></select></label><label className="text-xs">Item / stage number<input name="code" className={field} required pattern="[0-9]{1,2}" placeholder="01"/></label><label className="text-xs sm:col-span-2">Evidence / document reference<input name="evidence_reference" className={field} required minLength={8} maxLength={2000} placeholder="Internal repository reference or external review record"/></label><p className="text-xs text-slate-500 sm:col-span-3">References are submitted for review. Only authorized BIR reviewer records can mark a control passed.</p><Button disabled={busy}>Save evidence reference</Button></form></CardContent></Card>}
+      <div className="grid xl:grid-cols-2 gap-5">{controls("Annex A · 17 documentary requirements", data.annex)}<div className="space-y-5">{controls("Seven mandatory stages", data.stages)}<Card><CardContent className="pt-5 space-y-3"><ShieldCheck className="size-6 text-blue-600"/><h3 className="font-semibold">Evidence beyond dashboard counts</h3><p className="text-sm">Independently verifiable systems must collectively support 5 million transactions and 1,000 active accounts annually for each of the preceding three years. Local transaction totals do not establish this requirement.</p><p className="text-sm">Material changes require prior BIR approval and revalidation. Documentary completeness alone does not establish accreditation.</p></CardContent></Card></div></div>
+      <Card><CardHeader><CardTitle className="text-lg">Operational incidents & restoration</CardTitle></CardHeader><CardContent className="space-y-5"><form onSubmit={incident} className="grid sm:grid-cols-2 xl:grid-cols-4 gap-3"><label className="text-xs">Incident title<input name="title" required className={field}/></label><label className="text-xs">Severity<select name="severity" className={field}><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label><label className="text-xs">Detected at (PHT)<input name="detected_at" required type="datetime-local" className={field}/></label><label className="text-xs">Evidence reference<input name="evidence_reference" required minLength={8} className={field}/></label><p className="text-xs text-slate-500 sm:col-span-2 xl:col-span-3">Record actual incidents. This register does not send reports or notifications to BIR.</p><Button disabled={busy}>Record incident</Button></form>
+      {!data.incidents.length && <p className="text-sm text-slate-500">No operational incidents recorded.</p>}{data.incidents.map(i => <div key={i.id} className="rounded-xl border p-4 space-y-3"><div className="flex items-center gap-2"><CheckCircle2 className="size-4"/><strong>{i.title}</strong><Badge variant="outline">{i.severity}</Badge></div><p className="text-xs">Detected {date(i.detected_at)} · Restored {date(i.restored_at)} · Reported {date(i.reported_at)}</p><form onSubmit={e => update(e, i.id)} className="grid sm:grid-cols-4 gap-3"><label className="text-xs">Restored at (PHT)<input name="restored_at" type="datetime-local" className={field}/></label><label className="text-xs">Reported at (PHT)<input name="reported_at" type="datetime-local" className={field}/></label><label className="text-xs">Written report reference<input name="report_reference" className={field} minLength={8}/></label><Button className="self-end" disabled={busy}>Save incident evidence</Button></form></div>)}</CardContent></Card>
+      <Card><CardHeader><CardTitle className="text-lg">Source interpretation & records</CardTitle></CardHeader><CardContent className="text-sm space-y-2">{data.source_notes.map(n => <p key={n}>{n}</p>)}<p>Preserve taxpayer records through service exit and migration. The monitor exports transaction records and transmission history without a payment-status restriction. Requested BIR extracts and incident reports still require authorized delivery through the prescribed channels.</p></CardContent></Card>
+    </>}
+  </div>;
 }

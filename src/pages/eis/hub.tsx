@@ -172,7 +172,7 @@ export function EisHub() {
                 <p className="text-sm font-semibold text-foreground">Production Gate Score</p>
                 <p className="text-sm text-muted-foreground">
                   {readiness?.production_blocked
-                    ? "Live BIR submission is blocked until certification, PTT, and credentials are bound."
+                    ? "Production submission requires verified solution accreditation, taxpayer PTI, EIS certification, PTT, credentials and implemented BIR transport."
                     : "All critical production controls are registered."}
                 </p>
               </div>

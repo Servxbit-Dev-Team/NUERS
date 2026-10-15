@@ -58,6 +58,8 @@ export interface Invoice {
   parent_invoice_id?: string;
   merchant_name: string;
   merchant_tin: string;
+  permit_to_issue_number?: string | null;
+  esp_accreditation_number?: string | null;
   merchant_address: string;
   buyer_name: string;
   buyer_tin?: string;

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ElementType, type FormEvent } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
+import { EnterpriseDashboard } from "@/components/enterprise/enterprise-dashboard";
 import {
   AlertCircle,
   ArrowDownRight,
@@ -674,6 +675,7 @@ function initialsForName(value?: string | null) {
 }
 
 function ClientPortalPage({ view }: { view: ClientPageView }) {
+  const searchLocation = useLocation();
   const { user, profile: authProfile } = useAuth();
   const { data: dashboardData, loading: dashboardLoading, error: dashboardError } = useDashboardData("client");
   const [clientProfile, setClientProfile] = useState<ClientProfile | null>(null);
@@ -698,7 +700,8 @@ function ClientPortalPage({ view }: { view: ClientPageView }) {
   const [profileSaving, setProfileSaving] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState("");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get("search") || "");
+  useEffect(() => { setSearch(new URLSearchParams(searchLocation.search).get("search") || ""); }, [searchLocation.search]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -1974,7 +1977,7 @@ export function ClientDashboard() {
 
   if (legacyRoute) return <Navigate to={legacyRoute} replace />;
 
-  return <ClientPortalPage view="overview" />;
+  return <EnterpriseDashboard portal="citizen" />;
 }
 
 export function ClientTransactionsPage() {

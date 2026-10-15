@@ -62,6 +62,8 @@ type ApiReceipt = {
   document_label: string;
   merchant_name: string;
   merchant_tin: string;
+  permit_to_issue_number?: string | null;
+  esp_accreditation_number?: string | null;
   merchant_address: string;
   merchant_vat_reg: string;
   rdo_code: string | null;
@@ -202,6 +204,8 @@ function OfficialReceiptPrint({ r }: { r: ApiReceipt }) {
       seller={{
         name: r.merchant_name,
         tin: r.merchant_tin,
+        permitToIssueNumber: r.permit_to_issue_number,
+        espAccreditationNumber: r.esp_accreditation_number,
         address: r.merchant_address,
         vatRegistration: r.merchant_vat_reg,
       }}

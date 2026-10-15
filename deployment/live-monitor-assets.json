@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "mode": "reference-guided generation",
+  "reference": "/Users/marksioson/Downloads/NUERS Live Transaction Monitoring Dashboard.png",
+  "output": "public/dashboard-assets/live-monitor-header.png",
+  "prompt": "Use case: background-extraction. Asset type: decorative panoramic header artwork for an implemented NUERS Live Transaction Monitoring page. Reference: the attached dashboard screenshot. Extract and recreate ONLY its pale blue header illustration: modern Manila skyline in the middle-right, recognizable blue Philippine island silhouette, and a softly waving Philippine flag fading into white at the far right. Leave the entire left half almost white for real HTML heading text. Keep the palette very light ice-blue and white with subtle red and gold flag accents, low contrast, elegant soft sky and white fade at every edge. Approximately 3:1 panoramic aspect ratio. No text, slogans, date, clock, interface, sidebar, navigation, cards, graphs, tables, logo, building seal, borders, dark areas or watermark. Match the illustration placement, colors, mood and fading of the reference header.",
+  "icons": "Lucide SVG icons follow the existing application icon set; no raster UI or fake logo artwork."
+}

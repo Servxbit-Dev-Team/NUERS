@@ -20,7 +20,7 @@ type VerificationResult = {
   total_due: string;
   status: string;
   issued_at: string | null;
-  signature_valid: boolean;
+  signature_valid: boolean | null;
   authenticity: string;
 };
 
@@ -171,7 +171,7 @@ export function ReceiptVerificationPortal() {
                     <CheckCircle2 className="h-5 w-5 text-success" />
                     <div>
                       <p className="text-sm font-semibold text-foreground">{result.authenticity}</p>
-                      <p className="text-xs text-muted-foreground">Digital signature valid: {result.signature_valid ? "Yes" : "No"}</p>
+                      <p className="text-xs text-muted-foreground">Digital signature valid: {result.signature_valid === null ? "Not verified" : result.signature_valid ? "Yes" : "No"}</p>
                     </div>
                   </div>
                   <div className="space-y-2 text-xs">

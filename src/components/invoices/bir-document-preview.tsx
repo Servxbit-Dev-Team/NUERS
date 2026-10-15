@@ -12,6 +12,8 @@ export type BirDocumentParty = {
   address?: string | null;
   email?: string | null;
   vatRegistration?: string | null;
+  permitToIssueNumber?: string | null;
+  espAccreditationNumber?: string | null;
 };
 
 export type BirDocumentItem = {
@@ -229,8 +231,8 @@ export function BirDocumentPreview({
 
         <div className="mt-5 grid gap-4 text-[10px] text-slate-600 md:grid-cols-[1fr_auto]">
           <div className="space-y-1">
-            <p>ATP / Permit to Use No.: NUERS-PTU-000000 | Date Issued: {issueDate || "-"}</p>
-            <p>Approved serial range: {documentNumber.slice(0, 3)}-000001 to {documentNumber.slice(0, 3)}-999999</p>
+            <p>PTI Electronic Invoice: {seller.permitToIssueNumber || "Not recorded — issuance authority pending"}</p>
+            <p>ESP Accreditation: {seller.espAccreditationNumber || "Not recorded"}</p>
             <p>This electronic document is recorded in the NUERS ledger and subject to BIR EIS transmission readiness controls.</p>
           </div>
           <div className="flex items-center gap-2 rounded-lg border border-slate-300 p-2">

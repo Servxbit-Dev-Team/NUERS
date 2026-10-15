@@ -15,6 +15,7 @@ interface AuthContextType {
   } | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null; role: string | null }>;
+  completeGoogleSignIn: () => Promise<{ error: string | null; role: string | null }>;
   signUp: (email: string, password: string, meta?: Record<string, string>) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
@@ -94,12 +95,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: null };
   }
 
+  async function completeGoogleSignIn() {
+    const { data, error } = await supabase.auth.completeGoogleSignIn();
+    if (error) return { error: error.message, role: null };
+    if (!data.user || !data.role) return { error: "Unable to load your NUERS account.", role: null };
+    return { error: null, role: data.role };
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, signIn, completeGoogleSignIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

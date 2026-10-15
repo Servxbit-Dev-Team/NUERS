@@ -176,9 +176,11 @@ class BusinessInvoiceController extends Controller
         $now = now();
         $invoiceId = (string) Str::uuid();
         $status = $validated['status'] ?? 'draft';
+        $authority = $status !== 'draft' ? app(\App\Services\BirCompliance::class)->assertCanIssue((string) $merchant->id) : ['permit_to_issue_number' => null, 'esp_accreditation_number' => null];
 
-        DB::transaction(function () use ($request, $validated, $merchant, $invoiceId, $status, $totals, $documentType, $templateCode, $now) {
+        DB::transaction(function () use ($request, $validated, $merchant, $invoiceId, $status, $totals, $documentType, $templateCode, $now, $authority) {
             $invoiceRow = [
+                ...$authority,
                 'id' => $invoiceId,
                 'merchant_id' => $merchant->id,
                 'invoice_number' => $validated['invoice_number'],
@@ -260,7 +262,8 @@ class BusinessInvoiceController extends Controller
             }
 
             $validated['document_type'] = $documentType;
-            $this->mirrorBuyerExpense($merchant, $invoiceId, $validated, $totals, $now);
+            if ($status !== 'draft') $this->mirrorBuyerExpense($merchant, $invoiceId, $validated, $totals, $now);
+            app(\App\Services\BirCompliance::class)->audit($status === 'draft' ? 'invoice.draft.saved' : 'invoice.issued', $invoiceId, (string) DB::table('users')->where('api_token', $request->bearerToken())->value('id'), ['status' => $status, 'authority' => $authority, 'document_hash' => hash('sha256', json_encode([$invoiceRow, $validated['line_items']], JSON_THROW_ON_ERROR))]);
         });
 
         $invoice = DB::table('business_invoices')->where('id', $invoiceId)->first();
@@ -369,6 +372,8 @@ class BusinessInvoiceController extends Controller
             'parent_invoice_id' => $invoice->parent_invoice_id,
             'merchant_name' => $invoice->merchant_name,
             'merchant_tin' => $invoice->merchant_tin ?: '',
+            'permit_to_issue_number' => $invoice->permit_to_issue_number ?? null,
+            'esp_accreditation_number' => $invoice->esp_accreditation_number ?? null,
             'merchant_address' => $invoice->merchant_address ?: '',
             'buyer_name' => $invoice->buyer_name,
             'buyer_tin' => $invoice->buyer_tin,

@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/icon.png" />
+    <link rel="icon" type="image/png" href="/nuers-favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NUERS | National Unified Electronic Receipt System for Government Agencies</title>
     <meta name="description" content="NUERS is a secure government electronic receipt system that enables digital revenue collection, electronic official receipts, payment integration, compliance reporting, audit management, and financial transparency for government agencies and local government units." />

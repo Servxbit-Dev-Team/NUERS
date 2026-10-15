@@ -152,6 +152,8 @@ class MerchantTransactionController extends Controller
             't.created_at',
             DB::raw("COALESCE(r.receipt_number, rt.receipt_number) as receipt_number"),
             DB::raw("COALESCE(r.series_number, rt.series_number) as series_number"),
+            DB::raw("COALESCE(r.permit_to_issue_number, rt.permit_to_issue_number) as permit_to_issue_number"),
+            DB::raw("COALESCE(r.esp_accreditation_number, rt.esp_accreditation_number) as esp_accreditation_number"),
             DB::raw("COALESCE(r.receipt_type, rt.receipt_type) as receipt_type"),
         ];
 
@@ -413,6 +415,8 @@ class MerchantTransactionController extends Controller
             'transaction_ref' => $row->transaction_ref,
             'receipt_number' => $row->receipt_number,
             'series_number' => $row->series_number,
+            'permit_to_issue_number' => $row->permit_to_issue_number ?? null,
+            'esp_accreditation_number' => $row->esp_accreditation_number ?? null,
             'date' => $created->format('Y-m-d'),
             'time' => $created->format('H:i'),
             'created_at' => $created->toIso8601String(),

@@ -1,0 +1,16 @@
+{
+  "tool": "built-in image_gen",
+  "reference": "/Users/marksioson/Downloads/NUERS National E-Receipt Dashboard.png",
+  "artwork": "public/dashboard-assets/bir-skyline-header.png",
+  "artworkPrompt": "Use case: compositing. Edit target Image 1: the pale blue panoramic skyline and BIR building header. Image 2: official Bureau of Internal Revenue logo to insert, preserve its exact eagle, sun, column, ring, lettering and outline. Replace ONLY the fictional seal mounted above the BUREAU OF INTERNAL REVENUE building sign with the official logo in Image 2. Faithfully retain the logo identity and lettering. Mount it flush on the facade, matching its slight perspective, as a pale desaturated blue-gray relief badge consistent with the light stone architecture. Keep the rest of the image unchanged: the skyline, building architecture, physical sign, faded white left and bottom edges, sky, framing, panoramic 3:1 dimensions and light ice-blue palette. No extra text, interface, seals, or logos.",
+  "map": "public/dashboard-assets/philippines-map.png",
+  "mapPrompt": "Use case: background-extraction. Asset: Philippine island map graphic for a white dashboard card. The reference is a UI screenshot. Extract ONLY its blue Philippine archipelago illustration from Transactions by Region, faithfully preserving its recognizable separate island silhouettes. Remove ALL other pixels and surrounding content. A flat cartographic map of the Philippines on transparent alpha, with Luzon, Visayan islands, Mindanao and Palawan cleanly separated by transparent sea gaps. Thin internal province lines. Light blue in northern Luzon grading into deep navy blue on Mindanao. Crucially, no glow, aura, blur, paint strokes, haze, blue ocean, connected land masses, text, legends, panels, shadow, grid or surrounding UI. Crisp irregular coastline edges and fully transparent sea/background. Tall island silhouette composition with minimal unused transparent border.",
+  "officialBIRLogo": {
+    "path": "public/dashboard-assets/bir-official-logo.png",
+    "source": "https://bir-cdn.bir.gov.ph/BIR/uploads/bir-2024-logo.png",
+    "verifiedAt": "2026-10-15",
+    "website": "https://www.bir.gov.ph",
+    "usage": "Original PNG in BIR navigation and quick actions; grayscale CSS placement on the header facade."
+  },
+  "icons": "Lucide SVG icons, matching existing interface icon system."
+}

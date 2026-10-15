@@ -42,6 +42,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/lib/auth";
+import { EnterpriseShell } from "@/components/enterprise/enterprise-shell";
 import { apiFetch, publicAssetUrl } from "@/lib/api-url";
 
 type PortalType =
@@ -1315,6 +1316,9 @@ export function DashboardLayout({ portal }: { portal: PortalType }) {
     await signOut();
     navigate("/login");
   }
+
+  const enterprisePortal = portal === "merchant" ? "merchant" : portal === "client" || portal === "consumer" ? "citizen" : ["admin", "super-admin"].includes(portal) || ["admin", "super_admin"].includes(profile?.role ?? "") ? "admin" : null;
+  if (enterprisePortal) return <EnterpriseShell portal={enterprisePortal} root={portal === "admin" ? "/admin" : "/super-admin"} accountName={accountName} accountEmail={accountEmail} accountLogo={accountLogo} initials={accountInitials} roleLabel={enterprisePortal === "admin" ? (profile?.role === "super_admin" ? "Super Administrator" : "System Administrator") : enterprisePortal === "merchant" ? "Business Account" : "Citizen Account"} profilePath={profilePath} notificationPath={enterprisePortal === "admin" ? "/super-admin/notifications" : notificationPath} accountActive={isClientAccountActive} onSignOut={handleSignOut} />;
 
   return (
     <SidebarProvider>

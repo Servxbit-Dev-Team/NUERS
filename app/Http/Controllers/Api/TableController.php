@@ -31,6 +31,28 @@ class TableController extends Controller
     {
         abort_unless(isset(self::TABLES[$table]), 404, 'Unknown table.');
 
+        if ($table === 'profiles' && $request->method() !== 'GET') {
+            $actor = $this->userFromRequest($request);
+            abort_unless($actor, 401, 'An authenticated session is required.');
+            $role = DB::table('profiles')->where('id', $actor->id)->value('role');
+            $administrator = in_array($role, ['admin', 'super_admin'], true);
+            if (! $administrator) {
+                abort_unless(in_array($request->method(), ['PATCH', 'PUT'], true), 403, 'Only administrators may create or remove profiles.');
+                $values = $request->input('values', []);
+                foreach (['id' => $actor->id, 'role' => $role, 'email' => $actor->email] as $key => $current) {
+                    abort_if(array_key_exists($key, $values) && (string) $values[$key] !== (string) $current, 403, 'Identity and role changes require authorized administration.');
+                }
+                $request->attributes->set('profile_scope_id', $actor->id);
+            }
+            $values = $request->input('values', []);
+            foreach (Arr::isList($values) ? $values : [$values] as $value) {
+                // BIR review authority requires a separately verified staff provisioning process.
+                abort_if(($value['role'] ?? null) === 'bir', 403, 'BIR review authority cannot be self-assigned through the generic profile endpoint.');
+            }
+        }
+
+        abort_if(in_array($table, ['merchant_transactions', 'transaction_receipts'], true) && $request->method() !== 'GET', 409, 'Issued financial records are preserved. Use the authorized issuance or traceable correction workflow.');
+
         return match ($request->method()) {
             'GET' => $this->index($request, self::TABLES[$table]),
             'POST' => $this->store($request, self::TABLES[$table]),
@@ -89,6 +111,7 @@ class TableController extends Controller
         $query = $model::query();
         $this->applyFilters($query, $request);
 
+        if ($model === Profile::class && $request->attributes->has('profile_scope_id')) $query->where('id', $request->attributes->get('profile_scope_id'));
         $payload = $this->normalizePayload($request->input('values', []));
         $affected = (clone $query)->update($payload);
 

@@ -16,3 +16,8 @@ storage/framework/testing/*
 storage/framework/views/*
 
 .DS_Store
+
+# Local runtime and private live snapshots
+.local/
+/public/uploads/
+.phpunit.result.cache

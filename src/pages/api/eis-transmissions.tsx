@@ -59,6 +59,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 const SAMPLE_PAYLOAD = JSON.stringify({
+  is_test: true,
   invoice_number: "EIS-CERT-000001",
   document_type: "sales_invoice",
   issue_date: new Date().toISOString().slice(0, 10),
@@ -237,7 +238,7 @@ export function EisTransmissions() {
               </Badge>
             </div>
             <p className="max-w-3xl text-sm text-muted-foreground">
-              Database-backed invoice payload queue, canonical hash validation, duplicate detection, retry scheduling, and BIR acknowledgement tracking.
+              Database-backed invoice payload queue, canonical hash validation, duplicate detection, retry scheduling, and BIR acknowledgement tracking. Certification records are synthetic tests, not live BIR acceptances.
             </p>
           </div>
         </div>

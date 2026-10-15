@@ -204,6 +204,18 @@ class LaravelQuery<T = any> implements PromiseLike<ApiResult<T>> {
 
 export const supabase = {
   auth: {
+    async completeGoogleSignIn() {
+      const { data, error } = await request<{ session: LaravelSession; user: LaravelUser; role: string }>(
+        "/auth/google/session", { credentials: "same-origin" },
+      );
+      const session = data?.session ?? null;
+      if (session) {
+        storeSession(session);
+        notify("SIGNED_IN", session);
+      }
+      return { data: { session, user: data?.user ?? null, role: data?.role ?? null }, error };
+    },
+
     async getSession() {
       const { data, error } = await request<{ session: LaravelSession | null }>("/api/auth/session");
       const session = data?.session ?? null;

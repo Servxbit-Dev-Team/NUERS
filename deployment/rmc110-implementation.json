@@ -1,0 +1,102 @@
+{
+  "title": "NUERS RMC 110-2026 implementation record",
+  "date": "2026-10-15",
+  "deployment": "Localhost only; no production deployment or live taxpayer submission performed.",
+  "sources": [
+    {
+      "file": "/Users/marksioson/Desktop/RMC No. 110-2026_redacted.pdf",
+      "reviewed": "All 13 pages, rendered and OCR reviewed",
+      "role": "Primary circular"
+    },
+    {
+      "file": "/Users/marksioson/Desktop/RMC No. 110-2026 ANNEX A.pdf",
+      "reviewed": "Both pages, text and rendered review",
+      "role": "Primary 17-item checklist"
+    },
+    {
+      "file": "/Users/marksioson/Downloads/ESP_Accreditation10132026.pptx",
+      "reviewed": "All 34 slides and notes",
+      "role": "Supporting presentation"
+    }
+  ],
+  "sourceResolutions": [
+    "Annex A contains 17 items. Slides 32–33 omit joint-venture item 8 and renumber subsequent items. The register follows Annex A.",
+    "The three-year track record concerns independently verifiable systems collectively capable of five million transactions and one thousand active accounts annually in each preceding year. Current NUERS counters are not evidence of this.",
+    "The supplied circular is dated October 12, 2026. No independent online publication was verified; implementation uses the supplied documents."
+  ],
+  "implemented": [
+    {
+      "rule": "Solution-specific accreditation and seven mandatory sequential stages",
+      "behavior": "Version/configuration-specific application register; 17 evidence controls; seven stage controls; administrative evidence submission; separate BIR reviewer authority; documentary/stage prerequisites; failed/revised evidence invalidates later progression."
+    },
+    {
+      "rule": "Accreditation lifecycle",
+      "behavior": "Five-year maximum, current certificate and annual review evidence, 60-day renewal alert, running version/configuration match, pending material changes block production."
+    },
+    {
+      "rule": "PTI distinct from CAS PTU/AC, EIS certification and PTT",
+      "behavior": "Independent authorization gates with written taxpayer authority; no unauthorised production issuance/transmission; drafts retained; permit/certificate numbers snapshotted on new authorised documents. Fake PTU/serial ranges removed from previews."
+    },
+    {
+      "rule": "Three-calendar-day transmission limit and outage recovery",
+      "behavior": "Manila transaction date plus three calendar days, end of day. Original deadline remains fixed; verified recorded restoration adds a separate recovery deadline and incident link."
+    },
+    {
+      "rule": "Critical incident reporting within 24 hours",
+      "behavior": "Actual detection, restoration, report time and evidence reference tracked; reporting is manual through authorized RDO/LTS channels; the software does not send reports."
+    },
+    {
+      "rule": "Duplicate detection, traceability, controlled retries",
+      "behavior": "Unique document identity per environment; stable canonical SHA-256; same submission returns original; conflicting content rejected; row-locked finite retries, exponential scheduling, permanent-error blocks and terminal-status guards."
+    },
+    {
+      "rule": "Certification isolation",
+      "behavior": "Explicit synthetic-test marker required; certification acknowledgements clearly simulated; manual production acknowledgements blocked; certification records excluded from production BIR dashboard totals."
+    },
+    {
+      "rule": "Auditability and access",
+      "behavior": "Authenticated administrative monitor/export; issuance, review, incident and export events recorded in hash-chained application journal; integrity check detects modification and tail deletion. Public signup cannot grant staff roles; generic profile writes cannot self-assign BIR authority."
+    },
+    {
+      "rule": "Preservation and portability",
+      "behavior": "Generic mutation/deletion of issued financial records blocked; original records retained; authenticated CSV and machine-readable JSON export includes raw financial sources, invoices, payloads, acknowledgements, retries, request history and journal; no payment-status export gate."
+    },
+    {
+      "rule": "Honest receipt verification",
+      "behavior": "Registry presence is reported as a registry match; cryptographic signature and BIR acceptance are not invented."
+    },
+    {
+      "rule": "Live monitoring",
+      "behavior": "Actual database counts, 60-minute wall-clock flow, TPS over last 60 seconds, separate production/test queue, actual taxpayer ranking, paginated stream, real recorded activities, 5-second polling, pause/resume, manual search/filter/page changes, column controls, export, expand and trace dialog."
+    }
+  ],
+  "externalEvidenceAndRolloutRequirements": [
+    "Actual BIR-issued accreditation, taxpayer PTI, EIS certification, PTT, written authority and matching approved deployment configuration are not supplied or fabricated.",
+    "No verified BIR production transport/signing/key-exchange protocol has been implemented. The production transport gate remains closed.",
+    "Independent EO 119/security/privacy/ISO/SOC/VAPT assessments, hosting and data-residency attestations, load/failover/restore tests and three-year capacity evidence require actual external evidence.",
+    "The application hash chain is tamper-evident, not a substitute for independently immutable storage, database access controls and verified host time synchronization.",
+    "Historical payloads and old records are preserved. New queued EIS payloads are application-encrypted at rest; full database/disk/key-management controls require infrastructure verification.",
+    "Official BIR Summary List of Sales format validation, offline/manual contingency issuance and migration sign-off require their prescribed operational specifications, test evidence and authorized human review. Existing unrelated demonstration screens are not accreditation evidence.",
+    "Authorized staff must meet BIR requests for summaries within one working day and detailed machine-readable extracts within three working days, considering the actual request and applicable calendar.",
+    "Records must remain accessible through service exit or unpaid fees; no deletion merely because migration/contracts end; written BIR migration confirmation and any legal hold must be observed."
+  ],
+  "validation": {
+    "phpTests": 36,
+    "assertions": 232,
+    "frontend": "TypeScript and Vite builds for Laravel and static deployment",
+    "database": "Two guarded additive localhost migrations after private SQL backups; 13 existing transactions preserved."
+  },
+  "assets": "deployment/live-monitor-assets.json",
+  "endpoints": [
+    "GET /api/live-monitoring",
+    "GET /api/live-monitoring/export?format=csv|json",
+    "GET /api/live-monitoring/audit",
+    "GET /api/esp-compliance",
+    "POST /api/esp-compliance/applications",
+    "POST /api/esp-compliance/applications/{id}/evidence",
+    "POST /api/esp-compliance/applications/{id}/reviews",
+    "POST /api/esp-compliance/applications/{id}/certificate",
+    "POST /api/esp-compliance/incidents",
+    "PATCH /api/esp-compliance/incidents/{id}"
+  ]
+}

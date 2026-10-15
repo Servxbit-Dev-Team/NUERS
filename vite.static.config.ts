@@ -6,6 +6,7 @@ import { defineConfig } from "vite"
 
 const staticAssets = [
   "icon.png",
+  "nuers-favicon.png",
   "nuers_wBG.jpg",
   "NUERSLOGO.png",
   "NUERSLOGOWHITE.png",
@@ -14,6 +15,8 @@ const staticAssets = [
   "NUERS_WHITE.png",
   "robots.txt",
   "vite.svg",
+  "auth-assets",
+  "dashboard-assets",
 ]
 
 const liveApiBaseUrl = (process.env.VITE_API_BASE_URL ?? "https://nuers.net/public").replace(/\/$/, "")
@@ -30,7 +33,7 @@ function copyStaticAssets() {
 
         if (fs.existsSync(source)) {
           fs.mkdirSync(path.dirname(destination), { recursive: true })
-          fs.copyFileSync(source, destination)
+          fs.cpSync(source, destination, { recursive: true })
         }
       }
 

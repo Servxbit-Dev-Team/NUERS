@@ -312,7 +312,7 @@ export default function App() {
       </Route>
 
       {/* Transmission Monitoring */}
-      <Route path="/monitoring" element={<RequireAuth><DashboardLayout portal="monitoring" /></RequireAuth>}>
+      <Route path="/monitoring" element={<RequireRole role={["admin", "super_admin", "bir"]}><DashboardLayout portal="monitoring" /></RequireRole>}>
         <Route index element={<TransmissionMonitoringCenter />} />
       </Route>
 

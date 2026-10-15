@@ -215,6 +215,8 @@ export function InvoiceDetail() {
             seller={{
               name: invoice.merchant_name,
               tin: invoice.merchant_tin,
+        permitToIssueNumber: invoice.permit_to_issue_number,
+        espAccreditationNumber: invoice.esp_accreditation_number,
               address: invoice.merchant_address,
               vatRegistration: invoice.vat_registered ? "VAT Registered" : "Non-VAT Registered",
             }}

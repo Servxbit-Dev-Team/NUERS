@@ -1,3 +1,4 @@
+import { useLocation } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ElementType } from "react";
 import {
@@ -47,6 +48,8 @@ type ApiTransaction = {
   transaction_ref: string | null;
   receipt_number: string | null;
   series_number: string | null;
+  permit_to_issue_number?: string | null;
+  esp_accreditation_number?: string | null;
   date: string;
   time: string;
   created_at: string;
@@ -243,7 +246,9 @@ function csvCell(value: string | number | null | undefined) {
 }
 
 export function MerchantTransactions() {
-  const [search, setSearch] = useState("");
+  const searchLocation = useLocation();
+  const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get("search") || "");
+  useEffect(() => { setSearch(new URLSearchParams(searchLocation.search).get("search") || ""); }, [searchLocation.search]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [branchFilter, setBranchFilter] = useState("all");
@@ -944,6 +949,8 @@ export function MerchantTransactions() {
                   seller={{
                     name: data.merchant?.business_name ?? "Business Account",
                     tin: data.merchant?.tin ?? undefined,
+                    permitToIssueNumber: selected.permit_to_issue_number,
+                    espAccreditationNumber: selected.esp_accreditation_number,
                   }}
                   buyer={{
                     name: selected.customer,
