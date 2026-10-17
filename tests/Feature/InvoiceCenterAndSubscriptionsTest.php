@@ -12,7 +12,7 @@ class InvoiceCenterAndSubscriptionsTest extends TestCase
     {
         parent::setUp();
         config(['database.default'=>'sqlite','database.connections.sqlite.database'=>':memory:', 'app.timezone'=>'Asia/Manila']); DB::purge('sqlite');
-        foreach (['0001_01_01_000000_create_users_table.php','2026_06_02_000001_create_nuers_tables.php','2026_06_02_000014_create_business_invoices_tables.php','2026_06_02_000018_add_bir_document_templates_to_ledgers.php','2026_10_15_000004_create_website_subscription_plans.php'] as $file) (require database_path('migrations/'.$file))->up();
+        foreach (glob(database_path('migrations/*.php')) as $migrationFile) { (require $migrationFile)->up(); }
     }
     private function user(string $role): User
     {
@@ -43,9 +43,66 @@ class InvoiceCenterAndSubscriptionsTest extends TestCase
         $this->withToken($admin->api_token)->getJson('/api/invoice-center?search=notfound')->assertOk()->assertJsonPath('total',0)->assertJsonCount(0,'data');
         $this->withToken($admin->api_token)->getJson('/api/invoice-center?per_page=1000')->assertUnprocessable();
     }
+    public function test_export_filters_exact_business_and_inclusive_dates_across_pages_and_sources(): void
+    {
+        $admin = $this->user('admin'); $this->business('a'); $this->business('b');
+        // Both businesses deliberately share a TIN; selection must use the registered business ID.
+        for ($n = 0; $n < 12; $n++) $this->receipt('included-'.$n, 'a', 'issued', '2026-10-15 23:59:59');
+        $this->receipt('start', 'a', 'issued', '2026-10-15 00:00:00');
+        $this->receipt('before', 'a', 'issued', '2026-10-14 23:59:59');
+        $this->receipt('after', 'a', 'issued', '2026-10-16 00:00:00');
+        $this->receipt('foreign', 'b');
+        DB::table('business_invoices')->insert(['id'=>'invoice-a','merchant_id'=>'a','invoice_number'=>'SI-INCLUDED','buyer_name'=>'Test buyer','merchant_name'=>'Old business name','merchant_tin'=>'old-tin','document_type'=>'sales_invoice','status'=>'issued','issue_date'=>'2026-10-15','total_amount'=>100]);
+        $response = $this->withToken($admin->api_token)->get('/api/invoice-center/export?merchant_id=a&from=2026-10-15&to=2026-10-15&per_page=1&page=2');
+        $response->assertOk()->assertHeader('X-Export-Count', '14')->assertDownload('NUERS-documents-2026-10-15-to-2026-10-15.csv');
+        $csv = $response->streamedContent();
+        $this->assertStringStartsWith("\xEF\xBB\xBF", $csv);
+        $this->assertCount(15, explode("\n", trim($csv)));
+        $this->assertStringContainsString('OR-included-11', $csv); $this->assertStringContainsString('OR-start', $csv); $this->assertStringContainsString('SI-INCLUDED', $csv);
+        foreach (['OR-before','OR-after','OR-foreign'] as $excluded) $this->assertStringNotContainsString($excluded, $csv);
+        $this->withToken($admin->api_token)->getJson('/api/invoice-center?merchant_id=a&from=2026-10-15&to=2026-10-15')->assertOk()->assertJsonPath('total',14);
+    }
+
+    public function test_export_and_business_dropdown_respect_access_scope(): void
+    {
+        $this->getJson('/api/invoice-center/export')->assertUnauthorized();
+        $client = $this->user('client'); $this->withToken($client->api_token)->getJson('/api/invoice-center/export')->assertForbidden();
+        $owner = $this->user('merchant'); $this->business('own', $owner); $this->business('other'); $this->business('empty');
+        $this->receipt('owned','own'); $this->receipt('foreign','other');
+        $this->withToken($owner->api_token)->getJson('/api/invoice-center/businesses')->assertOk()->assertJsonCount(1,'businesses')->assertJsonPath('businesses.0.id','own');
+        $csv = $this->withToken($owner->api_token)->get('/api/invoice-center/export')->assertOk()->assertHeader('X-Export-Count','1')->streamedContent();
+        $this->assertStringContainsString('OR-owned',$csv); $this->assertStringNotContainsString('OR-foreign',$csv);
+        $this->withToken($owner->api_token)->getJson('/api/invoice-center/export?merchant_id=other')->assertNotFound();
+        $admin = $this->user('admin');
+        $this->withToken($admin->api_token)->getJson('/api/invoice-center/businesses')->assertOk()->assertJsonCount(3,'businesses');
+        $this->withToken($admin->api_token)->get('/api/invoice-center/export?merchant_id=empty')->assertOk()->assertHeader('X-Export-Count','0');
+    }
+
+    public function test_export_validates_dates_and_supports_open_ranges_and_type_status_filters(): void
+    {
+        $admin = $this->user('admin'); $this->business('a'); $this->receipt('valid','a'); $this->receipt('cancelled','a','cancelled');
+        $this->withToken($admin->api_token)->getJson('/api/invoice-center/export?from=2026-10-16&to=2026-10-15')->assertUnprocessable();
+        $this->withToken($admin->api_token)->getJson('/api/invoice-center/export?from=invalid')->assertUnprocessable();
+        $this->withToken($admin->api_token)->getJson('/api/invoice-center/export?merchant_id=unknown')->assertNotFound();
+        $this->withToken($admin->api_token)->get('/api/invoice-center/export?to=2026-10-15&type=receipts&status=valid')->assertOk()->assertHeader('X-Export-Count','1');
+        $this->withToken($admin->api_token)->get('/api/invoice-center/export?from=2026-10-15&type=cancelled')->assertOk()->assertHeader('X-Export-Count','1');
+        $empty = $this->withToken($admin->api_token)->get('/api/invoice-center/export?type=invoices')->assertOk()->assertHeader('X-Export-Count','0')->streamedContent();
+        $this->assertCount(1, explode("\n",trim($empty))); $this->assertStringContainsString('Document No.',$empty);
+    }
+
+    public function test_export_quotes_csv_values_and_neutralizes_spreadsheet_formulas(): void
+    {
+        $admin = $this->user('admin'); $this->business('a'); $this->receipt('formula','a');
+        DB::table('transaction_receipts')->where('id','formula')->update(['receipt_number'=>'=1+1','merchant_name'=>'  @SUM(1,2)','merchant_tin'=>'123,456']);
+        $csv = $this->withToken($admin->api_token)->get('/api/invoice-center/export')->assertOk()->streamedContent();
+        $stream = fopen('php://memory','r+'); fwrite($stream,substr($csv,3)); rewind($stream); fgetcsv($stream,0,',','"',''); $row=fgetcsv($stream,0,',','"',''); fclose($stream);
+        $this->assertSame("'=1+1",$row[0]); $this->assertSame("'  @SUM(1,2)",$row[3]); $this->assertSame('123,456',$row[4]);
+    }
+
     public function test_draft_recomputes_total_preserves_status_and_is_idempotent(): void
     {
         $owner=$this->user('merchant');$this->business('own',$owner);
+        DB::transaction(fn()=>app(\App\Services\MerchantWallet::class)->credit('own',300,'synthetic-funding','Synthetic test funding','test-fixture'));
         $p=['request_id'=>(string)Str::uuid(),'merchant_id'=>'own','document_type'=>'sales_invoice','buyer_name'=>'Buyer','issue_date'=>'2026-10-15','vat_inclusive'=>true,'items'=>[['description'=>'Item','quantity'=>2,'unit_price'=>280]], 'total_amount'=>1,'status'=>'paid'];
         $this->withToken($owner->api_token)->postJson('/api/invoice-center',$p)->assertCreated();
         $row=DB::table('business_invoices')->first();$this->assertEquals(560,$row->total_amount);$this->assertEquals(60,$row->vat_amount);$this->assertSame('draft',$row->status);
@@ -54,18 +111,28 @@ class InvoiceCenterAndSubscriptionsTest extends TestCase
         $p['request_id']=(string)Str::uuid();$p['merchant_id']='foreign';$this->withToken($owner->api_token)->postJson('/api/invoice-center',$p)->assertNotFound();
         $bir=$this->user('bir');$this->withToken($bir->api_token)->postJson('/api/invoice-center',$p)->assertForbidden();
     }
-    public function test_public_plans_match_confirmed_fee_and_storage_terms(): void
+    public function test_one_transaction_offer_is_shared_by_public_and_legacy_endpoints(): void
     {
-        $this->getJson('/api/subscription-plans')->assertOk()->assertJsonCount(2,'plans')->assertJsonPath('plans.0.name','Subscription 1')->assertJsonPath('plans.0.fee_centavos',200)->assertJsonPath('plans.0.minimum_transaction_centavos',50000)->assertJsonPath('plans.0.storage_mb',500)->assertJsonPath('plans.1.fee_centavos',300)->assertJsonPath('plans.1.storage_mb',null)->assertJsonPath('plans.1.retention_years',5);
+        foreach (['/api/pricing','/api/subscription-plans'] as $url) {
+            $this->getJson($url)->assertOk()->assertJsonCount(1,'plans')
+                ->assertJsonPath('pricing.billing_model','per_transaction')->assertJsonPath('pricing.subscription_required',false)
+                ->assertJsonPath('pricing.fee_centavos',300)->assertJsonPath('pricing.minimum_transaction_centavos',50000)
+                ->assertJsonPath('pricing.storage_mb',null)->assertJsonPath('pricing.retention_years',5)
+                ->assertJsonPath('pricing.recurring_fee_centavos',0);
+        }
     }
-    public function test_plan_edit_requires_admin_and_prevents_stale_overwrites(): void
+    public function test_legacy_editor_cannot_reintroduce_subscription_tiers(): void
     {
-        $plan=(array)DB::table('website_subscription_plans')->first();$plan['published']=false;$plan['featured']=true;$plan['name']='Updated plan';
-        $this->putJson('/api/admin/subscription-plans/1',$plan)->assertUnauthorized();$merchant=$this->user('merchant');$this->withToken($merchant->api_token)->putJson('/api/admin/subscription-plans/1',$plan)->assertForbidden();
+        $this->putJson('/api/admin/subscription-plans/1',[])->assertUnauthorized();
+        $merchant=$this->user('merchant');$this->withToken($merchant->api_token)->putJson('/api/admin/subscription-plans/1',[])->assertForbidden();
         $bir=$this->user('bir');$this->withToken($bir->api_token)->getJson('/api/admin/subscription-plans')->assertForbidden();
-        $admin=$this->user('admin');$this->withToken($admin->api_token)->putJson('/api/admin/subscription-plans/1',$plan)->assertOk()->assertJsonPath('plan.revision',2)->assertJsonPath('plan.name','Updated plan');
-        $this->getJson('/api/subscription-plans')->assertJsonCount(1,'plans')->assertJsonPath('plans.0.name','Subscription 2');
-        $this->withToken($admin->api_token)->putJson('/api/admin/subscription-plans/1',$plan)->assertConflict();
-        $plan['revision']=2;$plan['fee_centavos']=-1;$this->withToken($admin->api_token)->putJson('/api/admin/subscription-plans/1',$plan)->assertUnprocessable();
+        $admin=$this->user('admin');$this->withToken($admin->api_token)->putJson('/api/admin/subscription-plans/1',['fee_centavos'=>200,'storage_mb'=>500])->assertUnprocessable();
+        $this->getJson('/api/pricing')->assertJsonPath('pricing.fee_centavos',300)->assertJsonPath('pricing.storage_mb',null);
+    }
+    public function test_transaction_fee_boundaries_are_exact_and_flat(): void
+    {
+        $policy=app(\App\Services\TransactionPricing::class);
+        foreach ([0=>0,49999=>0,50000=>300,50001=>300,500000=>300] as $amount=>$fee) $this->assertSame($fee,$policy->feeForCentavos($amount));
+        $this->expectException(\InvalidArgumentException::class);$policy->feeForCentavos(-1);
     }
 }

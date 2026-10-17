@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Download, Send, Shield, QrCode, CheckCircle2,
-  Clock, AlertTriangle, XCircle, Edit, Copy, FileText,
-  History, Printer, ChevronRight, RotateCcw, Ban,
+  Clock, AlertTriangle, XCircle, Copy, FileText,
+  History, ChevronRight, RotateCcw, Ban,
   FileJson, FileSpreadsheet, FileCode, Loader2, Database,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,9 +21,10 @@ import {
   DOC_TYPE_META, STATUS_META, formatAmount, exportToJSON, exportToCSV, exportToXML,
   type Invoice, type InvoiceStatus,
 } from "@/lib/invoice-utils";
-import { BirDocumentPreview } from "@/components/invoices/bir-document-preview";
+import { OfficialReceipt } from "@/components/invoices/official-receipt";
+import { DocumentCopyActions } from "@/components/invoices/document-copy-actions";
 import { toast } from "sonner";
-import { apiFetch, readJsonResponse } from "@/lib/api-url";
+import { apiFetch, apiJson, readJsonResponse } from "@/lib/api-url";
 import { cn } from "@/lib/utils";
 
 const API_TOKEN_KEY = "nuers_api_token";
@@ -46,6 +47,7 @@ const StatusIcon: Record<InvoiceStatus, React.ElementType> = {
   draft:               FileText,
   pending:             Clock,
   validated:           CheckCircle2,
+  issued: CheckCircle2,
   sent:                Send,
   paid:                CheckCircle2,
   partially_paid:      Clock,
@@ -58,6 +60,7 @@ const StatusIcon: Record<InvoiceStatus, React.ElementType> = {
 export function InvoiceDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const cancellationRequestId=useRef(crypto.randomUUID());
   const [cancelReason, setCancelReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
   const [invoice, setInvoice] = useState<Invoice | null>(null);
@@ -96,16 +99,7 @@ export function InvoiceDetail() {
     };
   }, [id]);
 
-  const versions = useMemo(() => {
-    if (!invoice) return [];
-
-    return [
-      { version: 1, change_type: "created", changed_by: invoice.merchant_name, summary: "Invoice created in NUERS", ts: invoice.created_at },
-      invoice.validated_at ? { version: 2, change_type: "validated", changed_by: "NUERS validation engine", summary: "Invoice payload validated", ts: invoice.validated_at } : null,
-      invoice.signed_at ? { version: 3, change_type: "signed", changed_by: "NUERS signature service", summary: "Digital signature generated", ts: invoice.signed_at } : null,
-      invoice.cancelled_at ? { version: 4, change_type: "cancelled", changed_by: invoice.merchant_name, summary: invoice.cancellation_reason || "Invoice cancelled", ts: invoice.cancelled_at } : null,
-    ].filter(Boolean) as Array<{ version: number; change_type: string; changed_by: string; summary: string; ts?: string }>;
-  }, [invoice]);
+  const versions = useMemo(() => (invoice?.document_view?.history || []).map(e => ({version:e.id, change_type:e.event, changed_by:e.actor || "Actor not recorded", summary:e.reason || e.event, ts:e.occurred_at})), [invoice]);
 
   if (loading) {
     return (
@@ -135,14 +129,16 @@ export function InvoiceDetail() {
 
   const handleCancel = async () => {
     setCancelling(true);
-    await new Promise(r => setTimeout(r, 1000));
-    setCancelling(false);
-    toast.success(`Invoice ${invoice.invoice_number} cancellation submitted.`);
-    navigate("/merchant/invoices");
+    try {
+      const result=await apiJson<{id:string}>(`/api/documents/invoice/${invoice.id}/review-requests`,{method:"POST",body:JSON.stringify({request_id:cancellationRequestId.current,kind:"cancellation",reason:cancelReason})});
+      toast.success(`Cancellation review saved: ${result.id}. Original invoice remains preserved.`);
+      navigate("/merchant/invoices");
+    } catch(e) { toast.error(e instanceof Error?e.message:"Could not save the review request."); }
+    finally { setCancelling(false); }
   };
 
   const handleCorrection = () => {
-    navigate(`/merchant/invoices/create?type=${invoice.document_type === "sales_invoice" ? "credit_memo" : invoice.document_type}`);
+    navigate(`/merchant/invoices/create?type=credit_memo&original=${encodeURIComponent(invoice.id)}`);
     toast.info("Creating correction document…");
   };
 
@@ -165,12 +161,12 @@ export function InvoiceDetail() {
             <Badge variant="outline" className={cn("shrink-0 text-xs", meta.color)}>{meta.label}</Badge>
             {invoice.digital_signature && (
               <Badge variant="outline" className="shrink-0 gap-1 text-xs text-success border-success/40">
-                <Shield className="h-2.5 w-2.5" /> Signed
+                <Shield className="h-2.5 w-2.5" /> Digest recorded
               </Badge>
             )}
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Issued {invoice.issue_date} • Version {invoice.version_number} • {invoice.currency}
+            {invoice.status === "draft" ? "Draft business date" : "Recorded business date"} {invoice.issue_date} • Recorded revision {invoice.version_number} • {invoice.currency}
           </p>
         </div>
         <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
@@ -183,14 +179,8 @@ export function InvoiceDetail() {
           <Button variant="outline" size="sm" className="h-8 flex-1 gap-1 text-xs sm:flex-none" onClick={() => { exportToCSV(invoice); toast.success("Exported CSV"); }}>
             <FileSpreadsheet className="h-3.5 w-3.5" /> CSV
           </Button>
-          <Button variant="outline" size="sm" className="h-8 flex-1 gap-1 text-xs sm:flex-none" onClick={() => toast.info("Printing PDF…")}>
-            <Printer className="h-3.5 w-3.5" /> PDF
-          </Button>
-          {!["cancelled", "voided", "paid"].includes(invoice.status) && (
-            <Button size="sm" className="h-8 flex-1 gap-1 text-xs sm:flex-none" onClick={() => navigate(`/merchant/invoices/${id}/edit`)}>
-              <Edit className="h-3.5 w-3.5" /> Edit
-            </Button>
-          )}
+          <DocumentCopyActions source="invoice" id={invoice.id} number={invoice.invoice_number}/>
+
         </div>
       </div>
 
@@ -199,56 +189,15 @@ export function InvoiceDetail() {
           <TabsList className="h-auto min-w-max justify-start gap-1 p-1">
             <TabsTrigger value="document" className="h-8 whitespace-nowrap px-3 text-xs">Document</TabsTrigger>
             <TabsTrigger value="tax" className="h-8 whitespace-nowrap px-3 text-xs">Tax Breakdown</TabsTrigger>
-            <TabsTrigger value="signature" className="h-8 whitespace-nowrap px-3 text-xs">Signature & QR</TabsTrigger>
-            <TabsTrigger value="history" className="h-8 whitespace-nowrap px-3 text-xs">Version History</TabsTrigger>
+            <TabsTrigger value="signature" className="h-8 whitespace-nowrap px-3 text-xs">Checksum & QR</TabsTrigger>
+            <TabsTrigger value="history" className="h-8 whitespace-nowrap px-3 text-xs">Recorded History</TabsTrigger>
             <TabsTrigger value="actions" className="h-8 whitespace-nowrap px-3 text-xs">Actions</TabsTrigger>
           </TabsList>
         </div>
 
         {/* ── Document ─────────────────────────────────────────────────── */}
         <TabsContent value="document" className="mt-4 space-y-4">
-          <BirDocumentPreview
-            documentType={invoice.document_type}
-            documentNumber={invoice.invoice_number}
-            seriesNumber={invoice.invoice_number}
-            issueDate={invoice.issue_date}
-            seller={{
-              name: invoice.merchant_name,
-              tin: invoice.merchant_tin,
-        permitToIssueNumber: invoice.permit_to_issue_number,
-        espAccreditationNumber: invoice.esp_accreditation_number,
-              address: invoice.merchant_address,
-              vatRegistration: invoice.vat_registered ? "VAT Registered" : "Non-VAT Registered",
-            }}
-            buyer={{
-              name: invoice.buyer_name,
-              tin: invoice.buyer_tin,
-              address: invoice.buyer_address,
-              email: invoice.buyer_email,
-            }}
-            items={(invoice.line_items ?? []).map((line) => ({
-              description: line.description,
-              quantity: line.quantity,
-              unit: line.unit,
-              unitPrice: line.unit_price,
-              amount: line.line_total,
-              taxType: line.tax_type,
-            }))}
-            totals={{
-              gross: invoice.total_amount,
-              vatableSales: invoice.taxable_amount,
-              vatExemptSales: invoice.vat_exempt_amount,
-              zeroRatedSales: invoice.zero_rated_amount,
-              vatAmount: invoice.vat_amount,
-              discount: invoice.discount_amount,
-              withholdingTax: invoice.withholding_tax,
-              totalDue: invoice.total_amount - invoice.withholding_tax,
-            }}
-            paymentMethod={invoice.amount_paid > 0 ? "paid" : "charge"}
-            referenceNumber={invoice.reference_number || invoice.purchase_order || invoice.sales_order}
-            status={invoice.status}
-            qrValue={invoice.qr_payload || invoice.validation_hash || invoice.invoice_number}
-          />
+          {invoice.document_view ? <div className="merchant-electronic-preview"><OfficialReceipt document={invoice.document_view}/></div> : <p>Original document representation is unavailable. Refresh to retrieve the recorded source.</p>}
 
           {/* Parties */}
           <div className="grid gap-4 lg:grid-cols-2">
@@ -351,7 +300,7 @@ export function InvoiceDetail() {
                   { label: "Taxable Sales",          val: invoice.taxable_amount,              muted: true },
                   { label: "Zero-Rated Sales",       val: invoice.zero_rated_amount,           muted: true },
                   { label: "VAT-Exempt Sales",       val: invoice.vat_exempt_amount,           muted: true },
-                  { label: "VAT Output Tax (12%)",   val: invoice.vat_amount,                  muted: true },
+                  { label: "Recorded VAT Amount",   val: invoice.vat_amount,                  muted: true },
                   { label: "Less: Withholding Tax",  val: -invoice.withholding_tax,            muted: true },
                   { label: "Other Charges",          val: invoice.other_charges,               muted: true },
                   { label: "TOTAL AMOUNT DUE",       val: invoice.total_amount - invoice.withholding_tax, muted: false },
@@ -367,7 +316,7 @@ export function InvoiceDetail() {
             </Card>
             <Card>
               <CardHeader className="px-5 pt-4 pb-2">
-                <CardTitle className="text-sm">VAT Summary per BIR Format</CardTitle>
+                <CardTitle className="text-sm">Recorded Tax Summary</CardTitle>
               </CardHeader>
               <CardContent className="px-5 pb-4 space-y-3 text-xs">
                 {[
@@ -392,13 +341,13 @@ export function InvoiceDetail() {
           </div>
         </TabsContent>
 
-        {/* ── Signature & QR ────────────────────────────────────────────── */}
+        {/* ── Checksum & QR ────────────────────────────────────────────── */}
         <TabsContent value="signature" className="mt-4">
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader className="px-5 pt-4 pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-success" /> Digital Signature
+                  <Shield className="h-4 w-4 text-success" /> Recorded Checksum
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-5 pb-4 space-y-3 text-xs">
@@ -406,19 +355,19 @@ export function InvoiceDetail() {
                   <>
                     <div className="flex items-center gap-2 p-2 bg-success/10 border border-success/30 rounded">
                       <CheckCircle2 className="h-3.5 w-3.5 text-success flex-shrink-0" />
-                      <p className="text-success font-medium">Invoice digitally signed</p>
+                      <p className="text-success font-medium">Recorded digest · BIR signature not verified</p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-muted-foreground">Algorithm</p>
                       <p className="font-mono text-foreground">SHA-256</p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-muted-foreground">Signature Hash</p>
+                      <p className="text-muted-foreground">Recorded Digest</p>
                       <p className="font-mono bg-muted p-2 rounded break-all text-[10px]">{invoice.digital_signature}</p>
                     </div>
                     {invoice.signed_at && (
                       <div className="space-y-1">
-                        <p className="text-muted-foreground">Signed At</p>
+                        <p className="text-muted-foreground">Digest Recorded At</p>
                         <p className="text-foreground">{new Date(invoice.signed_at).toLocaleString("en-PH")}</p>
                       </div>
                     )}
@@ -428,7 +377,7 @@ export function InvoiceDetail() {
                     </div>
                   </>
                 ) : (
-                  <p className="text-muted-foreground italic">This invoice has not been signed yet.</p>
+                  <p className="text-muted-foreground italic">No verified BIR signature is available. API integration is pending.</p>
                 )}
               </CardContent>
             </Card>
@@ -441,9 +390,7 @@ export function InvoiceDetail() {
               <CardContent className="px-5 pb-4 space-y-3 text-xs">
                 {invoice.qr_payload ? (
                   <>
-                    <div className="flex justify-center p-6 bg-muted/40 rounded-lg">
-                      <QrCode className="h-24 w-24 text-foreground" />
-                    </div>
+                    <p>Recorded source payload only. This is not a public verification link or proof of BIR acceptance.</p>
                     <div className="space-y-1">
                       <p className="text-muted-foreground">QR Payload</p>
                       <p className="font-mono bg-muted p-2 rounded break-all text-[10px]">{invoice.qr_payload}</p>
@@ -466,16 +413,17 @@ export function InvoiceDetail() {
           <Card>
             <CardHeader className="px-5 pt-4 pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
-                <History className="h-4 w-4" /> Version & Audit Trail
+                <History className="h-4 w-4" /> Recorded Lifecycle Events (Latest 30)
               </CardTitle>
             </CardHeader>
             <CardContent className="px-5 pb-4">
               <div className="space-y-0">
+                {!versions.length && <p className="text-sm text-muted-foreground">No recorded lifecycle events. No history or actor has been inferred from timestamps.</p>}
                 {versions.map((v, i) => (
                   <div key={v.version} className="flex gap-3">
                     <div className="flex flex-col items-center">
                       <div className="h-6 w-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
-                        {v.version}
+                        {i + 1}
                       </div>
                       {i < versions.length - 1 && <div className="w-px flex-1 bg-border my-1" />}
                     </div>
@@ -498,21 +446,15 @@ export function InvoiceDetail() {
 
         {/* ── Actions ───────────────────────────────────────────────────── */}
         <TabsContent value="actions" className="mt-4">
+          <div className="mb-4 flex flex-wrap gap-2"><DocumentCopyActions source="invoice" id={invoice.id} number={invoice.invoice_number}/></div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
               {
-                title: "Send to Buyer",
-                desc: "Email invoice to buyer's registered address",
-                icon: Send, color: "text-primary",
-                action: () => toast.success(`Invoice sent to ${invoice.buyer_email || "buyer"}`),
-                disabled: invoice.status === "cancelled",
-              },
-              {
                 title: "Mark as Paid",
-                desc: "Record full payment for this invoice",
+                desc: "Settlement requires recorded payment evidence; this view does not change payment status.",
                 icon: CheckCircle2, color: "text-success",
-                action: () => toast.success("Invoice marked as paid"),
-                disabled: invoice.status === "paid" || invoice.status === "cancelled",
+                action: () => {},
+                disabled: true,
               },
               {
                 title: "Create Correction",
@@ -520,13 +462,6 @@ export function InvoiceDetail() {
                 icon: RotateCcw, color: "text-warning",
                 action: handleCorrection,
                 disabled: invoice.status === "draft",
-              },
-              {
-                title: "Download PDF",
-                desc: "Generate and download printable PDF",
-                icon: Printer, color: "text-foreground",
-                action: () => toast.info("Generating PDF…"),
-                disabled: false,
               },
               {
                 title: "Duplicate Invoice",
@@ -539,7 +474,7 @@ export function InvoiceDetail() {
                 title: "Export All Formats",
                 desc: "Download JSON, XML, and CSV simultaneously",
                 icon: Download, color: "text-chart-3",
-                action: () => { exportToJSON(invoice); exportToCSV(invoice); toast.success("All formats exported"); },
+                action: () => { exportToJSON(invoice); exportToCSV(invoice); exportToXML(invoice); toast.success("Internal JSON, XML and CSV exported"); },
                 disabled: false,
               },
             ].map(a => (
@@ -560,7 +495,7 @@ export function InvoiceDetail() {
           </div>
 
           {/* Cancellation workflow */}
-          {!["cancelled", "voided", "paid"].includes(invoice.status) && (
+          {invoice.status === "draft" && (
             <Card className="mt-4 border-destructive/30">
               <CardHeader className="px-5 pt-4 pb-2">
                 <CardTitle className="text-sm text-destructive flex items-center gap-2">
@@ -569,7 +504,7 @@ export function InvoiceDetail() {
               </CardHeader>
               <CardContent className="px-5 pb-4 space-y-3">
                 <p className="text-xs text-muted-foreground">
-                  Cancellation requires a reason and will create an immutable cancellation record. This action cannot be undone.
+                  Submit a cancellation review with the reason. The original invoice remains preserved until authorized disposition is documented.
                 </p>
                 <div className="space-y-1">
                   <Label className="text-xs">Cancellation Reason *</Label>
@@ -590,13 +525,13 @@ export function InvoiceDetail() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Cancel Invoice {invoice.invoice_number}?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This will void the invoice and create a permanent cancellation record. Reason: <strong>{cancelReason}</strong>
+                        This saves a pending review request. It does not void the invoice. Reason: <strong>{cancelReason}</strong>
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>No, keep invoice</AlertDialogCancel>
                       <AlertDialogAction onClick={handleCancel} className="bg-destructive hover:bg-destructive/90">
-                        {cancelling ? "Processing…" : "Yes, cancel invoice"}
+                        {cancelling ? "Processing…" : "Submit review request"}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>

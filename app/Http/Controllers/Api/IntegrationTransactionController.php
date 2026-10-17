@@ -2,494 +2,244 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\InsufficientWalletBalance;
 use App\Http\Controllers\Controller;
+use App\Services\AtomicQuota;
 use App\Services\BirCompliance;
+use App\Services\EisDocumentReadiness;
 use App\Services\IntegrationContract;
-use Illuminate\Http\JsonResponse;
+use App\Services\InvoiceCalculator;
+use App\Services\InvoiceSequence;
+use App\Services\MerchantWallet;
+use App\Services\SignedWebhook;
+use App\Services\TransactionPricing;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class IntegrationTransactionController extends Controller
 {
-    public function store(Request $request): JsonResponse
+    private function authenticate(Request $r, string $scope): array
+    {
+        $raw = (string) ($r->header('X-NUERS-API-Key') ?: $r->bearerToken());
+        abort_if(! $raw || strlen($raw) > 256, 401, 'Missing or invalid API key.');
+        $key = DB::table('merchant_api_keys')->where('key_hash', hash('sha256', $raw))->first();
+        abort_unless($key, 401, 'Invalid API key.');
+        abort_unless($key->status === 'active' && ($key->expires_at && now()->lt($key->expires_at)), 403, 'API key is inactive or expired.');
+        abort_unless(in_array($scope, json_decode($key->scopes ?? '[]', true) ?: [], true), 403, 'API key lacks the required scope.');
+        $ips = json_decode($key->ip_whitelist ?? '[]', true) ?: [];
+        abort_if($ips && ! in_array($r->ip(), $ips, true), 403, 'IP is not authorized.');
+        $merchant = DB::table('merchants')->where('id', $key->merchant_id)->first();
+        abort_unless($merchant, 404);
+        if (! $r->isMethod('GET')) {
+            abort_unless($merchant->status === 'active', 403, 'Only active businesses can submit new financial events. Retrieval remains available.');
+        }
+        app(AtomicQuota::class)->admit('integration:'.$key->id, (int) $key->rate_limit_per_day);
+
+        return [$key, $merchant];
+    }
+
+    public function show(Request $r, string $id)
+    {
+        [$key,$merchant] = $this->authenticate($r, 'transactions:read');
+        $inbox = DB::table('integration_inbox')->where('id', $id)->where('merchant_id', $merchant->id)->where('branch_code', $key->branch_code)->first();
+        abort_unless($inbox, 404);
+        $response = json_decode($inbox->response, true);
+        $response['preparation'] = DB::table('eis_document_outbox')->where('document_source', 'receipt')->where('document_id', $inbox->receipt_id)->orderByDesc('prepared_at')->first(['id', 'status', 'document_hash', 'blockers']);
+        $response['bir_acceptance'] = 'not_verified';
+
+        return response()->json($response)->header('Cache-Control', 'no-store');
+    }
+
+    private function accept(array $v, object $key, object $merchant): array
+    {
+        abort_unless(preg_match('/^[0-9]{5}$/', (string) $key->branch_code) && $key->branch_code === $v['branch_code'], 403, 'API key must be bound to this verified five-digit BIR branch.');
+        $family = in_array($v['document_type'], ['payment_receipt', 'official_receipt'], true) ? 'payment' : 'invoice';
+        abort_unless($v['event_type'] === ($family === 'payment' ? 'payment.recorded' : 'invoice.finalized'), 422, 'Event trigger and document family conflict.');
+        $hash = app(IntegrationContract::class)->canonicalHash($v);
+        $namespace = hash('sha256', json_encode([$merchant->id, $v['branch_code'], $v['source_system'], $family, $v['external_reference']]));
+        $eventHash = hash('sha256', json_encode([$merchant->id, $v['branch_code'], $v['source_system'], $v['source_event_id']]));
+
+        return DB::transaction(function () use ($v, $hash, $namespace, $eventHash, $merchant, $key, $family) {
+            // Serialize new source acceptance per tenant; the unique indexes are a second independent guard.
+            $merchant = DB::table('merchants')->where('id', $merchant->id)->lockForUpdate()->first();
+            abort_unless($merchant && $merchant->status === 'active', 403, 'Only active businesses can accept new financial events.');
+            $old = DB::table('integration_inbox')->where('namespace_hash', $namespace)->orWhere('event_hash', $eventHash)->first();
+            if ($old) {
+                abort_unless(hash_equals($old->request_hash, $hash), 409, 'Source identity was reused with different content. Preserve the original; submit a lawful correction.');
+
+                return ['duplicate' => true, ...json_decode($old->response, true)];
+            }
+            $tax = app(IntegrationContract::class)->calculateDocument($v, (bool) $merchant->vat_registered);
+            $types = collect($tax['items'])->pluck('tax_type')->unique();
+            if ($types->count() === 1) {
+                abort_unless($types->first() === $v['tax_type'], 422, 'Header and line tax classification must agree.');
+            }
+            $type = $family === 'payment' ? 'payment_receipt' : ($types->count() > 1 ? 'mixed_sales_invoice' : match ($types->first()) {
+                'vatable' => 'vat_invoice','non_vat' => 'non_vat_invoice','vat_exempt' => 'vat_exempt_invoice','zero_rated' => 'zero_rated_invoice'
+            });
+            abort_unless(in_array($v['document_type'], [$type, 'sales_invoice', 'official_receipt'], true), 422, 'Document type conflicts with calculated line tax classification.');
+            $id = (string) Str::uuid();
+            $transaction = (string) Str::uuid();
+            $receipt = (string) Str::uuid();
+            $wallet = app(MerchantWallet::class)->charge((string) $merchant->id, app(InvoiceCalculator::class)->cents($tax['gross_amount'], 'gross_amount'), $type, 'receipt', $receipt, $v['receipt_number'], $v['branch_code'], 'api', 'api-key:'.$key->id);
+            $authority = app(BirCompliance::class)->assertCanIssue((string) $merchant->id, $v['branch_code'], 'production');
+            $series = app(InvoiceSequence::class)->reserve((string) $merchant->id, $v['branch_code'], $family, $v['receipt_number']);
+            $at = CarbonImmutable::parse($v['occurred_at'])->setTimezone(config('app.timezone'))->format('Y-m-d H:i:s');
+            abort_if(DB::table('transaction_receipts')->where('merchant_id', $merchant->id)->where('receipt_number', $series['number'])->exists(), 409, 'Document number already exists.');
+            DB::table('merchant_transactions')->insert([
+                'id' => $transaction, 'merchant_id' => $merchant->id, 'merchant_ref_id' => $merchant->tin, 'transaction_ref' => 'SRC-'.$namespace,
+                'source_request_hash' => $hash, 'source_system' => $v['source_system'], 'source_api_key_id' => $key->id,
+                'amount' => $tax['gross_amount'], 'vat_amount' => $tax['vat_amount'], 'vatable_sales' => $tax['vatable_sales'], 'net_amount' => $tax['net_amount'],
+                'payment_method' => $v['payment_method'], 'region' => $merchant->region, 'branch' => $key->branch_name, 'branch_code' => $v['branch_code'], 'branch_type' => $key->branch_type,
+                'channel' => 'api', 'transaction_type' => $family === 'invoice' ? 'sale' : 'payment', 'tax_type' => $types->count() > 1 ? 'mixed' : $types->first(), 'document_type' => $type,
+                'customer_name' => $v['customer_name'] ?? null, 'customer_tin' => $v['customer_tin'] ?? null, 'status' => 'completed', 'receipt_id' => $receipt,
+                'external_payload' => json_encode($v), 'created_at' => $at, 'updated_at' => now(),
+            ]);
+            $terminals = DB::table('merchant_terminals as mt')->join('merchant_branches as mb', function($join){$join->on('mb.id','=','mt.branch_id')->on('mb.merchant_id','=','mt.merchant_id');})->where('mt.merchant_id', $merchant->id)->where('mt.api_key_id', $key->id)->where('mt.status', 'active')->where('mb.status','active')->where('mb.bir_branch_code',$v['branch_code'])->pluck('mt.id');
+            DB::table('transaction_receipts')->insert([
+                ...$authority, 'issuer_terminal_id' => $terminals->count() === 1 ? $terminals->first() : null, 'id' => $receipt, 'transaction_id' => $transaction, 'merchant_id' => $merchant->id, 'receipt_number' => $series['number'], 'series_number' => $series['series_id'],
+                'receipt_type' => 'api_transaction_receipt', 'document_type' => $type, 'merchant_name' => $merchant->business_name, 'merchant_tin' => $merchant->tin,
+                'merchant_address' => $merchant->address ?? '', 'merchant_vat_reg' => $merchant->vat_registered ? 'VAT Registered' : 'Non-VAT',
+                'seller_branch_code' => $v['branch_code'], 'buyer_name' => $v['customer_name'] ?? null, 'buyer_tin' => $v['customer_tin'] ?? null,
+                'gross_amount' => $tax['gross_amount'], 'discount_amount' => $tax['discount_amount'], 'vatable_sales' => $tax['vatable_sales'], 'vat_exempt_sales' => $tax['vat_exempt_sales'],
+                'zero_rated_sales' => $tax['zero_rated_sales'], 'vat_amount' => $tax['vat_amount'], 'total_due' => $tax['gross_amount'],
+                'items' => json_encode(array_map(fn ($i) => $i + ['vat_inclusive' => (bool) ($v['vat_inclusive'] ?? true)], $tax['items'])),
+                'status' => 'issued', 'issued_at' => $at, 'created_at' => now(), 'updated_at' => now(),
+            ]);
+            $prep = app(EisDocumentReadiness::class)->prepare('receipt', $receipt);
+            $body = ['id' => $id, 'transaction_id' => $transaction, 'receipt_id' => $receipt, 'receipt_number' => $series['number'], 'external_reference' => $v['external_reference'],
+                'source_event_id' => $v['source_event_id'], 'occurred_at' => $v['occurred_at'], 'accepted_at' => now()->toIso8601String(), 'status' => 'durably_recorded',
+                'wallet' => $wallet, 'bir_acceptance' => 'not_verified', 'outbox_id' => $prep['id'], 'status_url' => url('/api/integrations/transactions/'.$id)];
+            DB::table('integration_inbox')->insert(['id' => $id, 'merchant_id' => $merchant->id, 'api_key_id' => $key->id, 'namespace_hash' => $namespace, 'event_hash' => $eventHash, 'request_hash' => $hash,
+                'source_system' => $v['source_system'], 'source_event_id' => $v['source_event_id'], 'external_reference' => $v['external_reference'], 'branch_code' => $v['branch_code'],
+                'schema_version' => $v['schema_version'], 'event_type' => $v['event_type'], 'occurred_at' => $at, 'received_at' => now(), 'transaction_id' => $transaction, 'receipt_id' => $receipt,
+                'response' => json_encode($body), 'created_at' => now(), 'updated_at' => now()]);
+            app(BirCompliance::class)->audit('integration.event.accepted', $id, 'api-key:'.$key->id, ['merchant_id' => $merchant->id, 'source_hash' => $hash, 'series_id' => $series['series_id']]);
+            app(SignedWebhook::class)->enqueue((string) $merchant->id, 'invoice.issued', $receipt, ['status_url' => $body['status_url']]);
+
+            return ['duplicate' => false, ...$body];
+        }, 3);
+    }
+
+    public function wallet(Request $r)
+    {
+        [$key,$merchant] = $this->authenticate($r, 'transactions:read');
+        abort_unless($key->environment === 'live', 409, 'Sandbox keys cannot read the production wallet.');
+        $w = app(MerchantWallet::class)->state($merchant->id);
+        $p = app(TransactionPricing::class)->offer();
+
+        return response()->json(['merchant_id' => $merchant->id, 'branch_code' => $key->branch_code, 'currency' => 'PHP', 'available_centavos' => (int) $w->available_centavos, 'intake_mode' => $w->intake_mode, 'pricing' => ['fee_centavos' => $p->fee_centavos, 'minimum_transaction_centavos' => $p->minimum_transaction_centavos, 'revision' => $p->revision], 'funding_url' => url('/merchant/wallet'), 'bir_connection' => 'not_verified'])->header('Cache-Control', 'private, no-store');
+    }
+
+    public function batch(Request $r)
     {
         $started = microtime(true);
-        $apiKey = null;
+        $key = null;
         $merchant = null;
-        $statusCode = 201;
-        $error = null;
-
+        $status = 500;
         try {
-            [$apiKey, $merchant] = $this->authenticateApiKey($request);
-            $this->enforceScope($apiKey, 'transactions:write');
-            $this->enforceRateLimit($apiKey);
-
-            $validated = $request->validate(app(IntegrationContract::class)->rules());
-
-            $this->resolveCustomerTinFromBarcode($validated);
-
-            $reference = $validated['external_reference'];
-            $existing = DB::table('merchant_transactions')
-                ->where('merchant_id', $merchant->id)
-                ->where('transaction_ref', $reference)
-                ->first();
-
-            if ($existing) {
-                $statusCode = 200;
-
-                return response()->json([
-                    'duplicate' => true,
-                    'transaction_id' => $existing->id,
-                    'message' => 'Transaction already exists for this Business Account.',
-                ]);
+            [$key,$merchant] = $this->authenticate($r, 'transactions:write');
+            abort_unless($key->environment === 'live', 409, 'Sandbox keys cannot write production financial records.');
+            $v = $r->validate(['events' => 'required|array|min:1|max:50']);
+            $events = [];
+            foreach ($v['events'] as $event) {
+                abort_unless(is_array($event), 422, 'Each event must be a JSON object.');
+                $events[] = Validator::make($event, app(IntegrationContract::class)->rules(true))->validate();
             }
+            $results = DB::transaction(function () use ($events, $key, $merchant) {
+                DB::table('merchants')->where('id', $merchant->id)->lockForUpdate()->first();
+                $p = app(TransactionPricing::class)->offer(true);
+                $required = 0;
+                $seen = [];
+                foreach ($events as $event) {
+                    abort_unless($event['branch_code'] === $key->branch_code, 403, 'API key does not authorize this batch branch.');
+                    $family = in_array($event['document_type'], ['payment_receipt', 'official_receipt'], true) ? 'payment' : 'invoice';
+                    $namespace = hash('sha256', json_encode([$merchant->id, $event['branch_code'], $event['source_system'], $family, $event['external_reference']]));
+                    $eventHash = hash('sha256', json_encode([$merchant->id, $event['branch_code'], $event['source_system'], $event['source_event_id']]));
+                    $hash = app(IntegrationContract::class)->canonicalHash($event);
+                    $old = DB::table('integration_inbox')->where('namespace_hash', $namespace)->orWhere('event_hash', $eventHash)->first();
+                    if ($old) {
+                        abort_unless(hash_equals($old->request_hash, $hash), 409, 'A batch source identity conflicts with an accepted original.');
 
-            $authority = app(BirCompliance::class)->assertCanIssue((string) $merchant->id);
-
-            $amount = (float) ($validated['gross_amount'] ?? $validated['amount'] ?? 0);
-            $tax = app(IntegrationContract::class)->computeTax($amount, $validated['tax_type'], (float) ($validated['vat_rate'] ?? 12), (bool) ($validated['vat_inclusive'] ?? true));
-            $transactionId = (string) Str::uuid();
-            $receiptId = (string) Str::uuid();
-            $documentType = $this->resolveDocumentType($validated, $merchant, $tax);
-            $templateCode = $this->templateCode($documentType);
-            $receiptNumber = $validated['receipt_number'] ?? $this->receiptNumber($documentType);
-            $now = now();
-
-            $branch = $this->branchIdentity($apiKey, $merchant, $validated);
-
-            DB::transaction(function () use ($merchant, $apiKey, $validated, $tax, $transactionId, $receiptId, $receiptNumber, $documentType, $templateCode, $now, $branch, $authority) {
-                $transaction = [
-                    'id' => $transactionId,
-                    'merchant_id' => $merchant->id,
-                    'merchant_ref_id' => $merchant->tin,
-                    'transaction_ref' => $validated['external_reference'],
-                    'amount' => $tax['gross_amount'],
-                    'vat_amount' => $tax['vat_amount'],
-                    'vatable_sales' => $tax['vatable_sales'],
-                    'net_amount' => $tax['net_amount'],
-                    'payment_method' => $validated['payment_method'] ?? 'cash',
-                    'region' => $merchant->region ?: 'NCR',
-                    'branch' => $branch['name'],
-                    'channel' => $validated['channel'] ?? 'api',
-                    'transaction_type' => $validated['transaction_type'] ?? 'sale',
-                    'customer_name' => $validated['customer_name'] ?? null,
-                    'customer_tin' => $validated['customer_tin'] ?? null,
-                    'status' => 'completed',
-                    'receipt_id' => $receiptId,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-
-                if (Schema::hasColumn('merchant_transactions', 'source_system')) {
-                    $transaction['source_system'] = $validated['source_system'] ?? 'external_api';
+                        continue;
+                    }
+                    foreach ([$namespace, $eventHash] as $identity) {
+                        if (isset($seen[$identity])) {
+                            abort_unless($seen[$identity] === $hash, 409, 'A batch contains conflicting source identities.');
+                        }
+                    }
+                    $duplicate = isset($seen[$namespace]) || isset($seen[$eventHash]);
+                    $seen[$namespace] = $hash;
+                    $seen[$eventHash] = $hash;
+                    $tax = app(IntegrationContract::class)->calculateDocument($event, (bool) $merchant->vat_registered);
+                    if (! $duplicate && $family === 'invoice' && app(InvoiceCalculator::class)->cents($tax['gross_amount'], 'gross_amount') >= $p->minimum_transaction_centavos) {
+                        $required += (int) $p->fee_centavos;
+                    }
+                }
+                if ($required) {
+                    $w = app(MerchantWallet::class)->locked($merchant->id);
+                    if ($w->available_centavos < $required) {
+                        throw new InsufficientWalletBalance((int) $w->available_centavos, $required);
+                    }
+                }
+                $result = [];
+                foreach ($events as $event) {
+                    $result[] = $this->accept($event, $key, $merchant);
                 }
 
-                if (Schema::hasColumn('merchant_transactions', 'source_api_key_id')) {
-                    $transaction['source_api_key_id'] = $apiKey->id;
-                }
+                return $result;
+            }, 3);
 
-                if (Schema::hasColumn('merchant_transactions', 'branch_code')) {
-                    $transaction['branch_code'] = $branch['code'];
-                }
+            $status = 201;
 
-                if (Schema::hasColumn('merchant_transactions', 'branch_type')) {
-                    $transaction['branch_type'] = $branch['type'];
-                }
-
-                if (Schema::hasColumn('merchant_transactions', 'tax_type')) {
-                    $transaction['tax_type'] = $validated['tax_type'];
-                }
-
-                if (Schema::hasColumn('merchant_transactions', 'document_type')) {
-                    $transaction['document_type'] = $documentType;
-                }
-
-                if (Schema::hasColumn('merchant_transactions', 'bir_template_code')) {
-                    $transaction['bir_template_code'] = $templateCode;
-                }
-
-                if (Schema::hasColumn('merchant_transactions', 'external_payload')) {
-                    $transaction['external_payload'] = json_encode($validated);
-                }
-
-                if (Schema::hasColumn('merchant_transactions', 'rdo_code')) {
-                    $transaction['rdo_code'] = $merchant->rdo_code;
-                    $transaction['rdo_name'] = $merchant->rdo_name;
-                }
-
-                DB::table('merchant_transactions')->insert($transaction);
-
-                $receipt = [
-                    ...$authority,
-                    'id' => $receiptId,
-                    'transaction_id' => $transactionId,
-                    'merchant_id' => $merchant->id,
-                    'receipt_number' => $receiptNumber,
-                    'series_number' => null,
-                    'bir_accreditation' => null,
-                    'receipt_type' => 'api_transaction_receipt',
-                    'document_type' => $documentType,
-                    'bir_template_code' => $templateCode,
-                    'merchant_name' => $merchant->business_name,
-                    'merchant_tin' => $merchant->tin ?: '',
-                    'merchant_address' => $this->merchantAddress($merchant),
-                    'merchant_vat_reg' => $merchant->vat_registered ? 'VAT Registered' : 'Non-VAT',
-                    'buyer_name' => $validated['customer_name'] ?? null,
-                    'buyer_tin' => $validated['customer_tin'] ?? null,
-                    'gross_amount' => $tax['gross_amount'],
-                    'discount_amount' => 0,
-                    'vatable_sales' => $tax['vatable_sales'],
-                    'vat_exempt_sales' => $tax['vat_exempt_sales'],
-                    'zero_rated_sales' => $tax['zero_rated_sales'],
-                    'vat_amount' => $tax['vat_amount'],
-                    'total_due' => $tax['gross_amount'],
-                    'items' => json_encode($validated['items'] ?? []),
-                    'status' => 'issued',
-                    'issued_at' => $now,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-
-                if (Schema::hasColumn('transaction_receipts', 'rdo_code')) {
-                    $receipt['rdo_code'] = $merchant->rdo_code;
-                    $receipt['rdo_name'] = $merchant->rdo_name;
-                }
-
-                if (! Schema::hasColumn('transaction_receipts', 'document_type')) {
-                    unset($receipt['document_type']);
-                }
-
-                if (! Schema::hasColumn('transaction_receipts', 'bir_template_code')) {
-                    unset($receipt['bir_template_code']);
-                }
-
-                DB::table('transaction_receipts')->insert($receipt);
-                app(BirCompliance::class)->audit('invoice.api.issued', $receiptId, 'api-key:'.$apiKey->id, ['merchant_id' => $merchant->id, 'authority' => $authority, 'document_hash' => hash('sha256', json_encode($receipt, JSON_THROW_ON_ERROR))]);
-            });
-
-            DB::table('merchant_api_keys')->where('id', $apiKey->id)->update([
-                'last_used_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            return response()->json([
-                'transaction_id' => $transactionId,
-                'receipt_id' => $receiptId,
-                'receipt_number' => $receiptNumber,
-                'merchant_id' => $merchant->id,
-                'branch' => $branch,
-                'document' => [
-                    'document_type' => $documentType,
-                    'bir_template_code' => $templateCode,
-                    'label' => $this->documentLabel($documentType),
-                ],
-                'tax_classification' => [
-                    'tax_type' => $validated['tax_type'],
-                    'vatable_sales' => $tax['vatable_sales'],
-                    'vat_exempt_sales' => $tax['vat_exempt_sales'],
-                    'zero_rated_sales' => $tax['zero_rated_sales'],
-                    'vat_amount' => $tax['vat_amount'],
-                    'gross_amount' => $tax['gross_amount'],
-                ],
-            ], 201);
-        } catch (\Throwable $throwable) {
-            $statusCode = method_exists($throwable, 'getStatusCode') ? $throwable->getStatusCode() : 422;
-            $error = $throwable->getMessage();
-
-            throw $throwable;
+            return response()->json(['atomic' => true, 'accepted' => count($results), 'results' => $results, 'bir_acceptance' => 'not_verified'], 201)->header('Cache-Control', 'no-store');
+        } catch (\Throwable $e) {
+            $status = $e instanceof ValidationException ? 422 : (method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500);
+            throw $e;
         } finally {
-            $this->logRequest($request, $apiKey, $merchant, $statusCode, $started, $error);
+            $this->logRequest($r, $key, $merchant, $status, $started, '/api/integrations/transactions/batch');
         }
     }
 
-    private function authenticateApiKey(Request $request): array
+    public function store(Request $r)
     {
-        abort_unless(Schema::hasTable('merchant_api_keys'), 500, 'merchant_api_keys table is not migrated.');
+        $started = microtime(true);
+        $key = null;
+        $merchant = null;
+        $status = 500;
+        try {
+            [$key,$merchant] = $this->authenticate($r, 'transactions:write');
+            abort_unless($key->environment === 'live', 409, 'Sandbox keys cannot write production financial records. Use the synthetic developer preview.');
+            $v = $r->validate(app(IntegrationContract::class)->rules(true));
+            $result = $this->accept($v, $key, $merchant);
+            $status = $result['duplicate'] ? 200 : 201;
 
-        $plainKey = (string) ($request->header('X-NUERS-API-Key') ?: $request->bearerToken());
-
-        abort_if($plainKey === '', 401, 'Missing NUERS API key.');
-
-        $apiKey = DB::table('merchant_api_keys')
-            ->where('key_hash', hash('sha256', $plainKey))
-            ->first();
-
-        abort_unless($apiKey, 401, 'Invalid NUERS API key.');
-        abort_unless($apiKey->status === 'active', 403, 'This NUERS API key is not active.');
-
-        $allowedIps = $this->jsonArray($apiKey->ip_whitelist);
-        abort_if($allowedIps && ! in_array($request->ip(), $allowedIps, true), 403, 'This IP address is not allowed for the API key.');
-
-        $merchant = DB::table('merchants')->where('id', $apiKey->merchant_id)->first();
-
-        abort_unless($merchant, 404, 'Business Account for this API key was not found.');
-
-        return [$apiKey, $merchant];
-    }
-
-    private function resolveCustomerTinFromBarcode(array &$payload): void
-    {
-        $explicitTin = $this->normalizeTin($payload['customer_tin'] ?? null);
-
-        if ($this->isValidTin($explicitTin)) {
-            $payload['customer_tin'] = $this->formatTin($explicitTin);
-
-            return;
-        }
-
-        $barcodeTin = $this->tinFromNuersBarcode($payload['customer_name'] ?? null);
-
-        if (! $this->isValidTin($barcodeTin)) {
-            return;
-        }
-
-        $formattedTin = $this->formatTin($barcodeTin);
-        $payload['customer_tin'] = $formattedTin;
-
-        $profiles = DB::table('profiles')
-            ->whereRaw($this->normalizedTinSql('tin').' = ?', [$barcodeTin])
-            ->limit(2)
-            ->get();
-
-        if ($profiles->count() === 1 && trim((string) $profiles->first()->full_name) !== '') {
-            $payload['customer_name'] = $profiles->first()->full_name;
+            return response()->json($result, $status)->header('Location', $result['status_url']);
+        } catch (\Throwable $e) {
+            $status = $e instanceof ValidationException ? 422 : (method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500);
+            throw $e;
+        } finally {
+            $this->logRequest($r, $key, $merchant, $status, $started, '/api/integrations/transactions');
         }
     }
 
-    private function tinFromNuersBarcode(?string $value): string
+    private function logRequest(Request $r, ?object $key, ?object $merchant, int $status, float $started, string $endpoint): void
     {
-        $text = trim((string) $value);
-
-        if ($text === '' || ! Str::contains(Str::upper($text), 'NUERS')) {
-            return '';
+        // Best effort telemetry cannot turn a successfully committed acceptance into a false failure.
+        try {
+            DB::table('merchant_api_request_logs')->insert(['id' => (string) Str::uuid(), 'merchant_api_key_id' => $key?->id, 'merchant_id' => $merchant?->id,
+                'endpoint' => $endpoint, 'method' => 'POST', 'status_code' => $status, 'latency_ms' => (int) round((microtime(true) - $started) * 1000),
+                'request_reference' => mb_substr((string) ($r->input('external_reference') ?? ($r->is('api/integrations/transactions/batch') ? 'batch' : null)), 0, 120), 'source_system' => mb_substr((string) $r->input('source_system'), 0, 120),
+                'ip_address' => $r->ip(), 'created_at' => now(), 'updated_at' => now()]);
+            if ($key) {
+                DB::table('merchant_api_keys')->where('id', $key->id)->update(['last_used_at' => now()]);
+            }
+        } catch (\Throwable $loggingError) {
+            report($loggingError);
         }
-
-        return $this->normalizeTin($text);
-    }
-
-    private function normalizeTin(?string $tin): string
-    {
-        return preg_replace('/\D+/', '', (string) $tin) ?: '';
-    }
-
-    private function isValidTin(string $tin): bool
-    {
-        $length = strlen($tin);
-
-        return $length >= 9 && $length <= 12;
-    }
-
-    private function formatTin(string $tin): string
-    {
-        $digits = substr($this->normalizeTin($tin), 0, 12);
-        $groups = array_filter([
-            substr($digits, 0, 3),
-            substr($digits, 3, 3),
-            substr($digits, 6, 3),
-            substr($digits, 9, 3),
-        ], fn (string $group): bool => $group !== '');
-
-        return implode('-', $groups);
-    }
-
-    private function normalizedTinSql(string $column): string
-    {
-        return "REPLACE(REPLACE(REPLACE(REPLACE(COALESCE({$column}, ''), '-', ''), ' ', ''), '.', ''), '/', '')";
-    }
-
-    private function enforceScope(object $apiKey, string $scope): void
-    {
-        $scopes = $this->jsonArray($apiKey->scopes);
-
-        abort_unless(in_array($scope, $scopes, true), 403, "API key is missing {$scope} permission.");
-    }
-
-    private function enforceRateLimit(object $apiKey): void
-    {
-        if (! Schema::hasTable('merchant_api_request_logs')) {
-            return;
-        }
-
-        $count = DB::table('merchant_api_request_logs')
-            ->where('merchant_api_key_id', $apiKey->id)
-            ->where('created_at', '>=', now()->startOfDay())
-            ->count();
-
-        abort_if($count >= (int) $apiKey->rate_limit_per_day, 429, 'Daily API key rate limit exceeded.');
-    }
-
-    private function logRequest(Request $request, ?object $apiKey, ?object $merchant, int $statusCode, float $started, ?string $error): void
-    {
-        if (! Schema::hasTable('merchant_api_request_logs')) {
-            return;
-        }
-
-        $log = [
-            'id' => (string) Str::uuid(),
-            'merchant_api_key_id' => $apiKey?->id,
-            'merchant_id' => $merchant?->id,
-            'endpoint' => '/api/integrations/transactions',
-            'method' => $request->method(),
-            'status_code' => $statusCode,
-            'latency_ms' => (int) round((microtime(true) - $started) * 1000),
-            'request_reference' => $request->input('external_reference'),
-            'source_system' => $request->input('source_system'),
-            'ip_address' => $request->ip(),
-            'error_message' => $error,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ];
-
-        if (Schema::hasColumn('merchant_api_request_logs', 'branch_type')) {
-            $log['branch_type'] = $apiKey ? ($apiKey->branch_type ?? 'main') : null;
-            $log['branch_code'] = $apiKey ? ($apiKey->branch_code ?? 'MAIN') : null;
-            $log['branch_name'] = $apiKey ? ($apiKey->branch_name ?? 'Main Office') : null;
-        }
-
-        DB::table('merchant_api_request_logs')->insert($log);
-    }
-
-    private function resolveDocumentType(array $payload, object $merchant, array $tax): string
-    {
-        $explicit = $payload['document_type'] ?? null;
-
-        if (is_string($explicit) && $explicit !== '') {
-            return match ($explicit) {
-                'sales_invoice' => $this->documentTypeFromTax($payload, $merchant, $tax),
-                'official_receipt' => 'payment_receipt',
-                default => $explicit,
-            };
-        }
-
-        $transactionType = strtolower((string) ($payload['transaction_type'] ?? 'sale'));
-
-        if (Str::contains($transactionType, ['payment', 'receipt', 'collection', 'settlement'])) {
-            return 'payment_receipt';
-        }
-
-        $itemTaxTypes = collect($payload['items'] ?? [])
-            ->filter(fn ($item) => is_array($item))
-            ->map(fn ($item) => strtolower((string) ($item['tax_type'] ?? '')))
-            ->filter()
-            ->unique()
-            ->values();
-
-        if ($itemTaxTypes->count() > 1) {
-            return 'mixed_sales_invoice';
-        }
-
-        return $this->documentTypeFromTax($payload, $merchant, $tax);
-    }
-
-    private function documentTypeFromTax(array $payload, object $merchant, array $tax): string
-    {
-        $taxType = strtolower((string) ($payload['tax_type'] ?? 'vatable'));
-
-        return match (true) {
-            $taxType === 'zero_rated' || (float) $tax['zero_rated_sales'] > 0 => 'zero_rated_invoice',
-            $taxType === 'vat_exempt' || (float) $tax['vat_exempt_sales'] > 0 => 'vat_exempt_invoice',
-            $taxType === 'non_vat' || ! (bool) ($merchant->vat_registered ?? false) => 'non_vat_invoice',
-            default => 'vat_invoice',
-        };
-    }
-
-    private function templateCode(string $documentType): string
-    {
-        return [
-            'vat_invoice' => 'B1',
-            'non_vat_invoice' => 'B2',
-            'vat_exempt_invoice' => 'B3',
-            'zero_rated_invoice' => 'B4',
-            'mixed_sales_invoice' => 'B5',
-            'payment_receipt' => 'B6',
-        ][$documentType] ?? 'B1';
-    }
-
-    private function documentLabel(string $documentType): string
-    {
-        return [
-            'vat_invoice' => 'B1 VAT Invoice',
-            'non_vat_invoice' => 'B2 Non-VAT Invoice',
-            'vat_exempt_invoice' => 'B3 VAT-Exempt Sales Invoice',
-            'zero_rated_invoice' => 'B4 Zero-Rated Sales Invoice',
-            'mixed_sales_invoice' => 'B5 Mixed Sales Invoice',
-            'payment_receipt' => 'B6 Payment Receipt',
-        ][$documentType] ?? 'B1 VAT Invoice';
-    }
-
-    private function receiptNumber(string $documentType): string
-    {
-        $prefix = [
-            'vat_invoice' => 'VI',
-            'non_vat_invoice' => 'NVI',
-            'vat_exempt_invoice' => 'VEI',
-            'zero_rated_invoice' => 'ZRI',
-            'mixed_sales_invoice' => 'MSI',
-            'payment_receipt' => 'PR',
-        ][$documentType] ?? 'VI';
-
-        return $prefix.'-'.now()->format('Ymd').'-'.Str::upper(Str::random(8));
-    }
-
-    private function branchIdentity(object $apiKey, object $merchant, array $payload): array
-    {
-        $keyBranchType = $apiKey->branch_type ?? null;
-        $type = in_array($keyBranchType, ['main', 'branch'], true)
-            ? $keyBranchType
-            : ($payload['branch_type'] ?? 'main');
-        $name = $apiKey->branch_name
-            ?? $payload['branch_name']
-            ?? $payload['branch']
-            ?? ($type === 'main' ? 'Main Office' : 'Branch');
-        $code = $apiKey->branch_code
-            ?? $payload['branch_code']
-            ?? ($type === 'main' ? 'MAIN' : $name);
-
-        return [
-            'type' => $type,
-            'code' => $this->normalizeBranchCode($code),
-            'name' => $name,
-            'location' => $apiKey->branch_location ?? ($type === 'main' ? $this->merchantAddress($merchant) : null),
-        ];
-    }
-
-    private function normalizeBranchCode(?string $value): string
-    {
-        $normalized = preg_replace('/[^A-Z0-9]+/', '-', Str::upper(trim((string) $value)));
-        $normalized = trim((string) $normalized, '-');
-
-        return $normalized !== '' ? Str::limit($normalized, 40, '') : 'MAIN';
-    }
-
-    private function merchantAddress(object $merchant): string
-    {
-        $address = trim((string) ($merchant->address ?: ($merchant->business_registration_address ?? '')));
-
-        if ($address !== '') {
-            return $address;
-        }
-
-        return implode(', ', array_filter([
-            $merchant->barangay ?? null,
-            $merchant->city ?? null,
-            $merchant->country ?? null,
-        ]));
-    }
-
-    private function jsonArray(mixed $value): array
-    {
-        if (is_array($value)) {
-            return $value;
-        }
-
-        if (! is_string($value) || $value === '') {
-            return [];
-        }
-
-        $decoded = json_decode($value, true);
-
-        return is_array($decoded) ? array_values($decoded) : [];
     }
 }

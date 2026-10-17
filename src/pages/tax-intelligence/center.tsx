@@ -374,7 +374,7 @@ function RecordsTable({ title, description, rows }: { title: string; description
                   <td className="py-3 text-xs text-muted-foreground">{row.counterparty_name ?? "National control"}</td>
                   <td className="py-3 text-right text-xs font-medium text-foreground">{formatAmount(row.amount)}</td>
                   <td className="py-3 text-right text-xs text-foreground">{formatAmount(row.vat_amount)}</td>
-                  <td className="py-3 text-right text-xs text-foreground">{formatAmount(row.withholding_amount)}</td>
+                  <td className="py-3 text-right text-xs text-foreground">{row.withholding_amount===null?"Not verified":formatAmount(row.withholding_amount)}</td>
                   <td className="py-3">
                     <Badge variant="outline" className={`text-[10px] ${statusClass(row.status)}`}>{row.status}</Badge>
                   </td>
@@ -427,7 +427,7 @@ function SecondaryRecords({ title, rows }: { title: string; rows: TaxRecord[] })
               </div>
               <div className="rounded-md bg-secondary/40 p-2">
                 <p className="text-[10px] uppercase text-muted-foreground">EWT/CWT</p>
-                <p className="font-semibold text-foreground">{formatAmount(row.withholding_amount)}</p>
+                <p className="font-semibold text-foreground">{row.withholding_amount===null?"Not verified":formatAmount(row.withholding_amount)}</p>
               </div>
             </div>
             <div className="mt-3 flex items-center gap-2">
@@ -506,15 +506,16 @@ function TaxIntelligenceCenter({ scope }: { scope: TaxScope }) {
           <p className="mt-1 max-w-5xl text-sm text-muted-foreground">{cfg.description}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" className="gap-2 text-xs">
+          <Button disabled title="Requires a verified reporting workflow" variant="outline" size="sm" className="gap-2 text-xs">
             <FileText className="h-3.5 w-3.5" /> {cfg.secondaryAction}
           </Button>
-          <Button size="sm" className="gap-2 text-xs">
+          <Button disabled title="Requires verified workflow and model evidence" size="sm" className="gap-2 text-xs">
             <Zap className="h-3.5 w-3.5" /> {cfg.primaryAction}
           </Button>
         </div>
       </div>
 
+      {data.notice&&<p role="status" className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">{data.notice}</p>}
       {loading && (
         <Card>
           <CardContent className="p-4 text-sm text-muted-foreground">Loading tax intelligence data from MySQL...</CardContent>

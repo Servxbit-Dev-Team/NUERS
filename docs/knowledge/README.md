@@ -2,6 +2,12 @@
 
 This directory preserves project reference material and dated analysis for future work in this repository. It is project documentation, not global assistant memory.
 
+- [EIS readiness remediation and re-audit, 16 October 2026](eis-readiness-remediation-and-reaudit-2026-10-16.md) — implemented pre-accreditation controls, 114 regression tests, preserved source records and remaining external evidence/API requirements.
+
+- [Transactions page BIR EIS audit, 16 October 2026](transactions-bir-eis-audit-2026-10-16.md) — current local status, document coverage, historical seller identity, deadline and calculation findings.
+
+- [Current document alignment audit, 16 October 2026](document-alignment-audit-2026-10-16.md) — requirement matrix, critical legacy API gaps, isolated diagnostic results and production acceptance work.
+
 - [Functional specification v1.1 review and recommendations](functional-specification-v1.1-review.md)
 - [Original 18-page specification](sources/NUERS_Detailed_Illustrated_Functional_Specification_v1_1.pdf)
 - [Searchable page-numbered extraction](sources/NUERS_Functional_Specification_v1_1.extracted.txt)

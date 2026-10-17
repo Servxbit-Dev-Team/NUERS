@@ -2,13 +2,37 @@
 
 NUERS runs at **http://localhost:8001** from this checkout.
 
+## Approved security and workflow remediation — 16 October 2026
+
+The local schema now has **87 tables and no pending migrations** after four further reviewed migrations (000004–000007). The last migration replaces the expense number/TIN unique index with a tenant/original-source ID index; existing rows are preserved without inferred backfill. The latest backup is `.local/backups/NUERS_before_expense_source_provenance_20261016_234429.sql`. Original-column fingerprints matched before/after the workflow and expense provenance migrations; the security migration intentionally revoked legacy sessions. All **13 original financial transactions / PHP 750,400.00** remain preserved. Forty-eight encrypted preparation versions pass hash verification; 16 current preparations have blocked delivery jobs.
+
+Authentication, membership, MFA, versioned intake/sequence/idempotency, review/hold/portability, upload, dependency and operational-evidence controls were updated locally. The official BIR adapter and all activation flags remain blocked. No live deployment or external BIR/webhook message was performed. Read the [current remediation re-audit](../docs/audits/NUERS_REMEDIATION_REAUDIT_2026-10-16.md) and [merchant contract](../docs/integrations/merchant-ingestion-1.md) before integration work. Earlier database/test snapshots below are historical.
+
+## EIS preparation update — 16 October 2026
+
+Three reviewed additive EIS migrations now bring the active localhost database from **73 to 76 tables**, with **zero pending migrations**. They add reporting obligations, encrypted/versioned internal document preparation and append-only historical branch-evidence reviews. Every original table's original-column row fingerprints matched before and after each migration; all 13 transactions and PHP 750,400.00 of successful payment amounts remain preserved.
+
+Private backups precede each migration; the latest is `.local/backups/NUERS_before_eis_branch_evidence_20261016_215642.sql`. Verification reports are `.local/eis-readiness-fix-20261016/database-migration.json`, `database-migration-v2.json`, `database-migration-v3.json` and `reaudit.json`. Full isolated regression suite: **114 tests, 1,290 assertions**. Both frontend builds passed.
+
+The 16 canonical source documents remain Not Submitted, with absent historical branch evidence and three inconsistent imported invoice records explicitly flagged. No approvals or coverage records were fabricated; the user confirmed this is accreditation preparation. Official BIR transport/interface/response-verification gates remain false. No live-server changes or BIR submissions were performed. See [remediation and re-audit](../docs/knowledge/eis-readiness-remediation-and-reaudit-2026-10-16.md) for scope and remaining requirements. Earlier dated snapshot/schema sections below are historical.
+
+## Current schema update — 15 October 2026
+
+The active checkout was verified against **NUERS on 127.0.0.1:3307**. Twelve reviewed migrations, `2026_10_15_000004` through `2026_10_15_000015`, were pending in this database and have now been applied. This adds **16 tables**, bringing the active database from **57 to 73 tables**, with no pending migrations.
+
+The additions cover subscription plans; business registration, email verification, address and industry snapshots; support conversations/messages/events; reconciliation reviews; business registry workflows and RDO mappings; taxpayer authorizations/devices/connection observations; and integration connections/endpoints/webhooks. Existing merchant registry and user device-session fields were also added. Existing EIS configuration metadata was copied into the integration workspace as draft, without inferring approval or connectivity.
+
+A full private SQL backup was saved before migration at `.local/backups/NUERS_before_table_updates_20261015_212446.sql`. Row fingerprints over the original columns of all **56 existing data tables** matched before and after, including all **13 financial transactions**. The migration ledger changed as expected. Verification details are stored in `.local/database-table-update-20261015.json`.
+
+Post-update checks: **89 tests passed, 1,070 assertions** in isolated test databases. The running localhost health, registration-options and subscription-plan endpoints returned valid successful JSON; registration options include 124 RDOs and two published subscription plans. These changes were applied to localhost only.
+
 Restart the application and its isolated local database:
 
 ```bash
 bash .local/start.sh
 ```
 
-PHP and MySQL must be available on `PATH`; the database runtime uses Homebrew's `/opt/homebrew/opt/mysql/bin/mysqld`. MySQL listens only on `127.0.0.1:3308`. Other local MySQL services on ports 3306 and 3307 belong to separate environments.
+PHP and MySQL must be available on `PATH`; `.local/start.sh` starts the isolated MySQL runtime on `127.0.0.1:3307`, using `.local/mysql` and `.local/mysql.sock`. Confirm the active `.env` and migration status before applying later updates; older snapshot notes below describe the earlier import workflow.
 
 ## Plesk snapshot
 

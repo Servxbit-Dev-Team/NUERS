@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 
 const portals = [
-  { name: "Super Admin", audience: "NUERS platform operators", modules: "System, users, RBAC, APIs, security, subscriptions, gateways", icon: Server },
+  { name: "Super Admin", audience: "NUERS platform operators", modules: "System, users, RBAC, APIs, security, transaction fees, gateways", icon: Server },
   { name: "BIR Dashboard", audience: "BIR personnel and regulators", modules: "Revenue, compliance, audit, verification, reports, forecasts", icon: Landmark },
   { name: "Business Account Dashboard", audience: "Businesses and institutions", modules: "EOR issuance, POS, branches, settlements, reports, compliance", icon: Building2 },
   { name: "Client Dashboard", audience: "Citizens, taxpayers, students, patients", modules: "Wallet, payments, receipts, notifications, verification", icon: Users },

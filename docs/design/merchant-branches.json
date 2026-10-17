@@ -1,0 +1,136 @@
+{
+  "implemented_at": "2026-10-17T06:07:25.074849+00:00",
+  "reference": "/Users/marksioson/Downloads/NUERS Branches and Terminals Dashboard.png",
+  "routes": {
+    "merchant": "/merchant/branches",
+    "admin_review": "/super-admin/branch-reviews"
+  },
+  "design": {
+    "shared_navigation": "Existing merchant navigation retained; previously removed redundant pages stay removed.",
+    "layout": "Six summary cards, branch directory and terminal registry, profile summary, quick actions, evidence checklist and recent activity.",
+    "assets": "Existing Philippines hero and Lucide icons; no generated regulatory seals or fabricated branch photographs.",
+    "responsive": "Scrollable data tables preserve readable type; stacked panels on smaller screens.",
+    "attribution": "No Powered by branding."
+  },
+  "documentation_alignment": [
+    {
+      "requirement": "Exact five-digit BIR branch code, separate from internal directory identifiers",
+      "evidence": [
+        "database/migrations/2026_10_17_000008_merchant_branch_registry.php",
+        "app/Http/Controllers/Api/MerchantBranchController.php"
+      ],
+      "source": "docs/audits/NUERS_EIS_REQUIREMENTS_MATRIX.csv"
+    },
+    {
+      "requirement": "Branch, taxpayer, environment, API key and PTT device scope remain distinct",
+      "evidence": [
+        "app/Services/MerchantBranches.php"
+      ],
+      "source": "docs/knowledge/permits-integrations-and-sessions.md"
+    },
+    {
+      "requirement": "No invented BIR eligibility, acknowledgement, device synchronization or connectivity",
+      "evidence": [
+        "app/Services/MerchantBranches.php",
+        "src/pages/merchant/branches.tsx"
+      ],
+      "source": "docs/knowledge/permits-integrations-and-sessions.md"
+    },
+    {
+      "requirement": "Tenant isolation, reasoned changes, independent review, stale update protection",
+      "evidence": [
+        "app/Http/Controllers/Api/MerchantBranchController.php",
+        "app/Services/MerchantBranches.php",
+        "tests/Feature/MerchantBranchRegistryTest.php"
+      ],
+      "source": "docs/knowledge/sources/NUERS_Functional_Specification_v1_1.extracted.txt"
+    },
+    {
+      "requirement": "Encrypted private evidence and contacts, restricted downloads, hash verification, retained history",
+      "evidence": [
+        "app/Http/Controllers/Api/MerchantBranchController.php",
+        "app/Services/TenantPortability.php"
+      ],
+      "source": "docs/knowledge/sources/NUERS_EIS_Complete_System_Documentation.extracted.txt"
+    }
+  ],
+  "verification": {
+    "backend_tests": 254,
+    "assertions": 2645,
+    "javascript_tests": 13,
+    "production_build": true,
+    "static_build": true,
+    "browser_qa": [
+      "Created inactive branch without inventing a BIR branch code",
+      "Registered terminal without an API key; blocked issuance and unconfigured connection shown",
+      "Searched branch directory without filtering independent terminal registry",
+      "Checked document width equals viewport width"
+    ],
+    "fixtures": "Isolated SQLite QA on port 8002; no QA fixtures copied to main localhost or live database.",
+    "http": {
+      "https://nuers.net/merchant/branches": {
+        "status": 200,
+        "assets": [
+          "/assets/index-CptYWzGM.js",
+          "/assets/index-DvZU-b5X.css"
+        ]
+      },
+      "/assets/index-CptYWzGM.js": {
+        "status": 200,
+        "bytes": 2310805
+      },
+      "/assets/index-DvZU-b5X.css": {
+        "status": 200,
+        "bytes": 500455
+      },
+      "https://nuers.net/api/merchant/branches": {
+        "status": 401
+      },
+      "https://nuers.net/api/admin/branch-reviews": {
+        "status": 401
+      },
+      "https://nuers.net/.env": {
+        "status": 403
+      },
+      "https://nuers.net/api/health": {
+        "status": 200
+      }
+    },
+    "deployment": {
+      "branch_registry_verified": true,
+      "registry_counts": {
+        "merchant_branches": 0,
+        "merchant_terminals": 0,
+        "merchant_branch_documents": 0,
+        "merchant_branch_events": 0
+      },
+      "php": "8.4.26",
+      "debug": false,
+      "privileged_mfa": null,
+      "pricing_correct": true,
+      "no_powered_by": true,
+      "billing_model": "per_transaction",
+      "fee_centavos": 300,
+      "minimum_transaction_centavos": 50000,
+      "storage": "unlimited",
+      "retention_years": 5,
+      "fee_below_500": 0,
+      "fee_at_500": 300,
+      "smtp_config_preserved": true,
+      "deployed": true,
+      "backup_directory": "/var/www/vhosts/nuers.net/nuers-branches-backup-20261017-060405",
+      "application_record_counts_preserved": true,
+      "passwords_preserved": true,
+      "environment_preserved": true,
+      "pdf_verified": true,
+      "package_sha256": "67249ae8306302d2e9e2ae780a87904c613c74d5e0d78119d65778d3ac1f6a48"
+    }
+  },
+  "limits": [
+    "BIR production API/authority evidence remains pending; this page does not grant accreditation.",
+    "Branch verification checklist is an internal NUERS review workflow; uploading evidence does not establish government approval.",
+    "Interactive forms were exercised on isolated QA data; live authenticated merchant view was not exercised because the reset database has no merchant fixture.",
+    "Selection lists are bounded to 500 branches and 1000 terminals/keys/devices; CSV exports are capped at 5000 records.",
+    "The live verification helper used an incorrect MFA config key and returned null for privileged_mfa; this deployment did not modify security configuration or the environment."
+  ]
+}

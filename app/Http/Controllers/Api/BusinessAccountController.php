@@ -66,6 +66,9 @@ class BusinessAccountController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
+        foreach(['business_name','tin','business_type','bir_registration_date','vat_registered','address','country','country_code','city','city_code','barangay','barangay_code','zip_code','region','rdo_code','rdo_name','branch_count'] as $field) {
+            if(array_key_exists($field,$validated) && (string)($validated[$field] ?? '')!==(string)($merchant->$field ?? '')) abort(409,'Registered identity, address, tax and branch changes require the reviewed Business Registry workflow.');
+        }
         $updates = [
             ...$validated,
             'compliance_score' => $this->computedComplianceScore((object) [...(array) $merchant, ...$validated]),
@@ -74,6 +77,7 @@ class BusinessAccountController extends Controller
 
         DB::table('merchants')->where('id', $merchant->id)->update($updates);
 
+        if (array_key_exists('email',$validated) && ($validated['email']??null) !== ($merchant->email??null)) app(\App\Services\PlatformNotifications::class)->user($user->id,'security.business_contact.changed',(string)\Illuminate\Support\Str::uuid(),'Business profile contact changed','The contact information for your NUERS business profile was updated. Review Business Profile if this was unexpected.','security');
         $this->audit('business_account.profile.updated', $merchant->id, $user, $request, [
             'updated_fields' => array_keys($validated),
             'notes' => $validated['notes'] ?? null,
@@ -105,9 +109,7 @@ class BusinessAccountController extends Controller
         $directory = public_path('uploads/business-logos');
         File::ensureDirectoryExists($directory);
 
-        $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'png');
-        $fileName = Str::slug($merchant->business_name ?: 'business-account').'-'.Str::uuid().'.'.$extension;
-        $file->move($directory, $fileName);
+        $fileName = app(\App\Services\SafeImage::class)->store($file,$directory);
 
         $logoUrl = '/uploads/business-logos/'.$fileName;
 
@@ -143,13 +145,13 @@ class BusinessAccountController extends Controller
         if ($merchant) {
             return response()->json([
                 'data' => [
-                    ...$this->merchantPayload($merchant, $request),
+                    'id'=>$merchant->id,'business_name'=>$merchant->business_name,'tin'=>$merchant->tin,'address'=>$merchant->address,'vat_registered'=>(bool)$merchant->vat_registered,
                     'type' => 'business_account',
                 ],
             ]);
         }
 
-        $profile = DB::table('profiles')
+        $profile = DB::table('profiles')->where('id',$this->userFromRequest($request)->id)
             ->whereRaw($this->normalizedTinSql('tin').' = ?', [$tin])
             ->first();
 
@@ -180,34 +182,12 @@ class BusinessAccountController extends Controller
             return null;
         }
 
-        return DB::table('users')->where('api_token', $token)->first();
+        return app(\App\Services\ApiAccess::class)->user($request);
     }
 
     private function merchantForUser(object $user): ?object
     {
-        $merchant = DB::table('merchants')
-            ->where(function ($query) use ($user) {
-                $query
-                    ->where('merchant_account_id', $user->id)
-                    ->orWhere('merchant_account_email', $user->email)
-                    ->orWhere('email', $user->email);
-            })
-            ->first();
-
-        if ($merchant) {
-            return $merchant;
-        }
-
-        $profile = DB::table('profiles')->where('id', $user->id)->first();
-
-        if (! $profile?->organization) {
-            return null;
-        }
-
-        return DB::table('merchants')
-            ->where('business_name', $profile->organization)
-            ->orWhere('business_name', $profile->full_name)
-            ->first();
+        return app(\App\Services\ApiAccess::class)->merchants($user)->orderBy('id')->first();
     }
 
     private function merchantPayload(object $merchant, ?Request $request = null): array
@@ -328,62 +308,8 @@ class BusinessAccountController extends Controller
 
     private function profileDocuments(object $merchant): array
     {
-        return [
-            [
-                'id' => 'bir-registration',
-                'name' => 'BIR Business Registration',
-                'type' => 'TIN / BIR registration date',
-                'status' => $merchant->tin && $merchant->bir_registration_date ? 'verified' : 'missing',
-                'uploaded' => $merchant->bir_registration_date,
-                'expires' => null,
-                'size' => null,
-            ],
-            [
-                'id' => 'vat-registration',
-                'name' => 'VAT Registration',
-                'type' => 'BIR VAT status',
-                'status' => $merchant->vat_registered ? 'verified' : 'missing',
-                'uploaded' => $merchant->bir_registration_date,
-                'expires' => null,
-                'size' => null,
-            ],
-            [
-                'id' => 'business-address',
-                'name' => 'Business Registration Address',
-                'type' => 'Registered address',
-                'status' => $this->merchantAddress($merchant) ? 'verified' : 'missing',
-                'uploaded' => $merchant->updated_at,
-                'expires' => null,
-                'size' => null,
-            ],
-            [
-                'id' => 'rdo-assignment',
-                'name' => 'RDO Assignment',
-                'type' => 'BIR RDO branch mapping',
-                'status' => $merchant->rdo_code ? 'verified' : 'missing',
-                'uploaded' => $merchant->updated_at,
-                'expires' => null,
-                'size' => null,
-            ],
-            [
-                'id' => 'pos-system',
-                'name' => 'POS / Device Registration',
-                'type' => 'POS system on record',
-                'status' => $merchant->pos_system ? 'verified' : 'missing',
-                'uploaded' => $merchant->updated_at,
-                'expires' => null,
-                'size' => null,
-            ],
-            [
-                'id' => 'contact-email',
-                'name' => 'Business Contact Email',
-                'type' => 'Portal account contact',
-                'status' => ($merchant->email ?: $merchant->merchant_account_email) ? 'verified' : 'missing',
-                'uploaded' => $merchant->updated_at,
-                'expires' => null,
-                'size' => null,
-            ],
-        ];
+        $state=app(\App\Services\MerchantVerificationDocuments::class)->present($merchant->id);
+        return array_map(fn($d)=>['id'=>$d['kind'],'name'=>$d['name'],'type'=>$d['description'],'status'=>$d['status']==='needs_changes'?'expired':$d['status'],'uploaded'=>$d['created_at'],'expires'=>null,'size'=>$d['bytes']?round($d['bytes']/1024).' KB':null],$state['items']);
     }
 
     private function profileAuditEvents(object $merchant): array

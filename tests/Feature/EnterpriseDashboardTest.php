@@ -66,7 +66,7 @@ class EnterpriseDashboardTest extends TestCase
         DB::table('eis_acknowledgements')->insert(['id' => 'ack-own', 'transmission_id' => 'own-submission']);
         $response = $this->withToken($user->api_token)->getJson('/api/enterprise-dashboards/merchant');
         $response->assertOk()->assertJsonPath('metrics.0.value', 1)->assertJsonPath('metrics.1.value', 1)
-            ->assertJsonPath('metrics.4.value', 1)->assertJsonPath('recent.0.id', 'own-transaction')
+            ->assertJsonPath('metrics.4.value', 0)->assertJsonPath('recent.0.id', 'own-transaction')
             ->assertJsonCount(1, 'recent')->assertJsonPath('regions.0.count', 1)->assertJsonPath('notification_count', null);
         $this->assertSame(1, array_sum(array_column($response->json('volume'), 'valid')));
         $this->assertStringNotContainsString('other-transaction', $response->getContent());
@@ -75,7 +75,7 @@ class EnterpriseDashboardTest extends TestCase
     public function test_citizen_tin_scope_accepts_formatting_and_never_exposes_other_records(): void
     {
         $user = $this->user('client', '123-456-789');
-        DB::table('client_accounts')->insert(['id' => 'own', 'user_id' => $user->id, 'wallet_balance' => 150]);
+        DB::table('client_accounts')->insert(['id' => 'own', 'user_id' => $user->id, 'wallet_balance' => 150, 'tin'=>'123456789', 'status'=>'active']);
         $this->transaction('mine', 'store', '123456789');
         $this->transaction('not-mine', 'store', '987654321');
         $response = $this->withToken($user->api_token)->getJson('/api/enterprise-dashboards/citizen');

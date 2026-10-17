@@ -209,6 +209,7 @@ return $q;
         $u = $this->actor($r, true);
         $v = $r->validate(['connection_id' => 'required|exists:integration_connections,id', 'revision' => 'required|integer|min:0', 'url' => 'required|url:https|max:500', 'events' => 'required|array|min:1|max:4', 'events.*' => 'required|in:invoice.issued,transmission.acknowledged,transmission.failed,permit.expiring', 'status' => 'required|in:disabled,configured', 'secret' => 'nullable|string|min:32|max:4096', 'evidence' => 'required|string|min:10|max:3000', 'reason' => 'required|string|min:10|max:2000']);
         $this->https($v['url']);
+        $urlParts=parse_url($v['url']);abort_if(isset($urlParts['user']) || isset($urlParts['pass']) || isset($urlParts['fragment']) || (isset($urlParts['port']) && $urlParts['port']!==443),422,'Webhook URLs cannot contain credentials, fragments or non-443 ports.');
 
         return DB::transaction(function () use ($v, $u, $id) {
             $this->lock();

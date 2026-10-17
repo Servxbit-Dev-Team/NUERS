@@ -1,9 +1,11 @@
+import { useSearchParams } from "react-router-dom";
+import { VerificationDocumentsPanel } from "@/components/registration/verification-documents";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Building2, Mail, Phone, Globe, MapPin, FileText,
   Edit, Save, CheckCircle2, Shield, Upload, Download,
-  Clock, AlertCircle, RefreshCw, Star, Award, TrendingUp,
-  XCircle, ExternalLink, Eye, Calendar, Loader2, Database,
+  Clock, AlertCircle, Star, Award, TrendingUp,
+  XCircle, ExternalLink, Loader2, Database,
   Check, ChevronsUpDown,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Command, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -551,12 +553,11 @@ function SearchableLocationSelect({
 }
 
 export function MerchantProfile() {
+  const [profileParams] = useSearchParams();
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [uploadDialog, setUploadDialog] = useState(false);
-  const [uploadTarget, setUploadTarget] = useState<Document | null>(null);
   const [viewDoc, setViewDoc] = useState<Document | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [auditTrail, setAuditTrail] = useState<AuditEntry[]>([]);
@@ -891,11 +892,6 @@ export function MerchantProfile() {
     }
   }
 
-  function submitUpload() {
-    toast.success(`Document uploaded successfully and submitted for review.`);
-    setUploadDialog(false);
-    setUploadTarget(null);
-  }
 
   const complianceItems = [
     { label: "Business Name", ok: Boolean(form.business_name) },
@@ -978,7 +974,7 @@ export function MerchantProfile() {
         ))}
       </div>
 
-      <Tabs defaultValue="details">
+      <Tabs defaultValue={profileParams.get("tab")==="documents"?"documents":"details"}>
         <TabsList className="grid h-auto w-full grid-cols-2 gap-1 p-1 md:grid-cols-4 xl:w-fit">
           <TabsTrigger value="details" className="min-h-9 px-3 py-2 text-xs sm:text-sm">
             <span className="truncate">Business Details</span>
@@ -1371,81 +1367,7 @@ export function MerchantProfile() {
 
         {/* Documents Tab */}
         <TabsContent value="documents" className="mt-4">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">{verifiedDocs} verified · {documents.filter(d => d.status === "pending").length} under review · {missingDocs} need attention</p>
-              <Button size="sm" variant="outline" className="gap-2 text-xs" onClick={loadProfile}>
-                <RefreshCw className="h-3.5 w-3.5" /> Refresh
-              </Button>
-            </div>
-            <div className="space-y-2">
-              {documents.map((doc) => {
-                const cfg = docStatusConfig[doc.status];
-                return (
-                  <Card key={doc.id} className="overflow-hidden">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-4">
-                        <div className={`rounded-md p-2.5 ${doc.status === "verified" ? "bg-success/10" : doc.status === "pending" ? "bg-warning/10" : "bg-destructive/10"}`}>
-                          <FileText className={`h-5 w-5 ${cfg.color}`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-medium text-foreground">{doc.name}</p>
-                            <Badge
-                              variant="outline"
-                              className={`text-[10px] gap-1 border-current/30 ${cfg.color}`}
-                            >
-                              <cfg.icon className="h-2.5 w-2.5" />
-                              {cfg.label}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">{doc.type}</p>
-                          <div className="flex items-center gap-3 mt-1">
-                            {doc.uploaded && (
-                              <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                <Upload className="h-2.5 w-2.5" /> Uploaded {doc.uploaded}
-                              </span>
-                            )}
-                            {doc.expires && (
-                              <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                <Calendar className="h-2.5 w-2.5" /> Expires {doc.expires}
-                              </span>
-                            )}
-                            {doc.size && (
-                              <span className="text-[10px] text-muted-foreground">{doc.size}</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          {doc.status === "verified" || doc.status === "pending" ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="gap-1.5 text-xs h-7"
-                              onClick={() => setViewDoc(doc)}
-                            >
-                              <Eye className="h-3 w-3" /> View
-                            </Button>
-                          ) : null}
-                          {doc.status === "missing" || doc.status === "expired" ? (
-                            <Button
-                              size="sm"
-                              className="gap-1.5 text-xs h-7"
-                              onClick={() => setEditing(true)}
-                            >
-                              <Edit className="h-3 w-3" /> Complete Field
-                            </Button>
-                          ) : (
-                            <Badge variant="outline" className="text-[10px]">Database record</Badge>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
+          <VerificationDocumentsPanel />
         </TabsContent>
 
         {/* Compliance Tab */}
@@ -1594,37 +1516,6 @@ export function MerchantProfile() {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Upload Dialog */}
-      <Dialog open={uploadDialog} onOpenChange={setUploadDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Upload Document</DialogTitle>
-            <DialogDescription>
-              {uploadTarget ? `Uploading: ${uploadTarget.name}` : "Select a file to upload"}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="rounded-lg border-2 border-dashed border-border p-8 text-center hover:border-primary/40 transition-colors cursor-pointer">
-              <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-              <p className="text-sm font-medium text-foreground">Click to browse or drag &amp; drop</p>
-              <p className="text-xs text-muted-foreground mt-1">PDF, JPG, PNG up to 10 MB</p>
-            </div>
-            {uploadTarget?.type && (
-              <div className="rounded-md bg-muted/40 p-3 text-xs">
-                <p className="font-medium text-foreground mb-1">Required Document Type</p>
-                <p className="text-muted-foreground">{uploadTarget.type}</p>
-              </div>
-            )}
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setUploadDialog(false)}>Cancel</Button>
-              <Button size="sm" onClick={submitUpload} className="gap-2">
-                <Upload className="h-3.5 w-3.5" /> Submit for Review
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* View Document Dialog */}
       <Dialog open={!!viewDoc} onOpenChange={() => setViewDoc(null)}>

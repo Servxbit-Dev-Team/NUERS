@@ -21,9 +21,7 @@ class TaxpayerWorkspaceTest extends TestCase
         parent::setUp();
         config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:', 'app.timezone' => 'Asia/Manila', 'cache.default' => 'array']);
         DB::purge('sqlite');
-        foreach (['0001_01_01_000000_create_users_table.php', '2026_06_02_000001_create_nuers_tables.php', '2026_06_02_000002_create_enterprise_nuers_tables.php', '2026_06_02_000005_add_registration_address_to_merchants.php', '2026_06_02_000008_create_rdo_offices_table.php', '2026_06_02_000010_create_bir_eis_readiness_tables.php', '2026_10_15_000002_add_rmc110_compliance_controls.php', '2026_10_15_000010_add_business_registry_workflows.php', '2026_10_15_000012_create_taxpayer_authorizations.php', '2026_10_15_000013_create_integration_workspace.php'] as $f) {
-            (require database_path('migrations/'.$f))->up();
-        }$this->admin = $this->actor('super_admin');
+        foreach (glob(database_path('migrations/*.php')) as $migrationFile) { (require $migrationFile)->up(); }$this->admin = $this->actor('super_admin');
         $this->merchant = (string) Str::uuid();
         DB::table('merchants')->insert(['id' => $this->merchant, 'business_name' => 'Example Business', 'tin' => '123456789000', 'owner_name' => 'Owner', 'email' => 'owner@example.test', 'status' => 'active']);
         $this->withToken($this->admin->api_token);
@@ -39,7 +37,7 @@ class TaxpayerWorkspaceTest extends TestCase
 
     private function permit(array $p = [])
     {
-        return array_replace(['request_id' => (string) Str::uuid(), 'merchant_id' => $this->merchant, 'kind' => 'PTI', 'reference' => 'PTI-EXAMPLE-1', 'environment' => 'certification', 'scope' => 'Example main branch approved system', 'issued_at' => now()->subDays(30)->toDateString(), 'valid_until' => now()->addDays(20)->toDateString(), 'status' => 'active', 'evidence' => 'Example authority document reference', 'reason' => 'Document checked against taxpayer registration'], $p);
+        return array_replace(['request_id' => (string) Str::uuid(), 'merchant_id' => $this->merchant, 'kind' => 'PTI', 'reference' => 'PTI-EXAMPLE-1', 'environment' => 'certification', 'branch_code'=>'00000', 'scope' => 'Example main branch approved system', 'issued_at' => now()->subDays(30)->toDateString(), 'valid_until' => now()->addDays(20)->toDateString(), 'status' => 'active', 'evidence' => 'Example authority document reference', 'reason' => 'Document checked against taxpayer registration'], $p);
     }
 
     private function configForm(array $p = [])

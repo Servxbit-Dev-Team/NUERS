@@ -100,7 +100,8 @@ class BusinessRegistryTest extends TestCase
         $p['status'] = 'suspended';
         $this->postJson($url, $p)->assertOk()->assertJsonPath('business.status', 'suspended');
         $this->assertNull(DB::table('users')->where('id', $owner->id)->value('api_token'));
-        $this->postJson('/api/auth/login', ['email' => $owner->email, 'password' => 'OwnerPassword123'])->assertForbidden();
+        $login=$this->postJson('/api/auth/login', ['email' => $owner->email, 'password' => 'OwnerPassword123'])->assertOk();
+        $this->withToken($login->json('session.access_token'))->withHeaders(['X-NUERS-Device'=>$login->json('session.device_id')??'fixture-device'])->postJson('/api/merchant/expenses',[])->assertForbidden();
     }
 
     private function csv(array $rows): string
@@ -144,7 +145,7 @@ class BusinessRegistryTest extends TestCase
         $this->assertSame(64, strlen($token));
         $this->assertDatabaseHas('business_registry_requests', ['token_hash' => hash('sha256', $token), 'purpose' => 'invitation']);
         $this->postJson('/api/business-activation/inspect', ['token' => $token])->assertOk()->assertJsonPath('business_name', 'Example Business')->assertJsonMissingPath('email');
-        $p = ['token' => $token, 'password' => 'NewPassword123', 'password_confirmation' => 'NewPassword123', 'terms_accepted' => true, 'privacy_accepted' => true, 'notice_version' => '2026-10-15.2'];
+        $p = ['token' => $token, 'password' => 'NewPassword123', 'password_confirmation' => 'NewPassword123', 'terms_accepted' => true, 'privacy_accepted' => true, 'notice_version' => '2026-10-17.2'];
         $this->postJson('/api/business-activation', array_replace($p, ['terms_accepted' => false]))->assertUnprocessable();
         $this->postJson('/api/business-activation', $p)->assertOk();
         $u = DB::table('users')->where('email', 'owner@example.test')->first();

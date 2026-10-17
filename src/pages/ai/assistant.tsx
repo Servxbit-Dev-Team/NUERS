@@ -230,7 +230,7 @@ export function AIAssistant() {
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">NUERS AI Assistant</h1>
-          <p className="text-sm text-muted-foreground">Intelligent compliance, tax, and technical guidance powered by AI</p>
+          <p className="text-sm text-muted-foreground">Intelligent compliance, tax, and technical guidance with NUERS AI</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge className="bg-gold/20 text-gold-foreground border-gold/40 text-xs">

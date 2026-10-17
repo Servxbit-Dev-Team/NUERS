@@ -28,7 +28,8 @@ class GoogleAuthController extends Controller
             return $this->loginRedirect('google_error', 'not_configured');
         }
 
-        return Socialite::driver('google')->with(['prompt' => 'select_account'])->redirect();
+        // Google's existing browser session and prior consent can be reused.
+        return Socialite::driver('google')->redirect();
     }
 
     public function callback(Request $request): RedirectResponse
@@ -94,13 +95,14 @@ class GoogleAuthController extends Controller
         if ($user->google_id === null) {
             // An atomic update prevents a simultaneous callback replacing a link.
             $linked = User::whereKey($user->id)->whereNull('google_id')->update(['google_id' => $subject]);
+            if ($linked === 1) app(\App\Services\PlatformNotifications::class)->user($user->id,'security.google.connected',(string)$user->id,'Google sign-in connected','Google sign-in has been connected to your existing NUERS account. If you did not authorize this, contact NUERS support immediately.','security');
             if ($linked !== 1 && User::find($user->id)?->google_id !== $subject) {
                 return $this->loginRedirect('google_error', 'identity_conflict');
             }
         }
 
         $request->session()->regenerate();
-        $request->session()->put('google_login', ['user_id' => $user->id, 'expires_at' => now()->addMinutes(2)->timestamp]);
+        $request->session()->put('google_login', ['user_id' => $user->id, 'expires_at' => now()->addMinutes(5)->timestamp, 'credential_stamp'=>hash('sha256',$user->password)]);
 
         // The URL carries only a status flag, never Google or NUERS bearer tokens.
         return $this->loginRedirect('google', 'success');
@@ -115,10 +117,11 @@ class GoogleAuthController extends Controller
             $user = User::whereKey($pending['user_id'])->lockForUpdate()->first();
             $profile = $user ? Profile::find($user->id) : null;
             abort_unless($user && $profile && in_array($profile->role, self::ROLES, true), 401, 'This NUERS account is unavailable.');
+            abort_unless(hash_equals((string)($pending['credential_stamp']??''),hash('sha256',$user->password)),401,'Account security changed. Start a fresh Google sign-in.');
             $user = app(DeviceSession::class)->issue($user, $request);
             $userPayload = ['id' => (string) $user->id, 'email' => $user->email, 'user_metadata' => ['name' => $user->name]];
 
-            return ['session' => ['access_token' => $user->api_token, 'token_type' => 'bearer', 'user' => $userPayload], 'user' => $userPayload, 'role' => $profile->role];
+            return ['session' => [...app(DeviceSession::class)->metadata($user), 'access_token' => $user->api_token, 'token_type' => 'bearer', 'user' => $userPayload, 'mfa_required' => config('security.enforce_privileged_mfa') && (in_array($profile->role, config('security.privileged_roles'), true) || (bool) $user->mfa_secret)], 'user' => $userPayload, 'role' => $profile->role];
         });
 
         return response()->json($payload)->header('Cache-Control', 'private, no-store')->header('Referrer-Policy', 'no-referrer');

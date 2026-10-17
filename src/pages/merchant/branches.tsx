@@ -1,443 +1,83 @@
-import { useEffect, useState } from "react";
-import {
-  Activity, AlertTriangle, ArrowUpRight, BarChart3, CheckCircle2,
-  Database, Eye, GitBranch, Key, Loader2, MapPin, RefreshCw,
-  Search, Store, Wifi, WifiOff,
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent,
-} from "@/components/ui/chart";
-import type { ChartConfig } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
-import { apiFetch, readJsonResponse } from "@/lib/api-url";
-import { cn } from "@/lib/utils";
+import {useCallback,useEffect,useState,type ReactNode,type FormEvent,type ElementType} from 'react';
+import {Link} from 'react-router-dom';
+import {ArrowRight,Building2,CalendarDays,Check,CheckCircle2,ChevronLeft,ChevronRight,Download,Eye,FileText,Info,Link2,Loader2,MapPin,MoreVertical,Pencil,Plus,RefreshCw,Search,Send,Server,Settings,ShieldCheck,Store,Upload} from 'lucide-react';
+import {Dialog,DialogContent,DialogDescription,DialogHeader,DialogTitle} from '@/components/ui/dialog';
+import {apiFetch,apiJson,readJsonResponse} from '@/lib/api-url';
+import './merchant-dashboard.css';
+import './customers.css';
+import './branches.css';
 
-type ApiKeySummary = {
-  id: string;
-  name: string;
-  environment: string;
-  status: string;
-  key_preview: string;
-  last_seen: string;
-  requests_today: number;
-};
+type Branch={id:string;code:string;name:string;bir_branch_code:string|null;address:string;city:string;region:string;rdo_code:string;branch_type:string;status:string;review_status:string;revision:number;manager_name:string|null;email:string|null;phone:string|null;terminal_count?:number;review_reference?:string|null};
+type Terminal={id:string;code:string;identifier:string;name:string;branch_id:string;branch_name:string;bir_branch_code:string|null;pos_type:string;status:string;api_key_id:string|null;taxpayer_device_id:string|null;revision:number;api_key_name?:string|null;key_environment?:string|null;last_activity?:string|null;connection_status?:string;issuance_ready?:boolean;sync_status?:string};
+type Evidence={id:string;kind:string;name:string;bytes:number;created_at:string};
+type Readiness={can_issue:boolean;can_transmit:boolean;blockers:string[];note:string};
+type Profile={branch:Branch;completion:number;checks:Record<string,boolean>;terminals:number;active_terminals:number;documents:Evidence[];readiness:Readiness};
+type Overview={branches:{data:Branch[];total:number;page:number;last_page:number};terminals:{data:Terminal[];total:number;page:number;last_page:number};selected:Profile|null;summary:{total_branches:number;active_branches:number;registered_terminals:number;active_terminals:number;pending_verification:number;latest_update:string|null};options:{branches:Pick<Branch,'id'|'code'|'name'|'bir_branch_code'|'status'>[];cities:string[];regions:string[];keys:{id:string;name:string;branch_code:string;status:string;environment:string;expires_at:string|null}[];terminals:Terminal[];devices:{id:string;name:string;branch_code:string;status:string;environment:string}[];rdos:{rdo_code:string;rdo_name:string}[];document_kinds:Record<string,string>};activities:{id:string;branch_id:string;action:string;created_at:string}[];merchant:{name:string;tin:string};updated_at:string};
+type Filters={search:string;status:string;city:string;type:string;terminal_search:string;terminal_branch:string;pos_type:string;terminal_status:string;activity:string};
+const blank:Filters={search:'',status:'',city:'',type:'',terminal_search:'',terminal_branch:'',pos_type:'',terminal_status:'',activity:''};
+const posTypes:Record<string,string>={pos:'POS Terminal',mobile_pos:'Mobile POS',web:'Web Application',erp:'ERP Integration',api:'API Connector'};
+const reviewNames:Record<string,string>={draft:'Not reviewed',pending_review:'For Review',verified:'Identity reviewed',needs_changes:'Needs changes'};
+const checkNames:Record<string,string>={branch_information:'Branch information',address:'Address details',contact:'Contact person',tax_information:'BIR / tax information',documents:'Branch documents',terminal_configuration:'Terminal configuration'};
+const date=(s?:string|null)=>s?new Date(s.includes('T')?s:s.replace(' ','T')+'+08:00').toLocaleString('en-PH',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',timeZone:'Asia/Manila'}):'Not recorded';
+const query=(o:Record<string,string|number>)=>new URLSearchParams(Object.entries(o).filter(([,v])=>v!=='').map(([k,v])=>[k,String(v)])).toString();
+function Card({title,icon:Icon=FileText,children,action,className=''}:{title:string;icon?:ElementType;children:ReactNode;action?:ReactNode;className?:string}){return <section className={`mc-card mb-card ${className}`}><header><h2><Icon size={21}/>{title}</h2>{action}</header>{children}</section>}
+function Badge({children,tone='neutral'}:{children:ReactNode;tone?:string}){return <span className={`mb-badge ${tone}`}><i/>{children}</span>}
+async function download(path:string,name:string){const r=await apiFetch(path);if(!r.ok)await readJsonResponse(r);const blob=await r.blob(),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=(r.headers.get('content-disposition')?.match(/filename="([^"]+)"/)?.[1]||name).replace(/[\\/]/g,'_');a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+type Modal={kind:'branch'|'terminal'|'upload'|'review'|'profile'|'assign'|'readiness';branch?:Branch;terminal?:Terminal};
 
-type Branch = {
-  id: string;
-  name: string;
-  branch_code: string;
-  branch_type: "main" | "branch";
-  address: string;
-  city: string;
-  region: string;
-  status: "active" | "inactive";
-  monthly_revenue: number;
-  txns_today: number;
-  txns_month: number;
-  compliance: number;
-  growth: number;
-  api_connections: number;
-  online_connections: number;
-  idle_connections: number;
-  offline_connections: number;
-  last_seen: string;
-  keys: ApiKeySummary[];
-};
-
-type Summary = {
-  total_branches: number;
-  active_branches: number;
-  monthly_revenue: number;
-  transactions_today: number;
-  avg_compliance: number;
-  api_connections: number;
-};
-
-type ChartRow = {
-  name: string;
-  monthly_revenue: number;
-  txns_month: number;
-};
-
-const API_TOKEN_KEY = "nuers_api_token";
-
-const EMPTY_SUMMARY: Summary = {
-  total_branches: 0,
-  active_branches: 0,
-  monthly_revenue: 0,
-  transactions_today: 0,
-  avg_compliance: 0,
-  api_connections: 0,
-};
-
-const revenueChartConfig: ChartConfig = {
-  monthly_revenue: { label: "Monthly Revenue (PHP)", color: "var(--chart-1)" },
-  txns_month: { label: "Transactions", color: "var(--chart-2)" },
-};
-
-function authHeaders() {
-  const headers = new Headers({ Accept: "application/json" });
-
-  try {
-    const token = window.localStorage.getItem(API_TOKEN_KEY);
-    if (token) headers.set("Authorization", `Bearer ${token}`);
-  } catch {
-    // Browser storage can be unavailable in restricted contexts.
-  }
-
-  return headers;
+export function MerchantBranches(){
+ const[data,setData]=useState<Overview|null>(null),[filters,setFilters]=useState<Filters>(blank),[applied,setApplied]=useState<Filters>(blank),[page,setPage]=useState(1),[terminalPage,setTerminalPage]=useState(1),[selected,setSelected]=useState(''),[loading,setLoading]=useState(true),[error,setError]=useState(''),[message,setMessage]=useState(''),[clock,setClock]=useState(new Date()),[modal,setModal]=useState<Modal|null>(null),[busy,setBusy]=useState(false);
+ const load=useCallback(async(signal?:AbortSignal)=>{setLoading(true);try{const next=await apiJson<Overview>(`/api/merchant/branches?${query({...applied,page,terminal_page:terminalPage,branch_id:selected})}`,{signal});setData(next);setError('');window.dispatchEvent(new CustomEvent('nuers:merchant-connection',{detail:{connected:true,updatedAt:next.updated_at}}));}catch(e){if(!signal?.aborted)setError(e instanceof Error?e.message:'Branch registry is unavailable.');}finally{if(!signal?.aborted)setLoading(false)}},[applied,page,terminalPage,selected]);
+ useEffect(()=>{const c=new AbortController();void load(c.signal);return()=>c.abort()},[load]);useEffect(()=>{const t=setInterval(()=>setClock(new Date()),1000);return()=>clearInterval(t)},[]);
+ const profile=data?.selected,b=profile?.branch;
+ const open=(value:Modal)=>{setMessage('');setModal(value)};
+ const stats:{label:string;value:string;caption:string;color:string;icon:ElementType}[]=[{label:'Total Branches',value:String(data?.summary.total_branches??'—'),caption:'Saved branch identities',color:'blue',icon:Store},{label:'Active Branches',value:String(data?.summary.active_branches??'—'),caption:'Operational status only',color:'green',icon:Building2},{label:'Registered Terminals',value:String(data?.summary.registered_terminals??'—'),caption:'Saved terminal records',color:'purple',icon:Server},{label:'Active Terminals',value:String(data?.summary.active_terminals??'—'),caption:'In active branches',color:'amber',icon:Server},{label:'Pending Verification',value:String(data?.summary.pending_verification??'—'),caption:'Awaiting NUERS review',color:'red',icon:ShieldCheck},{label:'Last Sync / Latest Update',value:date(data?.summary.latest_update),caption:'Latest saved registry change',color:'blue',icon:RefreshCw}];
+ function apply(e:FormEvent){e.preventDefault();setPage(1);setTerminalPage(1);setSelected('');setApplied({...filters,search:filters.search.trim(),terminal_search:filters.terminal_search.trim()})}
+ async function exported(terminal=false){setBusy(true);try{await download(`/api/merchant/branches/export?${query({...applied,registry:terminal?'terminals':'branches'})}`,terminal?'NUERS-terminals.csv':'NUERS-branches.csv');setMessage('Filtered registry downloaded.')}catch(e){setError(e instanceof Error?e.message:'Export failed.')}finally{setBusy(false)}}
+ const select=(key:keyof Filters,label:string,options:Record<string,string>)=><label><span>{label}</span><select value={filters[key]} onChange={e=>setFilters({...filters,[key]:e.target.value})}><option value="">All {label==='Branch Status'?'Statuses':label==='City / Region'?'Locations':label==='POS Type'?'Types':label==='Branch'?'Branches':label==='Operational Status'?'Statuses':label==='Intake Activity'?'Activity':'Types'}</option>{Object.entries(options).map(([v,n])=><option key={v} value={v}>{n}</option>)}</select></label>;
+ const pager=(terminal=false)=>{const p=terminal?terminalPage:page,last=terminal?data?.terminals.last_page:data?.branches.last_page,total=terminal?data?.terminals.total:data?.branches.total,set=terminal?setTerminalPage:setPage;return <footer className="mb-pagination"><span>{total?`Showing ${(p-1)*10+1}–${Math.min(p*10,total)} of ${total}`:'No records'}</span><div><button aria-label={`Previous ${terminal?'terminal':'branch'} page`} disabled={loading||p<=1} onClick={()=>set(p-1)}><ChevronLeft size={16}/></button><b>{p} / {last||1}</b><button aria-label={`Next ${terminal?'terminal':'branch'} page`} disabled={loading||p>=(last||1)} onClick={()=>set(p+1)}><ChevronRight size={16}/></button></div></footer>};
+ return <div className="merchant-customers merchant-branches"><section className="mc-hero mb-hero"><div><span>{clock.getHours()<12?'Good morning,':clock.getHours()<18?'Good afternoon,':'Good evening,'}</span><h1>Branches / Terminals</h1><p>Manage your business branches, POS terminals, issuance scope, and activation status for NUERS operations.</p></div><div className="mc-clock"><CalendarDays size={34}/><div><span>{clock.toLocaleDateString('en-PH',{weekday:'long',month:'long',day:'numeric',year:'numeric',timeZone:'Asia/Manila'})}</span><strong>{clock.toLocaleTimeString('en-PH',{timeZone:'Asia/Manila'})}</strong><small className={error?'mc-danger':''}><i/>{error?'Refresh unavailable':data?'NUERS responding':'Connecting…'}</small></div></div></section>
+ {error&&<p className="mc-alert bad" role="alert">{error}<button onClick={()=>void load()}>Retry</button></p>}{message&&<p className="mc-alert" role="status">{message}</p>}
+ <div className="mc-stats mb-stats">{stats.map(({label,value,caption,color,icon:Icon},i)=><article key={label}><span className={`mc-icon ${color}`}><Icon size={29}/></span><div><h2>{label}</h2><strong className={i===5?'mb-latest':''}>{value}</strong><small>{caption}</small></div></article>)}</div>
+ <div className="mb-layout"><div className="mb-main"><Card title="Branch Directory" icon={Store} action={<div><button className="mc-primary" onClick={()=>open({kind:'branch'})}><Plus size={16}/>Add Branch</button><button className="mc-outline" disabled={busy||!data} onClick={()=>void exported()}><Download size={15}/>Export</button></div>}>
+ <form className="mb-filters" onSubmit={apply}><label className="mb-search"><span>Search branches</span><div><Search size={16}/><input aria-label="Search branches" maxLength={80} placeholder="Branch, location, RDO, BIR code…" value={filters.search} onChange={e=>setFilters({...filters,search:e.target.value})}/></div></label>{select('status','Branch Status',{active:'Active',inactive:'Inactive'})}{select('city','City / Region',Object.fromEntries([...(data?.options.cities||[]).map(c=>[c,c]),...(data?.options.regions||[]).map(c=>['region:'+c,'Region · '+c])]))}{select('type','Branch Type',{main:'Head Office',branch:'Branch'})}<div className="mb-filter-actions"><button className="mc-primary" disabled={loading}><Search size={14}/>Search</button><button type="button" className="mc-outline" onClick={()=>{setFilters(blank);setApplied(blank);setSelected('');setPage(1);setTerminalPage(1)}}>Reset</button></div></form>
+ <div className="mc-table mb-table"><table><thead><tr>{['#','Branch Code','Branch Name','Registered Address / City','RDO','BIR Branch Code','Branch Type','Terminals','Status','BIR / EIS','Actions'].map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{data?.branches.data.map((row,i)=><tr className={b?.id===row.id?'mb-selected':''} key={row.id}><td>{(page-1)*10+i+1}</td><td><button className="mc-text-button" onClick={()=>setSelected(row.id)}>{row.code}</button></td><td><button className="mb-name" onClick={()=>setSelected(row.id)}>{row.name}</button></td><td className="mb-address"><span>{row.address}</span><small>{row.city} · {row.region}</small></td><td>{row.rdo_code}</td><td>{row.bir_branch_code||'Not recorded'}</td><td><Badge>{row.branch_type==='main'?'Head Office':'Branch'}</Badge></td><td>{row.terminal_count}</td><td><Badge tone={row.status==='active'?'good':'neutral'}>{row.status==='active'?'Active':'Inactive'}</Badge></td><td><Badge tone={row.review_status==='pending_review'?'warn':'neutral'}>{reviewNames[row.review_status]}</Badge></td><td className="mc-row-actions"><button aria-label={`View ${row.name}`} onClick={()=>{setSelected(row.id);open({kind:'profile',branch:row})}}><Eye size={15}/></button><button aria-label={`Edit ${row.name}`} onClick={()=>open({kind:'branch',branch:row})}><Pencil size={15}/></button><details><summary aria-label={`More actions for ${row.name}`}><MoreVertical size={16}/></summary><div><button onClick={()=>{setSelected(row.id);open({kind:'upload',branch:row})}}>Upload documents</button><button onClick={()=>{setSelected(row.id);open({kind:'review',branch:row})}}>Request verification</button><button onClick={()=>open({kind:'terminal',branch:row})}>Register terminal</button></div></details></td></tr>)}</tbody></table>{!loading&&data&&!data.branches.data.length&&<div className="mc-empty"><Store size={35}/><h3>{data.summary.total_branches?'No branches match these filters':'Add your first branch'}</h3><p>Record your business location and branch identity. You can save an inactive draft while evidence is being prepared.</p><button className="mc-primary" onClick={()=>open({kind:'branch'})}><Plus size={16}/>Add Branch</button></div>}{loading&&!data&&<div className="mc-empty"><Loader2 className="animate-spin"/>Loading branch registry…</div>}</div>{pager()}</Card>
+ <Card title="Terminal Registry" icon={Server} action={<div><button className="mc-outline" disabled={busy||!data} onClick={()=>void exported(true)}><Download size={15}/>Export</button><button className="mc-primary" disabled={!data?.options.branches.length} onClick={()=>open({kind:'terminal',branch:b})}><Plus size={16}/>Register Terminal</button></div>}>
+ <form className="mb-filters mb-terminal-filters" onSubmit={apply}><label className="mb-search"><span>Search terminals</span><div><Search size={16}/><input aria-label="Search terminals" maxLength={80} placeholder="Terminal ID, identifier or name…" value={filters.terminal_search} onChange={e=>setFilters({...filters,terminal_search:e.target.value})}/></div></label>{select('terminal_branch','Branch',Object.fromEntries((data?.options.branches||[]).map(x=>[x.id,x.name])))}{select('pos_type','POS Type',posTypes)}{select('terminal_status','Operational Status',{active:'Active',inactive:'Inactive'})}{select('activity','Intake Activity',{recent:'Observed in last 15 minutes',unobserved:'No recent intake'})}<button className="mc-outline" disabled={loading}><Search size={14}/>Filter</button></form>
+ <div className="mc-table mb-table"><table><thead><tr>{['#','Terminal ID','Branch','Terminal Name','POS Type','API / Connection','Invoice Issuance','Last Activity','Sync Evidence','Actions'].map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{data?.terminals.data.map((row,i)=><tr key={row.id}><td>{(terminalPage-1)*10+i+1}</td><td><button className="mc-text-button" onClick={()=>open({kind:'terminal',terminal:row})}>{row.code}</button></td><td>{row.branch_name}</td><td><strong>{row.name}</strong><small>{row.identifier}</small></td><td>{posTypes[row.pos_type]}</td><td><Badge tone={row.connection_status==='recent_activity'?'good':'neutral'}>{({recent_activity:'Recent intake',stale_activity:'No recent intake',not_observed:'Not observed',not_configured:'Not configured'} as Record<string,string>)[row.connection_status||'not_observed']}</Badge><small>{row.key_environment==='sandbox'?'Sandbox key':row.api_key_name||'No key assigned'}</small></td><td><Badge tone={row.issuance_ready?'good':'warn'}>{row.issuance_ready?'Authority ready':'Blocked / evidence pending'}</Badge></td><td>{date(row.last_activity)}</td><td><Badge>{row.sync_status==='intake_recorded'?'Local intake recorded':'Not observed'}</Badge></td><td className="mc-row-actions"><button aria-label={`Configure ${row.name}`} onClick={()=>open({kind:'terminal',terminal:row})}><Settings size={16}/></button><button aria-label={`Assign ${row.name}`} onClick={()=>open({kind:'terminal',terminal:row})}><Link2 size={16}/></button></td></tr>)}</tbody></table>{!loading&&data&&!data.terminals.data.length&&<div className="mc-empty"><Server size={32}/><h3>No registered terminals in this view</h3><p>Register a terminal under a saved branch. API credentials and BIR device authority remain separate.</p></div>}</div>{pager(true)}</Card><p className="mc-footnote"><Info size={15}/>Recent intake records show observed NUERS activity. They do not prove continuous connectivity, device synchronization or BIR acceptance. Summary cards cover your entire registry.</p></div>
+ <aside className="mb-side"><Card title="Branch Profile Summary" icon={FileText} action={b&&<button className="mc-text-button" onClick={()=>open({kind:'profile',branch:b})}>View Full Profile <ArrowRight size={13}/></button>}>{profile&&b?<><div className="mb-profile-head"><span><Building2 size={38}/></span><div><strong>{b.code}</strong><Badge tone={b.status==='active'?'good':'neutral'}>{b.status==='active'?'Active':'Inactive'}</Badge><h3>{b.name}</h3><p>{b.branch_type==='main'?'Head Office':'Branch'} · {reviewNames[b.review_status]}</p></div><div className="mb-completion"><div style={{background:`conic-gradient(#00b478 ${profile.completion}%,#edf3fa 0)`}}><span><b>{profile.completion}%</b><small>Recorded</small></span></div></div></div><p className="mb-location"><MapPin size={15}/>{b.address}, {b.city}</p><div className="mb-profile-grid"><dl><dt>TIN / BIR Branch</dt><dd>{data?.merchant.tin} / {b.bir_branch_code||'Not recorded'}</dd></dl><dl><dt>RDO Code</dt><dd>{b.rdo_code}</dd></dl><dl><dt>Branch Manager</dt><dd>{b.manager_name||'Not recorded'}</dd></dl><dl><dt>Contact Number</dt><dd>{b.phone||'Not recorded'}</dd></dl></div><ul className="mb-checks">{Object.entries(profile.checks).map(([k,yes])=><li key={k}><CheckCircle2 size={13} className={yes?'done':''}/>{checkNames[k]}</li>)}</ul><div className="mb-profile-bottom"><button onClick={()=>{setFilters({...filters,terminal_branch:b.id});setApplied({...applied,terminal_branch:b.id});setTerminalPage(1)}}><Server/><span><b>{profile.terminals} Registered</b><small>{profile.active_terminals} operationally active</small></span></button><button onClick={()=>open({kind:'readiness',branch:b})}><ShieldCheck/><span><b>{profile.readiness.can_transmit?'Transmission ready':'EIS readiness pending'}</b><small>Review authority evidence <ArrowRight size={12}/></small></span></button></div></>:<div className="mb-side-empty"><Building2 size={35}/><p>Select or create a branch to view its profile.</p></div>}</Card>
+ <Card title="Quick Actions" icon={Link2}><div className="mb-quick"><button className="blue" onClick={()=>open({kind:'branch'})}><Store/>Add Branch</button><button className="green" disabled={!data?.options.branches.length} onClick={()=>open({kind:'terminal',branch:b})}><Server/>Register Terminal</button><button className="amber" disabled={!b} onClick={()=>open({kind:'upload',branch:b})}><Upload/>Upload Branch Documents</button><Link className="purple" to="/merchant/api-keys"><Settings/>Configure POS / API</Link><button className="cyan" disabled={!data?.options.terminals.length} onClick={()=>open({kind:'assign'})}><Link2/>Assign Terminal</button><button className="pink" disabled={!b||b.review_status==='pending_review'} onClick={()=>open({kind:'review',branch:b})}><Send/>Request Verification</button></div></Card>
+ <Card title="Required Branch Documents" icon={FileText} action={b&&<button className="mc-text-button" onClick={()=>open({kind:'upload',branch:b})}>View Details <ArrowRight size={13}/></button>}><ul className="mb-docs">{Object.entries(data?.options.document_kinds||{}).map(([kind,title])=>{const doc=profile?.documents.find(d=>d.kind===kind);return <li key={kind}><FileText size={14}/><span>{title}</span><Badge tone={doc?'good':'bad'}>{doc?'Recorded':'Required'}</Badge></li>})}</ul><small className="mb-note">Uploaded evidence requires independent review. Recorded does not mean BIR-approved.</small></Card>
+ <Card title="Recent Activity" icon={Building2} action={<button className="mc-icon-button" aria-label="Refresh branch registry" onClick={()=>void load()}><RefreshCw size={15}/></button>}><ol className="mb-activity">{data?.activities.map(a=><li key={a.id}><span><Check size={12}/></span><div><strong>{a.action.replaceAll('_',' ')}</strong><small>{data.options.branches.find(x=>x.id===a.branch_id)?.name||'Branch registry'}</small></div><time>{date(a.created_at)}</time></li>)}{!data?.activities.length&&<li className="mb-note">Registry changes will appear here.</li>}</ol></Card></aside></div>
+ {modal&&data&&<RegistryModal key={`${modal.kind}-${modal.branch?.id||modal.terminal?.id||'new'}`} modal={modal} data={data} onClose={()=>setModal(null)} onSaved={async(text)=>{setModal(null);setMessage(text);await load()}}/>}</div>;
 }
 
-function formatRev(n: number) {
-  if (n >= 1_000_000) return `PHP ${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `PHP ${(n / 1_000).toFixed(0)}K`;
-  return `PHP ${n.toLocaleString()}`;
+function RegistryModal({modal,data,onClose,onSaved}:{modal:Modal;data:Overview;onClose:()=>void;onSaved:(message:string)=>Promise<void>}){
+ const[terminal,setTerminal]=useState<Terminal|undefined>(modal.terminal),[form,setForm]=useState<Record<string,string>>(():Record<string,string>=>modal.kind==='branch'?{name:modal.branch?.name||'',bir_branch_code:modal.branch?.bir_branch_code||'',address:modal.branch?.address||'',city:modal.branch?.city||'',region:modal.branch?.region||'',rdo_code:modal.branch?.rdo_code||'',branch_type:modal.branch?.branch_type||'branch',status:modal.branch?.status||'inactive',manager_name:modal.branch?.manager_name||'',email:modal.branch?.email||'',phone:modal.branch?.phone||'',reason:''}:{branch_id:modal.terminal?.branch_id||modal.branch?.id||data.selected?.branch.id||'',identifier:modal.terminal?.identifier||'',name:modal.terminal?.name||'',pos_type:modal.terminal?.pos_type||'pos',status:modal.terminal?.status||'active',api_key_id:modal.terminal?.api_key_id||'',taxpayer_device_id:modal.terminal?.taxpayer_device_id||'',kind:'registration',reason:''}),[error,setError]=useState(''),[saving,setSaving]=useState(false),[file,setFile]=useState<File|null>(null),[requestId]=useState(()=>crypto.randomUUID());
+ const branch=modal.branch||data.selected?.branch,profile=data.selected?.branch.id===branch?.id?data.selected:null;
+ const set=(k:string,v:string)=>setForm(f=>({...f,[k]:v}));
+ const field=(key:string,title:string,required=true,type='text',max=160)=><label><span>{title}{required?' *':''}</span><input required={required} type={type} maxLength={max} value={form[key]||''} onChange={e=>set(key,e.target.value)} disabled={saving||(key==='bir_branch_code'&&!!modal.branch?.bir_branch_code)||(key==='identifier'&&!!terminal)} inputMode={key==='bir_branch_code'?'numeric':undefined} pattern={key==='bir_branch_code'?'[0-9]{5}':undefined}/></label>;
+ const dropdown=(key:string,title:string,options:Record<string,string>,required=true,empty='Select…')=><label><span>{title}{required?' *':''}</span><select required={required} disabled={saving} value={form[key]||''} onChange={e=>{set(key,e.target.value);if(key==='branch_id')setForm(f=>({...f,[key]:e.target.value,api_key_id:'',taxpayer_device_id:''}))}}>{empty&&<option value="">{empty}</option>}{Object.entries(options).map(([v,n])=><option value={v} key={v}>{n}</option>)}</select></label>;
+ async function submit(e:FormEvent){e.preventDefault();if(saving)return;setSaving(true);setError('');try{
+  if(modal.kind==='branch'){const body={...form,bir_branch_code:form.bir_branch_code||null,manager_name:form.manager_name||null,email:form.email||null,phone:form.phone||null,...(modal.branch?{revision:modal.branch.revision}:{request_id:requestId})};await apiJson(`/api/merchant/branches${modal.branch?'/'+modal.branch.id:''}`,{method:modal.branch?'PUT':'POST',body:JSON.stringify(body)});await onSaved('Branch saved. Operational status and BIR authority remain separate.');}
+  else if(modal.kind==='terminal'||modal.kind==='assign'){if(modal.kind==='assign'&&!terminal)throw Error('Choose the terminal to assign.');const body={...form,api_key_id:form.api_key_id||null,taxpayer_device_id:form.taxpayer_device_id||null,...(terminal?{revision:terminal.revision}:{request_id:requestId})};await apiJson(`/api/merchant/terminals${terminal?'/'+terminal.id:''}`,{method:terminal?'PUT':'POST',body:JSON.stringify(body)});await onSaved(terminal?'Terminal assignment / configuration saved.':'Terminal registered. Production issuance still requires authority evidence.');}
+  else if(modal.kind==='upload'){if(!file||!branch)throw Error('Choose a branch and a PDF, PNG or JPEG file.');if(file.size>3*1024*1024)throw Error('Maximum file size is 3 MB.');const body=new FormData();body.set('file',file);body.set('kind',form.kind);body.set('reason',form.reason);const response=await apiFetch(`/api/merchant/branches/${branch.id}/documents`,{method:'POST',body});await readJsonResponse(response);await onSaved(response.status===201?'Evidence encrypted and stored privately. Branch evidence must be reviewed again.':'This evidence is already recorded. Review status is unchanged.');}
+  else if(modal.kind==='review'&&branch){await apiJson(`/api/merchant/branches/${branch.id}/request-review`,{method:'POST',body:JSON.stringify({revision:branch.revision,reason:form.reason})});await onSaved('Verification request submitted for independent administrator review.');}
+ }catch(e){setError(e instanceof Error?e.message:'The change could not be saved.');}finally{setSaving(false)}}
+ const titles={branch:modal.branch?'Edit Branch':'Add Branch',terminal:terminal?'Configure / Assign Terminal':'Register Terminal',assign:'Assign Terminal',upload:'Branch Documents',review:'Request Branch Verification',profile:'Branch Profile',readiness:'Branch Issuance & Transmission Readiness'};
+ const configBranch=data.options.branches.find(x=>x.id===form.branch_id),keys=data.options.keys.filter(k=>k.branch_code===configBranch?.bir_branch_code&&k.status==='active'),devices=data.options.devices.filter(d=>d.branch_code===configBranch?.bir_branch_code&&d.status==='registered');
+ const documentList=profile&&<ul className="mb-modal-documents">{profile.documents.map(d=><li key={d.id}><FileText size={17}/><span><b>{data.options.document_kinds[d.kind]}</b><small>{d.name} · {Math.ceil(d.bytes/1024)} KB</small></span><button type="button" className="mc-text-button" onClick={()=>void download(`/api/merchant/branch-documents/${d.id}`,'NUERS-branch-evidence').catch(e=>setError(String(e.message)))}><Download size={16}/>Download</button></li>)}</ul>;
+ return <Dialog open onOpenChange={open=>{if(!open&&!saving)onClose()}}><DialogContent className="mc-dialog mb-dialog"><DialogHeader><DialogTitle>{titles[modal.kind]}</DialogTitle><DialogDescription>{branch?.name||data.merchant.name} · Saved identities and evidence are preserved in the registry audit history.</DialogDescription></DialogHeader>{(modal.kind==='profile'||modal.kind==='readiness')?<div className="mb-detail">{branch&&<><h3>{branch.name}</h3><Badge>{reviewNames[branch.review_status]}</Badge><dl>{[['Branch Reference',branch.code],['BIR Branch Code',branch.bir_branch_code||'Not recorded'],['Address',`${branch.address}, ${branch.city}, ${branch.region}`],['RDO',branch.rdo_code],['Manager',branch.manager_name||'Not recorded'],['Email',branch.email||'Not recorded'],['Phone',branch.phone||'Not recorded'],['Review Reference',branch.review_reference||'Not recorded']].map(([k,v])=><div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl></>}{profile?<><h3>Readiness evidence</h3><p>{profile.readiness.note}</p><ul>{profile.readiness.blockers.map(x=><li key={x}>{x}</li>)}</ul>{documentList}</>:<p>Loading selected branch evidence…</p>}{error&&<p role="alert" className="mc-alert bad">{error}</p>}</div>:<form className="mc-form" onSubmit={submit}>{modal.kind==='branch'&&<><p className="mb-note">Use the exact five-digit BIR branch code from verified registration evidence. Leave it blank and keep the branch inactive while preparing a draft.</p><div className="mc-form-grid">{field('name','Branch Name')}{field('bir_branch_code','BIR Branch Code · 5 digits',false,'text',5)}{field('address','Registered Address',true,'text',1000)}{field('city','City / Municipality')}{field('region','Region')}{dropdown('rdo_code','RDO',Object.fromEntries(data.options.rdos.map(x=>[x.rdo_code,`${x.rdo_code} · ${x.rdo_name}`])))}{dropdown('branch_type','Branch Type',{main:'Head Office',branch:'Branch'},true,'')}{dropdown('status','Operational Status',{inactive:'Inactive / draft',active:'Active'},true,'')}{field('manager_name','Branch Manager',false)}{field('phone','Contact Number',false,'tel',30)}{field('email','Contact Email',false,'email',254)}</div></>}
+ {(modal.kind==='terminal'||modal.kind==='assign')&&<>{modal.kind==='assign'&&<label><span>Registered Terminal *</span><select required value={terminal?.id||''} onChange={e=>{const t=data.options.terminals.find(x=>x.id===e.target.value);setTerminal(t);if(t)setForm(f=>({...f,branch_id:t.branch_id,identifier:t.identifier,name:t.name,pos_type:t.pos_type,status:t.status,api_key_id:t.api_key_id||'',taxpayer_device_id:t.taxpayer_device_id||''}))}}><option value="">Choose a terminal…</option>{data.options.terminals.map(t=><option key={t.id} value={t.id}>{t.code} · {t.name}</option>)}</select></label>}<div className="mc-form-grid">{dropdown('branch_id','Assign to Branch',Object.fromEntries(data.options.branches.map(x=>[x.id,`${x.name} · ${x.bir_branch_code||'Code pending'}`])))}{field('identifier','Terminal Identifier')}{field('name','Terminal Name')}{dropdown('pos_type','POS Type',posTypes,true,'')}{dropdown('status','Operational Status',{active:'Active',inactive:'Inactive'},true,'')}{dropdown('api_key_id','Branch API Key',Object.fromEntries(keys.map(k=>[k.id,`${k.name} · ${k.environment}`])),false,'No key assigned')}{dropdown('taxpayer_device_id','PTT Device Record',Object.fromEntries(devices.map(d=>[d.id,`${d.name} · ${d.environment}`])),false,'Not recorded')}</div><p className="mb-note">Only credentials and maintained PTT devices for the selected branch can be assigned. This does not create a key, approve a permit or claim a live connection. Changing the branch clears existing assignments.</p><Link className="mc-text-button" to="/merchant/api-keys">Manage API credentials <ArrowRight size={14}/></Link></>}
+ {modal.kind==='upload'&&<>{dropdown('kind','Evidence Category',data.options.document_kinds,true,'')}<label><span>PDF, PNG or JPEG · maximum 3 MB *</span><input type="file" required accept="application/pdf,image/png,image/jpeg" onChange={e=>setFile(e.target.files?.[0]||null)}/></label><p className="mb-note">Files remain encrypted in private storage and are downloaded through authorized access. Uploading new evidence returns the branch to draft review status.</p>{documentList}</>}
+ {modal.kind==='review'&&<><p>Submit this branch’s identity evidence for independent NUERS administrator review. This review does not grant PTI, PTT or BIR acceptance.</p><ul className="mb-review-checklist">{Object.entries(data.options.document_kinds).map(([k,v])=><li key={k}><CheckCircle2 size={16}/>{v}<Badge tone={profile?.documents.some(d=>d.kind===k)?'good':'warn'}>{profile?.documents.some(d=>d.kind===k)?'Recorded':'Missing'}</Badge></li>)}</ul></>}
+ <label><span>Reason / audit note *</span><textarea required minLength={10} maxLength={1000} rows={3} value={form.reason||''} onChange={e=>set('reason',e.target.value)} placeholder="Explain this registration, change or review request."/></label>{error&&<p role="alert" className="mc-alert bad">{error}</p>}<div className="mb-modal-actions"><button type="button" className="mc-outline" disabled={saving} onClick={onClose}>Cancel</button><button className="mc-primary" disabled={saving}>{saving?<Loader2 size={16} className="animate-spin"/>:<Check size={16}/>} {saving?'Saving…':modal.kind==='review'?'Submit for Review':modal.kind==='upload'?'Upload Evidence':'Save Record'}</button></div></form>}</DialogContent></Dialog>;
 }
 
-function goToApiKeys() {
-  window.location.href = "/merchant/api-keys";
-}
-
-export function MerchantBranches() {
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [chart, setChart] = useState<ChartRow[]>([]);
-  const [summary, setSummary] = useState<Summary>(EMPTY_SUMMARY);
-  const [selected, setSelected] = useState<Branch | null>(null);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  async function loadBranches() {
-    setLoading(true);
-    setError("");
-
-    try {
-      const response = await apiFetch("/api/merchant/api-branches", {
-        headers: authHeaders(),
-        cache: "no-store",
-      });
-      const payload = await readJsonResponse<{
-        branches?: Branch[];
-        chart?: ChartRow[];
-        summary?: Summary;
-      }>(response, "Unable to load API-connected branches.");
-
-      setBranches(payload.branches ?? []);
-      setChart(payload.chart ?? []);
-      setSummary(payload.summary ?? EMPTY_SUMMARY);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to load API-connected branches.");
-      setBranches([]);
-      setChart([]);
-      setSummary(EMPTY_SUMMARY);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadBranches();
-  }, []);
-
-  const filtered = branches.filter((branch) =>
-    (!search ||
-      branch.name.toLowerCase().includes(search.toLowerCase()) ||
-      branch.branch_code.toLowerCase().includes(search.toLowerCase()) ||
-      branch.city.toLowerCase().includes(search.toLowerCase())) &&
-    (statusFilter === "all" || branch.status === statusFilter || branch.branch_type === statusFilter)
-  );
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">API Branch Management</h1>
-          <p className="text-sm text-muted-foreground">
-            {summary.active_branches} active API branches · Branch identity is determined by each Business Account API key
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-2" onClick={loadBranches} disabled={loading}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            Refresh
-          </Button>
-          <Button size="sm" className="gap-2" onClick={goToApiKeys}>
-            <Key className="h-4 w-4" /> Create Branch API Key
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { label: "API Branches", value: summary.total_branches.toString(), icon: GitBranch, accent: "border-l-primary", sub: `${summary.active_branches} active` },
-          { label: "Monthly Revenue", value: formatRev(summary.monthly_revenue), icon: ArrowUpRight, accent: "border-l-success", sub: "from branch-tagged transactions" },
-          { label: "Today's Transactions", value: summary.transactions_today.toLocaleString(), icon: Activity, accent: "border-l-chart-1", sub: "API-ingested only" },
-          { label: "Avg Compliance", value: `${summary.avg_compliance}%`, icon: CheckCircle2, accent: "border-l-chart-2", sub: `${summary.api_connections} API connections` },
-        ].map((item) => (
-          <Card key={item.label} className={`border-l-4 ${item.accent}`}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-muted-foreground">{item.label}</span>
-                <item.icon className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <p className="text-xl font-bold text-foreground">{item.value}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{item.sub}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {error && (
-        <Card className="border-destructive/30 bg-destructive/5">
-          <CardContent className="flex items-center justify-between gap-3 p-4">
-            <div className="flex items-center gap-2 text-sm text-destructive">
-              <AlertTriangle className="h-4 w-4" />
-              {error}
-            </div>
-            <Button variant="outline" size="sm" onClick={loadBranches}>Retry</Button>
-          </CardContent>
-        </Card>
-      )}
-
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-primary" />
-            <CardTitle className="text-sm">API Branch Performance Comparison</CardTitle>
-          </div>
-          <p className="text-xs text-muted-foreground">Monthly revenue vs transaction volume from branch-tagged API keys</p>
-        </CardHeader>
-        <CardContent className="pt-0">
-          {loading ? (
-            <div className="flex items-center justify-center gap-2 rounded-md border border-dashed p-8 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading branch performance...
-            </div>
-          ) : chart.length > 0 ? (
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem]">
-              <div className="rounded-md border bg-muted/20 p-3">
-                <ChartContainer config={revenueChartConfig} className="aspect-auto h-[260px] w-full">
-                  <BarChart data={chart} accessibilityLayer margin={{ top: 8, right: 8, left: 0, bottom: 4 }}>
-                    <CartesianGrid vertical={false} stroke="var(--border)" />
-                    <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} interval={0} />
-                    <YAxis
-                      yAxisId="rev"
-                      width={52}
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fontSize: 9 }}
-                      tickFormatter={(v) => `PHP ${(Number(v) / 1_000_000).toFixed(1)}M`}
-                    />
-                    <YAxis yAxisId="txns" orientation="right" width={32} tickLine={false} axisLine={false} tick={{ fontSize: 9 }} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <ChartLegend content={<ChartLegendContent />} />
-                    <Bar yAxisId="rev" dataKey="monthly_revenue" fill="var(--color-monthly_revenue)" radius={[4, 4, 0, 0]} maxBarSize={42} />
-                    <Bar yAxisId="txns" dataKey="txns_month" fill="var(--color-txns_month)" radius={[4, 4, 0, 0]} maxBarSize={42} />
-                  </BarChart>
-                </ChartContainer>
-              </div>
-              <div className="grid gap-3 rounded-md border bg-background p-4 text-sm sm:grid-cols-2 xl:grid-cols-1">
-                {[
-                  { label: "API Branches", value: summary.total_branches.toLocaleString(), sub: `${summary.active_branches} active` },
-                  { label: "Monthly Revenue", value: formatRev(summary.monthly_revenue), sub: "branch-tagged" },
-                  { label: "Transactions Today", value: summary.transactions_today.toLocaleString(), sub: "API-ingested" },
-                  { label: "Avg Compliance", value: `${summary.avg_compliance}%`, sub: `${summary.api_connections} API connections` },
-                ].map((item) => (
-                  <div key={item.label} className="rounded-md border bg-muted/20 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{item.label}</p>
-                    <p className="mt-1 text-base font-semibold text-foreground">{item.value}</p>
-                    <p className="text-[10px] text-muted-foreground">{item.sub}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-10 text-center">
-              <Database className="h-9 w-9 text-muted-foreground/70" />
-              <p className="text-sm font-medium text-foreground">No branch transaction activity yet</p>
-              <p className="max-w-md text-xs text-muted-foreground">
-                Create API keys for each main/branch location. Once those systems send transactions, branch revenue and volume will appear here.
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="flex flex-wrap gap-2">
-        <div className="relative flex-1 min-w-0 basis-full sm:min-w-[220px] sm:basis-auto sm:max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search branch, code, city..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-40"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Branches</SelectItem>
-            <SelectItem value="main">Main Office</SelectItem>
-            <SelectItem value="branch">Branches</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {loading && (
-          <Card className="md:col-span-2 xl:col-span-3">
-            <CardContent className="flex items-center justify-center gap-2 p-10 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading API-connected branches...
-            </CardContent>
-          </Card>
-        )}
-
-        {!loading && filtered.length === 0 && (
-          <Card className="md:col-span-2 xl:col-span-3">
-            <CardContent className="flex flex-col items-center justify-center gap-2 p-10 text-center">
-              <Database className="h-9 w-9 text-muted-foreground/70" />
-              <p className="text-sm font-medium text-foreground">No matching API branches</p>
-              <p className="max-w-md text-xs text-muted-foreground">
-                Branch records are created by assigning branch identity to API keys, not by manual mock entries.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {!loading && filtered.map((branch) => (
-          <Card
-            key={branch.id}
-            className={cn("cursor-pointer transition-all hover:shadow-md hover:border-primary/30", branch.status === "inactive" && "opacity-65")}
-            onClick={() => setSelected(branch)}
-          >
-            <CardContent className="p-4 space-y-3">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className={cn("rounded-lg p-2", branch.status === "active" ? "bg-success/10" : "bg-muted")}>
-                    <Store className={cn("h-4 w-4", branch.status === "active" ? "text-success" : "text-muted-foreground")} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-foreground leading-tight truncate">{branch.name}</p>
-                    <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
-                      <MapPin className="h-2.5 w-2.5" />{branch.branch_code} · {branch.city || "No city"} {branch.region ? `· ${branch.region}` : ""}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <Badge variant={branch.branch_type === "main" ? "default" : "secondary"} className="text-[10px] shrink-0">
-                    {branch.branch_type === "main" ? "main" : "branch"}
-                  </Badge>
-                  <Badge variant={branch.status === "active" ? "outline" : "secondary"} className="text-[10px] shrink-0">
-                    {branch.status}
-                  </Badge>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 text-center">
-                {[
-                  { label: "Revenue", value: formatRev(branch.monthly_revenue) },
-                  { label: "Txns Today", value: branch.txns_today.toLocaleString() },
-                  { label: "API Keys", value: branch.api_connections.toString() },
-                ].map((item) => (
-                  <div key={item.label} className="rounded-md bg-muted/40 p-2">
-                    <p className="text-xs font-semibold text-foreground">{item.value}</p>
-                    <p className="text-[10px] text-muted-foreground">{item.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-                <span className="flex items-center gap-1 text-success"><Wifi className="h-3 w-3" />{branch.online_connections} online</span>
-                <span>{branch.idle_connections} idle</span>
-                <span className="flex items-center gap-1 text-destructive"><WifiOff className="h-3 w-3" />{branch.offline_connections} offline</span>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">API Compliance</span>
-                  <span className={cn("font-semibold",
-                    branch.compliance >= 90 ? "text-success" : branch.compliance >= 75 ? "text-warning" : "text-destructive"
-                  )}>{branch.compliance}%</span>
-                </div>
-                <Progress value={branch.compliance} className={cn("h-1.5",
-                  branch.compliance >= 90 ? "" : branch.compliance >= 75 ? "[&>div]:bg-warning" : "[&>div]:bg-destructive"
-                )} />
-              </div>
-
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Last seen: {branch.last_seen}</span>
-                <span className="flex items-center gap-1"><Eye className="h-3 w-3" />Details</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Store className="h-4 w-4 text-primary" /> {selected?.name}
-            </DialogTitle>
-          </DialogHeader>
-          {selected && (
-            <div className="space-y-4">
-              <div className="rounded-lg border bg-muted/30 p-3">
-                <p className="text-xs font-medium text-foreground">{selected.address}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  {selected.branch_type === "main" ? "Main office" : "Branch"} · Code {selected.branch_code} · {selected.city || "No city"} {selected.region ? `· ${selected.region}` : ""}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: "Monthly Revenue", value: formatRev(selected.monthly_revenue) },
-                  { label: "Transactions Today", value: selected.txns_today.toLocaleString() },
-                  { label: "Monthly Transactions", value: selected.txns_month.toLocaleString() },
-                  { label: "API Compliance", value: `${selected.compliance}/100` },
-                  { label: "API Connections", value: selected.api_connections.toLocaleString() },
-                  { label: "Last Seen", value: selected.last_seen },
-                ].map((field) => (
-                  <div key={field.label} className="rounded-lg border p-3">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{field.label}</p>
-                    <p className="text-sm font-medium text-foreground mt-0.5">{field.value}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div>
-                <p className="mb-2 text-xs font-medium text-foreground">API Keys Connected to This Branch</p>
-                <div className="space-y-2">
-                  {selected.keys.map((key) => (
-                    <div key={key.id} className="rounded-lg border p-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <div>
-                          <p className="text-xs font-semibold text-foreground">{key.name}</p>
-                          <p className="font-mono text-[10px] text-muted-foreground">{key.key_preview}</p>
-                        </div>
-                        <Badge variant={key.status === "active" ? "default" : "secondary"} className="text-[10px]">{key.status}</Badge>
-                      </div>
-                      <p className="mt-1 text-[10px] text-muted-foreground">
-                        {key.environment} · {key.requests_today.toLocaleString()} requests today · last {key.last_seen}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Button className="w-full gap-2" onClick={goToApiKeys}>
-                <Key className="h-4 w-4" /> Manage Branch API Keys
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+export function BranchReviewQueue(){
+ const[rows,setRows]=useState<Branch[]>([]),[detail,setDetail]=useState<{branch:Branch;documents:Evidence[];readiness:Readiness}|null>(null),[error,setError]=useState(''),[message,setMessage]=useState(''),[decision,setDecision]=useState(''),[reference,setReference]=useState(''),[reason,setReason]=useState(''),[saving,setSaving]=useState(false);
+ const load=useCallback(async()=>{try{const r=await apiJson<{data:{data:Branch[]}}>('/api/admin/branch-reviews');setRows(r.data.data);setError('')}catch(e){setError(e instanceof Error?e.message:'Could not load branch reviews.')}},[]);useEffect(()=>{void load()},[load]);
+ async function inspect(id:string){try{setDecision('');setReference('');setReason('');setDetail(await apiJson(`/api/admin/branch-reviews/${id}`));}catch(e){setError(e instanceof Error?e.message:'Could not open review.')}}
+ async function save(e:FormEvent){e.preventDefault();if(!detail)return;setSaving(true);try{await apiJson(`/api/admin/branch-reviews/${detail.branch.id}`,{method:'POST',body:JSON.stringify({revision:detail.branch.revision,decision,reference,reason})});setDetail(null);setMessage('Independent branch review recorded. BIR authority remains separate.');await load()}catch(e){setError(e instanceof Error?e.message:'Review failed.')}finally{setSaving(false)}}
+ return <div className="merchant-customers merchant-branches"><section className="mc-hero"><div><h1>Branch Verification Requests</h1><p>Independently review merchant branch identity and supporting evidence.</p></div></section>{error&&<p className="mc-alert bad" role="alert">{error}</p>}{message&&<p className="mc-alert" role="status">{message}</p>}<Card title="Pending Branch Reviews" icon={ShieldCheck} action={<button className="mc-outline" onClick={()=>void load()}><RefreshCw size={15}/>Refresh</button>}><div className="mc-table"><table><thead><tr>{['Branch Reference','Name','BIR Branch Code','City','Requested','Action'].map(x=><th key={x}>{x}</th>)}</tr></thead><tbody>{rows.map(b=><tr key={b.id}><td>{b.code}</td><td>{b.name}</td><td>{b.bir_branch_code}</td><td>{b.city}</td><td>{date((b as Branch&{requested_at:string}).requested_at)}</td><td><button className="mc-text-button" onClick={()=>void inspect(b.id)}>Review evidence <ArrowRight size={14}/></button></td></tr>)}</tbody></table>{!rows.length&&<div className="mc-empty"><ShieldCheck size={33}/><p>No branch verification requests are pending.</p></div>}</div><p className="mb-note">The queue shows the oldest 25 pending requests. Completing reviews brings the next pending requests into view.</p></Card>{detail&&<Dialog open onOpenChange={open=>{if(!open&&!saving)setDetail(null)}}><DialogContent className="mc-dialog mb-dialog"><DialogHeader><DialogTitle>{detail.branch.name}</DialogTitle><DialogDescription>{detail.branch.code} · BIR branch {detail.branch.bir_branch_code}. Record evidence, not inferred approval.</DialogDescription></DialogHeader><p>{detail.branch.address}, {detail.branch.city}, {detail.branch.region} · RDO {detail.branch.rdo_code}</p><p>Contact: {detail.branch.manager_name||'Not recorded'} · {detail.branch.phone||'Not recorded'}</p><ul className="mb-modal-documents">{detail.documents.map(d=><li key={d.id}><FileText size={16}/><span><b>{d.kind.replaceAll('_',' ')}</b><small>{d.name}</small></span><button className="mc-text-button" onClick={()=>void download(`/api/admin/branch-documents/${d.id}`,'NUERS-branch-evidence').catch(e=>setError(String(e.message)))}><Download size={16}/>Download</button></li>)}</ul><form className="mc-form" onSubmit={save}><label>Review Decision *<select required value={decision} onChange={e=>setDecision(e.target.value)}><option value="">Choose a decision…</option><option value="verified">Branch identity evidence reviewed</option><option value="needs_changes">Request corrections / more evidence</option></select></label><label>Independent Review Reference *<input required minLength={8} maxLength={500} value={reference} onChange={e=>setReference(e.target.value)}/></label><label>Reason *<textarea required minLength={10} maxLength={1000} value={reason} onChange={e=>setReason(e.target.value)}/></label><p className="mb-note">This decision cannot grant or edit PTI, PTT, ESP accreditation, certification, production transport, device activity or BIR acceptance.</p>{error&&<p className="mc-alert bad" role="alert">{error}</p>}<button className="mc-primary" disabled={saving}>{saving?<Loader2 className="animate-spin" size={16}/>:<Check size={16}/>}Save Review</button></form></DialogContent></Dialog>}</div>;
 }

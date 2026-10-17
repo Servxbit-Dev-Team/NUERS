@@ -3,16 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Merchant;
 use App\Models\Profile;
 use App\Models\User;
+use App\Services\ApiAccess;
 use App\Services\BirCompliance;
 use App\Services\DeviceSession;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -20,6 +22,7 @@ class AuthController extends Controller
     public function session(Request $request): JsonResponse
     {
         $user = $this->userFromRequest($request);
+        if ($user) $user = app(DeviceSession::class)->renew($user, $request);
 
         return response()->json([
             'session' => $user ? $this->sessionPayload($user) : null,
@@ -37,14 +40,12 @@ class AuthController extends Controller
         $user = User::where('email', $credentials['email'])->first();
 
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+            if($user) app(\App\Services\PlatformNotifications::class)->failedSignIn($user);
             throw ValidationException::withMessages([
                 'email' => ['Invalid email or password.'],
             ]);
         }
 
-        if (Profile::where('id', $user->id)->value('role') === 'merchant') {
-            abort_if(Merchant::where('merchant_account_id', $user->id)->whereIn('status', ['suspended', 'inactive'])->exists(), 403, 'Business access is suspended or inactive. Contact NUERS support.');
-        }
         $user = app(DeviceSession::class)->issue($user, $request);
 
         return response()->json([
@@ -55,46 +56,30 @@ class AuthController extends Controller
 
     public function signup(Request $request): JsonResponse
     {
-        $payload = $request->validate([
-            'email' => ['required', 'email', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:6'],
-            'meta' => ['array'],
-            'meta.role' => ['sometimes', Rule::in(['merchant', 'client', 'consumer'])],
-        ]);
+        $v = $request->validate(['email' => 'required|email|max:255|unique:users,email', 'password' => ['required', 'string', 'max:72', Password::min(12)->letters()->numbers()], 'meta' => 'nullable|array:role,full_name,organization,phone', 'meta.role' => 'nullable|in:client,consumer', 'meta.full_name' => 'nullable|string|max:255', 'meta.organization' => 'nullable|string|max:255', 'meta.phone' => 'nullable|string|max:80']);
 
-        $meta = $payload['meta'] ?? [];
-        $name = $meta['full_name'] ?? $payload['email'];
+        return DB::transaction(function () use ($v, $request) {
+            $meta = $v['meta'] ?? [];
+            $user = User::create(['name' => $meta['full_name'] ?? $v['email'], 'email' => strtolower($v['email']), 'password' => $v['password']]);
+            Profile::create(['id' => $user->id, 'email' => $user->email, 'role' => $meta['role'] ?? 'client', 'full_name' => $meta['full_name'] ?? '', 'organization' => $meta['organization'] ?? '', 'tin' => null, 'tin_bound_at' => null]);
+            DB::table('client_accounts')->insert(['id' => (string) Str::uuid(), 'user_id' => $user->id, 'account_number' => 'CL-'.Str::upper((string) Str::ulid()), 'full_name' => $meta['full_name'] ?? $user->email, 'email' => $user->email, 'mobile' => $meta['phone'] ?? null, 'account_type' => 'citizen', 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()]);
+            app(\App\Services\PlatformNotifications::class)->verification($user);
+            app(\App\Services\PlatformNotifications::class)->user($user->id,'account.created',(string)$user->id,'Welcome to NUERS','Your citizen account has been created and is pending review. Sign in to complete your profile and review account requirements.');
+            $user = app(DeviceSession::class)->issue($user, $request);
 
-        $user = User::create([
-            'name' => $name,
-            'email' => $payload['email'],
-            'password' => Hash::make($payload['password']),
-            'api_token' => Str::random(64),
-        ]);
-
-        Profile::create([
-            'id' => $user->id,
-            'email' => $user->email,
-            'role' => $meta['role'] ?? 'merchant',
-            'full_name' => $meta['full_name'] ?? '',
-            'organization' => $meta['organization'] ?? '',
-            'tin' => $meta['tin'] ?? null,
-            'tin_bound_at' => ! empty($meta['tin']) ? now() : null,
-        ]);
-
-        $user = app(DeviceSession::class)->issue($user, $request);
-
-        return response()->json([
-            'session' => $this->sessionPayload($user),
-            'user' => $this->userPayload($user),
-        ], 201)->header('Cache-Control', 'private, no-store');
+            return response()->json(['session' => $this->sessionPayload($user), 'user' => $this->userPayload($user)], 201)->header('Cache-Control', 'private, no-store');
+        });
     }
 
     public function logout(Request $request): JsonResponse
     {
         $user = $this->userFromRequest($request);
         if ($user) {
-            User::whereKey($user->id)->where('api_token', $request->bearerToken())->update(['api_token' => null]);
+            $updates = ['api_token' => null];
+            if (Schema::hasColumn('users', 'api_token_hash')) {
+                $updates += ['api_token_hash' => null, 'api_expires_at' => null, 'api_mfa_verified_at' => null];
+            }
+            User::whereKey($user->id)->update($updates);
         }
 
         return response()->json(['success' => true]);
@@ -115,10 +100,7 @@ class AuthController extends Controller
             return null;
         }
 
-        $user = User::where('api_token', $token)->first();
-        if ($user && Profile::where('id', $user->id)->value('role') === 'merchant' && Merchant::where('merchant_account_id', $user->id)->whereIn('status', ['suspended', 'inactive'])->exists()) {
-            return null;
-        }
+        $user = app(ApiAccess::class)->user($request);
 
         return $user;
     }
@@ -126,9 +108,11 @@ class AuthController extends Controller
     private function sessionPayload(User $user): array
     {
         return [
-            'access_token' => $user->api_token,
+            ...app(DeviceSession::class)->metadata($user),
+            'access_token' => $user->api_token ?: request()->bearerToken(),
             'token_type' => 'bearer',
             'user' => $this->userPayload($user),
+            'mfa_required' => config('security.enforce_privileged_mfa') && (in_array(Profile::where('id', $user->id)->value('role'), config('security.privileged_roles'), true) || (bool) $user->mfa_secret) && (! $user->api_mfa_verified_at || now()->diffInMinutes($user->api_mfa_verified_at, true) > config('security.privileged_step_up_minutes')),
         ];
     }
 

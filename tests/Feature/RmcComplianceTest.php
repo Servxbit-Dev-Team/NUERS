@@ -16,8 +16,7 @@ class RmcComplianceTest extends TestCase
         parent::setUp();
         config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:', 'app.timezone' => 'Asia/Manila']);
         DB::purge('sqlite');
-        foreach (['0001_01_01_000000_create_users_table.php', '2026_06_02_000001_create_nuers_tables.php', '2026_06_02_000002_create_enterprise_nuers_tables.php', '2026_06_02_000010_create_bir_eis_readiness_tables.php', '2026_06_02_000014_create_business_invoices_tables.php', '2026_10_15_000002_add_rmc110_compliance_controls.php', '2026_10_15_000003_snapshot_invoice_issuance_authority.php'] as $file) (require database_path('migrations/'.$file))->up();
-        $this->travelTo(\Carbon\Carbon::parse('2026-10-15 10:24:32', 'Asia/Manila'));
+        foreach (glob(database_path('migrations/*.php')) as $migrationFile) { (require $migrationFile)->up(); }$this->travelTo(\Carbon\Carbon::parse('2026-10-15 10:24:32', 'Asia/Manila'));
         $this->admin = $this->user('super_admin');
     }
     private function user(string $role): User
@@ -195,13 +194,19 @@ class RmcComplianceTest extends TestCase
         $this->assertTrue($policy->accreditation($id)['authorized']);
         $integrationId = DB::table('eis_integrations')->value('id');
         DB::table('eis_integrations')->where('id', $integrationId)->update(['esp_accreditation_id' => $id, 'pti_status' => 'approved', 'permit_to_issue_number' => 'TEST-PTI', 'taxpayer_authorization_reference' => 'test-authority', 'written_authorization_at' => now()]);
-        $this->assertTrue($policy->gate(DB::table('eis_integrations')->first(), false)['can_issue']);
+        // Integration flags alone cannot replace maintained branch/environment-specific permit evidence.
+        $this->assertFalse($policy->gate(DB::table('eis_integrations')->first(), false)['can_issue']);
         $this->assertFalse($policy->gate(DB::table('eis_integrations')->first())['can_transmit']);
         $merchant = $this->user('merchant');
-        DB::table('merchants')->insert(['id' => 'seller', 'business_name' => 'Test seller', 'merchant_account_id' => $merchant->id, 'tin' => '123456789']);
-        DB::table('eis_integrations')->where('id', $integrationId)->update(['merchant_id' => 'seller']);
-        $invoice = ['invoice_number' => 'TEST-PERMITTED', 'document_type' => 'sales_invoice', 'buyer_name' => 'Test buyer', 'issue_date' => '2026-10-15', 'status' => 'sent', 'line_items' => [['line_number' => 1, 'description' => 'Test item', 'quantity' => 1, 'unit_price' => 10000, 'line_total' => 10000]]];
+        DB::table('merchants')->insert(['id' => 'seller', 'business_name' => 'Test seller', 'merchant_account_id' => $merchant->id, 'tin' => '123456789','status'=>'active']);
+        DB::table('eis_integrations')->where('id', $integrationId)->update(['merchant_id'=>'seller','environment'=>'production','branch_code'=>'00000']);
+        DB::table('taxpayer_authorizations')->insert(['id'=>'fixture-pti','request_id'=>fake()->uuid(),'request_hash'=>str_repeat('a',64),'merchant_id'=>'seller','kind'=>'PTI','reference'=>'TEST-PTI','environment'=>'production','branch_code'=>'00000','scope'=>'Synthetic branch fixture only','issued_at'=>'2026-01-01','valid_until'=>'2027-01-01','status'=>'active','evidence'=>'Synthetic evidence not real','reason'=>'Isolated fixture only','reviewed_by'=>$this->admin->id,'reviewed_at'=>now()]);
+        DB::table('invoice_series')->insert(['id'=>'fixture-series','merchant_id'=>'seller','branch_code'=>'00000','document_family'=>'invoice','prefix'=>'TEST-','range_start'=>1,'range_end'=>99,'status'=>'active','authority_reference'=>'Synthetic evidence not real','verified_by'=>$this->admin->id,'valid_from'=>'2026-01-01','valid_until'=>'2027-01-01','created_at'=>now(),'updated_at'=>now()]);
+        $invoice = ['request_id'=>fake()->uuid(),'invoice_number' => 'CLIENT-PROPOSED-NUMBER', 'document_type' => 'sales_invoice', 'buyer_name' => 'Test buyer', 'issue_date' => '2026-10-15', 'status' => 'issued', 'line_items' => [['line_number' => 1, 'description' => 'Test item', 'quantity' => 1, 'unit_price' => 10000, 'line_total' => 10000]]];
         $invoiceId = $this->withToken($merchant->api_token)->postJson('/api/business-invoices', $invoice)->assertCreated()->assertJsonPath('invoice.permit_to_issue_number', 'TEST-PTI')->assertJsonPath('invoice.esp_accreditation_number', 'FIXTURE-NOT-REAL')->json('invoice.id');
+        $this->postJson('/api/business-invoices',$invoice)->assertOk()->assertJsonPath('invoice.id',$invoiceId);
+        $this->assertSame(1,DB::table('business_invoices')->where('merchant_id','seller')->count());
+        $this->assertSame(1,DB::table('merchant_customers')->where('merchant_id','seller')->count());
         DB::table('eis_integrations')->where('id', $integrationId)->update(['permit_to_issue_number' => 'CHANGED-PTI']);
         $this->withToken($merchant->api_token)->getJson('/api/business-invoices/'.$invoiceId)->assertOk()->assertJsonPath('invoice.permit_to_issue_number', 'TEST-PTI');
         $this->assertTrue($policy->auditIntegrity());
@@ -221,7 +226,7 @@ class RmcComplianceTest extends TestCase
         DB::table('merchants')->insert(['id' => 'seller', 'business_name' => 'Test seller', 'merchant_account_id' => $merchant->id, 'tin' => '123456789']);
         $invoice = ['invoice_number' => 'TEST-DRAFT', 'document_type' => 'sales_invoice', 'buyer_name' => 'Test buyer', 'buyer_tin' => '987654321', 'issue_date' => '2026-10-15', 'status' => 'draft', 'line_items' => [['line_number' => 1, 'description' => 'Test item', 'quantity' => 1, 'unit_price' => 10000, 'line_total' => 10000]]];
         $this->withToken($merchant->api_token)->postJson('/api/business-invoices', $invoice)->assertCreated()->assertJsonPath('invoice.status', 'draft');
-        $this->withToken($merchant->api_token)->postJson('/api/business-invoices', [...$invoice, 'invoice_number' => 'TEST-LIVE', 'status' => 'sent'])->assertStatus(409);
+        $this->withToken($merchant->api_token)->postJson('/api/business-invoices', [...$invoice, 'invoice_number' => 'TEST-LIVE', 'status' => 'issued'])->assertStatus(409);
         $this->assertDatabaseCount('business_invoices', 1);
         $this->assertDatabaseCount('merchant_transactions', 0);
     }

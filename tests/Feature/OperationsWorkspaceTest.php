@@ -17,8 +17,8 @@ class OperationsWorkspaceTest extends TestCase
         parent::setUp();
         config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:', 'app.timezone' => 'Asia/Manila']);
         DB::purge('sqlite');
-        foreach (['0001_01_01_000000_create_users_table.php', '2026_06_02_000001_create_nuers_tables.php', '2026_06_02_000002_create_enterprise_nuers_tables.php', '2026_06_02_000005_add_registration_address_to_merchants.php', '2026_06_02_000008_create_rdo_offices_table.php', '2026_06_02_000010_create_bir_eis_readiness_tables.php', '2026_06_02_000013_add_rdo_branch_to_transaction_records.php', '2026_06_02_000014_create_business_invoices_tables.php', '2026_06_02_000018_add_bir_document_templates_to_ledgers.php', '2026_10_15_000002_add_rmc110_compliance_controls.php', '2026_10_15_000009_create_reconciliation_reviews.php'] as $f) {
-            (require database_path('migrations/'.$f))->up();
+        foreach (glob(database_path('migrations/*.php')) as $migrationFile) {
+            (require $migrationFile)->up();
         }$this->admin = $this->actor('super_admin');
         DB::table('merchants')->insert(['id' => 'm', 'business_name' => 'Example Co', 'tin' => '123456789000']);
     }
@@ -33,7 +33,7 @@ class OperationsWorkspaceTest extends TestCase
 
     private function row(string $id, string $status = 'completed', int $amount = 112, string $date = '2026-10-15 11:00:00'): void
     {
-        DB::table('transaction_receipts')->insert(['id' => 'r'.$id, 'merchant_id' => 'm', 'receipt_number' => 'INV'.$id, 'merchant_name' => 'Example Co', 'merchant_tin' => '123456789000', 'document_type' => 'sales_invoice', 'status' => 'issued']);
+        DB::table('transaction_receipts')->insert(['id' => 'r'.$id, 'merchant_id' => 'm', 'receipt_number' => 'INV'.$id, 'merchant_name' => 'Example Co', 'merchant_tin' => '123456789000', 'document_type' => 'sales_invoice', 'status' => $status === 'completed' ? 'issued' : $status, 'issued_at' => $date, 'total_due' => $amount, 'vat_amount' => round($amount - $amount / 1.12, 2), 'vatable_sales' => round($amount / 1.12, 2), 'items' => json_encode([['description' => 'Service', 'quantity' => 1, 'unit_price' => $amount, 'tax_type' => 'vatable']])]);
         DB::table('merchant_transactions')->insert(['id' => $id, 'merchant_id' => 'm', 'receipt_id' => 'r'.$id, 'transaction_ref' => 'TX'.$id, 'status' => $status, 'amount' => $amount, 'vat_amount' => 12, 'vatable_sales' => 100, 'payment_method' => 'cash', 'branch' => 'Main', 'created_at' => $date]);
     }
 
@@ -63,8 +63,8 @@ class OperationsWorkspaceTest extends TestCase
         $this->row('a');
         $this->row('b', 'completed', 224);
         $this->row('c', 'pending', 999);
-        $this->withToken($this->admin->api_token)->getJson('/api/operations-report?mode=sales&per_page=1&group=business')->assertOk()->assertJsonPath('total', 2)->assertJsonPath('summary.sales', 336)->assertJsonPath('summary.vat', 24)->assertJsonPath('groups.0.count', 2)->assertJsonPath('groups.0.amount', 336)->assertJsonCount(1, 'data');
-        DB::table('merchants')->where('id', 'm')->update(['business_name' => '=SENSITIVE_FORMULA()']);
+        $this->withToken($this->admin->api_token)->getJson('/api/operations-report?mode=sales&per_page=1&group=business')->assertOk()->assertJsonPath('total', 2)->assertJsonPath('summary.sales', 336)->assertJsonPath('summary.vat', 36)->assertJsonPath('groups.0.count', 2)->assertJsonPath('groups.0.amount', 336)->assertJsonCount(1, 'data');
+        DB::table('transaction_receipts')->update(['merchant_name' => '=SENSITIVE_FORMULA()']);
         $csv = $this->get('/api/operations-report/export?mode=sales&per_page=1')->assertOk()->streamedContent();
         $this->assertStringContainsString('TXa', $csv);
         $this->assertStringContainsString('TXb', $csv);
@@ -76,11 +76,16 @@ class OperationsWorkspaceTest extends TestCase
     {
         $this->row('a');
         $url = '/api/operations-report/a/review';
-        $data = ['status' => 'resolved', 'reason' => 'Verified supporting record #123', 'revision' => 0];
+        $data = ['status' => 'resolved', 'reason' => 'Verified supporting record #123', 'revision' => 0, 'owner_id' => $this->admin->id, 'closure_evidence' => 'Original reviewed evidence #123'];
         $u = $this->actor('bir');
         $this->withToken($u->api_token)->postJson($url, $data)->assertForbidden();
         $this->withToken($this->admin->api_token)->postJson($url, ['status' => 'resolved', 'reason' => 'x', 'revision' => 0])->assertUnprocessable();
-        $this->postJson($url, $data)->assertOk()->assertJsonPath('revision', 1);
+        $this->postJson($url, $data)->assertConflict();
+        $this->postJson($url, array_replace($data, ['status' => 'in_progress']))->assertOk()->assertJsonPath('revision', 1);
+        $data['revision'] = 1;
+        $this->postJson($url, $data)->assertForbidden();
+        $independent = $this->actor('super_admin');
+        $this->withToken($independent->api_token)->postJson($url, $data)->assertOk()->assertJsonPath('revision', 2);
         $this->postJson($url, $data)->assertConflict();
         $this->getJson('/api/operations-report?mode=reconciliation&review=resolved')->assertOk()->assertJsonPath('total', 1)->assertJsonPath('summary.matched', 0)->assertJsonPath('data.0.bir_status', 'not_submitted');
         $this->assertSame('completed', DB::table('merchant_transactions')->value('status'));
@@ -110,6 +115,6 @@ class OperationsWorkspaceTest extends TestCase
         DB::table('eis_transmissions')->delete();
         $this->row('b');
         DB::table('transaction_receipts')->where('id', 'rb')->update(['receipt_number' => 'INVa']);
-        $this->getJson('/api/operations-report?mode=reconciliation')->assertOk()->assertJsonPath('summary.exceptions', 2)->assertJsonPath('data.0.exception', 'Duplicate Receipt Reference');
+        $this->getJson('/api/operations-report?mode=reconciliation')->assertOk()->assertJsonPath('summary.exceptions', 1)->assertJsonPath('data.0.source_record_count', 2)->assertJsonPath('data.0.exception', 'Duplicate Receipt Reference');
     }
 }

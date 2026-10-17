@@ -76,7 +76,7 @@ class MerchantReceiptController extends Controller
 
         abort_unless($token && Schema::hasTable('users'), 401, 'Authenticated Business Account session is required.');
 
-        $user = DB::table('users')->where('api_token', $token)->first();
+        $user = app(\App\Services\ApiAccess::class)->user($request);
 
         abort_unless($user, 401, 'Authenticated Business Account session is required.');
         abort_unless(Schema::hasTable('merchants'), 500, 'merchants table is not migrated.');
@@ -84,9 +84,7 @@ class MerchantReceiptController extends Controller
         $merchant = DB::table('merchants')
             ->where(function ($query) use ($user) {
                 $query
-                    ->where('merchant_account_id', $user->id)
-                    ->orWhere('merchant_account_email', $user->email)
-                    ->orWhere('email', $user->email);
+                    ->where('merchant_account_id', $user->id);
             })
             ->orderByRaw(
                 'CASE WHEN merchant_account_id = ? THEN 0 WHEN merchant_account_email = ? THEN 1 WHEN email = ? THEN 2 ELSE 3 END',

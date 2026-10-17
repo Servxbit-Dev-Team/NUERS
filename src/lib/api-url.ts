@@ -1,3 +1,4 @@
+import { rateLimitError } from "./rate-limit";
 import {storedToken,browserDevice,invalidateToken} from "./session-store";
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 function firstValidationError(errors: unknown) {
@@ -55,12 +56,14 @@ export async function readJsonResponse<T = any>(response: Response, fallbackMess
   const contentType = response.headers.get("Content-Type") ?? "";
 
   if (!contentType.toLowerCase().includes("application/json")) {
+    if (response.status === 429) throw rateLimitError(response, {});
     throw new Error("API endpoint returned HTML instead of JSON. Check the live API deployment path.");
   }
 
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
+    if (response.status === 429) throw rateLimitError(response, payload);
     const message = payload?.message || firstValidationError(payload?.errors) || fallbackMessage;
     throw new Error(String(message));
   }
@@ -81,6 +84,7 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
     headers,
   });
   if(response.status===401&&headers.get("Authorization")===`Bearer ${token}`)invalidateToken(token);
+  if(response.status===403){const body=await response.clone().json().catch(()=>null);if(body?.code==="MFA_REQUIRED"&&window.location.pathname!=="/security/mfa")window.location.assign("/security/mfa");}
   return response;
 }
 

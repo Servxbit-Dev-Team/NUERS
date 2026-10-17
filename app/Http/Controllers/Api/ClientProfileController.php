@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\ApiAccess;
+use App\Services\SafeImage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class ClientProfileController extends Controller
@@ -37,6 +38,7 @@ class ClientProfileController extends Controller
             'mobile' => ['nullable', 'string', 'max:80'],
         ]);
 
+        $oldContact = DB::table('profiles')->where('id',$user->id)->value('email');
         $now = now();
         $profileUpdates = [
             'full_name' => $validated['full_name'],
@@ -59,7 +61,7 @@ class ClientProfileController extends Controller
         $accountQuery = DB::table('client_accounts')->where('user_id', $user->id);
 
         if (! empty($user->email)) {
-            $accountQuery->orWhere('email', $user->email);
+
         }
 
         $account = $accountQuery->first();
@@ -72,6 +74,8 @@ class ClientProfileController extends Controller
                 'updated_at' => $now,
             ]);
         }
+
+        if ($oldContact !== ($validated['email'] ?: $user->email)) app(\App\Services\PlatformNotifications::class)->user($user->id,'security.contact.changed',(string)\Illuminate\Support\Str::uuid(),'Profile contact email changed','The contact email on your NUERS profile was changed. Your sign-in email has not changed. If this was unexpected, contact NUERS support.','security');
 
         return response()->json([
             'data' => $this->clientPayload($user, $request),
@@ -95,9 +99,7 @@ class ClientProfileController extends Controller
 
         $profile = DB::table('profiles')->where('id', $user->id)->first();
         $displayName = $profile?->full_name ?: $user->email ?: 'client-account';
-        $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'png');
-        $fileName = Str::slug($displayName).'-'.Str::uuid().'.'.$extension;
-        $file->move($directory, $fileName);
+        $fileName = app(SafeImage::class)->store($file, $directory);
 
         DB::table('profiles')->where('id', $user->id)->update([
             'profile_photo_url' => '/uploads/client-avatars/'.$fileName,
@@ -117,7 +119,7 @@ class ClientProfileController extends Controller
             return null;
         }
 
-        return DB::table('users')->where('api_token', $token)->first();
+        return app(ApiAccess::class)->user($request);
     }
 
     private function clientPayload(object $user, Request $request): array
@@ -126,12 +128,13 @@ class ClientProfileController extends Controller
         $accountQuery = DB::table('client_accounts')->where('user_id', $user->id);
 
         if (! empty($user->email)) {
-            $accountQuery->orWhere('email', $user->email);
+
         }
 
         $account = $accountQuery->first();
 
         return [
+            'verified_tin' => app(ApiAccess::class)->taxpayerTin($user),
             'profile' => $profile ? [
                 'id' => (int) $profile->id,
                 'email' => $profile->email,

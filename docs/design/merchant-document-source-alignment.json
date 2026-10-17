@@ -1,0 +1,191 @@
+{
+  "reviewed_at": "2026-10-17T08:33:15.536421+08:00",
+  "scope": "Follow-up to merchant-page design: original-source data accuracy, customer-readable E-Receipt representation and merchant workspace consolidation. Local application only. Not a complete BIR/accreditation acceptance audit.",
+  "user_scope_change": "User authorized retiring the redundant merchant Transactions page. Its ledger functionality is now a subview of Invoices&Receipts; no financial records are deleted.",
+  "routes": {
+    "documents": "http://localhost:8001/merchant/invoices",
+    "payment_activity": "http://localhost:8001/merchant/invoices?view=payments",
+    "retired_route": "http://localhost:8001/merchant/transactions redirects"
+  },
+  "documentation": [
+    {
+      "path": "/Users/marksioson/Desktop/NUERS/docs/knowledge/sources/NUERS_Functional_Specification_v1_1.extracted.txt",
+      "pages": "6-9",
+      "basis": "Read-only original details and history; E-Receipt is customer-readable representation, not a canonical tax record; authoritative amounts, source preservation and controlled access."
+    },
+    {
+      "path": "/Users/marksioson/Desktop/NUERS/docs/knowledge/sources/NUERS_EIS_Complete_System_Documentation.extracted.txt",
+      "pages": "6-8",
+      "basis": "Immutable invoice source, separate payments/transmission/evidence, no fabricated screenshot status or sample data."
+    },
+    {
+      "url": "https://bir-cdn.bir.gov.ph/BIR/pdf/RMC%20No.%2077-2024%20Digest.pdf",
+      "pages": "1-3",
+      "basis": "Business Style optional; invoices and supplementary receipts serve different purposes. This cross-check does not establish current taxpayer coverage or accreditation."
+    },
+    {
+      "url": "https://bir-cdn.bir.gov.ph/BIR/pdf/RMC%20No.%2077-2024%20Annex%20A1-B6.pdf",
+      "pages": "3,5-9",
+      "basis": "Type-specific invoice/payment examples and input-tax caveat. The screen does not claim approved BIR format or official API wire-code conformance."
+    }
+  ],
+  "controls": [
+    {
+      "control": "Original snapshot",
+      "behavior": "One read-only representation serves merchant details, own records drawer and administrative document preview. Original seller/buyer, tax classification, amounts, line items and dates are preserved. No current profile overwrites historic source values.",
+      "evidence": {
+        "file": "/Users/marksioson/Desktop/NUERS/app/Services/ElectronicDocumentView.php",
+        "line": 11
+      }
+    },
+    {
+      "control": "Money and settlements",
+      "behavior": "Wizard centavos convert to PHP once. Document total, withholding, net payable before settlements, actual recorded settlements and remaining balance are distinct. No fabricated VAT subtraction/addition or double withholding. Equal/zero duplicate totals are omitted from the printed copy; differing recorded balances remain visible and inconsistencies are warned.",
+      "evidence": {
+        "file": "/Users/marksioson/Desktop/NUERS/src/lib/document-presentation.ts",
+        "line": 7
+      }
+    },
+    {
+      "control": "Unknown metadata",
+      "behavior": "Optional Business Style is omitted unless recorded. The NUERS account label, VAT registration, current business name or address are not substitutes. Unknown payment method, branch, buyer TIN/address or permit remains unrecorded. Missing lines/quantities/units are not invented; a derived quantity-times-unit-price amount is explicitly identified.",
+      "evidence": {
+        "file": "/Users/marksioson/Desktop/NUERS/app/Services/ElectronicDocumentView.php",
+        "line": 36
+      }
+    },
+    {
+      "control": "Tax classification",
+      "behavior": "VAT-exempt example1000PHP retains0VAT and1000VAT-exempt sales. Primary invoice type is independent of the backing receipt table. Exact registration labels parse to a boolean; Non-VAT strings are never treated as truthy VAT registration. Initial and additional wizard lines respect VAT/non-VAT/exempt/zero-rated selection.",
+      "evidence": {
+        "file": "/Users/marksioson/Desktop/NUERS/src/pages/merchant/invoice-create.tsx",
+        "line": 304
+      }
+    },
+    {
+      "control": "Truthful status and verification",
+      "behavior": "Unsaved/local-checked previews remain drafts; edits invalidate local checks. Saved source state and BIR evidence remain separate. No generic QR glyph, record number or checksum is represented as a working public-token verification QR. No BIR approval, accreditation or issuance authorization is inferred from rendering.",
+      "evidence": {
+        "file": "/Users/marksioson/Desktop/NUERS/src/components/invoices/official-receipt.tsx",
+        "line": 39
+      }
+    },
+    {
+      "control": "Preserved evidence",
+      "behavior": "Read-only original details show actual latest30 lifecycle events and recorded actors; inferred versions/events are removed. Buttons that only simulated sending/marking paid are disabled; original changes use the reviewed correction workflow.",
+      "evidence": {
+        "file": "/Users/marksioson/Desktop/NUERS/src/pages/merchant/invoice-detail.tsx",
+        "line": 105
+      }
+    },
+    {
+      "control": "PDF",
+      "behavior": "PDF download refreshes the authenticated original, records render authorization with actor/role/tenant/correlation and renders the same source representation. Page splitting keeps ordinary rows and footer sections whole; the inspected sample is one A4page with intact typography, amounts and footer.",
+      "evidence": {
+        "file": "/Users/marksioson/Desktop/NUERS/app/Http/Controllers/Api/BusinessInvoiceController.php",
+        "line": 123
+      }
+    },
+    {
+      "control": "Consolidated workspace",
+      "behavior": "The separate merchant Transactions page and navigation entries are removed. Old bookmarks redirect with query parameters to Payment Activity inside Invoices&Receipts. Financial/payment/integration records and APIs are preserved; document and payment amounts are not merged into extra sales.",
+      "evidence": {
+        "file": "/Users/marksioson/Desktop/NUERS/src/pages/merchant/invoices.tsx",
+        "line": 5
+      }
+    },
+    {
+      "control": "Tenant scope",
+      "behavior": "Source lines, linked payment metadata and lifecycle events are separately scoped to the original merchant. Financial reconciliation also excludes foreign child items. Existing role/device/MFA ownership boundary remains in place.",
+      "evidence": {
+        "file": "/Users/marksioson/Desktop/NUERS/app/Services/EisDocumentReadiness.php",
+        "line": 71
+      }
+    }
+  ],
+  "verification": {
+    "php_tests": 156,
+    "php_assertions": 1708,
+    "client_tests": 6,
+    "builds": "Laravel and static Vite builds passed; existing bundle-size/static-root asset warnings remain.",
+    "browser_checks": [
+      "Legacy merchant route redirects to consolidated Payment Activity; Transactions navigation count0",
+      "Own VAT-exempt source1000PHP/0VAT displayed in shared E-Receipt with exact date and unknown metadata intact",
+      "Draft clearly marked not issued; simulated payment/email controls disabled",
+      "Actual PDF download verified as one A4page; final PNG visually inspected for clipping and footer spill",
+      "390px mobile workspace has no page-wide horizontal overflow and retains14px primary typography"
+    ],
+    "local_main_read_only": {
+      "checked_at": "2026-10-17T08:22:49+08:00",
+      "scope": "Read-only local main source representations; no financial edits or live deployment",
+      "counts": {
+        "documents": 16,
+        "financial_source_review": 3,
+        "settlement_source_review": 0,
+        "missing_original_branch": 16,
+        "drafts": 0
+      },
+      "source_hashes_before": {
+        "business_invoices": "581c4ee57bf7903946b71659164935ba8a6288a6b6fe28a6ab4d92f8041513f4",
+        "business_invoice_items": "b33e5d810f1f6994f24db66d0f5f695f808416b616a6c2c873c9dc33ac3530f2",
+        "transaction_receipts": "c1fdcb37da1d7177ff04f0cd334f3cd8a3c614bc662ccf478f1965e764dfc6ab",
+        "merchant_transactions": "8392805b54a0b19c49fb8fe5f4f4a5403ff4dc9e729e61cecd01de600a1a6e80"
+      },
+      "source_hashes_after": {
+        "business_invoices": "581c4ee57bf7903946b71659164935ba8a6288a6b6fe28a6ab4d92f8041513f4",
+        "business_invoice_items": "b33e5d810f1f6994f24db66d0f5f695f808416b616a6c2c873c9dc33ac3530f2",
+        "transaction_receipts": "c1fdcb37da1d7177ff04f0cd334f3cd8a3c614bc662ccf478f1965e764dfc6ab",
+        "merchant_transactions": "8392805b54a0b19c49fb8fe5f4f4a5403ff4dc9e729e61cecd01de600a1a6e80"
+      },
+      "source_unchanged": true,
+      "transactions": 13,
+      "payment_total": "750400.00",
+      "bir_flags": {
+        "transport": false,
+        "interface": false,
+        "response_verification": false
+      },
+      "audit_integrity": true
+    },
+    "proof_images": [
+      "/Users/marksioson/Desktop/NUERS/docs/design/merchant-electronic-document-qa.png",
+      "/Users/marksioson/Desktop/NUERS/docs/design/merchant-consolidated-documents-qa.jpg"
+    ],
+    "proof_data": "Synthetic isolated QA fixtures; not real BIR authority or production data.",
+    "main_financial_writes": false,
+    "schema_changes": false,
+    "external_bir_calls": 0,
+    "cleanup": "Synthetic8002 preview stopped; only agent-created QA tab closed; temporary viewport reset. Main localhost8001 remains running."
+  },
+  "remaining_evidence": {
+    "financial_source_review": 3,
+    "missing_original_branch_snapshots": 16,
+    "decision": "Preserve source values and flag review; no invented amounts, branch codes, permissions or approval evidence. All three BIR implementation flags remain false. Existing official contract/accreditation/infrastructure and asynchronous bulk-export acceptance gaps remain outside this scoped presentation correction."
+  },
+  "deleted_frontend_file": "/Users/marksioson/Desktop/NUERS/src/pages/merchant/transactions.tsx",
+  "source_sha256": {
+    "/Users/marksioson/Desktop/NUERS/app/Services/ElectronicDocumentView.php": "c15169c8b453733b3b86b334c153fdf1ccf2954e92be456e8422a37c6ab5cdc8",
+    "/Users/marksioson/Desktop/NUERS/app/Services/EisDocumentReadiness.php": "fa1a13c5939c02f910ec8a108d8054f7c85135c6f6064c1ce26486384e071109",
+    "/Users/marksioson/Desktop/NUERS/app/Http/Controllers/Api/BusinessInvoiceController.php": "3c833a255910a074fadab10db0546c7fb8eb99e2b8ab53476962de2463640f77",
+    "/Users/marksioson/Desktop/NUERS/app/Http/Controllers/Api/InvoiceCenterController.php": "a5573359f6c9118711ef55f2eab1089bd75c17e7fbce356ab8cc68e26d03f440",
+    "/Users/marksioson/Desktop/NUERS/app/Http/Controllers/Api/MerchantRecordsController.php": "c122df9d43b9e3a8d1f5e4d20642e7654cae0b56f78fb83cb69384018989c62e",
+    "/Users/marksioson/Desktop/NUERS/app/Http/Controllers/Api/MerchantOverviewController.php": "d112110f5535b2ee45d18d8fdd284f7d486890ddabad834846c4500210176249",
+    "/Users/marksioson/Desktop/NUERS/src/components/invoices/official-receipt.tsx": "dc7e3c2cab7c5196a40da4aa6b41a63c8256ac85504e03ac93f6032d642548d9",
+    "/Users/marksioson/Desktop/NUERS/src/components/invoices/electronic-document.css": "e0585c4bd94e585122a6fc8fc27318ceea0b60db3000210c31f45f15788b4141",
+    "/Users/marksioson/Desktop/NUERS/src/components/invoices/bir-document-preview.tsx": "9b7f8e9cf7e4b05a304090584da74d7e7408f06bdad179b41cfa91495608da61",
+    "/Users/marksioson/Desktop/NUERS/src/lib/document-presentation.ts": "eb9fc6c51b2cccc939efe560951d3417baf53a1c496a3aa9a530672a89ad5c2b",
+    "/Users/marksioson/Desktop/NUERS/src/lib/document-pdf.ts": "7de3a7c2efc21d113d7cf423781c70815bbdf56ff3597d86db4c6abe733374b2",
+    "/Users/marksioson/Desktop/NUERS/src/lib/invoice-utils.ts": "a5ba975752500674f646a19b0a550683298f6bebbe501e9f7ffa00a6ec663c50",
+    "/Users/marksioson/Desktop/NUERS/src/pages/merchant/invoice-create.tsx": "1dd06cdf47c599611d1fa932e9cca187ef47e10a267ac9f96fb81df4e93557e6",
+    "/Users/marksioson/Desktop/NUERS/src/pages/merchant/invoice-detail.tsx": "abf29017720c3a137a00ee00896ff476e1318ce07c93042acafe69e214830553",
+    "/Users/marksioson/Desktop/NUERS/src/pages/merchant/invoices.tsx": "6910cf5794b3609880f8feff22f4740e4f783b1d3288852792ec6f897724a528",
+    "/Users/marksioson/Desktop/NUERS/src/pages/merchant/dashboard.tsx": "760ca3d61f613236e523eae0de854e330526d236e506d4667cc12a38b32aa937",
+    "/Users/marksioson/Desktop/NUERS/src/components/merchant/records-workspace.tsx": "a3eb79d63b62e9a4ee6d1dcc863b545bd24fc872ed425fa54605f82ab7e6ef12",
+    "/Users/marksioson/Desktop/NUERS/src/components/merchant/records-workspace.css": "edaa0e1d93db7b0d7514fd951e2ee118f6c0b7dc64aed6388c60132a77071e4d",
+    "/Users/marksioson/Desktop/NUERS/src/components/enterprise/enterprise-shell.tsx": "279cef59efad3b132dc0e2b6fba871cca6611fd998367581d07f9fd7545d5e31",
+    "/Users/marksioson/Desktop/NUERS/src/components/layouts/dashboard-layout.tsx": "0ec7dd2d85fe899276530c0b9671671a01fd8f4c00461e24d40f1880bb1d32fa",
+    "/Users/marksioson/Desktop/NUERS/src/App.tsx": "1c04a4bf97464a3649c3505937cdb4c89b2766dac4a2031288d02524f88c1590",
+    "/Users/marksioson/Desktop/NUERS/tests/Feature/DurableWorkflowTest.php": "274e9870d551f39d7d7db713f7777833514db54bdc400b8a89cad00bfaf982ab",
+    "/Users/marksioson/Desktop/NUERS/tests/js/document-presentation.test.mjs": "a2623bac0eda9eb4af2ed06be8e44c8f33678cb55a801cfb7711850ed9f70222"
+  }
+}

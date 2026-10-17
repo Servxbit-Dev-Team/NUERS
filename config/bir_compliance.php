@@ -7,6 +7,8 @@ return [
     'configuration_reference' => env('NUERS_APPROVED_CONFIGURATION', ''),
     // A credential flag is not an implementation of the BIR transport protocol.
     'transport_implemented' => false,
+    'official_interface_verified' => false,
+    'production_response_verification_implemented' => false,
     'transmission_calendar_days' => 3,
     'incident_report_hours' => 24,
     'renewal_lead_days' => 60,

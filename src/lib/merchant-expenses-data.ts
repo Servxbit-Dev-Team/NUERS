@@ -56,23 +56,9 @@ export type MerchantExpensePayload = {
 };
 
 export type MerchantExpenseInput = {
-  source_invoice_reference: string;
-  purchase_order_reference?: string;
-  supplier_name: string;
-  supplier_tin?: string;
+  source_invoice_id: string;
   expense_category: string;
-  description?: string;
-  gross_amount: number;
-  vatable_amount?: number;
-  input_vat_amount?: number;
-  withholding_tax_amount?: number;
-  payment_status?: string;
-  validation_status?: string;
-  reconciliation_status?: string;
-  claim_status?: string;
-  risk_level?: string;
-  issued_at?: string;
-  due_at?: string;
+  evidence_reference: string;
 };
 
 const emptyPayload: MerchantExpensePayload = {
@@ -154,13 +140,13 @@ export function useMerchantExpenses(filters: {
   return { data, loading, error, refresh: load };
 }
 
-export async function createMerchantExpense(values: MerchantExpenseInput): Promise<MerchantExpensePayload> {
+export async function createMerchantExpense(values: MerchantExpenseInput): Promise<{ id: string; claim_status: string; duplicate?: boolean }> {
   const response = await apiFetch("/api/merchant/expenses", {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify(values),
   });
-  const payload = await readJsonResponse<MerchantExpensePayload>(response, "Unable to record business account expense.");
+  const payload = await readJsonResponse<{ id: string; claim_status: string; duplicate?: boolean }>(response, "Unable to record business account expense.");
 
   return payload;
 }

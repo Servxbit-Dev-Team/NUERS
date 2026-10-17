@@ -356,7 +356,7 @@ export function ExecutiveAnalytics() {
               <div className="flex items-center gap-3 mb-3">
                 <Zap className="h-5 w-5 text-gold" />
                 <p className="text-sm font-semibold">AI-Powered Predictive Insights</p>
-                <Badge variant="secondary" className="text-xs">Powered by NUERS AI</Badge>
+                <Badge variant="secondary" className="text-xs">NUERS AI</Badge>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {[

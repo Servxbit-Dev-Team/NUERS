@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "NUERS Developer API",
-    "version": "2026-10-15",
+    "version": "2026-10-17.wallet",
     "description": "Implemented NUERS application routes. This is not an official BIR EIS API specification. Live BIR transport remains unavailable."
   },
   "servers": [
@@ -45,8 +45,8 @@
     "/api/integrations/transactions": {
       "post": {
         "operationId": "ingest",
-        "summary": "Ingest a business transaction",
-        "description": "Tenant-bound transaction ingestion with transactions:write scope, active-key and exact-IP policy checks, daily quota and taxpayer issuance gate.\n\nResponse shown is illustrative; successful issuance requires the actual current authority gates. Inspect the returned record, not this sample, for its state.\nMerchant is resolved from the API key; there is no caller-selected merchant_id. X-NUERS-API-Key takes precedence over Authorization: Bearer.\nA repeated merchant + external_reference returns HTTP 200 with duplicate=true and the existing transaction_id. Current replay handling does not compare a content hash; reconcile changed content and never reuse a reference for another transaction.\nNo Idempotency-Key header or public 1,000-item batch route is implemented for this endpoint.\nThe sandbox/live key label does not create an isolated financial ledger. Use the public developer sandbox for tests.\nThis endpoint enforces the issuance gate. It does not establish live BIR transmission or automatic authoritative acknowledgment.",
+        "summary": "Accept a finalized source event",
+        "description": "Atomic tenant-bound financial intake, current prepaid wallet fee, active live key, exact branch/IP, shared quotas and taxpayer issuance gates.\n\nExample fee is illustrative; read GET /api/integrations/transactions/wallet for the current platform fee. API money input is PHP/pesos; wallet amounts are integer centavos.\nThe merchant comes from the key. Sandbox keys cannot write financial records.\nExact identity/content replay returns 200 and the original response without another fee. Conflicting content under an existing identity returns 409. Preserve original event ID, timestamp and number.\n402 returns code=INSUFFICIENT_WALLET_BALANCE, available_centavos, required_centavos, shortage_centavos and transaction_saved=false. No financial record, debit or numbering advance commits. Retain the source on the client and retry the same identity after funding.\nThe fee applies once per eligible finalized primary sale of PHP500 or above. Smaller sales, payment copies and accepted retries do not add a sale fee. Funding does not bypass branch, tax, series, authority or BIR delivery gates.",
         "tags": [
           "Merchant integration"
         ],
@@ -64,6 +64,9 @@
           },
           "401": {
             "description": "Authentication required"
+          },
+          "402": {
+            "description": "Insufficient merchant prepaid wallet funds; financial intake not saved"
           },
           "403": {
             "description": "Forbidden scope/role/IP"
@@ -121,7 +124,7 @@
                   },
                   "vat_rate": {
                     "type": "number",
-                    "description": "0\u2013100; defaults to 12 in the current calculation. Tax applicability must be independently approved.",
+                    "description": "Supported tax rate, 0 or 12 according to tax treatment; server rejects inconsistent taxes.",
                     "minimum": 0,
                     "maximum": 100
                   },
@@ -170,7 +173,7 @@
                   },
                   "customer_tin": {
                     "type": "string",
-                    "description": "Optional, up to 80 characters. Current request rule is string validation, not official BIR verification.",
+                    "description": "Optional supported 9/12/14-digit TIN form; field validation is not BIR verification.",
                     "maxLength": 80
                   },
                   "branch": {
@@ -185,8 +188,9 @@
                   },
                   "branch_code": {
                     "type": "string",
-                    "description": "Up to 80 characters. Confirm key-bound branch policy with the administrator.",
-                    "maxLength": 80
+                    "description": "Exact five-digit BIR branch code authorized by the key.",
+                    "maxLength": 5,
+                    "pattern": "^[0-9]{5}$"
                   },
                   "branch_type": {
                     "type": "string",
@@ -198,18 +202,85 @@
                   },
                   "receipt_number": {
                     "type": "string",
-                    "description": "Optional source document number, up to 120 characters; do not bypass approved numbering controls.",
+                    "description": "Original finalized source number; must match the next configured authorized series.",
                     "maxLength": 120
                   },
                   "items": {
                     "type": "array",
-                    "description": "Accepted as an array. Current ingestion does not validate per-line schema or reconcile line totals; confirm supported item structure before production.",
-                    "items": {}
+                    "description": "1\u2013100 complete item lines. description, positive quantity, unit_price in PHP/pesos and supported tax treatment; server reconciles lines and gross total.",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "description",
+                        "quantity",
+                        "unit_price"
+                      ],
+                      "properties": {
+                        "description": {
+                          "type": "string"
+                        },
+                        "quantity": {
+                          "type": "number",
+                          "exclusiveMinimum": 0
+                        },
+                        "unit_price": {
+                          "type": [
+                            "number",
+                            "string"
+                          ]
+                        },
+                        "tax_type": {
+                          "enum": [
+                            "vatable",
+                            "non_vat",
+                            "zero_rated",
+                            "vat_exempt"
+                          ]
+                        }
+                      }
+                    },
+                    "minItems": 1,
+                    "maxItems": 100
+                  },
+                  "schema_version": {
+                    "type": "string",
+                    "description": "NUERS-ingestion-1",
+                    "maxLength": 80,
+                    "const": "NUERS-ingestion-1"
+                  },
+                  "source_event_id": {
+                    "type": "string",
+                    "description": "Stable source event ID, up to 120 characters.",
+                    "maxLength": 80
+                  },
+                  "event_type": {
+                    "type": "string",
+                    "description": "invoice.finalized | payment.recorded. Payment evidence is not another sale.",
+                    "maxLength": 80,
+                    "enum": [
+                      "invoice.finalized",
+                      "payment.recorded"
+                    ]
+                  },
+                  "occurred_at": {
+                    "type": "string",
+                    "description": "Original event timestamp with explicit timezone; preserve on every retry.",
+                    "maxLength": 80
                   }
                 },
                 "required": [
                   "external_reference",
-                  "tax_type"
+                  "tax_type",
+                  "source_system",
+                  "payment_method",
+                  "document_type",
+                  "branch_code",
+                  "receipt_number",
+                  "items",
+                  "schema_version",
+                  "source_event_id",
+                  "event_type",
+                  "occurred_at"
                 ],
                 "anyOf": [
                   {
@@ -234,14 +305,19 @@
                 "vat_inclusive": true,
                 "document_type": "sales_invoice",
                 "payment_method": "cash",
-                "branch_code": "MAIN",
+                "branch_code": "00000",
                 "items": [
                   {
                     "description": "Synthetic example item",
                     "quantity": 1,
                     "unit_price": 1120
                   }
-                ]
+                ],
+                "schema_version": "NUERS-ingestion-1",
+                "source_event_id": "TEST-EVENT-000001",
+                "event_type": "invoice.finalized",
+                "occurred_at": "2026-10-17T10:00:00+08:00",
+                "receipt_number": "TEST-00000001"
               }
             }
           }
@@ -930,15 +1006,158 @@
                   "vat_inclusive": true,
                   "document_type": "sales_invoice",
                   "payment_method": "cash",
-                  "branch_code": "MAIN",
+                  "branch_code": "00000",
                   "items": [
                     {
                       "description": "Synthetic example item",
                       "quantity": 1,
                       "unit_price": 1120
                     }
-                  ]
+                  ],
+                  "schema_version": "NUERS-ingestion-1",
+                  "source_event_id": "TEST-EVENT-000001",
+                  "event_type": "invoice.finalized",
+                  "occurred_at": "2026-10-17T10:00:00+08:00",
+                  "receipt_number": "TEST-00000001"
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/transactions/wallet": {
+      "get": {
+        "operationId": "ingest-wallet",
+        "summary": "Read prepaid funds and current fee",
+        "description": "transactions:read scope. Shared merchant balance, current pricing revision and client intake preference. No wallet funding or BIR connection is performed.\n\n",
+        "tags": [
+          "Merchant integration"
+        ],
+        "security": [
+          {
+            "MerchantKeyHeader": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden scope/role/IP"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "429": {
+            "description": "Quota exceeded"
+          },
+          "503": {
+            "description": "Service configuration unavailable"
+          }
+        }
+      }
+    },
+    "/api/integrations/transactions/batch": {
+      "post": {
+        "operationId": "ingest-batch",
+        "summary": "Accept a finalized source batch atomically",
+        "description": "transactions:write, active live key. One branch, 1\u201350 original source events using the finalized event contract. New financial events, numbering and all fees commit together or none commit.\n\nA failed batch returns 402 if the total fee for new eligible events exceeds available funds. Existing exact duplicates require no new fee. Any validation, authority, sequence or source conflict rejects the entire batch. Retain every unaccepted original on the client.\nBatches are limited to 10 requests/minute plus key admission budgets. These are protective limits, not measured throughput.\nClient preference can be realtime or batch. External POS/ERP connectors must implement the preference, durable source retention and bounded identical retries.",
+        "tags": [
+          "Merchant integration"
+        ],
+        "security": [
+          {
+            "MerchantKeyHeader": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "402": {
+            "description": "Insufficient merchant prepaid wallet funds; financial intake not saved"
+          },
+          "403": {
+            "description": "Forbidden scope/role/IP"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "State or authority conflict"
+          },
+          "422": {
+            "description": "Validation failed"
+          },
+          "429": {
+            "description": "Quota exceeded"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "events": {
+                    "type": "array",
+                    "description": "1\u201350 complete NUERS-ingestion-1 events; use original legal source order.",
+                    "items": {
+                      "type": "object",
+                      "description": "Complete NUERS-ingestion-1 event; see the single-event intake request."
+                    },
+                    "minItems": 1,
+                    "maxItems": 50
+                  }
+                },
+                "required": [
+                  "events"
+                ]
+              },
+              "example": {
+                "events": [
+                  {
+                    "external_reference": "TEST-POS-000001",
+                    "source_system": "demo_pos",
+                    "channel": "pos",
+                    "amount": 1120,
+                    "tax_type": "vatable",
+                    "vat_rate": 12,
+                    "vat_inclusive": true,
+                    "document_type": "sales_invoice",
+                    "payment_method": "cash",
+                    "branch_code": "00000",
+                    "items": [
+                      {
+                        "description": "Synthetic example item",
+                        "quantity": 1,
+                        "unit_price": 1120
+                      }
+                    ],
+                    "schema_version": "NUERS-ingestion-1",
+                    "source_event_id": "TEST-EVENT-000001",
+                    "event_type": "invoice.finalized",
+                    "occurred_at": "2026-10-17T10:00:00+08:00",
+                    "receipt_number": "TEST-00000001"
+                  }
+                ]
               }
             }
           }

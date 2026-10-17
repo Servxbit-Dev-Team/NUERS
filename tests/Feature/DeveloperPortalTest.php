@@ -78,7 +78,7 @@ class DeveloperPortalTest extends TestCase
         foreach (['/api/docs', '/api/sandbox', '/developers/integration'] as $page) {
             $this->get($page)->assertOk()->assertSee('id="root"', false);
         }
-        $this->assertCount(13, $catalog['endpoints']);
+        $this->assertCount(15, $catalog['endpoints']);
         foreach ($catalog['endpoints'] as $endpoint) {
             $route = collect(Route::getRoutes())->first(fn ($r) => $r->uri() === ltrim($endpoint['path'], '/') && in_array($endpoint['method'], $r->methods()));
             $this->assertNotNull($route, $endpoint['method'].' '.$endpoint['path']);

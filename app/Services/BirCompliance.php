@@ -12,7 +12,7 @@ class BirCompliance
 {
     public function administrativeUser(Request $request): object
     {
-        $user = $request->bearerToken() ? DB::table('users')->where('api_token', $request->bearerToken())->first() : null;
+        $user = $request->bearerToken() ? app(ApiAccess::class)->user($request) : null;
         abort_unless($user, 401, 'An authenticated administrative session is required.');
         $role = DB::table('profiles')->where('id', $user->id)->value('role');
         abort_unless(in_array($role, ['admin', 'super_admin', 'bir'], true), 403, 'Administrative monitoring access is required.');
@@ -25,9 +25,9 @@ class BirCompliance
         $record = null;
         if (Schema::hasTable('esp_accreditations')) {
             $q = DB::table('esp_accreditations');
-            $record = ($id ? $q->where('id', $id) : $q->where('solution_name', config('bir_compliance.solution_name'))->where('solution_version', config('bir_compliance.solution_version')))->orderByDesc('created_at')->first();
+            $record = ($id ? $q->where('id', $id) : $q->where('solution_name', config('bir_compliance.solution_name'))->where('solution_version', config('bir_compliance.solution_version')))->when(DB::transactionLevel() > 0, fn ($q) => $q->lockForUpdate())->orderByDesc('created_at')->first();
         }
-        $controls = $record ? DB::table('esp_accreditation_controls')->where('accreditation_id', $record->id)->get() : collect();
+        $controls = $record ? DB::table('esp_accreditation_controls')->where('accreditation_id', $record->id)->when(DB::transactionLevel() > 0, fn ($q) => $q->lockForUpdate())->get() : collect();
         $rows = function (string $category) use ($controls) {
             return collect(config('bir_compliance.'.$category))->map(function ($title, $code) use ($controls, $category) {
                 $control = $controls->first(fn ($row) => $row->category === $category && str_pad($row->code, 2, '0', STR_PAD_LEFT) === str_pad($code, 2, '0', STR_PAD_LEFT));
@@ -76,7 +76,7 @@ class BirCompliance
             'renewal_due_at' => $expires?->subDays(60)->toDateString(), 'reference' => config('bir_compliance.reference')];
     }
 
-    public function integration(?string $merchantId = null): ?object
+    public function integration(?string $merchantId = null, ?string $branch = null, ?string $environment = null): ?object
     {
         if (! Schema::hasTable('eis_integrations')) {
             return null;
@@ -86,7 +86,14 @@ class BirCompliance
             $query->where('merchant_id', $merchantId);
         }
 
-        return $query->orderByDesc('updated_at')->first();
+        if ($branch !== null) {
+            $query->where('branch_code', $branch);
+        }
+        if ($environment !== null) {
+            $query->where('environment', $environment);
+        }
+
+        return $query->when(DB::transactionLevel() > 0, fn ($q) => $q->lockForUpdate())->orderByDesc('updated_at')->first();
     }
 
     public function gate(?object $integration, bool $transmission = true): array
@@ -116,15 +123,34 @@ class BirCompliance
                 if (! $reference) {
                     continue;
                 }
-                $permit = DB::table('taxpayer_authorizations')->where('kind', $kind)->where('reference', $reference)->first();
-                if ($permit && ($permit->merchant_id !== $integration->merchant_id || $permit->environment !== $integration->environment || ! in_array(app(TaxpayerAuthorizationController::class)->effective($permit), ['active', 'expiring_soon']))) {
+                $permit = DB::table('taxpayer_authorizations')->where('kind', $kind)->where('reference', $reference)->when(DB::transactionLevel() > 0, fn ($q) => $q->lockForUpdate())->first();
+                if (! $permit || $permit->merchant_id !== $integration->merchant_id || $permit->environment !== $integration->environment || ($permit->branch_code ?? null) !== $integration->branch_code || ! in_array(app(TaxpayerAuthorizationController::class)->effective($permit), ['active', 'expiring_soon'])) {
                     $blockers[] = $kind.' maintained authority is not current for this taxpayer and environment.';
                 }
             }
         }
+        if ($integration && ! preg_match('/^[0-9]{5}$/', (string) $integration->branch_code)) {
+            $blockers[] = 'A verified five-digit BIR branch is required.';
+        }
+        if ($integration?->merchant_id && DB::table('merchants')->where('id', $integration->merchant_id)->value('status') !== 'active') {
+            $blockers[] = 'Taxpayer business is not active.';
+        }
+        if ($integration && ! Schema::hasTable('taxpayer_authorizations')) {
+            $blockers[] = 'Maintained taxpayer authority records are required.';
+        }
+        if ($integration && Schema::hasTable('merchant_branches') && DB::table('merchant_branches')->where('merchant_id',$integration->merchant_id)->where('bir_branch_code',$integration->branch_code)->where('status','inactive')->exists()) {
+            $blockers[] = 'The registered branch is operationally inactive.';
+        }
         $authorizationReady = ! $blockers;
         if ($transmission && ! config('bir_compliance.transport_implemented')) {
             $blockers[] = 'Verified BIR production transport is not implemented; certification acknowledgements are simulations.';
+        }
+
+        if ($transmission && ! config('bir_compliance.official_interface_verified')) {
+            $blockers[] = 'The authorized BIR interface and official schema mapping have not been verified.';
+        }
+        if ($transmission && ! config('bir_compliance.production_response_verification_implemented')) {
+            $blockers[] = 'Authenticated BIR production response verification is not implemented.';
         }
 
         return ['can_issue' => ! $transmission && ! $blockers, 'can_transmit' => $transmission && ! $blockers,
@@ -132,12 +158,16 @@ class BirCompliance
             'blockers' => $blockers, 'accreditation' => $accreditation];
     }
 
-    public function assertCanIssue(string $merchantId): array
+    public function assertCanIssue(string $merchantId, ?string $branch = null, string $environment = 'production'): array
     {
-        $gate = $this->gate($this->integration($merchantId), false);
+        if ($branch === null) {
+            abort_if(DB::table('eis_integrations')->where('merchant_id', $merchantId)->where('environment', $environment)->distinct()->count('branch_code') > 1, 409, 'Select an explicit verified branch when multiple branch integrations exist.');
+        }
+        $integration = $this->integration($merchantId, $branch, $environment);
+        $gate = $this->gate($integration, false);
         abort_unless($gate['can_issue'], 409, 'Production issuance is blocked. Save a draft or use the controlled certification sandbox. '.implode(' ', $gate['blockers']));
 
-        return ['permit_to_issue_number' => $this->integration($merchantId)->permit_to_issue_number, 'esp_accreditation_number' => $gate['accreditation']['record']->certificate_number];
+        return ['permit_to_issue_number' => $integration->permit_to_issue_number, 'esp_accreditation_number' => $gate['accreditation']['record']->certificate_number];
     }
 
     public function deadline(string $date): CarbonImmutable
@@ -157,6 +187,7 @@ class BirCompliance
             $hash = hash('sha256', json_encode([$head->last_hash, $event, $subjectId, $actor, $json, $at], JSON_THROW_ON_ERROR));
             DB::table('eis_audit_events')->insert(['event' => $event, 'subject_id' => $subjectId, 'actor_id' => $actor, 'details' => $json, 'occurred_at' => $at, 'previous_hash' => $head->last_hash, 'entry_hash' => $hash]);
             DB::table('eis_audit_head')->where('id', 1)->update(['last_hash' => $hash]);
+            app(NotificationEvents::class)->recorded($event, $subjectId, $actor, $details, $hash);
         }, 3);
     }
 

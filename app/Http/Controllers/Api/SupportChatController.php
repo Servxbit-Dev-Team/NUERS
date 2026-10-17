@@ -9,7 +9,7 @@ use Carbon\Carbon;
 class SupportChatController extends Controller
 {
  private function admin(Request $r):object {
-  $u=$r->bearerToken()?DB::table('users')->where('api_token',$r->bearerToken())->first():null;
+  $u=$r->bearerToken()?app(\App\Services\ApiAccess::class)->user($r):null;
   abort_unless($u,401);abort_unless(in_array(DB::table('profiles')->where('id',$u->id)->value('role'),['admin','super_admin'],true),403);return $u;
  }
  private function conversation(Request $r,string $id,bool $admin=false,bool $lock=false):object {
@@ -21,13 +21,20 @@ class SupportChatController extends Controller
  private function timestamp(?string $value):?string {return $value?Carbon::parse($value,config('app.timezone'))->toIso8601String():null;}
  private function messageRow(object $m):array {return [...array_intersect_key((array)$m,array_flip(['id','request_id','sender_type','body'])),'created_at'=>$this->timestamp($m->created_at)];}
  private function publicRow(object $c):array {return [...array_intersect_key((array)$c,array_flip(['id','visitor_name','subject','status','created_at','last_message_at'])),'created_at'=>$this->timestamp($c->created_at),'last_message_at'=>$this->timestamp($c->last_message_at),'unread_count'=>DB::table('support_messages')->where('conversation_id',$c->id)->where('sender_type','agent')->where('id','>',$c->visitor_read_id)->count()];}
- private function event(string $id,?int $actor,string $action,array $details=[]):void {DB::table('support_events')->insert(['conversation_id'=>$id,'actor_id'=>$actor,'action'=>$action,'details'=>json_encode($details),'created_at'=>now()]);}
+ private function event(string $id,?int $actor,string $action,array $details=[]):void {DB::table('support_events')->insert(['conversation_id'=>$id,'actor_id'=>$actor,'action'=>$action,'details'=>json_encode($details),'created_at'=>now()]);
+  if(in_array($action,['conversation.created','agent.replied','conversation.updated'],true)){
+   $c=DB::table('support_conversations')->where('id',$id)->first();
+   if($action==='agent.replied' && DB::table('support_messages')->where('conversation_id',$id)->where('sender_type','agent')->where('id','>',$c->visitor_read_id)->count()>1)return;
+   if($action==='conversation.updated' && empty($details['status_changed']))return;
+   $title=match($action){'conversation.created'=>'Support request received','agent.replied'=>'Your NUERS support team has replied',default=>'Support request updated'};
+   app(\App\Services\PlatformNotifications::class)->user($c?->user_id,'support.'.$action,$id.'|'.($c->revision??1),$title,'Sign in to NUERS and open Help & Support to view your support conversation. Sensitive messages are available only inside your account.','support');
+  }}
  public function create(Request $r){
   $v=$r->validate(['id'=>'required|uuid','visitor_token'=>'required|string|regex:/^[a-f0-9]{64}$/','request_id'=>'required|uuid','name'=>'nullable|string|max:120','email'=>'nullable|email|max:255','subject'=>'required|string|max:180','message'=>'required|string|max:4000']);
   return DB::transaction(function()use($r,$v){
    $existing=DB::table('support_conversations')->where('id',$v['id'])->lockForUpdate()->first();
    if($existing){abort_unless(Carbon::parse($existing->token_expires_at)->isFuture(),404);abort_unless(hash_equals($existing->visitor_token_hash,hash('sha256',$v['visitor_token'])),404);$m=DB::table('support_messages')->where('conversation_id',$existing->id)->orderBy('id')->first();abort_unless($m&&$m->request_id===$v['request_id']&&$m->body===$v['message'],409,'This request has already been submitted with different content.');return response()->json(['conversation'=>$this->publicRow($existing)],200);}
-   $u=$r->bearerToken()?DB::table('users')->where('api_token',$r->bearerToken())->first():null;
+   $u=$r->bearerToken()?app(\App\Services\ApiAccess::class)->user($r):null;
    DB::table('support_conversations')->insert(['id'=>$v['id'],'visitor_token_hash'=>hash('sha256',$v['visitor_token']),'token_expires_at'=>now()->addDays(90),'user_id'=>$u?->id,'visitor_name'=>trim($v['name']??'')?:'Website visitor','visitor_email'=>$v['email']??null,'subject'=>$v['subject'],'status'=>'open','priority'=>'normal','last_message_at'=>now(),'created_at'=>now(),'updated_at'=>now()]);
    DB::table('support_messages')->insert(['conversation_id'=>$v['id'],'request_id'=>$v['request_id'],'sender_type'=>'visitor','sender_id'=>$u?->id,'body'=>$v['message'],'created_at'=>now()]);$this->event($v['id'],$u?->id,'conversation.created');
    return response()->json(['conversation'=>$this->publicRow(DB::table('support_conversations')->find($v['id']))],201);
@@ -61,7 +68,7 @@ class SupportChatController extends Controller
  public function read(Request $r,string $id,bool $admin=false){$c=$this->conversation($r,$id,$admin);$v=$r->validate(['message_id'=>'required|integer|min:1']);abort_unless(DB::table('support_messages')->where('conversation_id',$id)->where('id',$v['message_id'])->exists(),422);$col=$admin?'admin_read_id':'visitor_read_id';DB::table('support_conversations')->where('id',$id)->where($col,'<',$v['message_id'])->update([$col=>$v['message_id']]);return response()->json(['ok'=>true]);}
  public function update(Request $r,string $id){$actor=$this->admin($r);$v=$r->validate(['revision'=>'required|integer|min:1','status'=>['required',Rule::in(['open','pending','resolved'])],'priority'=>['required',Rule::in(['normal','high','urgent'])],'assigned_to'=>'nullable|integer']);
   if(!empty($v['assigned_to']))abort_unless(DB::table('profiles')->where('id',$v['assigned_to'])->whereIn('role',['admin','super_admin'])->exists(),422,'Assign to an administrator.');
-  return DB::transaction(function()use($r,$id,$actor,$v){$c=$this->conversation($r,$id,true,true);abort_unless($c->revision===$v['revision'],409,'Another administrator updated this conversation. Reload and retry.');DB::table('support_conversations')->where('id',$id)->update([...$v,'revision'=>$c->revision+1,'updated_at'=>now()]);$this->event($id,$actor->id,'conversation.updated',['status'=>$v['status'],'priority'=>$v['priority'],'assigned_to'=>$v['assigned_to']??null]);return response()->json(['ok'=>true]);});
+  return DB::transaction(function()use($r,$id,$actor,$v){$c=$this->conversation($r,$id,true,true);abort_unless($c->revision===$v['revision'],409,'Another administrator updated this conversation. Reload and retry.');DB::table('support_conversations')->where('id',$id)->update([...$v,'revision'=>$c->revision+1,'updated_at'=>now()]);$this->event($id,$actor->id,'conversation.updated',['status_changed'=>$c->status!==$v['status'],'status'=>$v['status'],'priority'=>$v['priority'],'assigned_to'=>$v['assigned_to']??null]);return response()->json(['ok'=>true]);});
  }
  public function adminMessages(Request $r,string $id){return $this->messages($r,$id,true);}public function adminSend(Request $r,string $id){return $this->send($r,$id,true);}public function adminRead(Request $r,string $id){return $this->read($r,$id,true);}
 }

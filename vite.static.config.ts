@@ -17,6 +17,7 @@ const staticAssets = [
   "vite.svg",
   "auth-assets",
   "dashboard-assets",
+  "website-assets",
 ]
 
 const liveApiBaseUrl = (process.env.VITE_API_BASE_URL ?? "https://nuers.net/public").replace(/\/$/, "")

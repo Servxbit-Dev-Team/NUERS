@@ -78,7 +78,7 @@ export function TaxpayerDashboard() {
     { label: "Verified Taxpayers",  value: "91.4%",   delta: "+0.8% vs last month", up: true, icon: ShieldCheck },
     { label: "High-Risk Flagged",   value: "38",      delta: "+4 this week",     up: false, icon: AlertTriangle },
     { label: "Service Requests",    value: "127",     delta: "-14 vs last week", up: true,  icon: FileText },
-    { label: "Active Subscriptions",value: "6,284",   delta: "+184 this month",  up: true,  icon: CreditCard },
+    { label: "Business Accounts",value: "6,284",   delta: "+184 this month",  up: true,  icon: CreditCard },
   ];
 
   return (
@@ -177,7 +177,7 @@ export function TaxpayerDashboard() {
           { title: "Taxpayer Registry", desc: "TIN management, status, RDO assignment", icon: Users, href: "/taxpayer/registry", badge: null },
           { title: "Business Registration", desc: "SEC/DTI entities, branches, hierarchy", icon: Building2, href: "/taxpayer/businesses", badge: null },
           { title: "Verification Center", desc: "Document review, risk assessment", icon: ShieldCheck, href: "/taxpayer/verification", badge: "63 pending" },
-          { title: "Customer Portal", desc: "Self-registration, subscriptions, billing", icon: CreditCard, href: "/taxpayer/portal", badge: null },
+          { title: "Customer Portal", desc: "Self-registration, transaction fees, records", icon: CreditCard, href: "/taxpayer/portal", badge: null },
           { title: "User Management", desc: "Roles, permissions, company hierarchy", icon: Layers, href: "/taxpayer/users", badge: null },
           { title: "Service Requests", desc: "TIN inquiries, corrections, disputes", icon: FileText, href: "/taxpayer/portal", badge: "127 open" },
         ].map(c => (

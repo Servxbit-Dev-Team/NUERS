@@ -1,6 +1,6 @@
 {
-  "_jspdf.es.min-C8udSl2E.js": {
-    "file": "assets/jspdf.es.min-C8udSl2E.js",
+  "_jspdf.es.min-BGwtXShk.js": {
+    "file": "assets/jspdf.es.min-BGwtXShk.js",
     "name": "jspdf.es.min",
     "isDynamicEntry": true,
     "imports": [
@@ -29,13 +29,13 @@
     "src": "node_modules/@fontsource/inter/files/inter-latin-700-normal.woff2"
   },
   "node_modules/canvg/lib/index.es.js": {
-    "file": "assets/index.es-Bgdy1m6z.js",
+    "file": "assets/index.es-C4djaSw3.js",
     "name": "index.es",
     "src": "node_modules/canvg/lib/index.es.js",
     "isDynamicEntry": true,
     "imports": [
       "src/main.tsx",
-      "_jspdf.es.min-C8udSl2E.js"
+      "_jspdf.es.min-BGwtXShk.js"
     ]
   },
   "node_modules/dompurify/dist/purify.es.mjs": {
@@ -57,16 +57,16 @@
     "isDynamicEntry": true
   },
   "src/main.tsx": {
-    "file": "assets/main-DBX0JonH.js",
+    "file": "assets/main-B66esMF2.js",
     "name": "main",
     "src": "src/main.tsx",
     "isEntry": true,
     "dynamicImports": [
       "node_modules/html-to-image/es/index.js",
-      "_jspdf.es.min-C8udSl2E.js"
+      "_jspdf.es.min-BGwtXShk.js"
     ],
     "css": [
-      "assets/main-D1vjnG7g.css"
+      "assets/main-Drxdqttp.css"
     ],
     "assets": [
       "assets/inter-latin-400-normal-C38fXH4l.woff2",

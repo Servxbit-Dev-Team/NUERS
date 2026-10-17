@@ -1,0 +1,205 @@
+{
+  "reviewed_at": "2026-10-17T08:06:15.825033+08:00",
+  "scope": "Merchant Invoices & Receipts and Transactions pages; local feature implementation and scoped verification. Not a new complete EIS/accreditation audit or live deployment.",
+  "routes": [
+    "http://localhost:8001/merchant/invoices",
+    "http://localhost:8001/merchant/transactions"
+  ],
+  "references": [
+    "/Users/marksioson/Downloads/NUERS Invoices and Receipts Dashboard.png",
+    "/Users/marksioson/Downloads/NUERS Transactions Dashboard Overview.png"
+  ],
+  "documentation_basis": [
+    {
+      "file": "/Users/marksioson/Desktop/NUERS/docs/knowledge/sources/NUERS_Functional_Specification_v1_1.extracted.txt",
+      "pages": "6-9",
+      "basis": "Proposed invoice/receipt lists, scoped search, original details/history, validation, paging and auditable exports; not BIR-issued."
+    },
+    {
+      "file": "/Users/marksioson/Desktop/NUERS/docs/knowledge/sources/NUERS_EIS_Complete_System_Documentation.extracted.txt",
+      "basis": "Role/tenant scope, immutable source/adjustment evidence, separate issuance/payment/transmission, missing official contract held as external dependency."
+    },
+    {
+      "file": "/Users/marksioson/Desktop/NUERS/docs/audits/NUERS_REGULATORY_DEPENDENCIES.md",
+      "basis": "Existing source-bound audit of supplied RMC110-2026, AnnexA and accreditation deck. No independent legal/publication recertification in this design change."
+    }
+  ],
+  "scoped_controls": [
+    {
+      "control": "Tenant access",
+      "behavior": "Explicit authenticated membership controls every list, detail and export. Request tenant IDs do not expand scope. Payment/receipt/outbox/payload/line/event joins are independently merchant-scoped.",
+      "evidence": {
+        "file": "/Users/marksioson/Desktop/NUERS/app/Http/Controllers/Api/MerchantRecordsController.php",
+        "line": 28
+      }
+    },
+    {
+      "control": "Canonical financial sources",
+      "behavior": "Documents combine the canonical issued ledger and own drafts. All portal/API payment events remain separate. Reconciled primary invoice sales and linked credit/debit adjustments exclude drafts, duplicate identities, and payment/delivery receipts.",
+      "evidence": {
+        "file": "/Users/marksioson/Desktop/NUERS/app/Http/Controllers/Api/MerchantRecordsController.php",
+        "line": 151
+      }
+    },
+    {
+      "control": "BIR truthfulness",
+      "behavior": "Acknowledgment requires all three official implementation gates and the common authentic-production-proof verifier. Local queue/blocked/uncertain/test/unverified/unlinked states remain distinct; views expose no submission action.",
+      "evidence": {
+        "file": "/Users/marksioson/Desktop/NUERS/app/Http/Controllers/Api/MerchantRecordsController.php",
+        "line": 57
+      }
+    },
+    {
+      "control": "Filter and SQL validation",
+      "behavior": "Allowlisted sort/status/category/page size, validated from/to and amount bounds, bound search parameters, Philippine calendar-day filtering and date-only source preservation.",
+      "evidence": {
+        "file": "/Users/marksioson/Desktop/NUERS/app/Http/Controllers/Api/MerchantRecordsController.php",
+        "line": 77
+      }
+    },
+    {
+      "control": "Export controls",
+      "behavior": "All matching pages or authorized selected IDs are streamed as internal CSV. Spreadsheet formula cells are escaped; failed foreign selection is rejected. Actor, role, merchant, correlation, scope and authorization outcome are hash-chain audited. Dedicated per-merchant export budget follows authentication and does not limit ordinary reads. Request-local array cache falls back to the existing database cache so this budget persists between local HTTP requests.",
+      "evidence": {
+        "file": "/Users/marksioson/Desktop/NUERS/app/Http/Controllers/Api/MerchantRecordsController.php",
+        "line": 205
+      }
+    },
+    {
+      "control": "Preservation",
+      "behavior": "Details and recent lifecycle history are read-only; an original invoice link preserves the established reviewed correction workflow. Suspended/inactive accounts retain GET retrieval/export; create controls display read-only state.",
+      "evidence": {
+        "file": "/Users/marksioson/Desktop/NUERS/app/Http/Controllers/Api/MerchantRecordsController.php",
+        "line": 187
+      }
+    },
+    {
+      "control": "Reference layout and typography",
+      "behavior": "Shared navy merchant shell and skyline/flag artwork, five metrics, filters, category tabs, paged tables with selection/export/actions, document quick actions/legend/reminders, transaction summary ring/recent activities/quick reports. Body/table/navigation14px, labels13px, secondary12px, section18px. Tables scroll without shrinking text; right actions remain available.",
+      "evidence": {
+        "file": "/Users/marksioson/Desktop/NUERS/src/components/merchant/records-workspace.tsx",
+        "line": 29
+      }
+    },
+    {
+      "control": "Actual UI states",
+      "behavior": "Real empty/loading/error states, last successful refresh, visible retry, measured NUERS response distinct from unverified BIR connectivity; period buttons apply the same filters to summary and table.",
+      "evidence": {
+        "file": "/Users/marksioson/Desktop/NUERS/src/components/merchant/records-workspace.tsx",
+        "line": 45
+      }
+    }
+  ],
+  "intentional_reference_adjustments": [
+    "Actual merchant data replaces reference counts, percentages, dates and business identities. No fabricated trend or live-status claim.",
+    "Payment Receipt replaces unsupported primary Official Receipt issuance; receipts do not become extra invoice sales.",
+    "BIR Acknowledgments and Queued Locally distinguish official proof from durable intent. Certification and unlinked payments never display production acceptance.",
+    "Connect POS/ERP opens the established authenticated integration route; no unreviewed CSV issuance importer is invented.",
+    "Sales Summary remains an internal draft; no prescribed official SLS export or blanket transmission requirement is claimed.",
+    "Read-only source details replace direct deletion/cancellation. Original source dates remain exact; date-only sources gain no invented issuance time.",
+    "Readability takes precedence over screenshot density: longer content scrolls vertically and wide tables scroll horizontally."
+  ],
+  "verification": {
+    "tests": 152,
+    "assertions": 1664,
+    "isolated_sqlite_regressions": [
+      "Own documents/drafts/payment reconciliation",
+      "Foreign receipt and tenant/detail/export rejection",
+      "Philippine date and validated bound filters",
+      "All-page and selected CSV with spreadsheet-formula protection",
+      "Per-merchant export budget preserves authentication/read access",
+      "Unverified and certification responses never become BIR acceptance"
+    ],
+    "production_builds": "Laravel and static Vite builds passed with TypeScript. Existing bundle-size warning and static-root asset-path warnings remain; referenced assets exist in public.",
+    "native_mysql_read_only": {
+      "documents": {
+        "rows": 1,
+        "bounded_search_count": 0,
+        "retrieved": 1,
+        "acknowledged": 0
+      },
+      "transactions": {
+        "rows": 1,
+        "bounded_search_count": 0,
+        "retrieved": 1,
+        "acknowledged": 0
+      },
+      "checked_at": "2026-10-17T07:53:43+08:00",
+      "database": "isolated synthetic NUERS_QA_EIS_20261016",
+      "driver_version": "8.4.11",
+      "scope": "Read-only native SQL projection and bound-filter smoke check; no load/security attack or external API calls",
+      "writes": 0
+    },
+    "local_main_preservation": {
+      "checked_at": "2026-10-17T08:06:15+08:00",
+      "scope": "Read-only local main database, not a live deployment",
+      "tables": 87,
+      "transactions": 13,
+      "payment_total": "750400.00",
+      "source_documents": 16,
+      "bir_transport_enabled": false,
+      "audit_integrity": true
+    },
+    "browser_checks": [
+      "1536px desktop: source modal, server page2, native committed date range plus searchable customer, filtered CSV verified as one matching row",
+      "Transaction Today empty state and This Month populated summary match table; source modal shows unlinked status honestly",
+      "390px mobile: navigation selection, no page-wide horizontal overflow, 14px tables with internal horizontal scroll and visible right actions",
+      "No browser console errors during final checks"
+    ],
+    "screenshots": [
+      {
+        "file": "/Users/marksioson/Desktop/NUERS/docs/design/merchant-invoices-receipts-qa.jpg",
+        "width": 1,
+        "height": 1,
+        "data": "Separate synthetic QA fixture; not real BIR approval or production data."
+      },
+      {
+        "file": "/Users/marksioson/Desktop/NUERS/docs/design/merchant-transactions-qa.jpg",
+        "width": 1,
+        "height": 1,
+        "data": "Separate synthetic QA fixture; not real BIR approval or production data."
+      },
+      {
+        "file": "/Users/marksioson/Desktop/NUERS/docs/design/merchant-invoices-receipts-mobile-qa.jpg",
+        "width": 1,
+        "height": 1,
+        "data": "Separate synthetic QA fixture; not real BIR approval or production data."
+      },
+      {
+        "file": "/Users/marksioson/Desktop/NUERS/docs/design/merchant-transactions-mobile-qa.jpg",
+        "width": 1,
+        "height": 1,
+        "data": "Separate synthetic QA fixture; not real BIR approval or production data."
+      }
+    ],
+    "test_command": "php -d memory_limit=512M vendor/bin/phpunit",
+    "build_command": "npm run build:all",
+    "source_whitespace_check": "git diff --check -- app src routes tests passed",
+    "cleanup": "Temporary synthetic8002 server stopped and agent-created QA tab closed; browser viewport reset. Existing localhost8001 server remains running.",
+    "desktop_viewport": {
+      "width": 1536,
+      "height": 1024,
+      "note": "Reference-size viewport; full-page capture may extend beyond it."
+    }
+  },
+  "remaining_acceptance_boundaries": [
+    "No BIR API access, authenticated official protocol/schema, real taxpayer/branch/authority/series/accreditation evidence or live approval has been supplied. All production transport/interface/response-verification flags remain false.",
+    "The current CSV download uses a rate-limited memory-bounded HTTP cursor. The internal specification proposed a background bulk-export job; such a durable asynchronous export service and measured very-large-tenant/report capacity are not established by this feature.",
+    "Document details show the latest30 existing lifecycle events; this does not fabricate missing historical evidence or establish independent immutable custody.",
+    "Full-list summary reconciliation and customer options require tenant data scans. This is not evidence of million-per-hour readiness, edge DDoS protection, multi-node cache enforcement, HA or tested disaster recovery.",
+    "Earlier seven-report audit and historical source manifests remain separate. This scoped report does not overwrite their historical hashes or mark external findings passed."
+  ],
+  "source_sha256": {
+    "/Users/marksioson/Desktop/NUERS/app/Http/Controllers/Api/MerchantRecordsController.php": "81b8665aef69c771d890ee989c5f61c445abf5cfaf9fdba330db98d4deff62b8",
+    "/Users/marksioson/Desktop/NUERS/src/components/merchant/records-workspace.tsx": "edc7e753b8d213c8d7d34f57e5d0cd0bd9ce6e31948cca5b75d3b146f3b83591",
+    "/Users/marksioson/Desktop/NUERS/src/components/merchant/records-workspace.css": "6cd4036b88ba67ec30e7a6f575e6c3325be722f2f9bce1ea26cd55db989ebc85",
+    "/Users/marksioson/Desktop/NUERS/src/pages/merchant/invoices.tsx": "bc49d76c11f51b61d3058e26c2f7332fe4d3b52982878c2eb128a26d6453f88f",
+    "/Users/marksioson/Desktop/NUERS/src/pages/merchant/transactions.tsx": "dee7bf03a4a143a0510ca3683dce3355971a19a4f1dc39079a3d941800e08f13",
+    "/Users/marksioson/Desktop/NUERS/src/components/enterprise/enterprise-shell.tsx": "d26d345d0d6b3375f4c8e038356b11190e46de49b19d0a406433c47d864855ca",
+    "/Users/marksioson/Desktop/NUERS/routes/api.php": "07c6511593a1b069c6e15119d6d420b00cc287859193af1ba914aea7bd08b64f",
+    "/Users/marksioson/Desktop/NUERS/tests/Feature/DurableWorkflowTest.php": "8b11e215ad6c67777b667d89c8431bcdccbb1dcc42e06f836959aa2efa56854d"
+  },
+  "production_data_writes": false,
+  "application_schema_changes": false,
+  "external_bir_calls": 0
+}

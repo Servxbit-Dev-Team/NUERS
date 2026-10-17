@@ -3,6 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\ApiAccess;
+use App\Services\BirCompliance;
+use App\Services\EisDocumentReadiness;
+use App\Services\ElectronicDocumentView;
+use App\Services\InvoiceCalculator;
+use App\Services\InvoiceSequence;
+use App\Services\MerchantCustomers;
+use App\Services\MerchantWallet;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -10,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class BusinessInvoiceController extends Controller
 {
@@ -31,6 +40,7 @@ class BusinessInvoiceController extends Controller
 
     private const STATUSES = [
         'draft',
+        'issued',
         'pending',
         'validated',
         'sent',
@@ -63,7 +73,11 @@ class BusinessInvoiceController extends Controller
         }
 
         if ($request->filled('type') && $request->query('type') !== 'all') {
-            $query->where('document_type', (string) $request->query('type'));
+            if ($request->query('type') === 'notes') {
+                $query->whereIn('document_type', ['credit_memo', 'debit_memo', 'credit_note', 'debit_note']);
+            } else {
+                $query->where('document_type', (string) $request->query('type'));
+            }
         }
 
         if ($request->filled('search')) {
@@ -108,9 +122,14 @@ class BusinessInvoiceController extends Controller
 
         abort_unless($record, 404, 'Invoice was not found for this Business Account.');
 
+        $render = $request->validate(['render' => ['nullable', Rule::in(['pdf'])]]);
+        if (($render['render'] ?? null) === 'pdf') {
+            app(BirCompliance::class)->audit('merchant.document.render.authorized', (string) $record->id, (string) $request->attributes->get('api_actor')->id, ['merchant_id' => $merchant->id, 'actor_role' => $request->attributes->get('api_role'), 'format' => 'pdf', 'outcome' => 'authorized_for_source_render', 'correlation_id' => (string) Str::uuid()]);
+        }
+
         return response()->json([
             'invoice' => $this->invoicePayload($record, true),
-        ]);
+        ])->header('Cache-Control', 'private, no-store');
     }
 
     public function store(Request $request): JsonResponse
@@ -123,9 +142,14 @@ class BusinessInvoiceController extends Controller
             'invoice_number' => ['required', 'string', 'max:80'],
             'document_type' => ['required', Rule::in(self::DOCUMENT_TYPES)],
             'status' => ['nullable', Rule::in(self::STATUSES)],
-            'buyer_name' => ['required', 'string', 'max:255'],
-            'buyer_tin' => ['nullable', 'string', 'max:80'],
-            'buyer_address' => ['nullable', 'string'],
+            'buyer_name' => ['required', 'string', 'min:2', 'max:255', 'not_regex:/[\x00-\x1F\x7F]/u'],
+            'request_id' => ['nullable', 'uuid'],
+            'customer_id' => ['nullable', 'uuid'],
+            'customer_revision' => ['nullable', 'integer', 'min:1'],
+            'buyer_customer_type' => ['nullable', Rule::in(['business', 'retail', 'walk_in'])],
+            'buyer_phone' => ['nullable', 'string', 'regex:/^\+?[0-9 ()-]{7,30}$/'],
+            'buyer_tin' => ['nullable', 'string', 'regex:/^(?:[0-9]{3}[ -]?){2}[0-9]{3}(?:[ -]?[0-9]{3})?$/'],
+            'buyer_address' => ['nullable', 'string', 'max:1000'],
             'buyer_email' => ['nullable', 'email', 'max:255'],
             'issue_date' => ['required', 'date'],
             'due_date' => ['nullable', 'date'],
@@ -136,19 +160,19 @@ class BusinessInvoiceController extends Controller
             'purchase_order' => ['nullable', 'string', 'max:120'],
             'sales_order' => ['nullable', 'string', 'max:120'],
             'original_invoice_id' => ['nullable', 'string', 'max:120'],
-            'correction_reason' => ['nullable', 'string'],
-            'qr_payload' => ['nullable', 'string'],
+            'correction_reason' => ['nullable', 'string', 'max:2000'],
+            'qr_payload' => ['nullable', 'string', 'max:8000'],
             'digital_signature' => ['nullable', 'string'],
             'validation_hash' => ['nullable', 'string', 'max:255'],
             'formats_generated' => ['nullable', 'array'],
             'formats_generated.*' => ['string', 'max:20'],
-            'notes' => ['nullable', 'string'],
-            'terms_and_conditions' => ['nullable', 'string'],
-            'footer_note' => ['nullable', 'string'],
-            'line_items' => ['required', 'array', 'min:1'],
+            'notes' => ['nullable', 'string', 'max:5000'],
+            'terms_and_conditions' => ['nullable', 'string', 'max:5000'],
+            'footer_note' => ['nullable', 'string', 'max:2000'],
+            'line_items' => ['required', 'array', 'min:1', 'max:100'],
             'line_items.*.line_number' => ['required', 'integer', 'min:1'],
             'line_items.*.item_code' => ['nullable', 'string', 'max:80'],
-            'line_items.*.description' => ['required', 'string'],
+            'line_items.*.description' => ['required', 'string', 'max:1000'],
             'line_items.*.unit' => ['nullable', 'string', 'max:40'],
             'line_items.*.quantity' => ['required', 'numeric', 'min:0'],
             'line_items.*.unit_price' => ['required', 'numeric'],
@@ -161,24 +185,54 @@ class BusinessInvoiceController extends Controller
             'line_items.*.tax_type' => ['nullable', Rule::in(['vatable', 'zero_rated', 'vat_exempt', 'non_vat'])],
         ]);
 
-        abort_if(
-            DB::table('business_invoices')
-                ->where('merchant_id', $merchant->id)
-                ->where('invoice_number', $validated['invoice_number'])
-                ->exists(),
-            422,
-            'This invoice number already exists for your Business Account.'
-        );
-
-        $totals = $this->totalsFromRequest($request);
+        $totals = $this->totalsFromRequest($request, (bool) $merchant->vat_registered);
+        $validated['line_items'] = $totals['_items'];
         $documentType = $this->normalizeDocumentType($validated['document_type'], $validated['line_items'], $totals, (bool) ($merchant->vat_registered ?? false));
+        if (in_array($documentType, ['credit_memo', 'debit_memo'], true)) {
+            $original = DB::table('business_invoices')->where('merchant_id', $merchant->id)->whereNotIn('status', ['draft', 'cancelled', 'voided'])->whereNotIn('document_type', ['credit_memo', 'debit_memo', 'credit_note', 'debit_note', 'payment_receipt', 'official_receipt', 'purchase_invoice', 'delivery_receipt'])->where(fn ($q) => $q->where('id', $validated['original_invoice_id'] ?? '')->orWhere('invoice_number', $validated['original_invoice_id'] ?? ''))->first();
+            abort_unless($original && trim((string) ($validated['correction_reason'] ?? '')), 422, 'An adjustment requires the original issued invoice of this seller and a correction reason.');
+            $validated['original_invoice_id'] = $original->id;
+        }
         $templateCode = $this->templateCode($documentType);
         $now = now();
         $invoiceId = (string) Str::uuid();
-        $status = $validated['status'] ?? 'draft';
-        $authority = $status !== 'draft' ? app(\App\Services\BirCompliance::class)->assertCanIssue((string) $merchant->id) : ['permit_to_issue_number' => null, 'esp_accreditation_number' => null];
+        $status = ($validated['status'] ?? 'draft') === 'sent' ? 'issued' : ($validated['status'] ?? 'draft');
+        abort_unless(in_array($status, ['draft', 'issued'], true), 422, 'New documents must be draft or issued. Payment and cancellation require their separate evidence-backed workflows.');
+        if ($status !== 'draft') {
+            abort_if(Carbon::parse($validated['issue_date'])->isAfter(today()), 422, 'An issued invoice cannot have a future business date.');
+        }
+        $authority = ['permit_to_issue_number' => null, 'esp_accreditation_number' => null];
 
-        DB::transaction(function () use ($request, $validated, $merchant, $invoiceId, $status, $totals, $documentType, $templateCode, $now, $authority) {
+        $requestHash = hash('sha256', json_encode([$validated, $totals], JSON_THROW_ON_ERROR));
+        $customerResult = DB::transaction(function () use ($request, $validated, $merchant, $invoiceId, $status, $totals, $documentType, $templateCode, $now, $authority, $requestHash) {
+            DB::table('merchants')->where('id', $merchant->id)->lockForUpdate()->first();
+            app(\App\Services\MerchantTeamAccess::class)->recheckMutation($request);
+            if (! empty($validated['request_id'])) {
+                $previous = DB::table('invoice_create_requests')->where('merchant_id', $merchant->id)->where('request_id', $validated['request_id'])->first();
+                if ($previous) {
+                    abort_unless(hash_equals($previous->request_hash, $requestHash), 409, 'This save identifier already belongs to another invoice request. Open the saved document before creating another.');
+                    $savedCustomer = DB::table('merchant_customers')->where('merchant_id', $merchant->id)->where('id', $previous->customer_id)->first();
+                    abort_unless($savedCustomer, 409, 'The saved customer relationship requires review.');
+
+                    return ['customer' => app(MerchantCustomers::class)->row($savedCustomer), 'created' => (bool) $previous->customer_created, 'invoice_id' => $previous->invoice_id, 'replayed' => true];
+                }
+            }
+
+            abort_if(DB::table('business_invoices')->where('merchant_id', $merchant->id)->where('invoice_number', $validated['invoice_number'])->exists(), 422, 'This invoice number already exists for your Business Account.');
+            if (! empty($validated['buyer_phone'])) {
+                abort_unless(strlen(preg_replace('/\D/', '', $validated['buyer_phone'])) >= 7 && strlen(preg_replace('/\D/', '', $validated['buyer_phone'])) <= 15, 422, 'Buyer phone must contain between seven and fifteen digits.');
+            }
+            $wallet = app(MerchantWallet::class);
+            $wallet->check((string) $merchant->id, app(InvoiceCalculator::class)->cents($totals['total_amount'], 'total_amount'), $documentType);
+            $customerResult = app(MerchantCustomers::class)->resolveInvoiceBuyer((string) $merchant->id, (string) $request->attributes->get('api_actor')->id, $validated);
+            $validated['customer_id'] = $customerResult['customer']['id'];
+            if ($status !== 'draft') {
+                $authority = app(BirCompliance::class)->assertCanIssue((string) $merchant->id);
+                $integration = app(BirCompliance::class)->integration((string) $merchant->id, null, 'production');
+                $allocated = app(InvoiceSequence::class)->reserve((string) $merchant->id, (string) ($integration->branch_code ?? ''), in_array($documentType, ['credit_memo', 'debit_memo'], true) ? $documentType : (in_array($documentType, ['payment_receipt', 'official_receipt'], true) ? 'payment' : 'invoice'));
+                $validated['invoice_number'] = $allocated['number'];
+                $wallet->charge((string) $merchant->id, app(InvoiceCalculator::class)->cents($totals['total_amount'], 'total_amount'), $documentType, 'invoice', $invoiceId, $allocated['number'], (string) ($integration->branch_code ?? ''), 'portal', (string) $request->attributes->get('api_actor')->id);
+            }
             $invoiceRow = [
                 ...$authority,
                 'id' => $invoiceId,
@@ -195,6 +249,7 @@ class BusinessInvoiceController extends Controller
                 'buyer_tin' => $request->input('buyer_tin'),
                 'buyer_address' => $request->input('buyer_address'),
                 'buyer_email' => $request->input('buyer_email'),
+                'buyer_phone' => $validated['buyer_phone'] ?? null,
                 'issue_date' => $validated['issue_date'],
                 'due_date' => $request->input('due_date') ?: null,
                 'delivery_date' => $request->input('delivery_date') ?: null,
@@ -217,13 +272,13 @@ class BusinessInvoiceController extends Controller
                 'reference_number' => $request->input('reference_number'),
                 'purchase_order' => $request->input('purchase_order'),
                 'sales_order' => $request->input('sales_order'),
-                'original_invoice_id' => $request->input('original_invoice_id'),
+                'original_invoice_id' => $validated['original_invoice_id'] ?? null,
                 'correction_reason' => $request->input('correction_reason'),
                 'qr_payload' => $request->input('qr_payload'),
-                'digital_signature' => $request->input('digital_signature'),
-                'signed_at' => $request->filled('digital_signature') ? $now : null,
-                'validated_at' => $request->filled('validation_hash') ? $now : null,
-                'validation_hash' => $request->input('validation_hash'),
+                'digital_signature' => null,
+                'signed_at' => null,
+                'validated_at' => $now,
+                'validation_hash' => hash('sha256', json_encode([$validated['line_items'], array_diff_key($totals, ['_items' => true])], JSON_THROW_ON_ERROR)),
                 'formats_generated' => json_encode($request->input('formats_generated', ['pdf', 'json'])),
                 'notes' => $request->input('notes'),
                 'terms_and_conditions' => $request->input('terms_and_conditions'),
@@ -236,7 +291,15 @@ class BusinessInvoiceController extends Controller
                 $invoiceRow['bir_template_code'] = $templateCode;
             }
 
+            if (Schema::hasColumn('business_invoices', 'seller_branch_code')) {
+                $invoiceRow['seller_branch_code'] = $status === 'draft' ? null : app(BirCompliance::class)->integration((string) $merchant->id, null, 'production')?->branch_code;
+                $invoiceRow['seller_rdo_code'] = $merchant->rdo_code ?? null;
+            }
             DB::table('business_invoices')->insert($invoiceRow);
+            if (! empty($validated['customer_id'])) {
+                app(MerchantCustomers::class)->link($merchant->id, $validated['customer_id'], (string) $request->attributes->get('api_actor')->id, 'invoice', $invoiceId);
+                app(BirCompliance::class)->audit('customer.document_linked', $validated['customer_id'], (string) $request->attributes->get('api_actor')->id, ['merchant_id' => $merchant->id, 'source' => 'invoice', 'document_id' => $invoiceId]);
+            }
 
             foreach ($validated['line_items'] as $line) {
                 DB::table('business_invoice_items')->insert([
@@ -261,45 +324,33 @@ class BusinessInvoiceController extends Controller
                 ]);
             }
 
+            if ($status !== 'draft' && Schema::hasTable('eis_document_outbox')) {
+                app(EisDocumentReadiness::class)->prepare('invoice', $invoiceId);
+            }
             $validated['document_type'] = $documentType;
-            if ($status !== 'draft') $this->mirrorBuyerExpense($merchant, $invoiceId, $validated, $totals, $now);
-            app(\App\Services\BirCompliance::class)->audit($status === 'draft' ? 'invoice.draft.saved' : 'invoice.issued', $invoiceId, (string) DB::table('users')->where('api_token', $request->bearerToken())->value('id'), ['status' => $status, 'authority' => $authority, 'document_hash' => hash('sha256', json_encode([$invoiceRow, $validated['line_items']], JSON_THROW_ON_ERROR))]);
-        });
+            if ($status !== 'draft') {
+                $this->mirrorBuyerExpense($merchant, $invoiceId, $validated, $totals, $now);
+            }
+            app(BirCompliance::class)->audit($status === 'draft' ? 'invoice.draft.saved' : 'invoice.issued', $invoiceId, (string) app(ApiAccess::class)->user($request)?->id, ['status' => $status, 'authority' => $authority, 'document_hash' => hash('sha256', json_encode([$invoiceRow, $validated['line_items']], JSON_THROW_ON_ERROR))]);
+            if (! empty($validated['request_id'])) {
+                DB::table('invoice_create_requests')->insert(['id' => (string) Str::uuid(), 'merchant_id' => $merchant->id, 'request_id' => $validated['request_id'], 'request_hash' => $requestHash, 'invoice_id' => $invoiceId, 'customer_id' => $customerResult['customer']['id'], 'customer_created' => $customerResult['created'], 'created_at' => $now, 'updated_at' => $now]);
+            }
 
-        $invoice = DB::table('business_invoices')->where('id', $invoiceId)->first();
+            return [...$customerResult, 'invoice_id' => $invoiceId, 'replayed' => false];
+        }, 3);
+
+        $invoice = DB::table('business_invoices')->where('merchant_id', $merchant->id)->where('id', $customerResult['invoice_id'])->first();
 
         return response()->json([
+            'request_id' => $validated['request_id'] ?? null,
             'invoice' => $this->invoicePayload($invoice, true),
-        ], 201);
+            'customer' => ['id' => $customerResult['customer']['id'], 'code' => $customerResult['customer']['code'], 'created' => $customerResult['created']],
+        ], $customerResult['replayed'] ? 200 : 201);
     }
 
     private function currentMerchant(Request $request): object
     {
-        $token = $request->bearerToken();
-
-        abort_unless($token, 401, 'Authenticated Business Account session is required.');
-
-        $user = DB::table('users')->where('api_token', $token)->first();
-
-        abort_unless($user, 401, 'Authenticated Business Account session is required.');
-
-        $merchant = DB::table('merchants')
-            ->where(function ($query) use ($user) {
-                $query
-                    ->where('merchant_account_id', $user->id)
-                    ->orWhere('merchant_account_email', $user->email)
-                    ->orWhere('email', $user->email);
-            })
-            ->orderByRaw(
-                'CASE WHEN merchant_account_id = ? THEN 0 WHEN merchant_account_email = ? THEN 1 WHEN email = ? THEN 2 ELSE 3 END',
-                [$user->id, $user->email, $user->email],
-            )
-            ->orderByDesc('updated_at')
-            ->first();
-
-        abort_unless($merchant, 404, 'No Business Account registry record is linked to this login.');
-
-        return $merchant;
+        return app(ApiAccess::class)->merchant($request);
     }
 
     private function summary(string $merchantId): array
@@ -379,6 +430,7 @@ class BusinessInvoiceController extends Controller
             'buyer_tin' => $invoice->buyer_tin,
             'buyer_address' => $invoice->buyer_address,
             'buyer_email' => $invoice->buyer_email,
+            'buyer_phone' => $invoice->buyer_phone ?? null,
             'issue_date' => $invoice->issue_date,
             'due_date' => $invoice->due_date,
             'delivery_date' => $invoice->delivery_date,
@@ -420,8 +472,10 @@ class BusinessInvoiceController extends Controller
         ];
 
         if ($withItems) {
+            $payload['document_view'] = app(ElectronicDocumentView::class)->make('invoice', $invoice);
             $payload['line_items'] = DB::table('business_invoice_items')
                 ->where('invoice_id', $invoice->id)
+                ->where('merchant_id', $invoice->merchant_id)
                 ->orderBy('line_number')
                 ->get()
                 ->map(fn ($line) => [
@@ -446,31 +500,30 @@ class BusinessInvoiceController extends Controller
         return $payload;
     }
 
-    private function totalsFromRequest(Request $request): array
+    private function totalsFromRequest(Request $request, bool $vatRegistered = true): array
     {
-        $lineItems = collect($request->input('line_items', []));
-        $subtotal = $request->input('subtotal_amount', $lineItems->sum('line_total'));
-        $discount = $request->input('discount_amount', $lineItems->sum('discount_amount'));
-        $taxable = $request->input('taxable_amount', $lineItems->sum('taxable_amount'));
-        $vat = $request->input('vat_amount', $lineItems->sum('vat_amount'));
-        $withholding = $request->input('withholding_tax', 0);
-        $otherCharges = $request->input('other_charges', 0);
-        $total = $request->input('total_amount', $subtotal - $discount + $vat + $otherCharges);
-        $paid = $request->input('amount_paid', 0);
+        $calculator = app(InvoiceCalculator::class);
+        $computed = $calculator->calculate($request->input('line_items', []), $vatRegistered,
+            0,
+            $calculator->cents($request->input('other_charges', 0), 'other_charges', true));
+        $rate = $request->input('withholding_pct', 0);
+        if (! is_numeric($rate) || $rate < 0 || $rate > 100 || abs($rate * 100 - round($rate * 100)) > 0.00001) {
+            throw ValidationException::withMessages(['withholding_pct' => 'Use a percentage from 0 to 100 with at most two decimals.']);
+        }
+        $computed['withholding_tax'] = intdiv(($computed['taxable_amount'] + $computed['zero_rated_amount'] + $computed['vat_exempt_amount']) * (int) round($rate * 100) + 5000, 10000);
+        $paid = $calculator->cents($request->input('amount_paid', 0), 'amount_paid', true);
+        abort_if($paid > $computed['total_amount'] - $computed['withholding_tax'], 422, 'Amount paid exceeds the net amount due.');
+        $computed['amount_paid'] = $paid;
+        $computed['amount_due'] = $computed['total_amount'] - $paid - $computed['withholding_tax'];
+        $items = $computed['items'];
+        unset($computed['items']);
+        foreach ($computed as $key => $value) {
+            if ($request->has($key) && $calculator->cents($request->input($key), $key, true) !== $value) {
+                throw ValidationException::withMessages([$key => 'Submitted amount does not match the server calculation.']);
+            }
+        }
 
-        return [
-            'subtotal_amount' => $this->fromCentavos($subtotal),
-            'discount_amount' => $this->fromCentavos($discount),
-            'taxable_amount' => $this->fromCentavos($taxable),
-            'vat_amount' => $this->fromCentavos($vat),
-            'withholding_tax' => $this->fromCentavos($withholding),
-            'other_charges' => $this->fromCentavos($otherCharges),
-            'total_amount' => $this->fromCentavos($total),
-            'amount_paid' => $this->fromCentavos($paid),
-            'amount_due' => $this->fromCentavos(max(0, $total - $paid - $withholding)),
-            'zero_rated_amount' => $this->fromCentavos($request->input('zero_rated_amount', 0)),
-            'vat_exempt_amount' => $this->fromCentavos($request->input('vat_exempt_amount', 0)),
-        ];
+        return [...array_map(fn ($value) => $value / 100, $computed), '_items' => $items];
     }
 
     private function mirrorBuyerExpense(object $seller, string $invoiceId, array $validated, array $totals, Carbon $now): void
@@ -485,52 +538,28 @@ class BusinessInvoiceController extends Controller
             return;
         }
 
-        $buyer = DB::table('merchants')
-            ->whereRaw($this->normalizedTinSql('tin').' = ?', [$buyerTin])
-            ->first();
+        $buyers = DB::table('merchants')->whereRaw($this->normalizedTinSql('tin').' = ?', [$buyerTin])->limit(2)->get();
+        $buyer = $buyers->count() === 1 ? $buyers->first() : null;
 
         if (! $buyer) {
             return;
         }
 
-        DB::table('merchant_expenses')->updateOrInsert(
-            [
-                'source_invoice_reference' => $validated['invoice_number'],
-                'buyer_tin' => $buyer->tin,
-            ],
-            [
-                'id' => (string) Str::uuid(),
-                'merchant_id' => $buyer->id,
-                'supplier_merchant_id' => $seller->id,
-                'purchase_order_reference' => $validated['purchase_order'] ?? null,
-                'supplier_name' => $seller->business_name,
-                'supplier_tin' => $seller->tin,
-                'buyer_name' => $validated['buyer_name'],
-                'expense_category' => 'B2B Purchase',
-                'description' => 'Generated from NUERS Business Invoice '.$validated['invoice_number'],
-                'gross_amount' => $totals['total_amount'],
-                'vatable_amount' => $totals['taxable_amount'],
-                'input_vat_amount' => $totals['vat_amount'],
-                'withholding_tax_amount' => $totals['withholding_tax'],
-                'net_payable' => max(0, $totals['amount_due']),
-                'document_type' => $validated['document_type'],
-                'payment_status' => 'unpaid',
-                'validation_status' => 'validated',
-                'reconciliation_status' => 'matched',
-                'claim_status' => 'available',
-                'risk_level' => 'low',
-                'ai_score' => 92,
-                'issued_at' => $validated['issue_date'],
-                'due_at' => $validated['due_date'] ?? null,
-                'metadata' => json_encode([
-                    'source' => 'business_invoices',
-                    'business_invoice_id' => $invoiceId,
-                    'seller_merchant_id' => $seller->id,
-                ]),
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]
-        );
+        if ($buyer->id === $seller->id || ! in_array($validated['document_type'], ['vat_invoice', 'non_vat_invoice', 'vat_exempt_invoice', 'zero_rated_invoice', 'mixed_sales_invoice', 'sales_invoice', 'service_invoice'], true)) {
+            return;
+        }
+        DB::table('merchant_expenses')->insertOrIgnore([
+            'id' => (string) Str::uuid(), 'merchant_id' => $buyer->id, 'supplier_merchant_id' => $seller->id, 'source_invoice_id' => $invoiceId,
+            'source_invoice_reference' => $validated['invoice_number'], 'buyer_tin' => $buyer->tin, 'buyer_name' => $validated['buyer_name'],
+            'supplier_name' => $seller->business_name, 'supplier_tin' => $seller->tin, 'purchase_order_reference' => $validated['purchase_order'] ?? null,
+            'expense_category' => 'B2B Purchase', 'description' => 'Pending review of original supplier invoice '.$validated['invoice_number'],
+            'gross_amount' => $totals['total_amount'], 'vatable_amount' => $totals['taxable_amount'], 'input_vat_amount' => $totals['vat_amount'],
+            'withholding_tax_amount' => $totals['withholding_tax'], 'net_payable' => max(0, $totals['amount_due']), 'document_type' => $validated['document_type'],
+            'payment_status' => 'unpaid', 'validation_status' => 'pending_review', 'reconciliation_status' => 'unmatched', 'claim_status' => 'pending_review',
+            'risk_level' => null, 'ai_score' => null, 'issued_at' => $validated['issue_date'], 'due_at' => $validated['due_date'] ?? null,
+            'metadata' => json_encode(['source' => 'business_invoices', 'source_invoice_id' => $invoiceId, 'seller_merchant_id' => $seller->id]),
+            'created_at' => $now, 'updated_at' => $now,
+        ]);
     }
 
     private function merchantPayload(object $merchant): array
@@ -603,7 +632,7 @@ class BusinessInvoiceController extends Controller
             return 'payment_receipt';
         }
 
-        if ($documentType !== 'sales_invoice') {
+        if (! in_array($documentType, ['sales_invoice', 'vat_invoice', 'non_vat_invoice', 'vat_exempt_invoice', 'zero_rated_invoice', 'mixed_sales_invoice'], true)) {
             return $documentType;
         }
 
@@ -620,6 +649,7 @@ class BusinessInvoiceController extends Controller
         $taxType = (string) ($taxTypes->first() ?: 'vatable');
 
         return match (true) {
+            $taxType === 'non_vat' || ! $vatRegistered => 'non_vat_invoice',
             $taxType === 'zero_rated' || $totals['zero_rated_amount'] > 0 => 'zero_rated_invoice',
             $taxType === 'vat_exempt' || $totals['vat_exempt_amount'] > 0 => 'vat_exempt_invoice',
             $taxType === 'non_vat' || ! $vatRegistered => 'non_vat_invoice',

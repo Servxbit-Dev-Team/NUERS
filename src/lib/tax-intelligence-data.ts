@@ -24,7 +24,7 @@ export type TaxRecord = {
   tin: string | null;
   amount: number;
   vat_amount: number;
-  withholding_amount: number;
+  withholding_amount: number|null;
   status: string;
   risk_level: string | null;
   score: number | null;
@@ -42,6 +42,8 @@ export type TaxGraphEdge = {
 
 export type TaxIntelligencePayload = {
   scope: TaxScope | "";
+  notice?:string;
+  reporting_state?:string;
   kpis: TaxKpi[];
   series: Record<string, TaxSeriesPoint[]>;
   records: Record<string, TaxRecord[]>;

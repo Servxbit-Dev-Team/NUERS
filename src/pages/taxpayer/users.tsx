@@ -231,7 +231,7 @@ export function UserManagement() {
                   ["Submit EIS",              true,  true,  true,  false, true,  false],
                   ["View Reports",            true,  true,  true,  false, true,  true],
                   ["Manage Users",            true,  true,  false, false, false, false],
-                  ["Billing & Subscription",  true,  false, false, false, false, false],
+                  ["Transaction Fees & Storage",  true,  false, false, false, false, false],
                   ["API Key Management",      true,  true,  false, false, false, false],
                   ["Branch Management",       true,  true,  false, false, false, false],
                 ].map(([label, ...vals]) => (

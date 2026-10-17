@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\ApiAccess;
+use App\Services\EisDocumentReadiness;
+use App\Services\ExpenseCreditEvidence;
+use App\Services\IssuedDocumentLedger;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,7 +17,9 @@ use Illuminate\Support\Facades\Schema;
 class MerchantTaxCenterController extends Controller
 {
     private const POSTED_TRANSACTION_STATUSES = ['completed', 'paid', 'issued', 'settled', 'verified'];
+
     private const POSTED_INVOICE_STATUSES = ['validated', 'sent', 'paid', 'partially_paid', 'overdue', 'issued'];
+
     private const CLAIMABLE_EXPENSE_STATUSES = ['available', 'matched', 'validated', 'valid', 'approved', 'claimed', 'validated_input_vat'];
 
     public function show(Request $request): JsonResponse
@@ -26,8 +32,7 @@ class MerchantTaxCenterController extends Controller
         $monthly = $this->blankMonthly($year);
         $ledger = collect();
 
-        $this->applyTransactionSales($merchant, $start, $end, $monthly, $ledger);
-        $this->applyInvoiceSales($merchant, $start, $end, $monthly, $ledger);
+        $this->applyCanonicalSales($merchant, $start, $end, $monthly, $ledger);
         $this->applyExpenseCredits($merchant, $start, $end, $monthly, $ledger);
 
         $monthly = array_values(array_map(function (array $row) {
@@ -62,6 +67,7 @@ class MerchantTaxCenterController extends Controller
                 'tin' => (string) ($merchant->tin ?? ''),
                 'vat_registered' => (bool) ($merchant->vat_registered ?? false),
             ],
+            'reporting_state' => 'internal_draft_not_tax_return', 'notice' => 'Canonical source-reconciled document totals; input VAT requires separately recorded original-source review. This is not an official tax return.',
             'year' => $year,
             'available_years' => $this->availableYears($year, $merchant),
             'last_sync' => $this->lastSync($merchant),
@@ -82,7 +88,7 @@ class MerchantTaxCenterController extends Controller
 
         abort_unless($token && Schema::hasTable('users'), 401, 'Authenticated Business Account session is required.');
 
-        $user = DB::table('users')->where('api_token', $token)->first();
+        $user = app(ApiAccess::class)->user($request);
 
         abort_unless($user, 401, 'Authenticated Business Account session is required.');
         abort_unless(Schema::hasTable('merchants'), 500, 'merchants table is not migrated.');
@@ -90,9 +96,7 @@ class MerchantTaxCenterController extends Controller
         $merchant = DB::table('merchants')
             ->where(function ($query) use ($user) {
                 $query
-                    ->where('merchant_account_id', $user->id)
-                    ->orWhere('merchant_account_email', $user->email)
-                    ->orWhere('email', $user->email);
+                    ->where('merchant_account_id', $user->id);
             })
             ->first();
 
@@ -136,100 +140,30 @@ class MerchantTaxCenterController extends Controller
         return $rows;
     }
 
-    private function applyTransactionSales(object $merchant, Carbon $start, Carbon $end, array &$monthly, Collection $ledger): void
+    private function applyCanonicalSales(object $merchant, Carbon $start, Carbon $end, array &$monthly, Collection $ledger): void
     {
-        if (! Schema::hasTable('merchant_transactions')) {
-            return;
-        }
-
-        $rows = DB::table('merchant_transactions')
-            ->where('merchant_id', $merchant->id)
-            ->whereBetween('created_at', [$start, $end])
-            ->whereIn('status', self::POSTED_TRANSACTION_STATUSES)
-            ->orderByDesc('created_at')
-            ->get();
-
+        $rows = app(IssuedDocumentLedger::class)->query()->where('merchant_id', $merchant->id)->where('status', 'success')->where('identity_count', 1)->whereIn('document_family', ['invoice', 'credit', 'debit'])->whereBetween('business_date', [$start->toDateString(), $end->toDateString()])->orderBy('id')->cursor();
         foreach ($rows as $row) {
-            $createdAt = Carbon::parse($row->created_at);
-            $month = (int) $createdAt->month;
-            $gross = (float) $row->amount;
-            $vatOutput = (float) $row->vat_amount;
-            $vatableSales = (float) $row->vatable_sales;
-
+            if ($row->document_source === 'transaction') {
+                continue;
+            }
+            if (in_array($row->document_family, ['credit', 'debit'], true) && (! $row->original_invoice_id || ! DB::table('business_invoices')->where('id', $row->original_invoice_id)->where('merchant_id', $merchant->id)->whereNotIn('status', ['draft', 'cancelled', 'voided'])->exists())) {
+                continue;
+            }
+            if (! app(EisDocumentReadiness::class)->inspect($row->document_source, $row->document_id)['financial_validation_passed']) {
+                continue;
+            }
+            $date = Carbon::parse($row->business_date);
+            $month = $date->month;
+            $sign = $row->document_family === 'credit' ? -1 : 1;
+            $gross = $sign * (float) $row->amount;
+            $vat = $sign * (float) $row->vat_amount;
             $monthly[$month]['gross'] += $gross;
-            $monthly[$month]['vatable_sales'] += $vatableSales;
-            $monthly[$month]['vat_output'] += $vatOutput;
+            $monthly[$month]['vatable_sales'] += $sign * (float) $row->vatable_sales;
+            $monthly[$month]['vat_output'] += $vat;
             $monthly[$month]['tx_count']++;
             $monthly[$month]['sales_document_count']++;
-
-            $ledger->push($this->ledgerRow([
-                'id' => 'TAX-TXN-'.$this->shortId($row->id),
-                'source' => 'Transaction',
-                'tx_ref' => $row->transaction_ref ?: $this->shortId($row->id),
-                'date_at' => $createdAt,
-                'channel' => $this->headline((string) (($row->channel ?? null) ?: ($row->source_system ?? null) ?: 'Transaction')),
-                'branch' => (string) (($row->branch ?? null) ?: ($row->branch_name ?? null) ?: 'Main Office'),
-                'customer' => (string) ($row->customer_name ?: 'Customer'),
-                'gross' => $gross,
-                'vat_output' => $vatOutput,
-                'input_credit' => 0.0,
-                'tax_type' => $this->taxType((string) ($row->tax_type ?? ''), $vatOutput, $vatableSales, $gross),
-                'status' => (string) $row->status,
-            ]));
-        }
-    }
-
-    private function applyInvoiceSales(object $merchant, Carbon $start, Carbon $end, array &$monthly, Collection $ledger): void
-    {
-        if (! Schema::hasTable('business_invoices')) {
-            return;
-        }
-
-        $startDate = $start->toDateString();
-        $endDate = $end->toDateString();
-
-        $query = DB::table('business_invoices')
-            ->where('merchant_id', $merchant->id)
-            ->whereIn('status', self::POSTED_INVOICE_STATUSES)
-            ->whereRaw('COALESCE(issue_date, DATE(created_at)) BETWEEN ? AND ?', [$startDate, $endDate]);
-
-        if (Schema::hasTable('merchant_transactions')) {
-            $query->whereNotExists(function ($inner) use ($merchant) {
-                $inner
-                    ->select(DB::raw(1))
-                    ->from('merchant_transactions')
-                    ->whereColumn('merchant_transactions.transaction_ref', 'business_invoices.invoice_number')
-                    ->where('merchant_transactions.merchant_id', $merchant->id);
-            });
-        }
-
-        foreach ($query->orderByDesc('issue_date')->orderByDesc('created_at')->get() as $row) {
-            $date = Carbon::parse($row->issue_date ?: $row->created_at);
-            $month = (int) $date->month;
-            $gross = (float) $row->total_amount;
-            $vatOutput = (float) $row->vat_amount;
-            $vatableSales = (float) $row->taxable_amount;
-
-            $monthly[$month]['gross'] += $gross;
-            $monthly[$month]['vatable_sales'] += $vatableSales;
-            $monthly[$month]['vat_output'] += $vatOutput;
-            $monthly[$month]['tx_count']++;
-            $monthly[$month]['sales_document_count']++;
-
-            $ledger->push($this->ledgerRow([
-                'id' => 'TAX-INV-'.$this->shortId($row->id),
-                'source' => 'Sales Invoice',
-                'tx_ref' => $row->invoice_number,
-                'date_at' => $date,
-                'channel' => 'Invoice',
-                'branch' => 'Business Account',
-                'customer' => (string) ($row->buyer_name ?: 'Buyer'),
-                'gross' => $gross,
-                'vat_output' => $vatOutput,
-                'input_credit' => 0.0,
-                'tax_type' => $this->taxType('', $vatOutput, $vatableSales, $gross),
-                'status' => (string) $row->status,
-            ]));
+            $ledger->push($this->ledgerRow(['id' => $row->id, 'source' => 'Canonical issued document', 'tx_ref' => $row->receipt_number, 'date_at' => $date, 'channel' => 'document', 'branch' => $row->branch_code ?? 'Unverified', 'customer' => $row->customer_name ?? '', 'gross' => $gross, 'vat_output' => $vat, 'input_credit' => 0, 'tax_type' => $row->document_type, 'status' => 'internal_draft']));
         }
     }
 
@@ -253,7 +187,16 @@ class MerchantTaxCenterController extends Controller
             ->orderByRaw('COALESCE(issued_at, created_at) DESC')
             ->get();
 
+        $recognizedSources = [];
         foreach ($rows as $row) {
+            $original = app(ExpenseCreditEvidence::class)->source($row);
+            if (! $original) {
+                continue;
+            }
+            if (isset($recognizedSources[$original->id])) {
+                continue;
+            }
+            $recognizedSources[$original->id] = true;
             $date = Carbon::parse($row->issued_at ?: $row->created_at);
             $month = (int) $date->month;
             $gross = (float) $row->gross_amount;

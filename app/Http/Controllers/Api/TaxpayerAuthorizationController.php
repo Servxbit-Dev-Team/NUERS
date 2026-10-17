@@ -115,10 +115,11 @@ class TaxpayerAuthorizationController extends Controller
     private function validated(array $data, ?string $id = null)
     {
         $data['reference'] = trim($data['reference'] ?? '');
-        $v = Validator::make($data, ['merchant_id' => 'required|exists:merchants,id', 'kind' => 'required|in:PTI,PTT', 'reference' => ['required', 'string', 'max:120', Rule::unique('taxpayer_authorizations')->where('kind', $data['kind'] ?? '')->ignore($id)], 'environment' => 'required|in:certification,production', 'scope' => 'required|string|min:5|max:2000', 'issued_at' => 'required|date_format:Y-m-d', 'valid_until' => 'nullable|date_format:Y-m-d|after_or_equal:issued_at', 'status' => 'required|in:pending,active,suspended,revoked', 'evidence' => 'required|string|min:10|max:3000', 'reason' => 'required|string|min:10|max:2000'])->validate();
+        $v = Validator::make($data, ['merchant_id' => 'required|exists:merchants,id', 'kind' => 'required|in:PTI,PTT', 'reference' => ['required', 'string', 'max:120', Rule::unique('taxpayer_authorizations')->where('kind', $data['kind'] ?? '')->ignore($id)], 'environment' => 'required|in:certification,production', 'branch_code'=>'nullable|regex:/^[0-9]{5}$/', 'scope' => 'required|string|min:5|max:2000', 'issued_at' => 'required|date_format:Y-m-d', 'valid_until' => 'nullable|date_format:Y-m-d|after_or_equal:issued_at', 'status' => 'required|in:pending,active,suspended,revoked', 'evidence' => 'required|string|min:10|max:3000', 'reason' => 'required|string|min:10|max:2000'])->validate();
         $v['reference'] = trim($v['reference']);
         abort_if($v['reference'] === '', 422, 'A permit reference is required.');
         if ($v['status'] === 'active') {
+            abort_unless(!empty($v['branch_code']),422,'Active authority requires its verified five-digit BIR branch code.');
             abort_if(C::parse($v['issued_at'])->isFuture(), 422, 'An active permit must already be effective.');
         }
 

@@ -36,7 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const activeSession=useRef<Session|null>(null),profileGeneration=useRef(0),profileLoaded=useRef(false);
 
   useEffect(() => {
-    let mounted=true,checking=false;
+    let mounted=true,checking=false,activityVersion=1,verifiedActivity=0;
+    const activity=()=>{activityVersion++;};
     function apply(next:Session|null){
       if(!mounted)return;
       const previous=activeSession.current;
@@ -48,25 +49,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async function verify(){
       if(checking||!mounted)return;
       checking=true;
+      const version=activityVersion;
+      const active=!document.hidden&&version>verifiedActivity;
       try{
-        const result=await supabase.auth.getSession();
+        const result=await supabase.auth.getSession({active});
         if(!mounted||result.stale)return;
         if(result.error){setSessionError('Unable to reach NUERS. Retrying your session check…');return;}
+        if(active)verifiedActivity=version;
         setSessionError(null);apply(result.data.session);
       } finally {checking=false}
     }
     const invalid=()=>{setSessionInvalid(true);setSessionError(null);apply(null)};
     const storage=(e:StorageEvent)=>{if(e.key===TOKEN_KEY||e.key===null){if(!storedToken())apply(null);else {profileGeneration.current++;setProfile(null);setLoading(true);verify()}}};
-    const resume=()=>{if(!document.hidden)verify()};
+    const resume=()=>{if(!document.hidden){activity();verify()}};
+    const online=()=>{if(!document.hidden)verify()};
     window.addEventListener(SESSION_INVALID_EVENT,invalid);
     window.addEventListener('storage',storage);
     window.addEventListener('focus',resume);
-    window.addEventListener('online',resume);
+    window.addEventListener('online',online);
     document.addEventListener('visibilitychange',resume);
+    const activityEvents=['pointerdown','keydown','wheel','touchstart'] as const;
+    activityEvents.forEach(event=>window.addEventListener(event,activity,{passive:true}));
     const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,next)=>apply(next));
     verify();
-    const interval=window.setInterval(verify,15000);
-    return()=>{mounted=false;profileGeneration.current++;window.clearInterval(interval);subscription.unsubscribe();window.removeEventListener(SESSION_INVALID_EVENT,invalid);window.removeEventListener('storage',storage);window.removeEventListener('focus',resume);window.removeEventListener('online',resume);document.removeEventListener('visibilitychange',resume)};
+    const interval=window.setInterval(()=>{if(!document.hidden)verify()},60000);
+    return()=>{mounted=false;profileGeneration.current++;window.clearInterval(interval);subscription.unsubscribe();window.removeEventListener(SESSION_INVALID_EVENT,invalid);window.removeEventListener('storage',storage);window.removeEventListener('focus',resume);window.removeEventListener('online',online);document.removeEventListener('visibilitychange',resume);activityEvents.forEach(event=>window.removeEventListener(event,activity))};
   }, []);
 
   async function fetchProfile(userId: string) {

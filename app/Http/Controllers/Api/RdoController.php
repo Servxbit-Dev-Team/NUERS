@@ -23,84 +23,17 @@ class RdoController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $payload = $request->validate([
-            'rdo_code' => ['required', 'string', 'max:20'],
-            'rdo_name' => ['required', 'string', 'max:255'],
-            'region' => ['required', 'string', 'max:100'],
-            'city' => ['nullable', 'string', 'max:255'],
-            'office_address' => ['nullable', 'string'],
-            'head_name' => ['nullable', 'string', 'max:255'],
-            'email' => ['nullable', 'email'],
-            'phone' => ['nullable', 'string', 'max:100'],
-            'password' => ['nullable', 'string', 'min:6'],
-            'coverage_area' => ['nullable', 'array'],
-            'notes' => ['nullable', 'string'],
-        ]);
-
-        $now = now();
-        $userId = DB::table('rdo_offices')->where('rdo_code', $payload['rdo_code'])->value('user_id');
-
-        if (!empty($payload['email']) && !empty($payload['password'])) {
-            $existingUser = DB::table('users')->where('email', $payload['email'])->first();
-
-            if ($existingUser) {
-                $userId = $existingUser->id;
-                DB::table('users')->where('id', $userId)->update([
-                    'name' => $payload['head_name'] ?: $payload['rdo_name'],
-                    'password' => Hash::make($payload['password']),
-                    'updated_at' => $now,
-                ]);
-            } else {
-                $userId = DB::table('users')->insertGetId([
-                    'name' => $payload['head_name'] ?: $payload['rdo_name'],
-                    'email' => $payload['email'],
-                    'email_verified_at' => $now,
-                    'password' => Hash::make($payload['password']),
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ]);
-            }
-
-            DB::table('profiles')->updateOrInsert(
-                ['id' => $userId],
-                [
-                    'email' => $payload['email'],
-                    'role' => 'rdo',
-                    'full_name' => $payload['head_name'] ?: $payload['rdo_name'],
-                    'organization' => "{$payload['rdo_code']} - {$payload['rdo_name']}",
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ],
-            );
-        }
-
-        DB::table('rdo_offices')->updateOrInsert(
-            ['rdo_code' => $payload['rdo_code']],
-            [
-                'id' => DB::table('rdo_offices')->where('rdo_code', $payload['rdo_code'])->value('id') ?: (string) Str::uuid(),
-                'rdo_code' => $payload['rdo_code'],
-                'rdo_name' => $payload['rdo_name'],
-                'region' => $payload['region'],
-                'city' => $payload['city'] ?? null,
-                'office_address' => $payload['office_address'] ?? null,
-                'head_name' => $payload['head_name'] ?? null,
-                'email' => $payload['email'] ?? null,
-                'phone' => $payload['phone'] ?? null,
-                'user_id' => $userId,
-                'status' => 'active',
-                'coverage_area' => json_encode($payload['coverage_area'] ?? []),
-                'notes' => $payload['notes'] ?? null,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-        );
-
-        $office = DB::table('rdo_offices')->where('rdo_code', $payload['rdo_code'])->first();
-
-        return response()->json([
-            'success' => true,
-            'office' => $this->officePayload($office),
-        ], 201);
+        $actor=app(\App\Services\ApiAccess::class)->require($request,['admin','super_admin']);
+        $v=$request->validate(['rdo_code'=>'required|string|max:20','rdo_name'=>'required|string|max:255','region'=>'required|string|max:100','city'=>'nullable|string|max:255','office_address'=>'nullable|string|max:2000','head_name'=>'nullable|string|max:255','email'=>'nullable|email|max:255','phone'=>'nullable|string|max:100','password'=>'prohibited','user_id'=>'prohibited','coverage_area'=>'nullable|array|max:200','coverage_area.*'=>'string|max:255','notes'=>'nullable|string|max:2000']);
+        return DB::transaction(function()use($v,$actor){
+            $old=DB::table('rdo_offices')->where('rdo_code',$v['rdo_code'])->lockForUpdate()->first();
+            $id=$old?->id ?? (string)Str::uuid();
+            $data=[...$v,'coverage_area'=>json_encode($v['coverage_area']??[]),'updated_at'=>now()];
+            if($old) DB::table('rdo_offices')->where('id',$id)->update($data);
+            else DB::table('rdo_offices')->insert([...$data,'id'=>$id,'status'=>'active','created_at'=>now()]);
+            app(\App\Services\BirCompliance::class)->audit('rdo.registry.saved',$id,(string)$actor->id,['before'=>$old,'after'=>$data]);
+            return response()->json(['success'=>true,'office'=>$this->officePayload(DB::table('rdo_offices')->where('id',$id)->first())],$old?200:201);
+        });
     }
 
     public function dashboard(Request $request): JsonResponse
@@ -248,25 +181,12 @@ class RdoController extends Controller
 
     private function resolveOffice(Request $request): ?object
     {
-        $code = (string) $request->query('code', '');
-
-        if ($code !== '') {
-            return DB::table('rdo_offices')->where('rdo_code', $code)->first();
-        }
-
-        $token = $request->bearerToken();
-
-        if ($token) {
-            $user = DB::table('users')->where('api_token', $token)->first();
-            if ($user) {
-                $office = DB::table('rdo_offices')->where('user_id', $user->id)->first();
-                if ($office) {
-                    return $office;
-                }
-            }
-        }
-
-        return DB::table('rdo_offices')->orderBy('rdo_code')->first();
+        $actor=app(\App\Services\ApiAccess::class)->require($request,['admin','super_admin','bir','rdo']);
+        $role=DB::table('profiles')->where('id',$actor->id)->value('role');
+        $q=DB::table('rdo_offices');
+        if($role==='rdo') $q->where('user_id',$actor->id);
+        if($request->filled('code')) $q->where('rdo_code',$request->query('code'));
+        return $q->orderBy('rdo_code')->first();
     }
 
     private function officePayload(object $office): array

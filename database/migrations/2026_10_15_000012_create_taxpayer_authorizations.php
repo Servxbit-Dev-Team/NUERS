@@ -50,8 +50,8 @@ return new class extends Migration
             $t->text('evidence');
             $t->text('reason');
             $t->string('recorded_by');
-            $t->timestamp('observed_at');
-            $t->timestamp('created_at');
+            $t->dateTime('observed_at');
+            $t->dateTime('created_at');
         });
     }
 

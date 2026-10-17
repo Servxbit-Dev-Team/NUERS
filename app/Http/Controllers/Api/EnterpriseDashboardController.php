@@ -19,7 +19,7 @@ class EnterpriseDashboardController extends Controller
     {
         abort_unless(in_array($portal, ['admin', 'merchant', 'citizen'], true), 404);
         $token = $request->bearerToken();
-        $user = $token ? DB::table('users')->where('api_token', $token)->first() : null;
+        $user = $token ? app(\App\Services\ApiAccess::class)->user($request) : null;
         abort_unless($user, 401, 'Sign in to view your dashboard.');
         $profile = DB::table('profiles')->where('id', $user->id)->first();
         $roles = match ($portal) {
@@ -35,17 +35,13 @@ class EnterpriseDashboardController extends Controller
         $receipts = DB::table('transaction_receipts as r');
         $transmissions = DB::table('eis_transmissions');
         if ($portal === 'merchant') {
-            $merchant = DB::table('merchants')->where('merchant_account_id', $user->id)->first()
-                ?? DB::table('merchants')->where(function (Builder $q) use ($user) {
-                    $q->where('merchant_account_email', $user->email)->orWhere('email', $user->email);
-                })->first();
+            $merchant = app(\App\Services\ApiAccess::class)->merchants($user)->first();
             $transactions->where('t.merchant_id', $merchant?->id ?? '__unlinked__');
             $receipts->where('r.merchant_id', $merchant?->id ?? '__unlinked__');
             $transmissions->where('merchant_id', $merchant?->id ?? '__unlinked__');
         } elseif ($portal === 'citizen') {
-            $account = DB::table('client_accounts')->where('user_id', $user->id)->first()
-                ?? DB::table('client_accounts')->where('email', $user->email)->first();
-            $tin = $this->tin($profile?->tin ?: ($account?->tin ?? ''));
+            $account = DB::table('client_accounts')->where('user_id', $user->id)->first();
+            $tin = $this->tin(app(\App\Services\ApiAccess::class)->taxpayerTin($user));
             if (in_array(strlen($tin), [9, 12], true)) {
                 $transactions->whereRaw("REPLACE(REPLACE(t.customer_tin, '-', ''), ' ', '') = ?", [$tin]);
                 $receipts->where(function (Builder $q) use ($tin, $transactions) {
@@ -62,14 +58,7 @@ class EnterpriseDashboardController extends Controller
         $count = (clone $transactions)->count();
         $validReceipts = (clone $receipts)->whereIn('r.status', self::RECEIPTS)->count();
         $invalid = (clone $transactions)->whereIn('t.status', self::INVALID)->count();
-        $birCount = (clone $transmissions)->where('environment', 'production')->whereNotNull('submitted_at')
-            ->where(fn ($q) => $q->whereNull('bir_reference_number')->orWhere('bir_reference_number', 'not like', 'CERT-%'))
-            ->where(function ($q) {
-                $q->where('status', 'submitted')->orWhere(function ($q) {
-                    $q->whereIn('status', ['accepted', 'acknowledged', 'processed', 'success'])->whereNotNull('bir_reference_number')
-                        ->whereExists(fn ($acks) => $acks->selectRaw('1')->from('eis_acknowledgements as ack')->whereColumn('ack.transmission_id', 'eis_transmissions.id'));
-                });
-            })->count();
+        $birCount=app(\App\Services\SubmissionEvidence::class)->count(clone $transmissions);
         $metrics = [
             ['label' => 'Total Transactions', 'value' => $count, 'color' => 'blue', 'icon' => 'receipt', 'note' => 'All recorded transactions'],
             ['label' => 'Valid Receipts', 'value' => $validReceipts, 'color' => 'green', 'icon' => 'file-check', 'note' => 'Issued and verified receipts'],
@@ -82,7 +71,7 @@ class EnterpriseDashboardController extends Controller
             $taxpayers = $tins->map(fn ($tin) => $this->tin($tin))->filter(fn ($tin) => in_array(strlen($tin), [9, 12], true))
                 ->map(fn ($tin) => substr($tin, 0, 9))->unique()->count();
             $metrics[] = ['label' => 'Registered Taxpayers', 'value' => $taxpayers, 'color' => 'yellow', 'icon' => 'users', 'note' => 'Distinct registered TINs'];
-            $metrics[] = ['label' => 'BIR Submissions', 'value' => $birCount, 'color' => 'purple', 'icon' => 'upload', 'note' => 'Submitted and acknowledged'];
+            $metrics[] = ['label' => 'BIR Submissions', 'value' => $birCount, 'color' => 'purple', 'icon' => 'upload', 'note' => 'Authentic production acknowledgements'];
         } elseif ($portal === 'merchant') {
             $metrics[] = ['label' => 'Total Sales', 'value' => (float) (clone $transactions)->whereIn('t.status', self::VALID)->sum('t.amount'), 'format' => 'money', 'color' => 'yellow', 'icon' => 'chart', 'note' => 'Completed transaction amounts'];
             $metrics[] = ['label' => 'BIR Submissions', 'value' => $birCount, 'color' => 'purple', 'icon' => 'upload', 'note' => 'Your submitted transmissions'];
@@ -137,13 +126,16 @@ class EnterpriseDashboardController extends Controller
                 $row->created_at = CarbonImmutable::parse($row->created_at, $databaseZone)->toIso8601String();
                 return $row;
             });
-        $checks = $portal === 'admin' ? DB::table('system_health_checks')->get()->keyBy('service_key') : collect();
+        // Migration seed rows are not health evidence. Report only direct observations or an explicit unknown.
         $status = $portal === 'admin'
             ? collect([
-                'web_servers' => 'Web Servers', 'database_servers' => 'Database Servers',
-                'storage_system' => 'Storage System', 'bir_gateway' => 'BIR Gateway',
-                'api_gateway' => 'API Services', 'database_backup' => 'Backup System', 'monitoring' => 'Monitoring',
-            ])->map(fn ($name, $key) => ['name' => $name, 'status' => $checks->get($key)?->status ?? 'unmonitored', 'checked_at' => $checks->get($key)?->checked_at])->values()
+                ['name'=>'Application response','status'=>'online','checked_at'=>$now->toIso8601String()],
+                ['name'=>'Database query','status'=>'online','checked_at'=>$now->toIso8601String()],
+                ['name'=>'Local storage permissions','status'=>is_writable(storage_path('app'))?'writable':'unavailable','checked_at'=>$now->toIso8601String()],
+                ['name'=>'BIR Gateway','status'=>'not_verified','checked_at'=>null],
+                ['name'=>'Backup restore','status'=>'not_verified','checked_at'=>null],
+                ['name'=>'HA / continuous monitoring','status'=>'not_verified','checked_at'=>null],
+            ])
             : collect([
                 ['name' => $portal === 'merchant' ? 'Business Account' : 'Citizen Account', 'status' => ($merchant?->status ?? $account?->status) ?: 'unlinked'],
                 ['name' => 'Account Profile', 'status' => $profile ? 'linked' : 'unlinked'],

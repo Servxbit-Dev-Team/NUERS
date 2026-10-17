@@ -114,7 +114,7 @@ class DashboardController extends Controller
             $accountQuery = DB::table('client_accounts')->where('user_id', $user->id);
 
             if (! empty($user->email)) {
-                $accountQuery->orWhere('email', $user->email);
+                $accountQuery;
             }
 
             $account = $accountQuery->first();
@@ -122,7 +122,7 @@ class DashboardController extends Controller
 
         $rows = collect();
         $accountStatus = strtolower((string) ($account?->status ?? ''));
-        $tinValues = $this->tinVariants($profile?->tin ?? null, $account?->tin ?? null);
+        $tinValues = $this->tinVariants(app(\App\Services\ApiAccess::class)->taxpayerTin($user));
 
         if ($account && $accountStatus !== 'active') {
             $rows->push($this->item(
@@ -1252,9 +1252,9 @@ class DashboardController extends Controller
         $settlementValue = $this->sum('settlement_batches', 'gross_amount');
 
         return [
-            $this->item('Enterprise Government Plan', 'NGA, GOCC, SUC, hospital, and LGU deployments', 'Active', 'Landmark', $agencyTenants, null, ['display' => "{$this->compactNumber($agencyTenants)} tenants", 'trend' => "{$this->compactNumber($this->count('rdo_offices'))} RDO offices"]),
-            $this->item('Merchant SaaS Subscriptions', 'Registered businesses under NUERS plans', 'Active', 'Building2', $merchantTenants, null, ['display' => $this->compactNumber($merchantTenants), 'trend' => $this->merchantStatusLabel()]),
-            $this->item('Billing Exceptions', 'Invoices, fees, and plan changes requiring review', $billingExceptions > 0 ? 'Review' : 'Good', 'AlertTriangle', $billingExceptions, null, ['display' => "{$this->compactNumber($billingExceptions)} reviews", 'trend' => 'From subscriptions table']),
+            $this->item('Government Accounts', 'NGA, GOCC, SUC, hospital, and LGU deployments', 'Active', 'Landmark', $agencyTenants, null, ['display' => "{$this->compactNumber($agencyTenants)} tenants", 'trend' => "{$this->compactNumber($this->count('rdo_offices'))} RDO offices"]),
+            $this->item('Merchant Accounts', 'Registered businesses using NUERS transaction pricing', 'Active', 'Building2', $merchantTenants, null, ['display' => $this->compactNumber($merchantTenants), 'trend' => $this->merchantStatusLabel()]),
+            $this->item('Billing Exceptions', 'Historical billing records requiring review', $billingExceptions > 0 ? 'Review' : 'Good', 'AlertTriangle', $billingExceptions, null, ['display' => "{$this->compactNumber($billingExceptions)} reviews", 'trend' => 'From subscriptions table']),
             $this->item('Revenue Share Settlements', 'Platform, gateway, agency, and treasury settlement value', 'Operational', 'Wallet', $settlementValue, null, ['display' => $this->money($settlementValue), 'trend' => 'From settlement batches']),
         ];
     }
@@ -1347,7 +1347,7 @@ class DashboardController extends Controller
             ['Audit Trail Management', 'audit_events', 'Traceability for every sensitive platform action', 'FileText'],
             ['Fraud Detection Monitoring', 'fraud_signals', 'AI anomaly detection and smart audit recommendations', 'Brain'],
             ['Revenue Analytics', 'merchant_transactions', 'Forecasting, heatmaps, source mix, and national trends', 'BarChart3'],
-            ['Subscription Management', 'subscriptions', 'Plans, billing exceptions, and platform fee controls', 'CreditCard'],
+            ['Wallets & Transaction Pricing', 'wallets', 'Prepaid merchant funds and the published fee for eligible sales of ₱500 and above', 'CreditCard'],
             ['Payment Gateway Management', 'payment_gateways', 'QRPH, GCash, Maya, cards, banks, and reconciliation', 'Wallet'],
             ['System Health Monitoring', 'system_health_checks', 'Runtime, database, API, webhook, and BCDR telemetry', 'Server'],
             ['Notification Center', 'notifications', 'Email, SMS, push, and portal notification operations', 'Bell'],
@@ -1462,25 +1462,12 @@ class DashboardController extends Controller
         $merchant = DB::table('merchants')
             ->where(function (Builder $query) use ($user) {
                 $query
-                    ->where('merchant_account_id', $user->id)
-                    ->orWhere('merchant_account_email', $user->email)
-                    ->orWhere('email', $user->email);
+                    ->where('merchant_account_id', $user->id);
             })
             ->first();
 
         if ($merchant) {
             return $merchant;
-        }
-
-        if ($this->tableExists('profiles')) {
-            $profile = DB::table('profiles')->where('id', $user->id)->first();
-
-            if ($profile?->organization) {
-                return DB::table('merchants')
-                    ->where('business_name', $profile->organization)
-                    ->orWhere('business_name', $profile->full_name)
-                    ->first();
-            }
         }
 
         return null;
@@ -1494,7 +1481,7 @@ class DashboardController extends Controller
             return null;
         }
 
-        return DB::table('users')->where('api_token', $token)->first();
+        return app(\App\Services\ApiAccess::class)->user($request);
     }
 
     private function businessAccountKpis(object $merchant): array
@@ -2152,7 +2139,7 @@ class DashboardController extends Controller
             return null;
         }
 
-        return DB::table('users')->where('api_token', $token)->first();
+        return app(\App\Services\ApiAccess::class)->user($request);
     }
 
     private function tinVariants(?string ...$values): array

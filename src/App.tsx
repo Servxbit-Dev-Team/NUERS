@@ -1,3 +1,11 @@
+import { AdminAccountProfile } from "@/pages/admin/account-profile";
+import { MerchantUsersPage, AcceptTeamInvitation } from "@/pages/merchant/users";
+import { MerchantWalletPage, AdminWalletConsole } from "@/pages/merchant/wallet";
+import { BackupRecoveryDashboard } from "@/pages/bcdr/dashboard";
+import { AccountSecurityPage, AccountSecuritySettings, EmailVerificationPage, PasswordRecoveryPage } from "@/pages/auth/account-security";
+import { OperationsReadiness } from "@/pages/operations/readiness";
+import { SystemConfiguration } from "@/pages/system/configuration";
+import { MfaPage } from "@/pages/auth/mfa";
 import { IntegrationWorkspace } from "@/pages/integrations";
 import { PermitManagement } from "@/pages/authorizations";
 import { RdoMappings } from "@/pages/business-registry/rdo-mappings";
@@ -13,18 +21,18 @@ import { LoginPage } from "@/pages/auth/login";
 import { RegisterPage } from "@/pages/auth/register";
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
 import { useAuth } from "@/lib/auth";
+import { MerchantCustomers } from "@/pages/merchant/customers";
 import { MerchantDashboard } from "@/pages/merchant/dashboard";
-import { MerchantTransactions } from "@/pages/merchant/transactions";
 import { MerchantReceipts } from "@/pages/merchant/receipts";
-import { MerchantVatReports } from "@/pages/merchant/vat-reports";
+import { MerchantSalesReports } from "@/pages/merchant/sales-reports";
 import { MerchantBilling } from "@/pages/merchant/billing";
 import { MerchantPosSettings } from "@/pages/merchant/pos-settings";
 import { MerchantApiKeys } from "@/pages/merchant/api-keys";
 import { MerchantProfile } from "@/pages/merchant/profile";
-import { MerchantBranches } from "@/pages/merchant/branches";
-import { MerchantNotifications } from "@/pages/merchant/notifications";
+import { MerchantBranches, BranchReviewQueue } from "@/pages/merchant/branches";
+
 import { MerchantExpenses } from "@/pages/merchant/expenses";
-import { MerchantInvoices } from "@/pages/merchant/invoices";
+import { MerchantInvoices, MerchantLegacyTransactions } from "@/pages/merchant/invoices";
 import { InvoiceCreate } from "@/pages/merchant/invoice-create";
 import { InvoiceDetail } from "@/pages/merchant/invoice-detail";
 import { AdminDashboard } from "@/pages/admin/dashboard";
@@ -73,29 +81,21 @@ import { BusinessRegistration } from "@/pages/taxpayer/businesses";
 import { VerificationCenter } from "@/pages/taxpayer/verification";
 import { TaxpayerPortal } from "@/pages/taxpayer/portal";
 import { UserManagement } from "@/pages/taxpayer/users";
-import { SocDashboard } from "@/pages/soc/dashboard";
-import { SystemAdmin } from "@/pages/system/admin";
 import { AnalyticsCenter } from "@/pages/analytics/center";
 // Electronic Invoicing Engine (Module 1)
-import { ElectronicInvoicingEngine } from "@/pages/engine";
 // New Modules
 import { EisHub } from "@/pages/eis/hub";
-import { AdminSubscriptionPlans } from "@/pages/admin/subscription-plans";
 import { InvoiceManagementCenter } from "@/pages/invoices/center";
 import { TransmissionMonitoringCenter } from "@/pages/monitoring/transmissions";
 import { ComplianceCenter } from "@/pages/compliance/center";
 import { AuditLogManagement } from "@/pages/audit/log";
 import { NotificationCenter } from "@/pages/notifications/center";
 import { CertificateManagement } from "@/pages/certificates/management";
-import { DataArchiveCenter } from "@/pages/archive/center";
-import { BCDRCenter } from "@/pages/bcdr/center";
-import { SOCOperations } from "@/pages/soc/operations";
 import { ESPAccreditation } from "@/pages/accreditation/esp";
 import { ExecutiveAnalytics } from "@/pages/executive/analytics";
 import { AIAssistant } from "@/pages/ai/assistant";
 import {
   BirTaxIntelligenceDashboard,
-  MerchantB2BTaxCenter,
   SuperAdminTaxOperationsCenter,
 } from "@/pages/tax-intelligence/center";
 
@@ -119,19 +119,21 @@ function roleSidebarPortal(role: string | null | undefined): React.ComponentProp
 }
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { user, loading, sessionError, sessionInvalid } = useAuth();
+  const { user, session, loading, sessionError, sessionInvalid } = useAuth();
   if (loading) return <div role="status" className="ne-session-loading">{sessionError||"Checking your session…"}</div>;
   if (!user) return <Navigate to={sessionInvalid?"/login?session=invalid":"/login"} replace />;
+  if (session?.mfa_required) return <Navigate to="/security/mfa" replace />;
   return <>{children}</>;
 }
 
 function RequireRole({ role, children }: { role: string | string[]; children: React.ReactNode }) {
-  const { user, profile, loading, sessionError, sessionInvalid } = useAuth();
+  const { user, profile, session, loading, sessionError, sessionInvalid } = useAuth();
   if (loading) return <div role="status" className="ne-session-loading">{sessionError||"Checking your session…"}</div>;
   if (!user) return <Navigate to={sessionInvalid?"/login?session=invalid":"/login"} replace />;
   const allowedRoles = Array.isArray(role) ? role : [role];
   if (!profile) return <div role="status" className="ne-session-loading">{sessionError||"Verifying account permissions…"}</div>;
   if (!allowedRoles.includes(profile.role)) return <Navigate to={roleDefaultPath(profile.role)} replace />;
+  if (session?.mfa_required) return <Navigate to="/security/mfa" replace />;
   return <>{children}</>;
 }
 
@@ -158,6 +160,12 @@ export default function App() {
       <Route path="/api/sandbox" element={<ApiSandbox />} />
       <Route path="/verify" element={<ReceiptVerificationPortal />} />
       <Route path="/activate-business" element={<BusinessActivation />} />
+      <Route path="/verify-email" element={<EmailVerificationPage />} />
+      <Route path="/forgot-password" element={<PasswordRecoveryPage />} />
+      <Route path="/reset-password" element={<PasswordRecoveryPage />} />
+      <Route path="/security/account" element={<RequireAuth><AccountSecurityPage /></RequireAuth>} />
+      <Route path="/security/mfa" element={<MfaPage />} />
+      <Route path="/accept-team-invite" element={<AcceptTeamInvitation />} />
       <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/terms-of-service" element={<LegalPolicyPage kind="terms" />} />
@@ -168,6 +176,7 @@ export default function App() {
       {/* Super Admin Portal */}
       <Route path="/super-admin" element={<RequireRole role={["admin", "super_admin"]}><DashboardLayout portal="super-admin" /></RequireRole>}>
         <Route index element={<SuperAdminDashboard />} />
+        <Route path="profile" element={<AdminAccountProfile />} />
         <Route path="transactions" element={<TransactionsCenter />} />
         <Route path="revenue-analytics" element={<ExecutiveAnalytics />} />
         <Route path="blueprint" element={<PlatformArchitecture />} />
@@ -178,7 +187,9 @@ export default function App() {
         <Route path="taxpayer-onboarding" element={<BusinessRegistry onboarding />} />
         <Route path="rdo-mappings" element={<RdoMappings />} />
         <Route path="users-rbac" element={<AdminUsers />} />
-        <Route path="subscriptions" element={<AdminSubscriptionPlans />} />
+        <Route path="subscriptions" element={<AdminWalletConsole />} />
+        <Route path="wallets" element={<AdminWalletConsole />} />
+        <Route path="branch-reviews" element={<BranchReviewQueue />} />
         <Route path="support" element={<AdminSupportInbox />} />
         <Route path="compliance" element={<AdminCompliance />} />
         <Route path="fraud" element={<AdminRiskDetection />} />
@@ -192,11 +203,11 @@ export default function App() {
         <Route path="reconciliation" element={<ReconciliationCenter />} />
         <Route path="tax-analytics" element={<SuperAdminTaxOperationsCenter />} />
         <Route path="graph" element={<SuperAdminTaxOperationsCenter />} />
-        <Route path="security" element={<SocDashboard />} />
-        <Route path="soc-operations" element={<SOCOperations />} />
+        <Route path="security" element={<OperationsReadiness />} />
+        <Route path="soc-operations" element={<OperationsReadiness />} />
         <Route path="audit" element={<AuditLogManagement />} />
         <Route path="certificates" element={<CertificateManagement />} />
-        <Route path="mfa-device-trust" element={<SystemAdmin />} />
+        <Route path="mfa-device-trust" element={<OperationsReadiness />} />
         <Route path="pti-ptt" element={<PermitManagement />} />
         <Route path="api-platform" element={<IntegrationWorkspace />} />
         <Route path="eis-readiness" element={<EisHub />} />
@@ -205,9 +216,9 @@ export default function App() {
         <Route path="api-keys" element={<ApiKeys />} />
         <Route path="webhooks" element={<ApiWebhooks />} />
         <Route path="payment-gateways" element={<ApiMonitoring />} />
-        <Route path="system-health" element={<SystemAdmin />} />
-        <Route path="backups" element={<BCDRCenter />} />
-        <Route path="data-archive" element={<DataArchiveCenter />} />
+        <Route path="system-health" element={<OperationsReadiness />} />
+        <Route path="backups" element={<BackupRecoveryDashboard />} />
+        <Route path="data-archive" element={<OperationsReadiness />} />
         <Route path="notifications" element={<NotificationCenter />} />
       </Route>
 
@@ -240,23 +251,27 @@ export default function App() {
       {/* Business Account Portal */}
       <Route path="/merchant" element={<RequireRole role={["merchant", "admin", "super_admin"]}><DashboardLayout portal="merchant" /></RequireRole>}>
         <Route index element={<MerchantDashboard />} />
-        <Route path="transactions" element={<MerchantTransactions />} />
+        <Route path="transactions" element={<MerchantLegacyTransactions />} />
         <Route path="receipts" element={<MerchantReceipts />} />
-        <Route path="vat-reports" element={<MerchantVatReports />} />
+        <Route path="sales-reports" element={<MerchantSalesReports />} />
+        <Route path="vat-reports" element={<Navigate to="/merchant/sales-reports" replace />} />
+        <Route path="wallet" element={<MerchantWalletPage />} />
+        <Route path="users" element={<MerchantUsersPage />} />
         <Route path="billing" element={<MerchantBilling />} />
         <Route path="pos-settings" element={<MerchantPosSettings />} />
         <Route path="api-keys" element={<MerchantApiKeys />} />
         <Route path="profile" element={<MerchantProfile />} />
         <Route path="branches" element={<MerchantBranches />} />
-        <Route path="notifications" element={<MerchantNotifications />} />
+        <Route path="customers" element={<MerchantCustomers />} />
+        <Route path="notifications" element={<AccountSecuritySettings />} />
         <Route path="expenses" element={<MerchantExpenses />} />
         <Route path="invoices" element={<MerchantInvoices />} />
-        <Route path="b2b-tax" element={<MerchantB2BTaxCenter />} />
-        <Route path="output-vat" element={<Navigate to="/merchant/b2b-tax" replace />} />
-        <Route path="input-vat" element={<Navigate to="/merchant/b2b-tax" replace />} />
-        <Route path="invoice-matching" element={<Navigate to="/merchant/b2b-tax" replace />} />
-        <Route path="withholding-tax" element={<Navigate to="/merchant/b2b-tax" replace />} />
-        <Route path="suppliers" element={<Navigate to="/merchant/b2b-tax" replace />} />
+        <Route path="b2b-tax" element={<Navigate to="/merchant/sales-reports" replace />} />
+        <Route path="output-vat" element={<Navigate to="/merchant/sales-reports" replace />} />
+        <Route path="input-vat" element={<Navigate to="/merchant/sales-reports" replace />} />
+        <Route path="invoice-matching" element={<Navigate to="/merchant/sales-reports" replace />} />
+        <Route path="withholding-tax" element={<Navigate to="/merchant/sales-reports" replace />} />
+        <Route path="suppliers" element={<Navigate to="/merchant/sales-reports" replace />} />
         <Route path="invoices/create" element={<InvoiceCreate />} />
         <Route path="invoices/recurring" element={<Navigate to="/merchant/invoices" replace />} />
         <Route path="invoices/bulk" element={<Navigate to="/merchant/invoices" replace />} />
@@ -318,7 +333,7 @@ export default function App() {
 
       {/* Electronic Invoicing Engine (Module 1) */}
       <Route path="/engine" element={<RequireAuth><DashboardLayout portal="engine" /></RequireAuth>}>
-        <Route index element={<ElectronicInvoicingEngine />} />
+        <Route index element={<OperationsReadiness />} />
       </Route>
 
       {/* EIS Integration Hub */}
@@ -359,18 +374,16 @@ export default function App() {
 
       {/* Data Archive */}
       <Route path="/archive" element={<RequireAuth><DashboardLayout portal="archive" /></RequireAuth>}>
-        <Route index element={<DataArchiveCenter />} />
+        <Route index element={<OperationsReadiness />} />
       </Route>
 
       {/* BCDR */}
-      <Route path="/bcdr" element={<RequireAuth><DashboardLayout portal="bcdr" /></RequireAuth>}>
-        <Route index element={<BCDRCenter />} />
-      </Route>
+      <Route path="/bcdr" element={<RequireRole role={["admin", "super_admin"]}><Navigate to="/super-admin/backups" replace /></RequireRole>} />
 
       {/* SOC */}
       <Route path="/soc" element={<RequireAuth><DashboardLayout portal="soc" /></RequireAuth>}>
-        <Route index element={<SocDashboard />} />
-        <Route path="operations" element={<SOCOperations />} />
+        <Route index element={<OperationsReadiness />} />
+        <Route path="operations" element={<OperationsReadiness />} />
       </Route>
 
       {/* ESP Accreditation */}
@@ -389,8 +402,8 @@ export default function App() {
       </Route>
 
       {/* System */}
-      <Route path="/system" element={<RequireAuth><DashboardLayout portal="system" /></RequireAuth>}>
-        <Route index element={<SystemAdmin />} />
+      <Route path="/system" element={<RequireRole role={["admin", "super_admin"]}><DashboardLayout portal="system" /></RequireRole>}>
+        <Route index element={<SystemConfiguration />} />
       </Route>
 
       {/* Enterprise Architecture */}

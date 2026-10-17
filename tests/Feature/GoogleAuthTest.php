@@ -90,7 +90,8 @@ class GoogleAuthTest extends TestCase
         parse_str(parse_url($url, PHP_URL_QUERY), $query);
         $this->assertNotEmpty($query['state']);
         $this->assertSame(session('state'), $query['state']);
-        $this->assertSame('select_account', $query['prompt']);
+        $this->assertArrayNotHasKey('prompt', $query);
+        $this->assertArrayNotHasKey('max_age', $query);
     }
 
     public function test_invalid_state_is_rejected_before_contacting_google(): void
@@ -183,4 +184,11 @@ class GoogleAuthTest extends TestCase
             ->getJson('/auth/google/session')->assertUnauthorized();
         $this->assertSame('existing-session', $user->fresh()->api_token);
     }
+    public function test_password_change_invalidates_an_earlier_google_handoff(): void
+    {
+        $user=$this->account();$this->provider();$this->oauthCallback()->assertRedirectContains('google=success');
+        $user->password='ChangedSecurePassword2026';$user->save();
+        $this->getJson('/auth/google/session')->assertUnauthorized();
+    }
+
 }

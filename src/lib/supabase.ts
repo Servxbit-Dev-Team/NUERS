@@ -8,6 +8,9 @@ export type LaravelUser = {
 export type LaravelSession = {
   access_token: string;
   token_type: string;
+  mfa_required?: boolean;
+  expires_at?: string | null;
+  absolute_expires_at?: string | null;
   user: LaravelUser;
 };
 
@@ -209,10 +212,10 @@ export const supabase = {
       return { data: { session, user: data?.user ?? null, role: data?.role ?? null }, error };
     },
 
-    async getSession() {
+    async getSession(options: { active?: boolean } = {}) {
       const token=storedToken();
       if(!token)return {data:{session:null},error:null,stale:false};
-      const {data,error}=await request<{session:LaravelSession|null}>("/api/auth/session");
+      const {data,error}=await request<{session:LaravelSession|null}>("/api/auth/session", { headers: options.active ? { "X-NUERS-Activity": "1" } : undefined });
       if(storedToken()!==token)return {data:{session:null},error:null,stale:true};
       if(error)return {data:{session:null},error,stale:false};
       const session=data?.session??null;

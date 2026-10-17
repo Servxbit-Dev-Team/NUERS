@@ -80,6 +80,8 @@ export function ClientRegisterPage() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError("");
+    if(accountType==="merchant"){navigate("/register");return;}
+    if(form.password.length<12||!/[a-zA-Z]/.test(form.password)||!/[0-9]/.test(form.password)){setError("Use at least 12 characters, including letters and numbers.");return;}
 
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match.");
@@ -91,18 +93,14 @@ export function ClientRegisterPage() {
       return;
     }
 
-    const fullName =
-      accountType === "merchant"
-        ? form.businessName.trim()
-        : `${form.firstName.trim()} ${form.lastName.trim()}`.trim();
-    const organization = accountType === "merchant" ? form.businessName.trim() : "Citizen Account";
+    const fullName=`${form.firstName.trim()} ${form.lastName.trim()}`.trim();
+    const organization="Citizen Account";
 
     setLoading(true);
     const { error: signUpError } = await signUp(form.email, form.password, {
       role: accountType,
       full_name: fullName,
       organization,
-      tin: form.tin,
       phone: form.phone,
     });
     setLoading(false);
@@ -112,7 +110,7 @@ export function ClientRegisterPage() {
       return;
     }
 
-    navigate(accountType === "merchant" ? "/merchant" : "/client");
+    navigate("/client");
   }
 
   return (

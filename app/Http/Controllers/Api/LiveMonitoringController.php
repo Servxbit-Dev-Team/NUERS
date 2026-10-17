@@ -103,18 +103,18 @@ class LiveMonitoringController extends Controller
         $transmissions = DB::table('eis_transmissions as e')->join('eis_invoice_payloads as p', 'p.id', '=', 'e.payload_id')
             ->where(function ($q) use ($receipts, $numbers, $rows) {
                 $q->whereIn('p.receipt_id', $receipts)->orWhere(function ($q) use ($numbers, $rows) { $q->whereIn('p.invoice_number', $numbers)->whereIn('e.merchant_id', $rows->pluck('merchant_id')->filter()->values()->all()); });
-            })->orderByDesc('e.created_at')->orderByDesc('e.id')->get(['e.*', 'p.receipt_id as linked_receipt', 'p.invoice_number']);
+            })->orderByRaw("CASE WHEN e.environment='production' THEN 0 ELSE 1 END")->orderByDesc('e.created_at')->orderByDesc('e.id')->get(['e.*', 'p.receipt_id as linked_receipt', 'p.invoice_number']);
         $byReceipt = []; $byNumber = [];
         foreach ($transmissions as $t) {
             if ($t->linked_receipt) $byReceipt[$t->linked_receipt] ??= $t;
             if ($t->merchant_id && $t->invoice_number) $byNumber[$t->merchant_id.'|'.$t->invoice_number] ??= $t;
         }
-        $ackIds = DB::table('eis_acknowledgements')->whereIn('transmission_id', $transmissions->pluck('id'))->pluck('transmission_id')->all();
+        $ackIds=$transmissions->filter(fn($t)=>app(\App\Services\SubmissionEvidence::class)->verified($t->id))->pluck('id')->all();
         return $rows->map(function ($row) use ($byReceipt, $byNumber, $ackIds) {
             $t = $byReceipt[$row->receipt_id] ?? $byNumber[$row->merchant_id.'|'.$row->receipt_number] ?? $byNumber[$row->merchant_id.'|'.$row->transaction_ref] ?? null;
             $birStatus = $t?->status ?? 'not_submitted';
             $test = $t && ($t->environment !== 'production' || str_starts_with($t->bir_reference_number ?? '', 'CERT-'));
-            if ($t && $birStatus === 'acknowledged' && (! in_array($t->id, $ackIds, true) || ! $t->bir_reference_number)) $birStatus = 'unverified_ack';
+            if ($t && in_array($birStatus,['acknowledged','accepted','success'],true) && (! in_array($t->id, $ackIds, true) || ! $t->bir_reference_number)) $birStatus = 'unverified_ack';
             return ['id' => $row->id, 'reference' => $row->transaction_ref, 'created_at' => $this->date($row->created_at)->toIso8601String(),
                 'receipt_number' => $row->receipt_number, 'tin' => $row->tin, 'business_name' => $row->business_name,
                 'type' => $row->receipt_type ?? $row->transaction_type, 'amount' => (float) $row->amount, 'status' => $row->status, 'state' => $this->state($row->status),

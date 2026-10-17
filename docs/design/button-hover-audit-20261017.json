@@ -1,0 +1,778 @@
+{
+  "date": "2026-10-17",
+  "scope": "Global CSS hover inventory and 30 representative shared/admin/merchant/auth/navigation button families, light and dark themes. Disabled controls are intentionally not hoverable.",
+  "cause": "The unlayered .ow-page button:hover background shorthand outranked the filled business registration button and left white foreground text on pale blue.",
+  "changes": [
+    "Preserve foreground/background pairs with a brightness feedback state for enabled operations buttons and keyboard focus.",
+    "Reassert the selected tab foreground/background after neutral tab styles.",
+    "Darken operations and merchant team primary gradient endpoints for readable small text."
+  ],
+  "source_files": [
+    "src/pages/operations/workspace.css",
+    "src/pages/merchant/users.css"
+  ],
+  "css_hover_rules_reviewed": [
+    {
+      "source": "src/components/enterprise/enterprise.css",
+      "selector": ".ne-nav-row:hover",
+      "rule": ".ne-nav-row:hover { background: #10335b; }"
+    },
+    {
+      "source": "src/components/enterprise/enterprise.css",
+      "selector": ".ne-active:hover",
+      "rule": ".ne-active:hover { background: linear-gradient(90deg,#0058d3,#07369b); }"
+    },
+    {
+      "source": "src/components/enterprise/enterprise.css",
+      "selector": ".ne-nav-children a:hover",
+      "rule": ".ne-nav-children a:hover { color: #fff; }"
+    },
+    {
+      "source": "src/components/enterprise/enterprise.css",
+      "selector": ".ne-account-menu a:hover, .ne-account-menu button:hover",
+      "rule": ".ne-account-menu a:hover, .ne-account-menu button:hover { background: #eef5ff; }"
+    },
+    {
+      "source": "src/components/enterprise/enterprise.css",
+      "selector": ".ne-recent td > a:hover",
+      "rule": ".ne-recent td > a:hover { color: #0069ff; }"
+    },
+    {
+      "source": "src/components/enterprise/enterprise.css",
+      "selector": ".ne-action-grid a:hover",
+      "rule": ".ne-action-grid a:hover { border-color: #9fc5ff; background: #f0f6ff; }"
+    },
+    {
+      "source": "src/pages/landing/website.css",
+      "selector": ".lp-button:hover",
+      "rule": ".lp-button:hover{transform:translateY(-2px);box-shadow:0 7px 24px #0066ff38}"
+    },
+    {
+      "source": "src/pages/landing/website.css",
+      "selector": ".lp-nav details>div>a:hover",
+      "rule": ".lp-nav details>div>a:hover{background:#edf5ff}"
+    },
+    {
+      "source": "src/pages/landing/website.css",
+      "selector": ".lp-feature-strip a:hover h2",
+      "rule": ".lp-feature-strip a:hover h2{color:#0068ff}"
+    },
+    {
+      "source": "src/pages/landing/website.css",
+      "selector": ".lp-audience-card:hover>img",
+      "rule": ".lp-audience-card:hover>img{transform:scale(1.04)}"
+    },
+    {
+      "source": "src/pages/landing/website.css",
+      "selector": ".lp-footer-grid>div>a:hover",
+      "rule": ".lp-footer-grid>div>a:hover{color:white}"
+    },
+    {
+      "source": "src/pages/invoices/invoices.css",
+      "selector": ".ic-table tbody tr:hover,.ic-table .ic-selected-row",
+      "rule": ".ic-table tbody tr:hover,.ic-table .ic-selected-row{background:#f3f8ff}"
+    },
+    {
+      "source": "src/pages/auth/login.css",
+      "selector": ".nuers-login__options button:hover, .nuers-login__help:hover",
+      "rule": ".nuers-login__options button:hover, .nuers-login__help:hover { text-decoration: underline; }"
+    },
+    {
+      "source": "src/pages/auth/login.css",
+      "selector": ".nuers-login__submit:hover:not(:disabled)",
+      "rule": ".nuers-login__submit:hover:not(:disabled) { background: #0048b8; box-shadow: 0 4px 16px #0053cf29; }"
+    },
+    {
+      "source": "src/pages/auth/login.css",
+      "selector": ".nuers-login__register a:hover",
+      "rule": ".nuers-login__register a:hover { text-decoration: underline; }"
+    },
+    {
+      "source": "src/pages/auth/login.css",
+      "selector": ".nuers-login__google:hover:not(:disabled)",
+      "rule": ".nuers-login__google:hover:not(:disabled) { background: #edf3fc; box-shadow: 0 2px 8px #183d7320; }"
+    },
+    {
+      "source": "src/pages/bcdr/dashboard.css",
+      "selector": ".bdr-actions>button:hover",
+      "rule": ".bdr-actions>button:hover{filter:brightness(.97)}"
+    },
+    {
+      "source": "src/pages/admin/support-inbox.css",
+      "selector": ".si-list>button:hover",
+      "rule": ".si-list>button:hover{background:#f7fbff}"
+    },
+    {
+      "source": "src/pages/operations/workspace.css",
+      "selector": "/* Preserve each variant's foreground/background pair on pointer and keyboard interaction. */\n.ow-page button:where(:hover,:focus-visible):not(:disabled)",
+      "rule": "/* Preserve each variant's foreground/background pair on pointer and keyboard interaction. */\n.ow-page button:where(:hover,:focus-visible):not(:disabled){filter:brightness(.94)}"
+    },
+    {
+      "source": "src/pages/operations/workspace.css",
+      "selector": ".ow-page tbody tr:hover",
+      "rule": ".ow-page tbody tr:hover{background:#f5f9ff}"
+    },
+    {
+      "source": "src/pages/monitoring/monitoring.css",
+      "selector": ".lm-menu label:hover, .lm-menu button:hover",
+      "rule": ".lm-menu label:hover, .lm-menu button:hover { background: #eff6ff; }"
+    },
+    {
+      "source": "src/pages/monitoring/monitoring.css",
+      "selector": ".lm-table-wrap tbody tr:hover",
+      "rule": ".lm-table-wrap tbody tr:hover { background: #f7faff; }"
+    },
+    {
+      "source": "src/pages/monitoring/monitoring.css",
+      "selector": ".lm-receipt-link:hover",
+      "rule": ".lm-receipt-link:hover { color: #0066ff; text-decoration: underline; }"
+    },
+    {
+      "source": "src/pages/legal/policy.css",
+      "selector": ".legal-layout aside nav a:hover",
+      "rule": ".legal-layout aside nav a:hover{background:#e9f2ff;border-color:#006aff;color:#0058d3}"
+    },
+    {
+      "source": "src/pages/merchant/customers.css",
+      "selector": ".mc-primary:hover,.mc-outline:hover",
+      "rule": ".mc-primary:hover,.mc-outline:hover{filter:brightness(.97)}"
+    },
+    {
+      "source": "src/pages/developers/developers.css",
+      "selector": ".dev-doc-sidebar a:hover",
+      "rule": ".dev-doc-sidebar a:hover{background:#e6effc}"
+    }
+  ],
+  "tested_cases": 30,
+  "normal_and_hover_minimum_contrast": 4.53,
+  "all_tested_pointer_states_verified": true,
+  "contrast_results": [
+    {
+      "label": "Light shared default",
+      "hovered": true,
+      "normal": {
+        "color": "oklch(0.985 0.002 250)",
+        "background": "oklch(0.25 0.06 250)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 15.28
+      },
+      "hover": {
+        "color": "oklch(0.985 0.002 250)",
+        "background": "oklab(0.25 -0.0205212 -0.0563816 / 0.9)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 11.49
+      }
+    },
+    {
+      "label": "Light shared destructive",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(255, 255, 255)",
+        "background": "oklch(0.577 0.245 27.325)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 4.77
+      },
+      "hover": {
+        "color": "rgb(255, 255, 255)",
+        "background": "oklab(0.577 0.217662 0.112464 / 0.9)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 4.53
+      }
+    },
+    {
+      "label": "Light shared outline",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(9, 33, 76)",
+        "background": "oklch(0.985 0.002 250)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 15.07
+      },
+      "hover": {
+        "color": "oklch(0.25 0.06 250)",
+        "background": "oklch(0.955 0.01 250)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 14.03
+      }
+    },
+    {
+      "label": "Light shared secondary",
+      "hovered": true,
+      "normal": {
+        "color": "oklch(0.25 0.06 250)",
+        "background": "oklch(0.955 0.01 250)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 14.03
+      },
+      "hover": {
+        "color": "oklch(0.25 0.06 250)",
+        "background": "oklab(0.955 -0.0034202 -0.00939693 / 0.8)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 14.41
+      }
+    },
+    {
+      "label": "Light shared ghost",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(9, 33, 76)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 15.75
+      },
+      "hover": {
+        "color": "oklch(0.25 0.06 250)",
+        "background": "oklch(0.955 0.01 250)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 14.03
+      }
+    },
+    {
+      "label": "Light shared link",
+      "hovered": true,
+      "normal": {
+        "color": "oklch(0.25 0.06 250)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 15.96
+      },
+      "hover": {
+        "color": "oklch(0.25 0.06 250)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 15.96
+      }
+    },
+    {
+      "label": "Dark shared default",
+      "hovered": true,
+      "normal": {
+        "color": "oklch(0.15 0.03 250)",
+        "background": "oklch(0.75 0.15 85)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 8.74
+      },
+      "hover": {
+        "color": "oklch(0.15 0.03 250)",
+        "background": "oklab(0.75 0.0130734 0.149429 / 0.9)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 7.29
+      }
+    },
+    {
+      "label": "Dark shared destructive",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(255, 255, 255)",
+        "background": "oklab(0.704 0.176821 0.072217 / 0.6)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 6.26
+      },
+      "hover": {
+        "color": "rgb(255, 255, 255)",
+        "background": "oklab(0.704 0.176821 0.072217 / 0.6)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 6.26
+      }
+    },
+    {
+      "label": "Dark shared outline",
+      "hovered": true,
+      "normal": {
+        "color": "oklch(0.95 0.01 250)",
+        "background": "oklab(0.3 -0.0136808 -0.0375877 / 0.3)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 14.75
+      },
+      "hover": {
+        "color": "oklch(0.95 0.01 250)",
+        "background": "oklab(0.3 -0.0136808 -0.0375877 / 0.5)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 13.84
+      }
+    },
+    {
+      "label": "Dark shared secondary",
+      "hovered": true,
+      "normal": {
+        "color": "oklch(0.92 0.01 250)",
+        "background": "oklch(0.25 0.05 250)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 12.59
+      },
+      "hover": {
+        "color": "oklch(0.92 0.01 250)",
+        "background": "oklab(0.25 -0.017101 -0.0469846 / 0.8)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 13
+      }
+    },
+    {
+      "label": "Dark shared ghost",
+      "hovered": true,
+      "normal": {
+        "color": "oklch(0.95 0.01 250)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 15.86
+      },
+      "hover": {
+        "color": "oklch(0.95 0.01 250)",
+        "background": "oklab(0.3 -0.017101 -0.0469846 / 0.5)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 13.84
+      }
+    },
+    {
+      "label": "Dark shared link",
+      "hovered": true,
+      "normal": {
+        "color": "oklch(0.75 0.15 85)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 8.16
+      },
+      "hover": {
+        "color": "oklch(0.75 0.15 85)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 8.16
+      }
+    },
+    {
+      "label": "Register New Business",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(255, 255, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(120deg, rgb(6, 45, 108), rgb(7, 28, 74))",
+        "filter": "none",
+        "contrast": 13.13
+      },
+      "hover": {
+        "color": "rgb(255, 255, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(120deg, rgb(6, 45, 108), rgb(7, 28, 74))",
+        "filter": "brightness(0.94)",
+        "contrast": 11.99
+      }
+    },
+    {
+      "label": "Search",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(255, 255, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(120deg, rgb(0, 100, 237), rgb(0, 81, 221))",
+        "filter": "none",
+        "contrast": 5.19
+      },
+      "hover": {
+        "color": "rgb(255, 255, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(120deg, rgb(0, 100, 237), rgb(0, 81, 221))",
+        "filter": "brightness(0.94)",
+        "contrast": 5.02
+      }
+    },
+    {
+      "label": "Import / Export",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(0, 88, 223)",
+        "background": "rgb(255, 255, 255)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 6.07
+      },
+      "hover": {
+        "color": "rgb(0, 88, 223)",
+        "background": "rgb(255, 255, 255)",
+        "image": "none",
+        "filter": "brightness(0.94)",
+        "contrast": 5.82
+      }
+    },
+    {
+      "label": "Active tab",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(255, 255, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(120deg, rgb(0, 100, 237), rgb(0, 81, 221))",
+        "filter": "none",
+        "contrast": 5.19
+      },
+      "hover": {
+        "color": "rgb(255, 255, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(120deg, rgb(0, 100, 237), rgb(0, 81, 221))",
+        "filter": "brightness(0.94)",
+        "contrast": 5.02
+      }
+    },
+    {
+      "label": "Neutral tab",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(66, 100, 162)",
+        "background": "rgb(252, 253, 255)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 5.77
+      },
+      "hover": {
+        "color": "rgb(66, 100, 162)",
+        "background": "rgb(252, 253, 255)",
+        "image": "none",
+        "filter": "brightness(0.94)",
+        "contrast": 5.54
+      }
+    },
+    {
+      "label": "Quick action",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(0, 88, 223)",
+        "background": "rgb(255, 255, 255)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 6.07
+      },
+      "hover": {
+        "color": "rgb(0, 88, 223)",
+        "background": "rgb(255, 255, 255)",
+        "image": "none",
+        "filter": "brightness(0.94)",
+        "contrast": 5.82
+      }
+    },
+    {
+      "label": "Dialog primary",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(255, 255, 255)",
+        "background": "rgb(0, 100, 255)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 4.92
+      },
+      "hover": {
+        "color": "rgb(255, 255, 255)",
+        "background": "rgb(0, 100, 255)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 4.92
+      }
+    },
+    {
+      "label": "Registry dialog primary",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(255, 255, 255)",
+        "background": "rgb(0, 100, 255)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 4.92
+      },
+      "hover": {
+        "color": "rgb(255, 255, 255)",
+        "background": "rgb(0, 100, 255)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 4.92
+      }
+    },
+    {
+      "label": "Merchant primary",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(255, 255, 255)",
+        "background": "rgb(0, 107, 255)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 4.62
+      },
+      "hover": {
+        "color": "rgb(255, 255, 255)",
+        "background": "rgb(0, 107, 255)",
+        "image": "none",
+        "filter": "brightness(0.97)",
+        "contrast": 4.55
+      }
+    },
+    {
+      "label": "Merchant outline",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(0, 101, 249)",
+        "background": "rgb(255, 255, 255)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 4.97
+      },
+      "hover": {
+        "color": "rgb(0, 101, 249)",
+        "background": "rgb(255, 255, 255)",
+        "image": "none",
+        "filter": "brightness(0.97)",
+        "contrast": 4.89
+      }
+    },
+    {
+      "label": "Team primary",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(255, 255, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(120deg, rgb(0, 100, 237), rgb(0, 80, 235))",
+        "filter": "none",
+        "contrast": 5.19
+      },
+      "hover": {
+        "color": "rgb(255, 255, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(120deg, rgb(0, 100, 237), rgb(0, 80, 235))",
+        "filter": "brightness(0.97)",
+        "contrast": 5.11
+      }
+    },
+    {
+      "label": "Team outline",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(0, 96, 252)",
+        "background": "rgb(255, 255, 255)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 5.15
+      },
+      "hover": {
+        "color": "rgb(0, 96, 252)",
+        "background": "rgb(255, 255, 255)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 5.15
+      }
+    },
+    {
+      "label": "Merchant records primary",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(11, 37, 89)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 14.76
+      },
+      "hover": {
+        "color": "rgb(11, 37, 89)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 14.76
+      }
+    },
+    {
+      "label": "Account menu",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(23, 60, 107)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 11.08
+      },
+      "hover": {
+        "color": "rgb(23, 60, 107)",
+        "background": "rgb(238, 245, 255)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 10.1
+      }
+    },
+    {
+      "label": "Login",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(255, 255, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(110deg, rgb(0, 83, 207), rgb(0, 88, 216))",
+        "filter": "none",
+        "contrast": 6.2
+      },
+      "hover": {
+        "color": "rgb(255, 255, 255)",
+        "background": "rgb(0, 72, 184)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 8.02
+      }
+    },
+    {
+      "label": "Google sign in",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(71, 85, 112)",
+        "background": "rgb(248, 249, 250)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 7.11
+      },
+      "hover": {
+        "color": "rgb(71, 85, 112)",
+        "background": "rgb(237, 243, 252)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 6.72
+      }
+    },
+    {
+      "label": "Sidebar navigation",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(243, 246, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 15.99
+      },
+      "hover": {
+        "color": "rgb(243, 246, 255)",
+        "background": "rgb(16, 51, 91)",
+        "image": "none",
+        "filter": "none",
+        "contrast": 11.8
+      }
+    },
+    {
+      "label": "Sidebar active",
+      "hovered": true,
+      "normal": {
+        "color": "rgb(243, 246, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(90deg, rgb(0, 73, 191), rgb(7, 54, 155))",
+        "filter": "none",
+        "contrast": 7.18
+      },
+      "hover": {
+        "color": "rgb(243, 246, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(90deg, rgb(0, 88, 211), rgb(7, 54, 155))",
+        "filter": "none",
+        "contrast": 5.83
+      }
+    }
+  ],
+  "validation": {
+    "build": "npm run build:all passed",
+    "php_tests": 290,
+    "php_assertions": 3039,
+    "js_tests": 16,
+    "ui": "Business Registry verified in isolated synthetic QA. No real business records modified."
+  },
+  "local_super_admin": {
+    "email": "nuersofficial@gmail.com",
+    "role": "super_admin",
+    "created": true,
+    "existing_password_preserved": false,
+    "new_password_hash_matches_request": true,
+    "existing_accounts_preserved": true,
+    "environment_preserved": true,
+    "audit_chain_valid": true,
+    "privileged_mfa": true,
+    "account_count": 2,
+    "external_email_sent": false
+  },
+  "live": {
+    "hover_rule_verified": true,
+    "team_schema_verified": true,
+    "team_routes_verified": true,
+    "team_counts": {
+      "merchant_team_roles": 0,
+      "merchant_team_members": 0,
+      "merchant_team_events": 0
+    },
+    "php": "8.4.26",
+    "debug": false,
+    "privileged_mfa": true,
+    "pricing_correct": true,
+    "no_powered_by": true,
+    "smtp_config_preserved": true,
+    "staff_grants_created": false,
+    "external_email_sent": false,
+    "bir_transport_enabled": false,
+    "super_admin_account": {
+      "email": "nuersofficial@gmail.com",
+      "role": "super_admin",
+      "created": true,
+      "existing_password_preserved": false,
+      "new_password_hash_matches_request": true,
+      "existing_accounts_preserved": true,
+      "environment_preserved": true,
+      "audit_chain_valid": true,
+      "privileged_mfa": true,
+      "account_count": 2,
+      "external_email_sent": false
+    },
+    "deployed": true,
+    "backup_directory": "/var/www/vhosts/nuers.net/nuers-hover-backup-20261017-084553",
+    "application_record_counts_preserved": true,
+    "passwords_preserved": true,
+    "environment_preserved": true,
+    "pricing_preserved": true,
+    "production_fixtures_created": false,
+    "pdf_verified": true,
+    "package_sha256": "0b93ecec1524e1d2d4a1ed41a8e3413bc04ba2c46e18acd0fb01630260ac4b3e"
+  },
+  "http_verification": {
+    "http://127.0.0.1:8001": {
+      "health": {
+        "status": 200,
+        "body": {
+          "ok": true,
+          "app": "NUERS Laravel API"
+        }
+      },
+      "css_status": 200,
+      "current_styles_exact_match": true,
+      "loaded_stylesheet_url": "http://127.0.0.1:8001/build/assets/main-C9PYtMEy.css"
+    },
+    "https://nuers.net": {
+      "health": {
+        "status": 200,
+        "body": {
+          "ok": true,
+          "app": "NUERS Laravel API"
+        }
+      },
+      "css_status": 200,
+      "current_styles_exact_match": true,
+      "loaded_stylesheet_url": "https://nuers.net/assets/index-61fLZUSi.css"
+    }
+  }
+}

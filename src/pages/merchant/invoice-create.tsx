@@ -1,10 +1,11 @@
+import { SavePendingInvoice } from "@/components/merchant/client-queue";
 import { useState, useCallback, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Plus, Trash2, Save, Send, CheckCircle2,
   FileText, Receipt, CreditCard, TrendingUp, TrendingDown, Truck,
   Wrench, Shield, Zap, RefreshCw, Info,
-  Search, Loader2,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,10 +17,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
+import { taxForDocument } from "@/lib/document-presentation";
+import { InvoiceCustomerPicker, type InvoiceCustomer } from "@/components/invoices/invoice-customer-picker";
 import { BirDocumentPreview } from "@/components/invoices/bir-document-preview";
 import {
   BIR_DOCUMENT_TYPES, DOC_TYPE_META, generateInvoiceNumber, computeLineItem, computeInvoiceTotals,
-  formatAmount, toCentavos, fromCentavos, signInvoice, buildQRPayload,
+  formatAmount, toCentavos, fromCentavos, computeInvoiceChecksum, buildQRPayload,
   validateInvoice, type DocumentType, type LineItem, type TaxType,
 } from "@/lib/invoice-utils";
 import { toast } from "sonner";
@@ -45,7 +48,7 @@ const DOC_ICON: Record<DocumentType, React.ElementType> = {
 
 // ─── Empty line item ───────────────────────────────────────────────────────
 let _id = 0;
-function emptyLine(n: number): LineItem {
+function emptyLine(n: number, tax: TaxType = "vatable"): LineItem {
   return {
     id: `new-${++_id}`,
     line_number: n,
@@ -57,10 +60,10 @@ function emptyLine(n: number): LineItem {
     discount_pct: 0,
     discount_amount: 0,
     taxable_amount: 0,
-    vat_rate: 12,
+    vat_rate: tax === "vatable" ? 12 : 0,
     vat_amount: 0,
     line_total: 0,
-    tax_type: "vatable" as TaxType,
+    tax_type: tax,
   };
 }
 
@@ -79,6 +82,7 @@ type BusinessAccountLookup = {
   rdo_code?: string | null;
   rdo_name?: string | null;
   status?: string | null;
+  vat_registered?: boolean | null;
 };
 
 const API_TOKEN_KEY = "nuers_api_token";
@@ -114,6 +118,8 @@ export function InvoiceCreate() {
 
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [pendingWalletPayload,setPendingWalletPayload]=useState<Record<string,unknown>|null>(null);
+  const [saveRequestId] = useState(crypto.randomUUID());
   const [signing, setSigning] = useState(false);
 
   // ── Form state ─────────────────────────────────────────────────────────
@@ -124,15 +130,19 @@ export function InvoiceCreate() {
   const [merchantName, setMerchantName] = useState("");
   const [merchantTin, setMerchantTin] = useState("");
   const [merchantAddress, setMerchantAddress] = useState("");
+  const [merchantVatRegistered, setMerchantVatRegistered] = useState<boolean | null>(null);
   const [sellerLoading, setSellerLoading] = useState(true);
   const [sellerMessage, setSellerMessage] = useState("Loading logged-in Business Account...");
+  const [customerProfile, setCustomerProfile] = useState<InvoiceCustomer|null>(null);
+  const [newBuyer, setNewBuyer] = useState(false);
+  const [buyerPhone, setBuyerPhone] = useState("");
+  const [buyerType, setBuyerType] = useState("retail");
+  const [customerLoading, setCustomerLoading] = useState(false);
   const [buyerName, setBuyerName] = useState("");
   const [buyerTin, setBuyerTin] = useState("");
   const [buyerAddress, setBuyerAddress] = useState("");
   const [buyerEmail, setBuyerEmail] = useState("");
-  const [buyerLookupLoading, setBuyerLookupLoading] = useState(false);
-  const [buyerLookupMessage, setBuyerLookupMessage] = useState("Enter buyer TIN to search NUERS registered accounts.");
-  const [buyerMatched, setBuyerMatched] = useState(false);
+
 
   // Dates
   const today = new Date().toISOString().split("T")[0];
@@ -147,14 +157,14 @@ export function InvoiceCreate() {
   const [poNumber, setPoNumber] = useState("");
   const [soNumber, setSoNumber] = useState("");
   const [correctionReason, setCorrectionReason] = useState("");
-  const [originalInvoice, setOriginalInvoice] = useState("");
+  const [originalInvoice, setOriginalInvoice] = useState(searchParams.get("original") || "");
 
   // Line items
-  const [lines, setLines] = useState<LineItem[]>([emptyLine(1)]);
+  const [lines, setLines] = useState<LineItem[]>([emptyLine(1, taxForDocument(initialType))]);
 
   // Tax/charges
   const [withholdingPct, setWithholdingPct] = useState(0);
-  const [otherCharges, setOtherCharges] = useState(0);
+  const otherCharges = 0;
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("Payment due within 30 days of invoice date.");
 
@@ -192,6 +202,7 @@ export function InvoiceCreate() {
         setMerchantName(account.business_name || "");
         setMerchantTin(formatTin(account.tin));
         setMerchantAddress(account.address || "");
+        setMerchantVatRegistered(typeof account.vat_registered === "boolean" ? account.vat_registered : null);
         setSellerMessage(account.tin ? "Seller loaded from your logged-in Business Account." : "Seller loaded. TIN is still pending in the Business Account registry.");
       } catch (error) {
         if (!active) return;
@@ -208,68 +219,30 @@ export function InvoiceCreate() {
     };
   }, []);
 
+  function selectCustomer(customer:InvoiceCustomer) {
+    setCustomerProfile(customer);setNewBuyer(false);setBuyerName(customer.name);setBuyerTin(customer.tin || "");setBuyerAddress(customer.address || "");setBuyerEmail(customer.email || "");setBuyerPhone(customer.phone || "");setBuyerType(customer.type);
+  }
+  function addNewBuyer(name:string) {
+    setCustomerProfile(null);setNewBuyer(true);setBuyerName(name);setBuyerTin("");setBuyerAddress("");setBuyerEmail("");setBuyerPhone("");setBuyerType("retail");
+  }
   useEffect(() => {
-    const digits = normalizeTin(buyerTin);
-
-    setBuyerMatched(false);
-
-    if (!digits) {
-      setBuyerLookupMessage("Enter buyer TIN to search NUERS registered accounts.");
-      return;
-    }
-
-    if (digits.length < 9) {
-      setBuyerLookupMessage("Enter at least 9 TIN digits to search.");
-      return;
-    }
-
-    let active = true;
-    const timer = window.setTimeout(async () => {
-      setBuyerLookupLoading(true);
-      setBuyerLookupMessage("Searching registered NUERS account...");
-
-      try {
-        const response = await apiFetch(`/api/business-accounts/lookup?tin=${encodeURIComponent(digits)}`, {
-          headers: authHeaders(),
-          cache: "no-store",
-        });
-
-        if (!active) return;
-
-        let payload: { data: BusinessAccountLookup };
-        try {
-          payload = await readJsonResponse<{ data: BusinessAccountLookup }>(response, "No registered NUERS account found for this TIN.");
-        } catch (err) {
-          setBuyerLookupMessage(err instanceof Error ? err.message : "No registered NUERS account found for this TIN.");
-          return;
-        }
-
-        const account = payload.data as BusinessAccountLookup;
-        setBuyerName(account.business_name || account.owner_name || "");
-        setBuyerTin(formatTin(account.tin || digits));
-        setBuyerAddress(account.address || "");
-        setBuyerEmail(account.email || "");
-        setBuyerMatched(true);
-        setBuyerLookupMessage(`${account.type === "client_profile" ? "Client" : "Business Account"} matched and buyer details populated.`);
-      } catch (error) {
-        if (!active) return;
-        setBuyerLookupMessage(error instanceof Error ? error.message : "Buyer TIN lookup failed.");
-      } finally {
-        if (active) setBuyerLookupLoading(false);
-      }
-    }, 450);
-
-    return () => {
-      active = false;
-      window.clearTimeout(timer);
-    };
-  }, [buyerTin]);
+    const customerId = searchParams.get("customer");
+    if (!customerId) return;
+    const controller=new AbortController();setCustomerLoading(true);
+    apiFetch(`/api/merchant/customers/${encodeURIComponent(customerId)}`,{signal:controller.signal}).then(r=>readJsonResponse<{data:InvoiceCustomer}>(r)).then(({data})=>{
+      if(controller.signal.aborted)return;
+      if(data.status!=="active")throw new Error("This customer profile is inactive.");
+      selectCustomer(data);
+    }).catch(e=>{if(!controller.signal.aborted)toast.error(e.message || "Could not load customer profile.")}).finally(()=>{if(!controller.signal.aborted)setCustomerLoading(false)});
+    return()=>controller.abort();
+  },[searchParams]);
 
   // ── Re-generate invoice number when doc type changes ──────────────────
   const handleDocTypeChange = (t: DocumentType) => {
     setDocType(t);
     setInvoiceNumber(generateInvoiceNumber(t));
     const forcedTax = ({
+      vat_invoice: "vatable",
       non_vat_invoice: "non_vat",
       vat_exempt_invoice: "vat_exempt",
       zero_rated_invoice: "zero_rated",
@@ -296,7 +269,7 @@ export function InvoiceCreate() {
     }));
   }, []);
 
-  const addLine = () => setLines(prev => [...prev, emptyLine(prev.length + 1)]);
+  const addLine = () => setLines(prev => [...prev, emptyLine(prev.length + 1, taxForDocument(docType))]);
   const removeLine = (id: string) => setLines(prev => prev.filter(l => l.id !== id).map((l, i) => ({ ...l, line_number: i + 1 })));
 
   // ── Totals ─────────────────────────────────────────────────────────────
@@ -312,17 +285,20 @@ export function InvoiceCreate() {
       merchant_tin: merchantTin,
       buyer_tin: buyerTin || undefined,
     };
-    const sig = await signInvoice(partial);
-    const qr = buildQRPayload({ ...partial, document_type: docType, validation_hash: sig.slice(0, 16) });
-    setSignature(sig);
-    setQrPayload(qr);
-    setValidationHash(sig.slice(0, 16));
-    setIsSigned(true);
-    setSigning(false);
-    toast.success("Invoice digitally signed (SHA-256)");
+    try {
+      const sig = await computeInvoiceChecksum(partial);
+      const qr = buildQRPayload({ ...partial, document_type: docType, validation_hash: sig.slice(0, 16) });
+      setSignature(sig);setQrPayload(qr);setValidationHash(sig.slice(0, 16));setIsSigned(true);
+      toast.success("Preview checksum generated");
+    } catch(error) {toast.error(error instanceof Error?error.message:"Unable to compute checksum.");}
+    finally {setSigning(false);}
+
   };
 
+  useEffect(() => { setIsValidated(false); setIsSigned(false); setSignature(""); setQrPayload(""); setValidationHash(""); }, [lines, docType, merchantName, merchantTin, merchantAddress, buyerName, buyerTin, buyerAddress, buyerEmail, buyerPhone, buyerType, issueDate, withholdingPct, originalInvoice, refNumber, poNumber, soNumber, merchantVatRegistered]);
+
   const handleValidate = () => {
+    if (merchantVatRegistered === false && lines.some(line => line.tax_type === "vatable")) { toast.error("This seller is recorded as Non-VAT. Select the correct document and line tax classification."); return; }
     const result = validateInvoice(
       { buyer_name: buyerName, merchant_tin: merchantTin, total_amount: totals.total, issue_date: issueDate, document_type: docType, original_invoice_id: originalInvoice || undefined, reference_number: refNumber || undefined },
       lines
@@ -333,7 +309,7 @@ export function InvoiceCreate() {
     }
     result.warnings.forEach(w => toast.warning(w));
     setIsValidated(true);
-    toast.success("Invoice validated successfully");
+    toast.success("Local form checks passed. Server validation and issuance authority are still required.");
   };
 
   const handleSave = async (send = false) => {
@@ -371,14 +347,16 @@ export function InvoiceCreate() {
         fmtCsv ? "csv" : null,
       ].filter(Boolean);
 
-      const response = await apiFetch("/api/business-invoices", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
+      const invoicePayload = {
+          request_id: saveRequestId,
           invoice_number: invoiceNumber,
           document_type: docType,
-          status: send ? "sent" : isValidated ? "validated" : "draft",
+          status: send ? "issued" : "draft",
           buyer_name: buyerName,
+          customer_id: customerProfile?.id,
+          customer_revision: customerProfile?.revision,
+          buyer_customer_type: buyerType,
+          buyer_phone: buyerPhone || null,
           buyer_tin: buyerTin,
           buyer_address: buyerAddress,
           buyer_email: buyerEmail,
@@ -397,6 +375,7 @@ export function InvoiceCreate() {
           taxable_amount: totals.taxable,
           vat_amount: totals.vat,
           withholding_tax: totals.withholding,
+          withholding_pct: withholdingPct,
           other_charges: totals.other_charges,
           total_amount: totals.total,
           amount_paid: 0,
@@ -407,7 +386,7 @@ export function InvoiceCreate() {
           terms_and_conditions: terms,
           formats_generated: formats.length ? formats : ["pdf", "json"],
           qr_payload: qrPayload || null,
-          digital_signature: signature || null,
+          digital_signature: null,
           validation_hash: validationHash || null,
           line_items: lines.map(line => ({
             line_number: line.line_number,
@@ -424,12 +403,14 @@ export function InvoiceCreate() {
             line_total: line.line_total,
             tax_type: line.tax_type,
           })),
-        }),
-      });
+        };
+      const response = await apiFetch("/api/business-invoices",{method:"POST",headers,body:JSON.stringify(invoicePayload)});
+      if(response.status===402){setPendingWalletPayload(invoicePayload);return;}
 
-      await readJsonResponse(response, "Unable to save invoice to the database.");
+      const saved = await readJsonResponse<{customer?:{created:boolean;code:string}}>(response, "Unable to save invoice to the database.");
+      if (saved.customer?.created) toast.success(`New buyer saved to Customers (${saved.customer.code}).`);
 
-      toast.success(send ? `Invoice ${invoiceNumber} saved and sent.` : `Invoice ${invoiceNumber} saved to database.`);
+      toast.success(send ? `Invoice ${invoiceNumber} issued locally; BIR submission remains subject to authorization.` : `Invoice ${invoiceNumber} saved to database.`);
       navigate("/merchant/invoices");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to save invoice to the database.");
@@ -623,45 +604,24 @@ export function InvoiceCreate() {
             <CardHeader className="px-5 pt-5 pb-3">
               <div className="flex items-center justify-between gap-3">
                 <CardTitle className="text-sm">Buyer / Customer</CardTitle>
-                {buyerMatched && (
-                  <Badge variant="default" className="gap-1 text-[10px]">
-                    <CheckCircle2 className="h-3 w-3" />
-                    Registered
-                  </Badge>
-                )}
+                {customerProfile && <Badge variant="secondary" className="text-xs">Saved customer</Badge>}
               </div>
             </CardHeader>
-            <CardContent className="px-5 pb-5 space-y-3">
-              <div className="space-y-1">
-                <Label className="text-xs">Buyer TIN Search</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    value={buyerTin}
-                    onChange={e => setBuyerTin(e.target.value)}
-                    onBlur={() => setBuyerTin(formatTin(buyerTin))}
-                    className="h-8 pl-9 pr-9 font-mono text-xs"
-                    placeholder="000-000-000-000"
-                  />
-                  {buyerLookupLoading && <Loader2 className="absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-muted-foreground" />}
-                </div>
-                <p className={cn("text-[10px]", buyerMatched ? "text-success" : "text-muted-foreground")}>{buyerLookupMessage}</p>
+            <CardContent className="px-5 pb-5 space-y-4">
+              <div className="space-y-2">
+                <Label className="text-sm">Business / Person Name *</Label>
+                <InvoiceCustomerPicker selected={customerProfile} newName={newBuyer?buyerName:""} onSelect={selectCustomer} onNew={addNewBuyer} disabled={saving||customerLoading}/>
+                {customerLoading && <p className="text-sm text-muted-foreground" role="status">Loading customer profile…</p>}
+                {customerProfile && <p className="text-xs text-muted-foreground">{customerProfile.code} · <Link to="/merchant/customers" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Manage customers</Link></p>}
               </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs">Business / Person Name *</Label>
-                <Input value={buyerName} onChange={e => setBuyerName(e.target.value)} className="h-8 text-xs" placeholder="Auto-fills when TIN is registered" />
+              {newBuyer && <div className="space-y-2"><Label htmlFor="invoice-new-buyer-name" className="text-sm">New Business / Person Name *</Label><Input id="invoice-new-buyer-name" value={buyerName} onChange={e=>setBuyerName(e.target.value)} maxLength={255} className="min-h-10 text-sm" placeholder="Enter the buyer’s full name"/><p className="text-xs text-muted-foreground">This buyer will be saved to Customers with the invoice. Existing matches are reused; conflicting profiles require selection.</p></div>}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-2"><Label htmlFor="invoice-buyer-tin" className="text-sm">Buyer TIN (if applicable)</Label><Input id="invoice-buyer-tin" value={buyerTin} onChange={e=>setBuyerTin(e.target.value)} readOnly={Boolean(customerProfile)} className="min-h-10 font-mono text-sm" placeholder="000-000-000-000" maxLength={15}/></div>
+                <div className="space-y-2"><Label htmlFor="invoice-buyer-type" className="text-sm">Customer Type</Label><select id="invoice-buyer-type" value={buyerType} disabled={Boolean(customerProfile)} onChange={e=>setBuyerType(e.target.value)} className="w-full min-h-10 rounded-md border bg-background px-3 text-sm"><option value="retail">Retail / Individual</option><option value="business">B2B / Business</option><option value="walk_in">Walk-in</option></select></div>
               </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs">Address</Label>
-                <Input value={buyerAddress} onChange={e => setBuyerAddress(e.target.value)} className="h-8 text-xs" placeholder="Auto-fills from registered account address" />
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs">Email</Label>
-                <Input type="email" value={buyerEmail} onChange={e => setBuyerEmail(e.target.value)} className="h-8 text-xs" placeholder="Auto-fills from registered account email" />
-              </div>
+              <div className="space-y-2"><Label htmlFor="invoice-buyer-address" className="text-sm">Buyer Address</Label><Input id="invoice-buyer-address" value={buyerAddress} onChange={e=>setBuyerAddress(e.target.value)} maxLength={1000} className="min-h-10 text-sm" placeholder="Buyer’s invoice address"/></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><div className="space-y-2"><Label htmlFor="invoice-buyer-email" className="text-sm">Buyer Email</Label><Input id="invoice-buyer-email" type="email" value={buyerEmail} onChange={e=>setBuyerEmail(e.target.value)} maxLength={255} className="min-h-10 text-sm" placeholder="customer@example.com"/></div><div className="space-y-2"><Label htmlFor="invoice-buyer-phone" className="text-sm">Buyer Phone (optional)</Label><Input id="invoice-buyer-phone" value={buyerPhone} onChange={e=>setBuyerPhone(e.target.value)} maxLength={30} className="min-h-10 text-sm" placeholder="Mobile / phone number"/></div></div>
+              <p className="text-xs leading-relaxed text-muted-foreground">{customerProfile?"Address and contact edits apply to this invoice only. Update the customer directory separately when permanent details change.":"Saving an invoice or draft adds a new buyer profile. No customer login or email notification is created."} Buyer details do not establish BIR registration.</p>
             </CardContent>
           </Card>
           <div className="lg:col-span-2 flex justify-between">
@@ -768,7 +728,7 @@ export function InvoiceCreate() {
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Other Charges (₱)</Label>
-                <Input type="number" value={otherCharges} min={0} step={0.01} onChange={e => setOtherCharges(+e.target.value)} className="text-xs h-8 w-32" />
+                <Input type="number" value={otherCharges} disabled aria-label="Add charges as classified line items" className="text-xs h-8 w-32" /><p className="text-xs text-muted-foreground">Add extra charges as line items with their tax classification.</p>
               </div>
               <Separator />
               <div className="space-y-1">
@@ -855,20 +815,20 @@ export function InvoiceCreate() {
             <CardHeader className="px-5 pt-5 pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Shield className="h-4 w-4 text-primary" />
-                Digital Signature
+                Document Checksum
               </CardTitle>
             </CardHeader>
             <CardContent className="px-5 pb-5 space-y-4">
               <p className="text-xs text-muted-foreground">
-                SHA-256 signature is computed from invoice number, total amount, issue date, and TIN values to produce a tamper-evident hash.
+                This preview checksum helps compare document values. BIR signing and acceptance remain pending the verified API integration.
               </p>
               <Button onClick={handleSign} disabled={signing || isSigned} className="gap-1.5 w-full">
-                {signing ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Signing…</> : isSigned ? <><CheckCircle2 className="h-3.5 w-3.5" /> Signed</> : <><Shield className="h-3.5 w-3.5" /> Sign Invoice</>}
+                {signing ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Computing…</> : isSigned ? <><CheckCircle2 className="h-3.5 w-3.5" /> Checksum ready</> : <><Shield className="h-3.5 w-3.5" /> Compute Checksum</>}
               </Button>
               {isSigned && (
                 <div className="space-y-2">
                   <div className="space-y-1">
-                    <Label className="text-[10px] text-muted-foreground">Digital Signature (SHA-256)</Label>
+                    <Label className="text-[10px] text-muted-foreground">Preview Checksum (SHA-256)</Label>
                     <p className="font-mono text-[10px] bg-muted p-2 rounded break-all text-foreground">{signature}</p>
                   </div>
                   <div className="space-y-1">
@@ -888,7 +848,7 @@ export function InvoiceCreate() {
             <CardHeader className="px-5 pt-5 pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-success" />
-                Invoice Validation
+                Local Form Checks
               </CardTitle>
             </CardHeader>
             <CardContent className="px-5 pb-5 space-y-4">
@@ -896,27 +856,27 @@ export function InvoiceCreate() {
                 Validates completeness: required fields, line items, tax computation, and document-type–specific rules.
               </p>
               <Button onClick={handleValidate} disabled={isValidated} variant={isValidated ? "outline" : "default"} className="gap-1.5 w-full">
-                {isValidated ? <><CheckCircle2 className="h-3.5 w-3.5 text-success" /> Validated</> : <><Zap className="h-3.5 w-3.5" /> Run Validation</>}
+                {isValidated ? <><CheckCircle2 className="h-3.5 w-3.5 text-success" /> Local checks passed</> : <><Zap className="h-3.5 w-3.5" /> Run Validation</>}
               </Button>
               {isValidated && (
                 <div className="p-3 bg-success/10 border border-success/30 rounded-lg">
                   <p className="text-xs font-medium text-success flex items-center gap-1.5">
                     <CheckCircle2 className="h-3.5 w-3.5" />
-                    All validation checks passed
+                    Local form checks passed
                   </p>
                   <ul className="mt-2 space-y-1 text-[10px] text-muted-foreground">
                     <li>✓ Required fields complete</li>
                     <li>✓ Line items valid</li>
-                    <li>✓ Tax computation correct</li>
+                    <li>Server recomputes and verifies financial amounts on save</li>
                     <li>✓ Document type rules satisfied</li>
-                    <li>✓ Unique invoice number confirmed</li>
+                    <li>Number uniqueness and authorized series are checked by the server</li>
                   </ul>
                 </div>
               )}
               <Separator />
               <div className="space-y-2 text-xs">
                 <p className="font-medium text-foreground">Invoice Version</p>
-                <p className="text-muted-foreground">Version 1 — Initial creation</p>
+                <p className="text-muted-foreground">Unsaved draft — no issued version exists</p>
                 <p className="text-muted-foreground">Timestamp: {new Date().toLocaleString("en-PH")}</p>
               </div>
             </CardContent>
@@ -934,14 +894,7 @@ export function InvoiceCreate() {
         <Card>
           <CardHeader className="px-5 pt-5 pb-3 flex-row items-center justify-between">
             <CardTitle className="text-sm">Invoice Preview</CardTitle>
-            <div className="flex gap-2">
-              {[fmtPdf && "PDF", fmtJson && "JSON", fmtXml && "XML", fmtCsv && "CSV"].filter(Boolean).map(f => (
-                <Button key={f as string} variant="outline" size="sm" className="h-7 text-xs gap-1"
-                  onClick={() => toast.info(`Downloading ${invoiceNumber}.${(f as string).toLowerCase()}…`)}>
-                  {f}
-                </Button>
-              ))}
-            </div>
+            <span className="text-sm text-muted-foreground">Unsaved draft preview</span>
           </CardHeader>
           <CardContent className="px-5 pb-5">
             <BirDocumentPreview
@@ -952,7 +905,7 @@ export function InvoiceCreate() {
                 name: merchantName,
                 tin: merchantTin,
                 address: merchantAddress,
-                vatRegistration: "NUERS Business Account",
+                vatRegistered: merchantVatRegistered,
               }}
               buyer={{
                 name: buyerName,
@@ -976,10 +929,11 @@ export function InvoiceCreate() {
                 vatAmount: totals.vat,
                 discount: totals.discount,
                 withholdingTax: totals.withholding,
+                otherCharges: totals.other_charges,
                 totalDue: totals.total - totals.withholding,
               }}
               referenceNumber={refNumber || poNumber || soNumber}
-              status={isValidated ? "validated" : "draft"}
+              status="draft"
               qrValue={validationHash || qrPayload || invoiceNumber}
             />
 
@@ -997,6 +951,7 @@ export function InvoiceCreate() {
           </CardContent>
         </Card>
       )}
+      <SavePendingInvoice payload={pendingWalletPayload} onClose={()=>setPendingWalletPayload(null)}/>
     </div>
   );
 }

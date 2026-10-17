@@ -1,3 +1,4 @@
+import { AccountSecuritySettings } from "@/pages/auth/account-security";
 import { useEffect, useMemo, useRef, useState, type ElementType, type FormEvent } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
 import { EnterpriseDashboard } from "@/components/enterprise/enterprise-dashboard";
@@ -66,7 +67,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import { useDashboardData, type DashboardListItem } from "@/lib/dashboard-data";
-import { apiFetch, publicAssetUrl, readJsonResponse } from "@/lib/api-url";
+import { apiJson, apiFetch, publicAssetUrl, readJsonResponse } from "@/lib/api-url";
 import { downloadB6ReceiptPdf } from "@/lib/receipt-pdf";
 
 type ClientProfile = {
@@ -396,19 +397,6 @@ function resolveBoundTin(...values: Array<string | null | undefined>) {
   return candidates.find(isValidTin) ?? candidates.find(Boolean) ?? "";
 }
 
-function mysqlTimestamp(date = new Date()) {
-  const pad = (value: number) => String(value).padStart(2, "0");
-  return [
-    date.getFullYear(),
-    pad(date.getMonth() + 1),
-    pad(date.getDate()),
-  ].join("-") + " " + [
-    pad(date.getHours()),
-    pad(date.getMinutes()),
-    pad(date.getSeconds()),
-  ].join(":");
-}
-
 function statusVariant(status?: string | null) {
   const normalized = (status ?? "").toLowerCase();
   if (["paid", "issued", "verified", "completed", "active", "receipt"].includes(normalized)) return "secondary";
@@ -686,6 +674,9 @@ function ClientPortalPage({ view }: { view: ClientPageView }) {
   const [loading, setLoading] = useState(true);
   const [transactionLoading, setTransactionLoading] = useState(false);
   const [error, setError] = useState("");
+  const [identityNotice,setIdentityNotice]=useState("");
+  const [verifiedTin,setVerifiedTin]=useState("");
+  const [tinEvidence,setTinEvidence]=useState("");
   const [tinInput, setTinInput] = useState("");
   const [tinError, setTinError] = useState("");
   const [savingTin, setSavingTin] = useState(false);
@@ -710,7 +701,7 @@ function ClientPortalPage({ view }: { view: ClientPageView }) {
   const [selectedReceiptRow, setSelectedReceiptRow] = useState<TransactionRow | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
-  const boundTin = resolveBoundTin(clientProfile?.tin, authProfile?.tin, clientAccount?.tin);
+  const boundTin = verifiedTin;
   const hasBoundTin = isValidTin(boundTin);
   const isClientAccountActive = (clientAccount?.status ?? "").toLowerCase() === "active";
   const payload = hasBoundTin ? barcodePayload(boundTin) : "";
@@ -758,7 +749,8 @@ function ClientPortalPage({ view }: { view: ClientPageView }) {
         email: accountData?.email || data?.email || user.email || "",
         mobile: accountData?.mobile || "",
       });
-      setTinDialogOpen(!isValidTin(nextTin));
+      try{const identity=await apiJson<{data:{verified_tin:string|null}}>("/api/client/profile");setVerifiedTin(identity.data.verified_tin||"");}catch{setVerifiedTin("");}
+      setTinDialogOpen(false);
       setLoading(false);
       setClientIdentityLoaded(true);
     }
@@ -878,45 +870,15 @@ function ClientPortalPage({ view }: { view: ClientPageView }) {
     }
 
     if (!isValidTin(tinInput)) {
-      setTinError("Enter a valid 9 to 12 digit TIN number.");
+      setTinError("Enter your nine-digit personal TIN.");
       return;
     }
 
-    const formattedTin = formatTin(tinInput);
-    const boundAt = mysqlTimestamp();
+    if(normalizeTin(tinInput).length!==9 || tinEvidence.trim().length<10){setTinError("Enter your nine-digit personal TIN and original evidence reference for review.");return;}
     setSavingTin(true);
-
-    const { error: updateError } = await supabase
-      .from<ClientProfile>("profiles")
-      .update({ tin: formattedTin, tin_bound_at: boundAt })
-      .eq("id", user.id);
-
-    if (!updateError && clientAccount) {
-      await supabase
-        .from<ClientAccount>("client_accounts")
-        .update({ tin: formattedTin })
-        .eq("user_id", user.id);
-    }
-
-    setSavingTin(false);
-
-    if (updateError) {
-      setTinError(updateError.message);
-      return;
-    }
-
-    setClientProfile((current) => ({
-      id: Number(user.id),
-      email: user.email,
-      role: current?.role ?? "client",
-      full_name: current?.full_name ?? authProfile?.full_name ?? "",
-      organization: current?.organization ?? authProfile?.organization ?? "Citizen Account",
-      tin: formattedTin,
-      tin_bound_at: boundAt,
-    }));
-    setClientAccount((current) => current ? { ...current, tin: formattedTin } : current);
-    setTinInput(formattedTin);
-    setTinDialogOpen(false);
+    try{await apiJson("/api/identity/claims",{method:"POST",body:JSON.stringify({tin:normalizeTin(tinInput),evidence_reference:tinEvidence})});setTinDialogOpen(false);setTinEvidence("");setIdentityNotice("Identity review requested. Refresh after approval and activation to make the barcode available.");}
+    catch(e){setTinError(e instanceof Error?e.message:"Could not save the identity review request.");}
+    finally{setSavingTin(false);}
   }
 
   function emitClientProfileUpdate(profile?: ClientProfile | null, account?: ClientAccount | null) {
@@ -1216,13 +1178,16 @@ function ClientPortalPage({ view }: { view: ClientPageView }) {
 
   return (
     <div className="space-y-6">
+      {identityNotice&&<p role="status" className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">{identityNotice}</p>}
       <TinBindingDialog
-        open={tinDialogOpen || (clientIdentityLoaded && !hasBoundTin)}
+        open={tinDialogOpen}
+        tinEvidence={tinEvidence}
+        onEvidenceChange={setTinEvidence}
         tinInput={tinInput}
         tinError={tinError}
         saving={savingTin}
-        canClose={hasBoundTin}
-        onOpenChange={(open) => setTinDialogOpen(hasBoundTin || !clientIdentityLoaded ? open : true)}
+        canClose={clientIdentityLoaded || hasBoundTin}
+        onOpenChange={setTinDialogOpen}
         onTinChange={(value) => setTinInput(formatTin(value))}
         onSubmit={handleTinSubmit}
       />
@@ -2001,7 +1966,7 @@ export function ClientNotificationsPage() {
 }
 
 export function ClientSecurityPage() {
-  return <ClientPortalPage view="security" />;
+  return <AccountSecuritySettings />;
 }
 
 export function ClientProfilePage() {
@@ -2011,6 +1976,8 @@ export function ClientProfilePage() {
 function TinBindingDialog({
   open,
   tinInput,
+  tinEvidence,
+  onEvidenceChange,
   tinError,
   saving,
   canClose,
@@ -2020,6 +1987,8 @@ function TinBindingDialog({
 }: {
   open: boolean;
   tinInput: string;
+  tinEvidence: string;
+  onEvidenceChange:(value:string)=>void;
   tinError: string;
   saving: boolean;
   canClose: boolean;
@@ -2035,9 +2004,9 @@ function TinBindingDialog({
             <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10">
               <UserCheck className="h-5 w-5 text-primary" />
             </div>
-            <DialogTitle>Bind your TIN number</DialogTitle>
+            <DialogTitle>Request taxpayer identity review</DialogTitle>
             <DialogDescription>
-              Required before NUERS can generate your client barcode or display transactions matched to your taxpayer identity.
+              Provide your personal TIN and original evidence reference. An independent reviewer must verify the claim before activation or barcode access.
             </DialogDescription>
           </DialogHeader>
 
@@ -2047,7 +2016,7 @@ function TinBindingDialog({
               id="client-tin"
               value={tinInput}
               onChange={(event) => onTinChange(event.target.value)}
-              placeholder="000-000-000-000"
+              placeholder="000-000-000"
               className="font-mono"
               inputMode="numeric"
               autoFocus
@@ -2056,10 +2025,11 @@ function TinBindingDialog({
             {tinError ? (
               <p className="text-xs text-destructive">{tinError}</p>
             ) : (
-              <p className="text-xs text-muted-foreground">TIN must contain 9 to 12 digits. This becomes the basis of your scan barcode.</p>
+              <p className="text-xs text-muted-foreground">Use your nine-digit personal TIN. A submitted claim does not establish verified identity.</p>
             )}
           </div>
 
+          <label className="block space-y-2">Original evidence reference<Input required minLength={10} maxLength={2000} value={tinEvidence} onChange={e=>onEvidenceChange(e.target.value)} placeholder="Reference to the identity / taxpayer evidence submitted for review"/></label>
           <div className="rounded-lg border bg-slate-50 p-3 text-xs leading-5 text-muted-foreground">
             No barcode will be generated until this TIN is bound. Business account scans will post future transactions to this client account.
           </div>
@@ -2072,7 +2042,7 @@ function TinBindingDialog({
             )}
             <Button type="submit" className="w-full min-w-0 gap-2" disabled={saving}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-              Save TIN and generate barcode
+              Submit identity for review
             </Button>
           </DialogFooter>
         </form>

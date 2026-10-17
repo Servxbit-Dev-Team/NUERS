@@ -16,6 +16,7 @@ export type DocumentType =
   | "service_invoice";
 
 export type InvoiceStatus =
+  | "issued"
   | "draft"
   | "pending"
   | "validated"
@@ -49,6 +50,7 @@ export interface LineItem {
 }
 
 export interface Invoice {
+  document_view?: import("@/components/invoices/official-receipt").CenterDocument;
   id: string;
   invoice_number: string;
   document_type: DocumentType;
@@ -108,12 +110,12 @@ export interface Invoice {
 
 // ─── Document type meta ────────────────────────────────────────────────────
 export const DOC_TYPE_META: Record<DocumentType, { label: string; short: string; prefix: string; color: string }> = {
-  vat_invoice:        { label: "B1 VAT Invoice",              short: "B1",  prefix: "VI",  color: "text-primary"     },
-  non_vat_invoice:    { label: "B2 Non-VAT Invoice",          short: "B2",  prefix: "NVI", color: "text-muted-foreground" },
-  vat_exempt_invoice: { label: "B3 VAT-Exempt Sales Invoice", short: "B3",  prefix: "VEI", color: "text-success"     },
-  zero_rated_invoice: { label: "B4 Zero-Rated Sales Invoice", short: "B4",  prefix: "ZRI", color: "text-chart-3"     },
-  mixed_sales_invoice:{ label: "B5 Mixed Sales Invoice",      short: "B5",  prefix: "MSI", color: "text-warning"     },
-  payment_receipt:    { label: "B6 Payment Receipt",          short: "B6",  prefix: "PR",  color: "text-chart-2"     },
+  vat_invoice:        { label: "VAT Invoice",              short: "B1",  prefix: "VI",  color: "text-primary"     },
+  non_vat_invoice:    { label: "Non-VAT Invoice",          short: "B2",  prefix: "NVI", color: "text-muted-foreground" },
+  vat_exempt_invoice: { label: "VAT-Exempt Sales Invoice", short: "B3",  prefix: "VEI", color: "text-success"     },
+  zero_rated_invoice: { label: "Zero-Rated Sales Invoice", short: "B4",  prefix: "ZRI", color: "text-chart-3"     },
+  mixed_sales_invoice:{ label: "Mixed Sales Invoice",      short: "B5",  prefix: "MSI", color: "text-warning"     },
+  payment_receipt:    { label: "Payment Receipt",          short: "B6",  prefix: "PR",  color: "text-chart-2"     },
   sales_invoice:      { label: "Sales Invoice",               short: "SI",  prefix: "SI",  color: "text-primary"     },
   official_receipt:   { label: "Official Receipt",            short: "OR",  prefix: "OR",  color: "text-success"     },
   credit_memo:        { label: "Credit Memo",                 short: "CM",  prefix: "CM",  color: "text-warning"     },
@@ -153,7 +155,7 @@ export const BIR_TEMPLATES: Record<DocumentType, BirDocumentTemplate> = {
     documentType: "vat_invoice",
     heading: "VAT INVOICE",
     bodyTitle: "INVOICE",
-    label: "B1 VAT Invoice",
+    label: "VAT Invoice",
     tinRegistrationLabel: "VAT REG TIN",
     showVatBreakdown: true,
   },
@@ -162,7 +164,7 @@ export const BIR_TEMPLATES: Record<DocumentType, BirDocumentTemplate> = {
     documentType: "non_vat_invoice",
     heading: "NON-VAT INVOICE",
     bodyTitle: "INVOICE",
-    label: "B2 Non-VAT Invoice",
+    label: "Non-VAT Invoice",
     tinRegistrationLabel: "NON-VAT REG TIN",
     warning: "THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX",
     showVatBreakdown: false,
@@ -172,7 +174,7 @@ export const BIR_TEMPLATES: Record<DocumentType, BirDocumentTemplate> = {
     documentType: "vat_exempt_invoice",
     heading: "VAT INVOICE - VAT EXEMPT SALE",
     bodyTitle: "INVOICE VAT-EXEMPT SALE",
-    label: "B3 VAT-Exempt Sales Invoice",
+    label: "VAT-Exempt Sales Invoice",
     tinRegistrationLabel: "VAT REG TIN",
     warning: "THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX",
     showVatBreakdown: true,
@@ -182,7 +184,7 @@ export const BIR_TEMPLATES: Record<DocumentType, BirDocumentTemplate> = {
     documentType: "zero_rated_invoice",
     heading: "VAT INVOICE - ZERO-RATED SALE",
     bodyTitle: "INVOICE ZERO-RATED SALE",
-    label: "B4 Zero-Rated Sales Invoice",
+    label: "Zero-Rated Sales Invoice",
     tinRegistrationLabel: "VAT REG TIN",
     warning: "THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX",
     showVatBreakdown: true,
@@ -192,7 +194,7 @@ export const BIR_TEMPLATES: Record<DocumentType, BirDocumentTemplate> = {
     documentType: "mixed_sales_invoice",
     heading: "NON-VAT INVOICE MIXED SALES TRANSACTION",
     bodyTitle: "INVOICE - MIXED SALES TRANSACTION",
-    label: "B5 Mixed Sales Invoice",
+    label: "Mixed Sales Invoice",
     tinRegistrationLabel: "NON-VAT REG TIN",
     warning: "THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX",
     showVatBreakdown: false,
@@ -202,7 +204,7 @@ export const BIR_TEMPLATES: Record<DocumentType, BirDocumentTemplate> = {
     documentType: "payment_receipt",
     heading: "PAYMENT RECEIPT",
     bodyTitle: "PAYMENT RECEIPT",
-    label: "B6 Payment Receipt",
+    label: "Payment Receipt",
     tinRegistrationLabel: "TIN",
     warning: "THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX",
     supplementary: true,
@@ -214,7 +216,7 @@ export const BIR_TEMPLATES: Record<DocumentType, BirDocumentTemplate> = {
     documentType: "vat_invoice",
     heading: "VAT INVOICE",
     bodyTitle: "INVOICE",
-    label: "B1 VAT Invoice",
+    label: "VAT Invoice",
     tinRegistrationLabel: "VAT REG TIN",
     showVatBreakdown: true,
   },
@@ -223,7 +225,7 @@ export const BIR_TEMPLATES: Record<DocumentType, BirDocumentTemplate> = {
     documentType: "payment_receipt",
     heading: "PAYMENT RECEIPT",
     bodyTitle: "PAYMENT RECEIPT",
-    label: "B6 Payment Receipt",
+    label: "Payment Receipt",
     tinRegistrationLabel: "TIN",
     warning: "THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX",
     supplementary: true,
@@ -341,6 +343,7 @@ export const STATUS_META: Record<InvoiceStatus, { label: string; variant: "defau
   draft:               { label: "Draft",              variant: "secondary"    },
   pending:             { label: "Pending",            variant: "outline"      },
   validated:           { label: "Validated",          variant: "default"      },
+  issued:              { label: "Issued", variant: "default" },
   sent:                { label: "Sent",               variant: "default"      },
   paid:                { label: "Paid",               variant: "default"      },
   partially_paid:      { label: "Partially Paid",     variant: "outline"      },
@@ -370,20 +373,20 @@ export function computeLineItem(
   const gross = Math.round(unit_price * quantity);
   const discount_amount = Math.round(gross * discount_pct / 100);
   const net = gross - discount_amount;
-  const taxable_amount = tax_type === "vatable" ? Math.round(net / (1 + vat_rate / 100)) : net;
+  const taxable_amount = tax_type === "vatable" ? Math.round(net / (1 + vat_rate / 100)) : 0;
   const vat_amount = tax_type === "vatable" ? net - taxable_amount : 0;
   return { discount_amount, taxable_amount, vat_amount, line_total: net };
 }
 
 export function computeInvoiceTotals(items: LineItem[], withholding_pct = 0, other_charges = 0) {
-  const subtotal = items.reduce((s, i) => s + i.line_total, 0);
+  const subtotal = items.reduce((s, i) => s + Math.round(i.unit_price * i.quantity), 0);
   const discount = items.reduce((s, i) => s + i.discount_amount, 0);
   const taxable  = items.reduce((s, i) => s + i.taxable_amount, 0);
   const vat      = items.reduce((s, i) => s + i.vat_amount, 0);
   const zero_rated = items.filter(i => i.tax_type === "zero_rated").reduce((s, i) => s + i.line_total, 0);
   const vat_exempt = items.filter(i => i.tax_type === "vat_exempt" || i.tax_type === "non_vat").reduce((s, i) => s + i.line_total, 0);
-  const withholding = Math.round((subtotal - discount) * withholding_pct / 100);
-  const total = subtotal - discount + vat + other_charges;
+  const withholding = Math.round((taxable + zero_rated + vat_exempt) * withholding_pct / 100);
+  const total = subtotal - discount + other_charges;
   return { subtotal, discount, taxable, vat, zero_rated, vat_exempt, withholding, other_charges, total };
 }
 
@@ -401,23 +404,21 @@ export function fromCentavos(centavos: number): number {
   return centavos / 100;
 }
 
-// ─── Digital signature (deterministic hash of key invoice fields) ─────────
-export async function signInvoice(invoice: Partial<Invoice>): Promise<string> {
+// Preview checksum only; official signing belongs to the verified BIR adapter.
+export async function computeInvoiceChecksum(invoice: Partial<Invoice>): Promise<string> {
   const payload = JSON.stringify({
     invoice_number: invoice.invoice_number,
     total_amount: invoice.total_amount,
     issue_date: invoice.issue_date,
     merchant_tin: invoice.merchant_tin,
     buyer_tin: invoice.buyer_tin,
-    ts: Date.now(),
   });
   if (typeof window !== "undefined" && window.crypto?.subtle) {
     const enc = new TextEncoder();
     const buf = await window.crypto.subtle.digest("SHA-256", enc.encode(payload));
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
   }
-  // fallback: simple checksum
-  return btoa(payload).slice(0, 64);
+  throw new Error("Secure checksum generation is unavailable in this browser.");
 }
 
 // ─── QR payload ───────────────────────────────────────────────────────────

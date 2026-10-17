@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Services\ApiAccess;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -72,9 +72,15 @@ class CitizenApprovalController extends Controller
             'status' => ['required', Rule::in(['active', 'pending', 'under_review', 'rejected'])],
         ]);
 
+        if ($validated['status'] === 'active') {
+            $subject = str_starts_with($id, 'profile:') ? (string) Str::after($id, 'profile:') : (string) DB::table('client_accounts')->where('id', $id)->value('user_id');
+            $review = Schema::hasTable('taxpayer_identity_reviews') ? DB::table('taxpayer_identity_reviews')->where('user_id', $subject)->where('status', 'approved')->whereNotNull('reviewed_at')->first() : null;
+            abort_unless($review, 409, 'Verify identity and taxpayer evidence through an independent identity review before activation.');
+            DB::table('client_accounts')->where('user_id', $subject)->update(['tin' => $review->tin]);
+        }
         if (str_starts_with($id, 'profile:')) {
             return response()->json([
-                'data' => $this->createAccountFromProfile((int) Str::after($id, 'profile:'), $validated['status']),
+                'data' => $this->createAccountFromProfile((int) Str::after($id, 'profile:'), $validated['status'], $review->tin ?? null),
                 'summary' => $this->summary(),
             ]);
         }
@@ -94,6 +100,8 @@ class CitizenApprovalController extends Controller
             ]);
         }
 
+        if ($account->status !== $validated['status']) app(\App\Services\PlatformNotifications::class)->user($account->user_id,'citizen.reviewed',(string)Str::uuid(),'Citizen account review update','Your NUERS citizen account status is '.str_replace('_',' ',$validated['status']).'. Sign in to review your account requirements.');
+
         $updated = DB::table('client_accounts')
             ->leftJoin('profiles', 'profiles.id', '=', 'client_accounts.user_id')
             ->select($this->accountSelectColumns())
@@ -111,7 +119,7 @@ class CitizenApprovalController extends Controller
         $token = $request->bearerToken();
         abort_unless($token, 401, 'Authenticated reviewer session is required.');
 
-        $user = User::where('api_token', $token)->first();
+        $user = app(ApiAccess::class)->user($request);
         abort_unless($user, 401, 'Authenticated reviewer session is required.');
 
         $role = Schema::hasTable('profiles')
@@ -149,7 +157,7 @@ class CitizenApprovalController extends Controller
             'client_accounts.wallet_balance',
             'client_accounts.created_at',
             'client_accounts.updated_at',
-            Schema::hasColumn('profiles', 'tin') ? 'profiles.tin' : DB::raw('NULL as tin'),
+            Schema::hasColumn('client_accounts', 'tin') ? DB::raw('COALESCE(client_accounts.tin,profiles.tin) as tin') : DB::raw('NULL as tin'),
             Schema::hasColumn('profiles', 'tin_bound_at') ? 'profiles.tin_bound_at' : DB::raw('NULL as tin_bound_at'),
             Schema::hasColumn('profiles', 'profile_photo_url') ? 'profiles.profile_photo_url' : DB::raw('NULL as profile_photo_url'),
         ];
@@ -215,7 +223,7 @@ class CitizenApprovalController extends Controller
             ->values();
     }
 
-    private function createAccountFromProfile(int $profileId, string $status): array
+    private function createAccountFromProfile(int $profileId, string $status, ?string $verifiedTin = null): array
     {
         abort_unless(Schema::hasTable('profiles'), 500, 'profiles table is not migrated.');
 
@@ -232,21 +240,20 @@ class CitizenApprovalController extends Controller
         $fullName = trim((string) ($profile->full_name ?: $profile->user_name ?: $email ?: 'Citizen Account'));
 
         $existingAccountQuery = DB::table('client_accounts')->where('user_id', $profileId);
-        if ($email) {
-            $existingAccountQuery->orWhere('email', $email);
-        }
 
         $existingAccount = $existingAccountQuery->first();
 
         if ($existingAccount) {
             DB::table('client_accounts')->where('id', $existingAccount->id)->update([
                 'status' => $status,
+                ...($verifiedTin ? ['tin' => $verifiedTin] : []),
                 'updated_at' => now(),
             ]);
         } else {
             DB::table('client_accounts')->insert([
                 'id' => (string) Str::uuid(),
                 'user_id' => $profileId,
+                'tin' => $verifiedTin,
                 'account_number' => $this->nextAccountNumber(),
                 'full_name' => $fullName,
                 'account_type' => 'citizen',
@@ -272,10 +279,11 @@ class CitizenApprovalController extends Controller
             ->leftJoin('profiles', 'profiles.id', '=', 'client_accounts.user_id')
             ->select($this->accountSelectColumns())
             ->where('client_accounts.user_id', $profileId)
-            ->when($email, fn ($query) => $query->orWhere('client_accounts.email', $email))
+
             ->orderByDesc('client_accounts.updated_at')
             ->first();
 
+        if (!$existingAccount || $existingAccount->status !== $status) app(\App\Services\PlatformNotifications::class)->user($profileId,'citizen.reviewed',(string)Str::uuid(),'Citizen account review update','Your NUERS citizen account status is '.str_replace('_',' ',$status).'. Sign in to review your account requirements.');
         return $this->accountPayload($account);
     }
 

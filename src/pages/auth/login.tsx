@@ -24,9 +24,10 @@ const assurances = [
 ];
 
 export function LoginPage() {
-  const { signIn, completeGoogleSignIn, loading: authLoading } = useAuth();
+  const { signIn, completeGoogleSignIn, loading: authLoading, user, profile } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const googleCompletionStarted = useRef(false);
+  const oauthReturn = useRef(searchParams.has("google") || searchParams.has("google_error"));
   const navigate = useNavigate();
   const [email, setEmail] = useState(rememberedEmail);
   const [rememberMe, setRememberMe] = useState(() => Boolean(rememberedEmail()));
@@ -37,12 +38,16 @@ export function LoginPage() {
   const [help, setHelp] = useState<"support" | "password" | null>(null);
 
   function openPortal(role: string | null) {
-    if (role === "merchant") navigate("/merchant");
-    else if (role === "consumer" || role === "client") navigate("/client");
-    else if (role === "bir") navigate("/bir");
-    else if (role === "rdo") navigate("/rdo");
-    else navigate("/super-admin");
+    if (role === "merchant") navigate("/merchant", {replace:true});
+    else if (role === "consumer" || role === "client") navigate("/client", {replace:true});
+    else if (role === "bir") navigate("/bir", {replace:true});
+    else if (role === "rdo") navigate("/rdo", {replace:true});
+    else navigate("/super-admin", {replace:true});
   }
+
+  useEffect(() => {
+    if (!authLoading && user && profile?.role && !oauthReturn.current && !googleCompletionStarted.current) openPortal(profile.role);
+  }, [authLoading, user, profile?.role]);
 
   useEffect(() => {
     const googleError = searchParams.get("google_error");
@@ -141,7 +146,7 @@ export function LoginPage() {
               </div>
               <div className="nuers-login__options">
                 <label><input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} /> <span>Remember me</span></label>
-                <button type="button" onClick={() => setHelp("password")}>Forgot password?</button>
+                <button type="button" onClick={() => navigate("/forgot-password")}>Forgot password?</button>
               </div>
               <button type="submit" className="nuers-login__submit" disabled={loading} aria-busy={loading}>
                 <span>{loading ? "Signing In…" : "Sign In"}</span><ArrowRight aria-hidden="true" />
@@ -158,7 +163,7 @@ export function LoginPage() {
           </div>
           <footer className="nuers-login__card-footer">
             <span>© 2026 NUERS. All rights reserved.</span>
-            <div><span>Powered by</span><img src="/auth-assets/ok-technology-transparent.png" alt="OK Technology — Software Solutions for a Smarter Tomorrow" /></div>
+            
           </footer>
         </section>
       </div>

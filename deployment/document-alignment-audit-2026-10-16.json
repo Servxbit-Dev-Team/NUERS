@@ -1,0 +1,568 @@
+{
+  "title": "NUERS document-alignment audit",
+  "audit_date": "2026-10-16",
+  "timezone": "Asia/Manila",
+  "git_commit": "12f05be63f2134f0b96b592d713fecf31396d2f7",
+  "verdict": "Partially aligned. Not ready for production acceptance or a claim of complete BIR/ESP compliance.",
+  "scope": "Localhost source, migrations, read-only aggregate runtime checks, existing tests and isolated dummy-data diagnostic probes. No application fixes or real-record modifications were made in this audit. Live Plesk and infrastructure were not audited.",
+  "basis": [
+    {
+      "path": "/Users/marksioson/Desktop/RMC No. 110-2026_redacted.pdf",
+      "sha256": "2da25159348dcc79bd144b946e03c928aaa4c1bbfbd5c8f94f13ad47b31905a2",
+      "bytes": 2174983
+    },
+    {
+      "path": "/Users/marksioson/Desktop/RMC No. 110-2026 ANNEX A.pdf",
+      "sha256": "6d7fc325e9bfe70126cfc7e04075ce179b14c3e3a0e4faba8038578eabf00385",
+      "bytes": 765841
+    },
+    {
+      "path": "/Users/marksioson/Downloads/ESP_Accreditation10132026.pptx",
+      "sha256": "006efc37f60b2117c46617d3f41e69aba98bd84c7d472ecdad1522274f84dc9a",
+      "bytes": 139683
+    },
+    {
+      "path": "/Users/marksioson/Desktop/NUERS/docs/knowledge/sources/NUERS_Detailed_Illustrated_Functional_Specification_v1_1.pdf",
+      "sha256": "7199c97e9c58285576b6be99d8af73900a1813dd437acc9bafb1cd67bd71553c",
+      "bytes": 23440341
+    },
+    {
+      "path": "/Users/marksioson/Desktop/NUERS/docs/knowledge/sources/NUERS_EIS_Complete_System_Documentation.pdf",
+      "sha256": "f3b9309d63b314622ee548008c58d4d22c61a024810278828be7b8cdc82af7c6",
+      "bytes": 20464582
+    }
+  ],
+  "source_precedence": [
+    "User-supplied RMC and Annex A are the regulatory baseline for this comparison; the blank checklist is not accreditation evidence.",
+    "ESP deck is supporting guidance. Annex A has 17 items; slides 32-33 omit joint-venture item 8 and renumber subsequent items.",
+    "NUERS v1.1/v2 specifications define project acceptance/design requirements and explicitly are not BIR approval.",
+    "Focused official-domain web searches returned no matching publication; this audit does not independently authenticate the supplied circular or certify legal compliance."
+  ],
+  "runtime": {
+    "at": "2026-10-16T08:36:56+08:00",
+    "scope": "localhost only; read-only aggregate checks",
+    "tables": 73,
+    "pending_migrations": 0,
+    "transactions": 13,
+    "accreditation_records": 0,
+    "annex_verified": 0,
+    "annex_total": 17,
+    "stages_verified": 0,
+    "stages_total": 7,
+    "production_can_transmit": false,
+    "transport_implemented": false,
+    "production_blockers": [
+      "Verified BIR-issued solution accreditation certificate is not recorded.",
+      "A current accreditation validity period is required.",
+      "Annex A documentary requirements are incomplete or unverified.",
+      "All seven mandatory BIR accreditation stages must pass.",
+      "Taxpayer PTI Electronic Invoice authority and supporting evidence are required; CAS PTU/AC is insufficient.",
+      "Written client-taxpayer authorization is required for ESP integration services.",
+      "Current taxpayer EIS certification is required.",
+      "Taxpayer Permit to Transmit is required separately from PTI.",
+      "BIR production credentials and key material are not registered.",
+      "Verified BIR production transport is not implemented; certification acknowledgements are simulations."
+    ],
+    "journal_integrity": true,
+    "app_timezone": "Asia/Manila",
+    "queue_connection": "sync",
+    "session_lifetime_minutes": 120
+  },
+  "validation": {
+    "existing_suite": {
+      "tests_passed": 89,
+      "assertions": 1070,
+      "log": ".local/document-audit-20261016/existing-tests.log"
+    },
+    "diagnostic_probes": {
+      "cases_reproduced": 5,
+      "assertions": 27,
+      "database": "isolated SQLite :memory: with dummy records only",
+      "note": "Probe success means the reported gaps reproduced; it is not compliance success.",
+      "results": [
+        {
+          "finding": "A01",
+          "scope": "isolated SQLite :memory: dummy data",
+          "anonymous_profile_http": 200,
+          "anonymous_financial_http": 200,
+          "financial_rows_exposed": 1
+        },
+        {
+          "finding": "A02",
+          "scope": "isolated SQLite :memory: dummy data",
+          "anonymous_patch_http": 200,
+          "dummy_account_modified": true
+        },
+        {
+          "finding": "A02",
+          "scope": "isolated SQLite :memory: dummy data",
+          "anonymous_delete_http": 200,
+          "dummy_user_and_profile_deleted": true
+        },
+        {
+          "finding": "A03",
+          "scope": "isolated SQLite :memory: dummy data",
+          "expected_line_centavos": 20000,
+          "accepted_total_centavos": 1,
+          "invoice_created": false
+        },
+        {
+          "finding": "A09",
+          "scope": "isolated SQLite :memory: dummy data",
+          "duplicate_identity_record_count": 2,
+          "recorded_sales_total": 224,
+          "duplicates_flagged_but_counted": true,
+          "standalone_issued_invoice_omitted": true
+        }
+      ],
+      "code": ".local/document-audit-20261016/DocumentAlignmentProbesTest.php"
+    }
+  },
+  "findings": [
+    {
+      "id": "A02",
+      "severity": "critical",
+      "title": "Anonymous client-account writes and deletion cascade",
+      "requirements": [
+        "RMC pp.2,8-11: integrity, authorized access, preservation and confidentiality",
+        "Functional v1.1 pp.2-3,18; v2 pp.2-3,12-15: role/tenant scope and controlled changes"
+      ],
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/Api/TableController.php",
+          "line": 67
+        },
+        {
+          "file": "app/Http/Controllers/Api/TableController.php",
+          "line": 186
+        }
+      ],
+      "verified": "Isolated anonymous PATCH changed dummy account status and balance. Anonymous DELETE removed the dummy client account and its linked users/profiles rows. Both returned HTTP 200.",
+      "impact": "Unauthenticated callers can modify account state and erase linked login identity if this route is reachable. No real records were used in these tests.",
+      "remediation": "Retire generic account writes or require authenticated, explicit role/tenant authorization and allowed fields on every operation. Preserve identities and evidence via an approved deactivation workflow; prevent deletion without controlled policy.",
+      "acceptance": "Anonymous/wrong-role/cross-tenant PATCH and DELETE fail before any side effect. Admin deletion and account deactivation follow reviewed preservation policy."
+    },
+    {
+      "id": "A01",
+      "severity": "critical",
+      "title": "Anonymous generic identity and financial reads",
+      "requirements": [
+        "RMC pp.2,6,9-10: security, confidentiality and authorized data access",
+        "Functional v1.1 p.2; v2 pp.2-3 and per-screen access requirements"
+      ],
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/Api/TableController.php",
+          "line": 30
+        },
+        {
+          "file": "app/Http/Controllers/Api/TableController.php",
+          "line": 76
+        }
+      ],
+      "verified": "Isolated unauthenticated GETs for profiles and merchant_transactions returned HTTP 200 and dummy rows. Merchant special checks and profile write checks do not protect the other generic GET operations.",
+      "impact": "Financial and identity records can be exposed without authentication; optional request filters are not tenant authorization.",
+      "remediation": "Apply centralized authentication, default-deny role policies, server-derived tenant/branch filters and response-field allowlists to all generic reads; preferably replace these routes with explicit scoped controllers.",
+      "acceptance": "Anonymous reads return 401, disallowed roles return 403, and another tenant cannot read records by omitting/changing filters."
+    },
+    {
+      "id": "A03",
+      "severity": "high",
+      "title": "Legacy merchant invoice calculation trusts client-supplied totals",
+      "requirements": [
+        "RMC pp.4,8,11: accurate, complete invoice and sales data",
+        "Functional v2 pp.6,16; v1.1 p.18: authoritative validation before issuance"
+      ],
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/Api/BusinessInvoiceController.php",
+          "line": 149
+        },
+        {
+          "file": "app/Http/Controllers/Api/BusinessInvoiceController.php",
+          "line": 449
+        }
+      ],
+      "verified": "Pure-method probe supplied quantity 2 x unit price 10000 centavos, but line_total/total_amount 1 centavo. The calculator accepted PHP 0.01 instead of recomputing PHP 200. No invoice was created.",
+      "impact": "Once issuance permissions are granted, the legacy path can persist inconsistent amounts. The newer draft-center calculator does not protect this endpoint.",
+      "remediation": "Use one server-side integer-money calculation service with approved tax/discount classifications, explicit rounding, and reconciliation/rejection of supplied totals.",
+      "acceptance": "Tampered lines, totals, VAT and discounts cannot change authoritative computed amounts; preview, stored document, API and exports agree."
+    },
+    {
+      "id": "A09",
+      "severity": "high",
+      "title": "Sales summary counts duplicate references and omits standalone issued invoices",
+      "requirements": [
+        "RMC pp.8-9: non-duplication and automatic SLS",
+        "Functional v2 p.10: exclude double counting and apply approved credit/debit/void treatment"
+      ],
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/Api/OperationsReportController.php",
+          "line": 18
+        },
+        {
+          "file": "app/Http/Controllers/Api/OperationsReportController.php",
+          "line": 97
+        },
+        {
+          "file": "app/Http/Controllers/Api/TransactionWorkspaceController.php",
+          "line": 24
+        }
+      ],
+      "verified": "An isolated fixture with two successful transaction rows carrying the same invoice identity returned sales PHP 224 while both were flagged duplicate. A separate issued business_invoices row was absent because the report is based on merchant_transactions.",
+      "impact": "The current operational sales report cannot establish complete/nonduplicated SLS compliance across all issuance paths.",
+      "remediation": "Define the canonical issued-document reporting ledger, stable document identity, conflict-review handling, complete source coverage and approved adjustment rules; validate the prescribed BIR output format.",
+      "acceptance": "Known duplicates/conflicts do not silently inflate approved totals; every in-scope issued document is reported exactly once, with traceable credit/debit/void rules and reconciliation to source."
+    },
+    {
+      "id": "A04",
+      "severity": "production_blocker",
+      "title": "Verified BIR adapter, signing and authoritative response processing are absent",
+      "requirements": [
+        "RMC pp.3-9: approved end-to-end issuance/transmission and testing",
+        "Functional v2 pp.2,8,16-17; v1.1 p.18: authenticated official responses and uncertainty handling"
+      ],
+      "evidence": [
+        {
+          "file": "config/bir_compliance.php",
+          "line": 9
+        },
+        {
+          "file": "app/Services/BirCompliance.php",
+          "line": 126
+        },
+        {
+          "file": "app/Http/Controllers/Api/EisController.php",
+          "line": 222
+        },
+        {
+          "file": "src/lib/invoice-utils.ts",
+          "line": 404
+        }
+      ],
+      "verified": "transport_implemented is false and production transmission is blocked. The browser helper called signInvoice produces a SHA-256 digest/checksum, not a private-key digital signature. Integration configuration/local diagnostics do not implement official token exchange or BIR response authentication.",
+      "impact": "No verified live BIR submission, acceptance, signing/encryption protocol, token refresh or timeout-result inquiry can be claimed.",
+      "remediation": "Obtain verified official interface/schema material and authorized certification credentials; implement a reviewed adapter, true signing/key management, authenticated response mapping and unknown-result inquiry. Keep production blocked until acceptance evidence exists.",
+      "acceptance": "BIR-authorized certification tests demonstrate schema, authentication, signing/encryption, acknowledgment, rejection, replay and ambiguous timeout behavior."
+    },
+    {
+      "id": "A05",
+      "severity": "high",
+      "title": "Issued-document to durable outbox and delivery worker are incomplete",
+      "requirements": [
+        "RMC pp.4,8-9: timely queuing, retries, reconciliation and recovery",
+        "Functional v2 pp.2,8,16; v1.1 p.18: atomic issuance/outbox and durable jobs"
+      ],
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/Api/BusinessInvoiceController.php",
+          "line": 181
+        },
+        {
+          "file": "app/Http/Controllers/Api/IntegrationTransactionController.php",
+          "line": 61
+        },
+        {
+          "file": "app/Http/Controllers/Api/EisController.php",
+          "line": 372
+        },
+        {
+          "file": "routes/console.php",
+          "line": 1
+        }
+      ],
+      "verified": "Invoice issuance and administrative EIS queuing are separate workflows. Retry rows and bounded backoff exist, but no production delivery Job/consumer or scheduled outbox dispatcher was found; runtime queue connection is sync.",
+      "impact": "Recorded deadlines do not guarantee automatic delivery/recovery or deadline escalation; cross-boundary crashes and uncertain acknowledgments have no completed acceptance flow.",
+      "remediation": "Persist canonical issuance, audit event and uniquely keyed outbox atomically; add leased durable workers, attempt evidence, inquiry-before-replay, escalation and crash recovery tests.",
+      "acceptance": "Crash/replay tests at each commit boundary demonstrate no lost/double documents; verified restoration preserves original deadline and completes authorized recovery."
+    },
+    {
+      "id": "A06",
+      "severity": "high",
+      "title": "Privileged MFA, granular duties and independent approvals are incomplete",
+      "requirements": [
+        "Functional v1.1 pp.2-3,18 and v2 pp.2-3,13,15-16",
+        "RMC p.6 and Annex A 14-15: demonstrable identity/access/security controls"
+      ],
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/Api/AuthController.php",
+          "line": 30
+        },
+        {
+          "file": "routes/api.php",
+          "line": 59
+        },
+        {
+          "file": "app/Services/DeviceSession.php",
+          "line": 27
+        },
+        {
+          "file": "app/Services/BirCompliance.php",
+          "line": 13
+        }
+      ],
+      "verified": "Password/Google identity and same-device token behavior exist. No complete enforced MFA challenge/enrollment/recovery implementation was found. Password login has no dedicated throttle declaration; generic API defaults are not an account-aware login lockout policy. Broad staff roles do not implement the complete operator/auditor/security/branch duty matrix or two-person sensitive approvals.",
+      "impact": "Device binding and role checks do not satisfy the specified stronger privileged authentication and separation of duties.",
+      "remediation": "Add server-enforced privileged MFA, account/IP throttling, explicit action/tenant/branch policies, independent approver records and an approved bearer/cookie/token lifecycle.",
+      "acceptance": "Privileged actions fail without the required second factor and approval; cross-role/branch cases fail; stale/revoked credentials cannot retain access."
+    },
+    {
+      "id": "A08",
+      "severity": "high",
+      "title": "Merchant profile edits bypass reviewed taxpayer identity changes",
+      "requirements": [
+        "RMC pp.4,8: taxpayer identity, authority and traceability",
+        "Functional v2 pp.11-12: reviewed identity and readiness"
+      ],
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/Api/BusinessAccountController.php",
+          "line": 40
+        },
+        {
+          "file": "app/Http/Controllers/Api/BusinessAccountController.php",
+          "line": 69
+        }
+      ],
+      "verified": "The owner-scoped account endpoint can directly update merchant TIN, business name, tax/RDO/address fields. It does not invoke the registry revision/review or a complete authority revalidation workflow.",
+      "impact": "A reviewed taxpayer record can change through a separate route while existing approval references remain associated with its merchant ID.",
+      "remediation": "Route material identity edits through pending-change review, canonical duplicate-TIN validation, revisions, before/after audit evidence and re-evaluation of linked authorities.",
+      "acceptance": "Material taxpayer identity changes cannot preserve prior production eligibility without the required review; historical financial snapshots remain unchanged."
+    },
+    {
+      "id": "A07",
+      "severity": "high",
+      "title": "Security, continuity and report screens contain unmeasured assurances",
+      "requirements": [
+        "RMC pp.7-9 and Annex A 15-16: demonstrated operational/security/continuity evidence",
+        "Functional v2 pp.4,13-16: authoritative telemetry and real workflows"
+      ],
+      "evidence": [
+        {
+          "file": "src/pages/bcdr/center.tsx",
+          "line": 13
+        },
+        {
+          "file": "src/pages/bcdr/center.tsx",
+          "line": 69
+        },
+        {
+          "file": "src/pages/soc/dashboard.tsx",
+          "line": 25
+        },
+        {
+          "file": "src/pages/system/admin.tsx",
+          "line": 26
+        },
+        {
+          "file": "src/pages/admin/reports.tsx",
+          "line": 76
+        },
+        {
+          "file": "src/pages/admin/compliance.tsx",
+          "line": 25
+        },
+        {
+          "file": "app/Http/Controllers/Api/EnterpriseDashboardController.php",
+          "line": 137
+        }
+      ],
+      "verified": "BCDR declares fixed successful backups, recovery results/sites and readiness. SOC/system charts use Math.random. Generic report generation reports success via timers/toasts. Main dashboard health is read from stored health rows, not an active measurement/freshness acceptance check.",
+      "impact": "These rendered screens do not establish current backup, DR, security, SLA or compliance performance. The newer real monitor does not make the legacy screens authoritative.",
+      "remediation": "Clearly label prototypes/unverified values or replace them with persisted measured telemetry, real report jobs, freshness rules and actual restore/failover evidence.",
+      "acceptance": "Every operational assurance links to a current measured job/result/evidence record; failed or absent evidence cannot display verified success."
+    },
+    {
+      "id": "A10",
+      "severity": "high",
+      "title": "Protected evidence custody, legal holds and exit/delivery workflows are incomplete",
+      "requirements": [
+        "RMC pp.9-10 and Annex A 14-17: continued access, complete secure extracts, legal holds and migration conditions",
+        "Functional v2 pp.12-16"
+      ],
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/Api/EspComplianceController.php",
+          "line": 73
+        },
+        {
+          "file": "app/Http/Controllers/Api/LiveMonitoringController.php",
+          "line": 164
+        },
+        {
+          "file": "src/pages/archive/center.tsx",
+          "line": 30
+        }
+      ],
+      "verified": "Evidence references, CSV/JSON exports and a hash-chained application journal exist. No complete protected evidence-file repository, enforceable hold lifecycle, approved migration release/deletion flow or regulator request/delivery deadline workflow was demonstrated. Archive examples and local backups are not proof of these controls.",
+      "impact": "Reference fields and export buttons alone do not establish protected evidence custody or the complete preservation/access obligations.",
+      "remediation": "Implement protected evidence objects/manifests, independent audit checkpoints, enforceable holds, scoped secure export/delivery jobs, request deadlines and controlled migration/retention release conditions.",
+      "acceptance": "Holds prevent all relevant deletion paths; complete exports remain available through unpaid fees/exit; authorized delivery and migration confirmation are auditable."
+    },
+    {
+      "id": "A11",
+      "severity": "unverified_acceptance",
+      "title": "Capacity, residency, independent security assurance and full UTC normalization remain unproven",
+      "requirements": [
+        "RMC pp.6-9; Annex A 14-17",
+        "Functional v2 pp.2,16: UTC persistence, realistic load and failure acceptance"
+      ],
+      "evidence": [
+        {
+          "file": "app/Services/BirCompliance.php",
+          "line": 155
+        },
+        {
+          "file": "app/Http/Controllers/Api/OperationsReportController.php",
+          "line": 17
+        },
+        {
+          "file": "app/Http/Controllers/Api/OperationsReportController.php",
+          "line": 116
+        }
+      ],
+      "verified": "Runtime persists many records under Asia/Manila while the audit journal explicitly uses UTC. Operational reports load collections and aggregate them in application memory. Functional tests do not establish independent assessments, data residency, measured load, restore/failover or the historical three-year capacity threshold.",
+      "impact": "No enterprise performance or infrastructure compliance acceptance can be concluded from table counts, screenshots or 89 functional tests.",
+      "remediation": "Define one time-persistence contract and conversion plan; test realistic data/query/export volumes; obtain independently verifiable security, residency, three-year track record and BIR-supervised continuity/performance evidence.",
+      "acceptance": "Approved load/recovery targets are measured end to end, residency/access arrangements are evidenced, and UTC/PHT boundary tests cover all transactional paths."
+    }
+  ],
+  "requirement_matrix": [
+    {
+      "area": "Database schema",
+      "assessment": "updated",
+      "evidence": "73 tables; zero pending migrations; 13 existing transactions in read-only inventory",
+      "limit": "Migration completeness is not document compliance."
+    },
+    {
+      "area": "Annex A and seven mandatory stages",
+      "assessment": "implemented bookkeeping; evidence pending",
+      "evidence": "17 controls and seven ordered review stages with evidence/revalidation gates",
+      "limit": "Runtime has zero accreditation records, 0/17 verified documentary controls and 0/7 verified stages."
+    },
+    {
+      "area": "ESP solution/version/configuration validity",
+      "assessment": "partial",
+      "evidence": "Current validity, annual review, renewal lead and material-change blockers exist",
+      "limit": "Actual BIR-issued certificate and independently verified scope were not established."
+    },
+    {
+      "area": "PTI, PTT, EIS certification and taxpayer authority",
+      "assessment": "partial",
+      "evidence": "Separate issuance/transmission gates and maintained permit status checks; permit snapshots on new approved issuance",
+      "limit": "Actual authority evidence and full material-identity revalidation are not established."
+    },
+    {
+      "area": "Three-calendar-day deadline and outage recovery",
+      "assessment": "partial",
+      "evidence": "Original deadline preserved; separate incident-linked restoration deadline; bounded retry rules",
+      "limit": "No completed automatic worker/escalation/production recovery acceptance."
+    },
+    {
+      "area": "Critical incident reporting",
+      "assessment": "partial",
+      "evidence": "Detection, restoration, written report reference and 24-hour reporting due time tracked",
+      "limit": "Actual RDO/LTS report submission and delivery evidence remain operational requirements."
+    },
+    {
+      "area": "Live monitor and transaction workspace",
+      "assessment": "partial",
+      "evidence": "Real database counters, five-second polling, filtering, pause/resume, paging, trace drawer and exports",
+      "limit": "Cursor-based resumable delivery and production backlog/deadline telemetry acceptance remain incomplete."
+    },
+    {
+      "area": "Invoice arithmetic and issuance integrity",
+      "assessment": "not aligned across all paths",
+      "evidence": "Authority gates and snapshots exist; isolated A03 proves the legacy arithmetic gap",
+      "limit": "Canonical recomputation, idempotent issuance/outbox and controlled complete correction lifecycle required."
+    },
+    {
+      "area": "Automatic SLS and sales reports",
+      "assessment": "partial with reproduced correctness defects",
+      "evidence": "Stored-ledger summary/group/CSV workflow exists",
+      "limit": "A09: duplicates still counted and standalone issued invoice source omitted; official SLS and adjustment rules not accepted."
+    },
+    {
+      "area": "Reconciliation",
+      "assessment": "partial",
+      "evidence": "Persisted exception reviews, reasons/revisions, hash/amount/TIN comparisons and test-vs-production distinctions",
+      "limit": "No verified BIR inquiry, acceptance response workflow or complete unknown-result resolution."
+    },
+    {
+      "area": "Registration and business registry",
+      "assessment": "partial",
+      "evidence": "Structured address/industry, verification proof, published plan snapshot, reviewed registry and RDO mappings",
+      "limit": "These are not BIR legal-existence verification; the legacy material identity route remains a bypass."
+    },
+    {
+      "area": "Integration and device configuration",
+      "assessment": "partial",
+      "evidence": "Stored configuration, encrypted new provider secrets, redacted logs and device-session behavior",
+      "limit": "Provider transport, real signing, signed webhook delivery and complete granular client authorization remain separate."
+    },
+    {
+      "area": "Immutable/time-synchronized audit",
+      "assessment": "partial",
+      "evidence": "Application journal hash chain verifies intact with locked head",
+      "limit": "No independent immutable custody/checkpoint proof or complete time synchronization acceptance."
+    },
+    {
+      "area": "Access control and privileged authentication",
+      "assessment": "not aligned",
+      "evidence": "New role-scoped endpoints exist",
+      "limit": "A01/A02 generic routes bypass protection; MFA/duty separation is incomplete."
+    },
+    {
+      "area": "Data ownership, access and portability",
+      "assessment": "partial",
+      "evidence": "Financial row mutation restrictions and structured authenticated extracts exist",
+      "limit": "Unauthorized account paths, legal holds, secure delivery and migration confirmation still require completion."
+    },
+    {
+      "area": "Manual contingency invoicing",
+      "assessment": "not demonstrated",
+      "evidence": "Operational outage/incident records exist",
+      "limit": "Recording/uploading/reconciling/linking manual outage invoices is not a completed end-to-end workflow."
+    },
+    {
+      "area": "Backups, restore, failover, security and residency",
+      "assessment": "unverified; some UI prototype claims",
+      "evidence": "Private local SQL backups and prototype screens exist",
+      "limit": "Actual offsite encryption, restore drills, RTO/RPO, external assurance and approved infrastructure are not established."
+    },
+    {
+      "area": "BIR production transmission",
+      "assessment": "blocked/incomplete",
+      "evidence": "Runtime can_transmit=false; transport_implemented=false; certification ACKs labeled simulated",
+      "limit": "Requires real approved interface, credentials, authenticated transport/response handling and BIR acceptance testing."
+    },
+    {
+      "area": "Performance and three-year track record",
+      "assessment": "unverified",
+      "evidence": "Configuration records thresholds; functional tests exercise local behavior",
+      "limit": "The circular historical five-million/one-thousand annual supported-system evidence and supervised load/continuity tests are not established; internal v2 load targets are separate project targets."
+    },
+    {
+      "area": "Public representations",
+      "assessment": "mixed",
+      "evidence": "Registry match is distinguished from cryptographic/BIR verification; monitor shows pending gates",
+      "limit": "Legacy continuity, SOC, compliance and report screens still display unmeasured assurances."
+    }
+  ],
+  "priority_order": [
+    "Close anonymous generic account/identity/financial endpoints and their mutation/cascade paths.",
+    "Unify financial calculation and canonical complete/nonduplicated SLS reporting.",
+    "Enforce taxpayer identity change review, granular authorization, privileged MFA and independent approvals.",
+    "Complete atomic issuance/outbox, durable workers, official BIR adapter, authentic responses and uncertain-result reconciliation.",
+    "Replace prototype operational assurances with measured evidence; complete evidence custody, holds, portability and manual contingency workflows.",
+    "Complete independent security/residency/capacity and BIR-supervised performance/continuity acceptance before production."
+  ],
+  "limitations": [
+    "A passing functional test suite does not certify accreditation, security or high-volume resilience.",
+    "Aggregate approval counts reflect records available in the audited localhost database at the recorded runtime time.",
+    "Official BIR technical schemas and production certification access were not available for protocol acceptance.",
+    "No compliance percentage is assigned because software controls, legal authority and independently verified evidence have different acceptance conditions."
+  ]
+}

@@ -232,6 +232,9 @@ class BusinessRegistryController extends Controller
             [$v,$meta] = $this->validated($r->all(), $id);
             $meta = array_replace(json_decode($old->registry_details ?? '{}', true) ?: [], $meta);
             DB::table('merchants')->where('id', $id)->update($v + ['registry_revision' => $old->registry_revision + 1, 'registry_details' => json_encode($meta), 'updated_at' => now()]);
+            $identityChanged=false;
+            foreach(['business_name','tin','vat_registered','address','rdo_code','branch_count'] as $field) if(array_key_exists($field,$v) && (string)($v[$field] ?? '')!==(string)($old->$field ?? '')) $identityChanged=true;
+            if($identityChanged) DB::table('eis_integrations')->where('merchant_id',$id)->update(['pti_status'=>'pending','ptt_status'=>'pending','certification_status'=>'pending','updated_at'=>now()]);
             $this->audit('updated', $id, $u, ['reason' => $r->input('reason'), 'before' => array_intersect_key((array) $old, $v), 'after' => $v]);
 
             return response()->json(['business' => $this->present(DB::table('merchants')->where('id', $id)->first())]);
@@ -256,6 +259,7 @@ class BusinessRegistryController extends Controller
                 foreach (['registration_certificate', 'identity', 'business_information', 'representative_authority', 'contact_verification'] as $key) {
                     abort_unless($meta['checks'][$key] ?? false, 422, 'Complete all five document-review checks before onboarding.');
                 }abort_unless(! empty($v['evidence']), 422, 'An evidence/reference is required before onboarding.');
+                app(\App\Services\MerchantVerificationDocuments::class)->assertActivation($id);
                 $status = 'active';
             }if ($stage === 'rejected') {
                 $status = 'inactive';
@@ -266,7 +270,7 @@ class BusinessRegistryController extends Controller
             DB::table('merchants')->where('id', $id)->update(['status' => $status, 'registry_details' => json_encode($meta), 'registry_revision' => $v['revision'] + 1, 'updated_at' => now()]);
             if (in_array($status, ['suspended', 'inactive']) && $m->merchant_account_id) {
                 abort_unless(DB::table('profiles')->where('id', $m->merchant_account_id)->value('role') === 'merchant', 409, 'Linked account must be reviewed before changing access.');
-                DB::table('users')->where('id', $m->merchant_account_id)->update(['api_token' => null]);
+                DB::table('users')->where('id', $m->merchant_account_id)->update(app(\App\Services\ApiAccess::class)->revocation());
             }DB::table('business_registry_requests')->where('merchant_id', $id)->where('purpose', 'invitation')->whereNull('completed_at')->update(['revoked_at' => now()]);
             $this->audit('reviewed', $id, $u, ['reason' => $v['reason'], 'before_status' => $m->status, 'status' => $status, 'stage' => $stage, 'checks' => $meta['checks'], 'evidence' => $meta['evidence']]);
 
@@ -430,6 +434,7 @@ class BusinessRegistryController extends Controller
             DB::table('business_registry_requests')->where('purpose', 'invitation')->where('merchant_id', $id)->whereNull('completed_at')->update(['revoked_at' => now()]);
             $token = Str::random(64);
             DB::table('business_registry_requests')->insert(['id' => $r->input('request_id'), 'actor_id' => $u->id, 'purpose' => 'invitation', 'merchant_id' => $id, 'request_hash' => hash('sha256', $m->email), 'token_hash' => hash('sha256', $token), 'payload' => Crypt::encryptString(json_encode(['token' => $token, 'email' => $m->email])), 'expires_at' => now()->addHours(48), 'created_at' => now(), 'updated_at' => now()]);
+            app(\App\Services\PlatformNotifications::class)->queue($m->email,'business.invitation',(string)$r->input('request_id'),'Set up your NUERS business account','You have been invited to set up your NUERS business account. Use the secure link within 48 hours. This link works once. If you were not expecting this invitation, contact NUERS support.',action:app(\App\Services\PlatformNotifications::class)->url('activate-business').'#token='.$token,expires:now()->addHours(48),context:['invitation_id'=>$r->input('request_id')]);
             $this->audit('invitation.created', $id, $u, ['reason' => $r->input('reason'), 'expires_at' => now()->addHours(48)->toIso8601String()]);
 
             return response()->json(['url' => url('/activate-business').'#token='.$token, 'expires_at' => now()->addHours(48)->toIso8601String()]);
@@ -464,6 +469,7 @@ class BusinessRegistryController extends Controller
             Profile::create(['id' => $u->id, 'email' => $u->email, 'role' => 'merchant', 'full_name' => $u->name, 'organization' => $m->business_name, 'tin' => $m->tin, 'tin_bound_at' => now()]);
             DB::table('merchants')->where('id', $m->id)->update(['merchant_account_id' => $u->id, 'merchant_account_email' => $u->email, 'registry_revision' => $m->registry_revision + 1, 'updated_at' => now()]);
             DB::table('business_registry_requests')->where('id', $inv->id)->update(['completed_at' => now(), 'payload' => Crypt::encryptString(json_encode(['email' => $m->email, 'consented_at' => now()->toIso8601String(), 'notice_version' => $v['notice_version']])), 'updated_at' => now()]);
+            app(\App\Services\PlatformNotifications::class)->verification($u);
             $this->audit('account.activated', $m->id, $u, ['terms_version' => $v['notice_version'], 'privacy_version' => $v['notice_version'], 'email_verified' => false]);
 
             return response()->json(['message' => 'Account created. Sign in with your business contact email. Platform approval and BIR permissions remain separate.']);

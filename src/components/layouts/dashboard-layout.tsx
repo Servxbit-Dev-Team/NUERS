@@ -133,7 +133,7 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
           { label: "Business Account Management", href: "/admin/merchants", icon: Building2 },
           { label: "Client Accounts", href: "/taxpayer/users", icon: UserCheck },
           { label: "BIR Accounts", href: "/admin/users", icon: ShieldCheck },
-          { label: "Subscription Plans", href: "/merchant/billing", icon: CreditCard },
+          { label: "Transaction Fees & Storage", href: "/merchant/billing", icon: CreditCard },
         ],
       },
       {
@@ -206,7 +206,6 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
         section: "Overview",
         items: [
           { label: "Dashboard", href: "/merchant", icon: LayoutDashboard },
-          { label: "Transactions", href: "/merchant/transactions", icon: Receipt },
           { label: "Receipt History", href: "/merchant/receipts", icon: QrCode },
         ],
       },
@@ -220,7 +219,7 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
         section: "Finance",
         items: [
           { label: "Expenses", href: "/merchant/expenses", icon: Wallet },
-          { label: "Tax Center", href: "/merchant/vat-reports", icon: FileText },
+          { label: "Sales Reports", href: "/merchant/sales-reports", icon: FileText },
           { label: "Billing & Fees", href: "/merchant/billing", icon: CreditCard },
         ],
       },
@@ -889,7 +888,7 @@ const cleanSidebarGroups: Partial<Record<PortalType, NavGroup[]>> = {
         { label: "Client Accounts", href: "/super-admin/client-accounts", icon: UserCheck },
         { label: "Citizen Approval", href: "/super-admin/citizen-approval", icon: ShieldCheck },
         { label: "Users & RBAC", href: "/super-admin/users-rbac", icon: Users },
-        { label: "Subscriptions", href: "/super-admin/subscriptions", icon: CreditCard },
+        { label: "Transaction Pricing", href: "/super-admin/subscriptions", icon: CreditCard },
       ],
     },
     {
@@ -998,17 +997,15 @@ const cleanSidebarGroups: Partial<Record<PortalType, NavGroup[]>> = {
       section: "Business Account",
       items: [
         { label: "Dashboard", href: "/merchant", icon: LayoutDashboard },
-        { label: "Transactions", href: "/merchant/transactions", icon: Receipt },
         { label: "Receipts", href: "/merchant/receipts", icon: QrCode },
         { label: "Invoices", href: "/merchant/invoices", icon: FileText },
-        { label: "Tax Center", href: "/merchant/vat-reports", icon: ShieldCheck },
+        { label: "Sales Reports", href: "/merchant/sales-reports", icon: ShieldCheck },
         { label: "Notifications", href: "/merchant/notifications", icon: Bell },
       ],
     },
     {
       section: "B2B Tax",
       items: [
-        { label: "B2B Tax Center", href: "/merchant/b2b-tax", icon: Landmark },
         { label: "B2B Expenses", href: "/merchant/expenses", icon: Wallet },
       ],
     },
@@ -1204,7 +1201,7 @@ export function DashboardLayout({ portal }: { portal: PortalType }) {
       ? "/client/profile"
       : portal === "bir"
         ? "/bir"
-        : "/super-admin";
+        : ["admin", "super_admin"].includes(profile?.role ?? "") ? "/super-admin/profile" : "/super-admin";
   const integrationPath = portal === "merchant" ? "/merchant/api-keys" : "/api";
   const securityPath = portal === "merchant" ? "/merchant/profile" : portal === "client" || portal === "consumer" ? "/client/security" : "/soc";
   const showUtilityAccountLinks = portal !== "client" && portal !== "consumer";

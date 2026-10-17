@@ -102,7 +102,8 @@ function authHeaders() {
 
 const examplePayload = {
   external_reference: "POS-MAIN-2026-000001",
-  source_system: "Servxbit POS",
+  source_system: "servxbit-pos",
+  schema_version:"NUERS-ingestion-1",source_event_id:"source-event-stable-001",event_type:"invoice.finalized",occurred_at:"2026-10-16T10:00:00+08:00",branch_code:"00000",
   channel: "pos",
   transaction_type: "sale",
   payment_method: "card",
@@ -960,7 +961,7 @@ export function MerchantApiKeys() {
   const [newKeyEnv, setNewKeyEnv] = useState<"live" | "sandbox">("live");
   const [newBranchType, setNewBranchType] = useState<"main" | "branch">("main");
   const [newBranchName, setNewBranchName] = useState("Main Office");
-  const [newBranchCode, setNewBranchCode] = useState("MAIN");
+  const [newBranchCode, setNewBranchCode] = useState("");
   const [newBranchLocation, setNewBranchLocation] = useState("");
   const [selectedKey, setSelectedKey] = useState<ApiKey | null>(null);
 
@@ -1129,7 +1130,7 @@ export function MerchantApiKeys() {
           environment: newKeyEnv,
           branch_type: newBranchType,
           branch_name: newBranchType === "main" ? "Main Office" : newBranchName,
-          branch_code: newBranchType === "main" ? "MAIN" : newBranchCode,
+          branch_code: newBranchCode,
           branch_location: newBranchLocation || null,
           scopes: ["transactions:write", "transactions:read", "receipts:write", "receipts:read", "reports:read"],
           rate_limit_per_day: newKeyEnv === "live" ? 50000 : 5000,
@@ -1142,7 +1143,7 @@ export function MerchantApiKeys() {
       setNewKeyName("");
       setNewBranchType("main");
       setNewBranchName("Main Office");
-      setNewBranchCode("MAIN");
+      setNewBranchCode("");
       setNewBranchLocation("");
       await loadApiKeys();
     } catch (err) {
@@ -1181,6 +1182,7 @@ export function MerchantApiKeys() {
         </div>
       </div>
 
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-slate-800">Production intake uses <code>NUERS-ingestion-1</code>: provide a stable source event ID, <code>invoice.finalized</code> or <code>payment.recorded</code>, original timezone-aware event time, source system identifier and verified five-digit branch. Source numbers must match the authorized series. Retrying the same event returns its saved resource and status URL. Examples below describe the internal NUERS contract; BIR technical mapping remains pending. Existing keys without expiry must be replaced.</div>
       {/* KPI */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
@@ -1696,7 +1698,7 @@ export function MerchantApiKeys() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><Plus className="h-4 w-4 text-primary" /> Create New API Key</DialogTitle>
-            <DialogDescription>API keys grant programmatic access to NUERS. Store them securely.</DialogDescription>
+            <DialogDescription>Keys expire after 90 days and are bound to one verified BIR branch. A key does not grant PTI/PTT authority. Sandbox keys cannot write the live ledger.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             {newlyCreatedKey?.plain_key && (
@@ -1741,7 +1743,7 @@ export function MerchantApiKeys() {
                   onClick={() => {
                     setNewBranchType("main");
                     setNewBranchName("Main Office");
-                    setNewBranchCode("MAIN");
+                    setNewBranchCode("");
                   }}
                 >
                   Main Office
@@ -1763,7 +1765,7 @@ export function MerchantApiKeys() {
                 Transactions sent through this key inherit this branch identity. External systems cannot override it.
               </p>
             </div>
-            {newBranchType === "branch" && (
+            {(
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label>Branch Name</Label>
@@ -1771,7 +1773,7 @@ export function MerchantApiKeys() {
                 </div>
                 <div className="space-y-1.5">
                   <Label>Branch Code</Label>
-                  <Input placeholder="e.g. MKT-001" value={newBranchCode} onChange={(e) => setNewBranchCode(e.target.value)} />
+                  <Input placeholder="Verified 5-digit BIR branch" maxLength={5} inputMode="numeric" value={newBranchCode} onChange={(e) => setNewBranchCode(e.target.value.replace(/\D/g,""))} />
                 </div>
               </div>
             )}

@@ -154,13 +154,13 @@ class MerchantApiKeyController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'environment' => ['required', Rule::in(['live', 'sandbox'])],
-            'scopes' => ['nullable', 'array'],
-            'scopes.*' => ['string', 'max:80'],
-            'ip_whitelist' => ['nullable', 'array'],
-            'ip_whitelist.*' => ['string', 'max:80'],
+            'scopes' => ['nullable', 'array','max:5'],
+            'scopes.*' => ['string', Rule::in(self::DEFAULT_SCOPES)],
+            'ip_whitelist' => ['nullable', 'array','max:30'],
+            'ip_whitelist.*' => ['ip'],
             'rate_limit_per_day' => ['nullable', 'integer', 'min:100', 'max:1000000'],
             'branch_type' => ['nullable', Rule::in(['main', 'branch'])],
-            'branch_code' => ['nullable', 'string', 'max:80'],
+            'branch_code' => ['required', 'regex:/^[0-9]{5}$/'],
             'branch_name' => ['nullable', 'string', 'max:255'],
             'branch_location' => ['nullable', 'string', 'max:255'],
         ]);
@@ -181,6 +181,7 @@ class MerchantApiKeyController extends Controller
             'branch_location' => $validated['branch_location'] ?? null,
             'key_prefix' => Str::substr($plainKey, 0, 18),
             'key_hash' => hash('sha256', $plainKey),
+            'expires_at'=>now()->addDays(90),
             'key_last_four' => Str::substr($plainKey, -4),
             'status' => 'active',
             'scopes' => json_encode($validated['scopes'] ?? self::DEFAULT_SCOPES),
@@ -190,6 +191,7 @@ class MerchantApiKeyController extends Controller
             'updated_at' => $now,
         ]);
 
+        app(\App\Services\BirCompliance::class)->audit('api_key.created',$id,(string)$user->id,['merchant_id'=>$merchant->id,'environment'=>$validated['environment'],'branch_code'=>$validated['branch_code']]);
         $record = DB::table('merchant_api_keys')->where('id', $id)->first();
 
         return response()->json([
@@ -215,17 +217,19 @@ class MerchantApiKeyController extends Controller
         $validated = $request->validate([
             'active' => ['nullable', 'boolean'],
             'name' => ['nullable', 'string', 'max:255'],
-            'scopes' => ['nullable', 'array'],
-            'scopes.*' => ['string', 'max:80'],
-            'ip_whitelist' => ['nullable', 'array'],
-            'ip_whitelist.*' => ['string', 'max:80'],
+            'scopes' => ['nullable', 'array','max:5'],
+            'scopes.*' => ['string', Rule::in(self::DEFAULT_SCOPES)],
+            'ip_whitelist' => ['nullable', 'array','max:30'],
+            'ip_whitelist.*' => ['ip'],
             'rate_limit_per_day' => ['nullable', 'integer', 'min:100', 'max:1000000'],
             'branch_type' => ['nullable', Rule::in(['main', 'branch'])],
-            'branch_code' => ['nullable', 'string', 'max:80'],
+            'branch_code' => ['sometimes','required', 'regex:/^[0-9]{5}$/'],
             'branch_name' => ['nullable', 'string', 'max:255'],
             'branch_location' => ['nullable', 'string', 'max:255'],
         ]);
 
+        abort_if($key->status==='revoked' && ($validated['active']??false),409,'Revoked keys cannot be reactivated. Create a replacement.');
+        abort_if(isset($validated['branch_code']) && $validated['branch_code']!==$key->branch_code,409,'Key branch is immutable. Revoke and replace this key.');
         $updates = ['updated_at' => now()];
 
         if (array_key_exists('active', $validated)) {
@@ -252,6 +256,7 @@ class MerchantApiKeyController extends Controller
         }
 
         DB::table('merchant_api_keys')->where('id', $id)->update($updates);
+        app(\App\Services\BirCompliance::class)->audit('api_key.updated',$id,(string)$this->userFromRequest($request)->id,['merchant_id'=>$merchant->id,'fields'=>array_keys($updates)]);
 
         return response()->json([
             'key' => $this->keyPayload(DB::table('merchant_api_keys')->where('id', $id)->first()),
@@ -272,6 +277,7 @@ class MerchantApiKeyController extends Controller
             ]);
 
         abort_unless($updated, 404, 'API key was not found for this Business Account.');
+        app(\App\Services\BirCompliance::class)->audit('api_key.revoked',$id,(string)$this->userFromRequest($request)->id,['merchant_id'=>$merchant->id]);
 
         return response()->json(['ok' => true]);
     }
@@ -282,17 +288,11 @@ class MerchantApiKeyController extends Controller
 
         abort_unless($user, 401, 'Authenticated Business Account session is required.');
 
-        $merchant = DB::table('merchants')
-            ->where(function ($query) use ($user) {
-                $query
-                    ->where('merchant_account_id', $user->id)
-                    ->orWhere('merchant_account_email', $user->email)
-                    ->orWhere('email', $user->email);
-            })
-            ->first();
+        $merchant = app(\App\Services\ApiAccess::class)->merchants($user)->first();
 
         abort_unless($merchant, 404, 'No Business Account registry record is linked to this login.');
 
+        if (!$request->isMethod('GET')) abort_unless($merchant->status==='active',403,'Only active businesses can manage credentials.');
         return $merchant;
     }
 
@@ -304,7 +304,7 @@ class MerchantApiKeyController extends Controller
             return null;
         }
 
-        return DB::table('users')->where('api_token', $token)->first();
+        return app(\App\Services\ApiAccess::class)->user($request);
     }
 
     private function keyPayload(object $key): array
@@ -323,7 +323,7 @@ class MerchantApiKeyController extends Controller
             'requests_today' => $today,
             'requests_month' => $month,
             'rate_limit' => (int) $key->rate_limit_per_day,
-            'active' => $key->status === 'active',
+            'expires_at'=>$key->expires_at??null,'active' => $key->status === 'active' && !empty($key->expires_at) && now()->lt($key->expires_at),
             'status' => $key->status,
             'permissions' => $this->jsonArray($key->scopes),
             'ip_whitelist' => $this->jsonArray($key->ip_whitelist),
@@ -473,7 +473,7 @@ class MerchantApiKeyController extends Controller
         $last30 = $logs ? (clone $logs)->where('created_at', '>=', now()->subDays(30)) : null;
         $last30Count = $last30 ? (clone $last30)->count() : 0;
         $success30 = $last30 ? (clone $last30)->where('status_code', '<', 400)->count() : 0;
-        $successRate = $last30Count > 0 ? round(($success30 / $last30Count) * 100, 1) : ($key->status === 'active' ? 100 : 0);
+        $successRate = $last30Count > 0 ? round(($success30 / $last30Count) * 100, 1) : null;
         $lastSeenAt = $key->last_used_at ?: $lastLog?->created_at;
         $active = $key->status === 'active';
 
@@ -560,7 +560,7 @@ class MerchantApiKeyController extends Controller
             : null;
         $last30Count = $last30Logs ? (clone $last30Logs)->count() : 0;
         $successCount = $last30Logs ? (clone $last30Logs)->where('status_code', '<', 400)->count() : 0;
-        $compliance = $last30Count > 0 ? round(($successCount / $last30Count) * 100) : ($keys->where('status', 'active')->count() > 0 ? 100 : 0);
+        $compliance = $last30Count > 0 ? round(($successCount / $last30Count) * 100) : null;
         $latestSeen = $keys->pluck('last_used_at')->filter()->sortDesc()->first();
 
         return [

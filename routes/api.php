@@ -32,9 +32,9 @@ Route::get('/health', fn () => ['ok' => true, 'app' => 'NUERS Laravel API']);
 Route::get('/registration/options', [\App\Http\Controllers\Api\BusinessRegistrationController::class, 'options']);
 Route::get('/registration/locations', [\App\Http\Controllers\Api\BusinessRegistrationController::class, 'locations']);
 Route::get('/registration/rdo', [\App\Http\Controllers\Api\BusinessRegistrationController::class, 'resolveRdo']);
-Route::post('/registration/email-code', [\App\Http\Controllers\Api\BusinessRegistrationController::class, 'sendCode'])->middleware('throttle:5,1');
-Route::post('/registration/verify-code', [\App\Http\Controllers\Api\BusinessRegistrationController::class, 'verifyCode'])->middleware('throttle:15,1');
-Route::post('/registration/business', [\App\Http\Controllers\Api\BusinessRegistrationController::class, 'store'])->middleware('throttle:5,1');
+Route::post('/registration/email-code', [\App\Http\Controllers\Api\BusinessRegistrationController::class, 'sendCode'])->middleware('throttle:5,1,registration-email:');
+Route::post('/registration/verify-code', [\App\Http\Controllers\Api\BusinessRegistrationController::class, 'verifyCode'])->middleware('throttle:15,1,registration-verify:');
+Route::post('/registration/business', [\App\Http\Controllers\Api\BusinessRegistrationController::class, 'store'])->middleware('throttle:5,1,registration-submit:');
 
 Route::post('/support/conversations', [\App\Http\Controllers\Api\SupportChatController::class,'create'])->middleware('throttle:5,1');
 Route::get('/support/conversations/{id}', [\App\Http\Controllers\Api\SupportChatController::class,'messages'])->whereUuid('id');
@@ -46,19 +46,27 @@ Route::post('/admin/support/{id}/messages', [\App\Http\Controllers\Api\SupportCh
 Route::post('/admin/support/{id}/read', [\App\Http\Controllers\Api\SupportChatController::class,'adminRead'])->whereUuid('id');
 Route::patch('/admin/support/{id}', [\App\Http\Controllers\Api\SupportChatController::class,'update'])->whereUuid('id');
 
+Route::get('/pricing', [\App\Http\Controllers\Api\SubscriptionPlanController::class, 'index']);
 Route::get('/subscription-plans', [\App\Http\Controllers\Api\SubscriptionPlanController::class, 'index']);
 Route::get('/admin/subscription-plans', [\App\Http\Controllers\Api\SubscriptionPlanController::class, 'manage']);
 Route::put('/admin/subscription-plans/{id}', [\App\Http\Controllers\Api\SubscriptionPlanController::class, 'update'])->whereNumber('id');
 
 Route::get('/invoice-center', [\App\Http\Controllers\Api\InvoiceCenterController::class, 'index']);
+Route::get('/invoice-center/export', [\App\Http\Controllers\Api\InvoiceCenterController::class, 'export']);
 Route::get('/invoice-center/businesses', [\App\Http\Controllers\Api\InvoiceCenterController::class, 'merchants']);
 Route::post('/invoice-center', [\App\Http\Controllers\Api\InvoiceCenterController::class, 'store']);
 Route::get('/invoice-center/{source}/{id}', [\App\Http\Controllers\Api\InvoiceCenterController::class, 'show']);
 
 Route::get('/auth/session', [AuthController::class, 'session']);
-Route::post('/auth/login', [AuthController::class, 'login']);
-Route::post('/auth/signup', [AuthController::class, 'signup']);
+Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+Route::post('/auth/signup', [AuthController::class, 'signup'])->middleware('throttle:5,1');
 Route::post('/auth/logout', [AuthController::class, 'logout']);
+Route::post('/auth/forgot-password', [\App\Http\Controllers\Api\AccountSecurityController::class, 'forgot'])->middleware('throttle:3,1,password-forgot:');
+Route::post('/auth/reset-password', [\App\Http\Controllers\Api\AccountSecurityController::class, 'reset'])->middleware('throttle:10,1,password-reset:');
+Route::post('/auth/change-password', [\App\Http\Controllers\Api\AccountSecurityController::class, 'change'])->middleware('throttle:5,1,password-change:');
+Route::get('/auth/notification-preferences', [\App\Http\Controllers\Api\AccountSecurityController::class, 'preferences']);
+Route::put('/auth/notification-preferences', [\App\Http\Controllers\Api\AccountSecurityController::class, 'preferences']);
+Route::get('/admin/configuration/notifications', [\App\Http\Controllers\Api\AccountSecurityController::class, 'admin']);
 Route::post('/merchant-accounts', [AuthController::class, 'createMerchantAccount']);
 Route::get('/client/profile', [ClientProfileController::class, 'show']);
 Route::put('/client/profile', [ClientProfileController::class, 'update']);
@@ -72,6 +80,12 @@ Route::patch('/citizen-approvals/{id}', [CitizenApprovalController::class, 'upda
 Route::get('/business-invoices', [BusinessInvoiceController::class, 'index']);
 Route::post('/business-invoices', [BusinessInvoiceController::class, 'store']);
 Route::get('/business-invoices/{invoice}', [BusinessInvoiceController::class, 'show']);
+Route::get('/admin/configuration', [\App\Http\Controllers\Api\MailConfigurationController::class, 'show']);
+Route::put('/admin/configuration/smtp', [\App\Http\Controllers\Api\MailConfigurationController::class, 'save'])->middleware('throttle:10,1,smtp-save:');
+Route::post('/admin/configuration/smtp/test', [\App\Http\Controllers\Api\MailConfigurationController::class, 'test'])->middleware('throttle:5,1,smtp-test:');
+Route::get('/document-copies/{source}/{id}', [\App\Http\Controllers\Api\DocumentCopyController::class, 'info']);
+Route::get('/document-copies/{source}/{id}/pdf', [\App\Http\Controllers\Api\DocumentCopyController::class, 'pdf'])->middleware('throttle:20,1,document-pdf:');
+Route::post('/document-copies/{source}/{id}/email', [\App\Http\Controllers\Api\DocumentCopyController::class, 'send'])->middleware('throttle:10,1,document-email:');
 Route::get('/merchant/api-keys', [MerchantApiKeyController::class, 'index']);
 Route::post('/merchant/api-keys', [MerchantApiKeyController::class, 'store']);
 Route::patch('/merchant/api-keys/{id}', [MerchantApiKeyController::class, 'update']);
@@ -84,9 +98,15 @@ Route::get('/merchant/receipts', [MerchantReceiptController::class, 'index']);
 Route::get('/merchant/receipts/verify', [MerchantReceiptController::class, 'verify']);
 Route::get('/merchant/transactions', [MerchantTransactionController::class, 'index']);
 Route::get('/merchant/tax-center', [MerchantTaxCenterController::class, 'show']);
+Route::get('/merchant/sales-reports', [\App\Http\Controllers\Api\MerchantSalesReportController::class, 'show'])->middleware('throttle:30,1,merchant-sales-report:');
+Route::get('/merchant/sales-reports/export', [\App\Http\Controllers\Api\MerchantSalesReportController::class, 'export'])->middleware('throttle:5,1,merchant-sales-export:');
 Route::post('/integrations/transactions', [IntegrationTransactionController::class, 'store']);
 Route::get('/dashboards/{portal}', [DashboardController::class, 'show']);
 Route::get('/enterprise-dashboards/{portal}', [EnterpriseDashboardController::class, 'show']);
+Route::get('/merchant/overview', [\App\Http\Controllers\Api\MerchantOverviewController::class, 'show']);
+Route::get('/merchant/records/export', [\App\Http\Controllers\Api\MerchantRecordsController::class, 'export']);
+Route::get('/merchant/records', [\App\Http\Controllers\Api\MerchantRecordsController::class, 'index']);
+Route::get('/merchant/records/{record}', [\App\Http\Controllers\Api\MerchantRecordsController::class, 'show']);
 Route::get('/live-monitoring', [LiveMonitoringController::class, 'show']);
 Route::get('/live-monitoring/audit', [LiveMonitoringController::class, 'auditLog']);
 Route::get('/live-monitoring/export', [LiveMonitoringController::class, 'export']);
@@ -115,6 +135,10 @@ Route::post('/business-activation', [\App\Http\Controllers\Api\BusinessRegistryC
 Route::get('/operations-report/export', [\App\Http\Controllers\Api\OperationsReportController::class,'export']);
 Route::get('/operations-report', [\App\Http\Controllers\Api\OperationsReportController::class,'index']);
 Route::post('/operations-report/{id}/review', [\App\Http\Controllers\Api\OperationsReportController::class,'review']);
+Route::get('/eis-readiness', [\App\Http\Controllers\Api\EisReadinessController::class,'index']);
+Route::post('/eis-readiness/coverage', [\App\Http\Controllers\Api\EisReadinessController::class,'coverage']);
+Route::post('/eis-readiness/{source}/{id}/branch-review', [\App\Http\Controllers\Api\EisReadinessController::class,'branchReview'])->middleware('throttle:20,1');
+Route::post('/eis-readiness/{source}/{id}/prepare', [\App\Http\Controllers\Api\EisReadinessController::class,'prepare'])->middleware('throttle:30,1');
 Route::get('/transaction-workspace/export', [\App\Http\Controllers\Api\TransactionWorkspaceController::class,'export']);
 Route::get('/transaction-workspace', [\App\Http\Controllers\Api\TransactionWorkspaceController::class,'index']);
 Route::get('/transaction-workspace/{id}', [\App\Http\Controllers\Api\TransactionWorkspaceController::class,'show']);
@@ -198,3 +222,95 @@ Route::put('/integration-workspace/webhooks/{id}', [\App\Http\Controllers\Api\In
 Route::post('/developer/sandbox', [\App\Http\Controllers\Api\DeveloperSandboxController::class,'run'])->middleware('throttle:20,1');
 Route::get('/developer/openapi', fn()=>response()->file(resource_path('data/developer-openapi.json'),['Content-Type'=>'application/json','Content-Disposition'=>'attachment; filename="nuers-openapi.json"','Cache-Control'=>'public, max-age=300']));
 Route::get('/developer/catalog', fn()=>response()->file(resource_path('data/developer-catalog.json'),['Content-Type'=>'application/json','Cache-Control'=>'public, max-age=300']));
+
+Route::get('/auth/mfa/status', [\App\Http\Controllers\Api\MfaController::class,'status']);
+Route::post('/auth/mfa/enroll', [\App\Http\Controllers\Api\MfaController::class,'enroll'])->middleware('throttle:5,1');
+Route::post('/auth/mfa/confirm', [\App\Http\Controllers\Api\MfaController::class,'confirm'])->middleware('throttle:5,1');
+Route::post('/auth/mfa/verify', [\App\Http\Controllers\Api\MfaController::class,'verify'])->middleware('throttle:5,1');
+
+Route::get('/integrations/transactions/wallet', [IntegrationTransactionController::class,'wallet']);
+Route::post('/integrations/transactions/batch', [IntegrationTransactionController::class,'batch'])->middleware('throttle:10,1,wallet-batch:');
+Route::get('/integrations/transactions/{id}', [IntegrationTransactionController::class, 'show']);
+
+Route::post('/documents/{source}/{id}/review-requests', [\App\Http\Controllers\Api\DocumentGovernanceController::class,'requestReview']);
+Route::post('/documents/invoice/{id}/publish', [\App\Http\Controllers\Api\DocumentGovernanceController::class,'publish']);
+Route::post('/documents/{source}/{id}/holds', [\App\Http\Controllers\Api\DocumentGovernanceController::class,'hold']);
+Route::post('/documents/holds/{id}/release', [\App\Http\Controllers\Api\DocumentGovernanceController::class,'releaseHold']);
+Route::post('/identity/claims', [\App\Http\Controllers\Api\DocumentGovernanceController::class,'identityClaim']);
+Route::post('/identity/claims/{id}/review', [\App\Http\Controllers\Api\DocumentGovernanceController::class,'identityReview']);
+Route::post('/invoice-series', [\App\Http\Controllers\Api\DocumentGovernanceController::class,'series']);
+Route::get('/operations/readiness', [\App\Http\Controllers\Api\OperationalEvidenceController::class,'show']);
+Route::get('/businesses/{merchant}/portability', [\App\Http\Controllers\Api\TenantPortabilityController::class,'export'])->middleware('throttle:3,1');
+Route::post('/merchant/expenses/{id}/review', [\App\Http\Controllers\Api\MerchantExpenseController::class,'review']);
+Route::post('/documents/review-requests/{id}/decision', [\App\Http\Controllers\Api\DocumentGovernanceController::class,'decide']);
+
+Route::post('/auth/resend-verification', [\App\Http\Controllers\Api\AccountSecurityController::class, 'resendVerification'])->middleware('throttle:1,1,email-resend:');
+Route::post('/auth/verify-email', [\App\Http\Controllers\Api\AccountSecurityController::class, 'verifyEmail'])->middleware('throttle:10,1,email-verify:');
+
+Route::get('/admin/backups', [\App\Http\Controllers\Api\BackupRecoveryController::class,'index']);
+Route::get('/admin/backups/records', [\App\Http\Controllers\Api\BackupRecoveryController::class,'records']);
+Route::get('/admin/backups/export', [\App\Http\Controllers\Api\BackupRecoveryController::class,'export'])->middleware('throttle:10,1,bcdr-export:');
+Route::post('/admin/backups/{type}', [\App\Http\Controllers\Api\BackupRecoveryController::class,'create'])->whereIn('type',['requests','evidence'])->middleware('throttle:20,1,bcdr-create:');
+Route::post('/admin/backups/{type}/{id}/review', [\App\Http\Controllers\Api\BackupRecoveryController::class,'review'])->whereIn('type',['requests','evidence'])->whereUuid('id')->middleware('throttle:20,1,bcdr-review:');
+
+// Merchant customer registry: ownership always comes from the authenticated merchant.
+Route::get('/merchant/customers', [\App\Http\Controllers\Api\MerchantCustomerController::class,'index']);
+Route::get('/merchant/customers/options', [\App\Http\Controllers\Api\MerchantCustomerController::class,'options']);
+Route::get('/merchant/customers/export', [\App\Http\Controllers\Api\MerchantCustomerController::class,'export'])->middleware('throttle:10,1,customer-export:');
+Route::get('/merchant/customers/source-buyers', [\App\Http\Controllers\Api\MerchantCustomerController::class,'sourceBuyers']);
+Route::post('/merchant/customers/import', [\App\Http\Controllers\Api\MerchantCustomerController::class,'import'])->middleware('throttle:5,1,customer-import:');
+Route::post('/merchant/customers', [\App\Http\Controllers\Api\MerchantCustomerController::class,'store'])->middleware('throttle:30,1,customer-create:');
+Route::get('/merchant/customers/{id}', [\App\Http\Controllers\Api\MerchantCustomerController::class,'show'])->whereUuid('id');
+Route::patch('/merchant/customers/{id}', [\App\Http\Controllers\Api\MerchantCustomerController::class,'update'])->whereUuid('id')->middleware('throttle:30,1,customer-update:');
+Route::post('/merchant/customers/{id}/documents', [\App\Http\Controllers\Api\MerchantCustomerController::class,'link'])->whereUuid('id')->middleware('throttle:30,1,customer-link:');
+
+// Merchant-owned operational registry; registration never grants BIR authority.
+Route::get('/merchant/branches', [\App\Http\Controllers\Api\MerchantBranchController::class, 'index']);
+Route::get('/merchant/branches/export', [\App\Http\Controllers\Api\MerchantBranchController::class, 'export'])->middleware('throttle:10,1,branch-export:');
+Route::post('/merchant/branches', [\App\Http\Controllers\Api\MerchantBranchController::class, 'store'])->middleware('throttle:20,1,branch-write:');
+Route::put('/merchant/branches/{id}', [\App\Http\Controllers\Api\MerchantBranchController::class, 'update'])->whereUuid('id')->middleware('throttle:20,1,branch-write:');
+Route::post('/merchant/branches/{id}/documents', [\App\Http\Controllers\Api\MerchantBranchController::class, 'upload'])->whereUuid('id')->middleware('throttle:10,1,branch-upload:');
+Route::post('/merchant/branches/{id}/request-review', [\App\Http\Controllers\Api\MerchantBranchController::class, 'requestReview'])->whereUuid('id')->middleware('throttle:5,1,branch-review:');
+Route::get('/merchant/branch-documents/{id}', [\App\Http\Controllers\Api\MerchantBranchController::class, 'download'])->whereUuid('id');
+Route::post('/merchant/terminals', [\App\Http\Controllers\Api\MerchantBranchController::class, 'terminalStore'])->middleware('throttle:20,1,terminal-write:');
+Route::put('/merchant/terminals/{id}', [\App\Http\Controllers\Api\MerchantBranchController::class, 'terminalUpdate'])->whereUuid('id')->middleware('throttle:20,1,terminal-write:');
+Route::get('/admin/branch-reviews', [\App\Http\Controllers\Api\MerchantBranchController::class, 'pending']);
+Route::get('/admin/branch-reviews/{id}', [\App\Http\Controllers\Api\MerchantBranchController::class, 'reviewDetail'])->whereUuid('id');
+Route::get('/admin/branch-documents/{id}', [\App\Http\Controllers\Api\MerchantBranchController::class, 'download'])->whereUuid('id');
+Route::post('/admin/branch-reviews/{id}', [\App\Http\Controllers\Api\MerchantBranchController::class, 'review'])->whereUuid('id')->middleware('throttle:10,1,branch-decision:');
+
+// Optional onboarding uploads remain bound to a verified, unconsumed email challenge.
+Route::post('/registration/documents', [\App\Http\Controllers\Api\MerchantVerificationDocumentController::class,'stage'])->middleware('throttle:10,1,registration-documents:');
+Route::get('/merchant/verification-documents', [\App\Http\Controllers\Api\MerchantVerificationDocumentController::class,'index']);
+Route::post('/merchant/verification-documents', [\App\Http\Controllers\Api\MerchantVerificationDocumentController::class,'upload'])->middleware('throttle:10,1,verification-upload:');
+Route::get('/merchant/verification-documents/{id}', [\App\Http\Controllers\Api\MerchantVerificationDocumentController::class,'download'])->whereUuid('id');
+Route::get('/admin/businesses/{merchant}/verification-documents', [\App\Http\Controllers\Api\MerchantVerificationDocumentController::class,'index'])->whereUuid('merchant');
+Route::get('/admin/verification-documents/{id}', [\App\Http\Controllers\Api\MerchantVerificationDocumentController::class,'download'])->whereUuid('id');
+Route::post('/admin/verification-documents/{id}/review', [\App\Http\Controllers\Api\MerchantVerificationDocumentController::class,'review'])->whereUuid('id')->middleware('throttle:20,1,verification-review:');
+
+Route::get('/merchant/wallet', [\App\Http\Controllers\Api\MerchantWalletController::class,'index']);
+Route::put('/merchant/wallet/settings', [\App\Http\Controllers\Api\MerchantWalletController::class,'settings'])->middleware('throttle:10,1,wallet-settings:');
+Route::post('/merchant/wallet/topups', [\App\Http\Controllers\Api\MerchantWalletController::class,'topup'])->middleware('throttle:5,1,wallet-topup:');
+Route::get('/merchant/wallet/statement', [\App\Http\Controllers\Api\MerchantWalletController::class,'statement'])->middleware('throttle:5,1,wallet-export:');
+Route::get('/admin/wallets', [\App\Http\Controllers\Api\MerchantWalletController::class,'adminIndex']);
+Route::put('/admin/wallets/pricing', [\App\Http\Controllers\Api\MerchantWalletController::class,'pricing'])->middleware('throttle:5,1,wallet-pricing:');
+Route::post('/admin/wallets/topups/{id}/review', [\App\Http\Controllers\Api\MerchantWalletController::class,'review'])->whereUuid('id')->middleware('throttle:10,1,wallet-review:');
+Route::get('/admin/wallets/{merchant}/audit', [\App\Http\Controllers\Api\MerchantWalletController::class,'audit'])->middleware('throttle:2,1,wallet-audit:');
+
+// Merchant work access: ownership-controlled grants, separate from platform and taxpayer roles.
+Route::get('/merchant/access', [\App\Http\Controllers\Api\MerchantTeamController::class,'access']);
+Route::get('/merchant/team', [\App\Http\Controllers\Api\MerchantTeamController::class,'index']);
+Route::get('/merchant/team/export', [\App\Http\Controllers\Api\MerchantTeamController::class,'export'])->middleware('throttle:5,1,team-export:');
+Route::post('/merchant/team/invitations', [\App\Http\Controllers\Api\MerchantTeamController::class,'invite'])->middleware('throttle:10,1,team-invite:');
+Route::patch('/merchant/team/members/{id}', [\App\Http\Controllers\Api\MerchantTeamController::class,'update'])->whereUuid('id');
+Route::post('/merchant/team/roles', [\App\Http\Controllers\Api\MerchantTeamController::class,'role']);
+Route::put('/merchant/team/roles/{id}', [\App\Http\Controllers\Api\MerchantTeamController::class,'role'])->whereUuid('id');
+Route::post('/team-invitations/preview', [\App\Http\Controllers\Api\MerchantTeamController::class,'preview'])->middleware('throttle:20,1,team-preview:');
+Route::post('/team-invitations/accept', [\App\Http\Controllers\Api\MerchantTeamController::class,'accept'])->middleware('throttle:5,1,team-accept:');
+
+// Self-service administrator profile; identity and role come exclusively from the authenticated session.
+Route::get('/admin/account-profile', [\App\Http\Controllers\Api\AdminAccountProfileController::class,'show']);
+Route::put('/admin/account-profile', [\App\Http\Controllers\Api\AdminAccountProfileController::class,'update'])->middleware('throttle:20,1');
+Route::post('/admin/account-profile/avatar', [\App\Http\Controllers\Api\AdminAccountProfileController::class,'uploadAvatar'])->middleware('throttle:5,1');
+Route::get('/admin/account-profile/avatar', [\App\Http\Controllers\Api\AdminAccountProfileController::class,'avatar']);
+Route::put('/admin/account-profile/notifications', [\App\Http\Controllers\Api\AdminAccountProfileController::class,'notifications'])->middleware('throttle:20,1');

@@ -1,0 +1,81 @@
+{
+  "verified_at": "2026-10-17T09:00:36.631426+08:00",
+  "scope": "Localhost implementation; no live deployment and no customer emails sent",
+  "features": [
+    "Tenant-scoped server PDF download for invoice and receipt sources",
+    "Same server PDF attached to customer-copy email",
+    "Editable recipient defaulting to recorded buyer email; original source email unchanged",
+    "Encrypted SMTP credentials, TLS verification and public destination address pinning",
+    "Saved-revision SMTP test required before enabling customer copies",
+    "Per-merchant durable send budget and per-admin test budget",
+    "Idempotent request IDs, explicit SMTP acceptance/uncertain states, encrypted recipient history",
+    "Configurations & Changes dashboard using existing NUERS shell, artwork and icon system"
+  ],
+  "verification": {
+    "backend": "163 tests, 1777 assertions passed",
+    "new_mail_pdf_tests": "7 tests, 66 assertions passed",
+    "client": "6 tests passed",
+    "build": "Laravel and static builds passed",
+    "browser": [
+      "Admin configuration and test forms visible; no console errors",
+      "Admin and merchant have no page-wide overflow at 390px",
+      "SMTP form input text verified 14px",
+      "Missing customer email can be entered; send remains disabled until SMTP enabled",
+      "Real PDF downloaded from synthetic merchant list, A4 one page",
+      "Long PDF with 65 rows: five pages, repeated table header, unclipped totals and footer"
+    ]
+  },
+  "source_preservation": {
+    "checked_at": "2026-10-17T08:56:43+08:00",
+    "scope": "Read-only local main source representations; no financial edits or live deployment",
+    "counts": {
+      "documents": 16,
+      "financial_source_review": 3,
+      "settlement_source_review": 0,
+      "missing_original_branch": 16,
+      "drafts": 0
+    },
+    "source_hashes_before": {
+      "business_invoices": "581c4ee57bf7903946b71659164935ba8a6288a6b6fe28a6ab4d92f8041513f4",
+      "business_invoice_items": "b33e5d810f1f6994f24db66d0f5f695f808416b616a6c2c873c9dc33ac3530f2",
+      "transaction_receipts": "c1fdcb37da1d7177ff04f0cd334f3cd8a3c614bc662ccf478f1965e764dfc6ab",
+      "merchant_transactions": "8392805b54a0b19c49fb8fe5f4f4a5403ff4dc9e729e61cecd01de600a1a6e80"
+    },
+    "source_hashes_after": {
+      "business_invoices": "581c4ee57bf7903946b71659164935ba8a6288a6b6fe28a6ab4d92f8041513f4",
+      "business_invoice_items": "b33e5d810f1f6994f24db66d0f5f695f808416b616a6c2c873c9dc33ac3530f2",
+      "transaction_receipts": "c1fdcb37da1d7177ff04f0cd334f3cd8a3c614bc662ccf478f1965e764dfc6ab",
+      "merchant_transactions": "8392805b54a0b19c49fb8fe5f4f4a5403ff4dc9e729e61cecd01de600a1a6e80"
+    },
+    "source_unchanged": true,
+    "transactions": 13,
+    "payment_total": "750400.00",
+    "bir_flags": {
+      "transport": false,
+      "interface": false,
+      "response_verification": false
+    },
+    "audit_integrity": true
+  },
+  "remaining_setup": [
+    "Enter real provider SMTP credentials in /system, save with delivery disabled, send a test, confirm inbox receipt, then enable customer copies.",
+    "No live SMTP/provider delivery was tested; mail transport outcomes were exercised with isolated test doubles."
+  ],
+  "screenshots": [
+    "docs/design/smtp-configuration-qa.jpg",
+    "docs/design/smtp-section-qa.jpg",
+    "docs/design/customer-copy-email-qa.jpg",
+    "docs/design/merchant-pdf-actions-qa.jpg"
+  ],
+  "code_sha256": {
+    "app/Http/Controllers/Api/DocumentCopyController.php": "d9808c9769bf9d0cb9b1e9292c532a068916c1fa831960279222723102db8c66",
+    "app/Http/Controllers/Api/MailConfigurationController.php": "c370c21a89dcaf7e7988ad1949be8dd7f8a58e064df77a6da9c9ea8a2367c484",
+    "app/Services/DocumentPdf.php": "a2e92b3eb00c572e6065df8612ce950e6efe6ceef03dc5d8717e82412d9287ef",
+    "app/Services/PlatformMail.php": "7cfb4a57f126e67915d6d6c1ced6f1eb00d5df7f7a2901c38066ac457c5700ac",
+    "resources/views/documents/electronic-copy.blade.php": "62fb499686ae3876a7b705afd529159ed36c77f2ea8f552e75f827e41a7c6ade",
+    "src/components/invoices/document-copy-actions.tsx": "09fb476cb4abfad248ca664f1910f179af66baad83d6d1de7399675d57c6f095",
+    "src/pages/system/configuration.tsx": "842478ae0ed11370c5453761106185b00b9d10dcbf9a3e7b6186181fe9f995aa",
+    "src/pages/system/configuration.css": "e1b306e3ce4420a0cfd94569415f546774ce5d492392a1c5d8bf9c0538ed89d2",
+    "database/migrations/2026_10_17_000001_document_email_and_smtp.php": "c4562d55f736c9d9c7eaf8d49309839cfdb6c6c5eaab154dc335dceaa40665de"
+  }
+}
