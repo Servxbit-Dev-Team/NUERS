@@ -278,3 +278,6 @@
 @media (prefers-reduced-motion: reduce) {.nuers-enterprise * { animation: none !important; transition: none !important; } }
 @media (max-width: 650px) {.ne-hero-art > .ne-official-seal { top: 10.3cqw; opacity: .4; } }
 
+
+.ne-software-identity { display:block; color:#e2edff; font-size:12px; line-height:18px; font-weight:600; letter-spacing:.2px; margin-bottom:8px; }
+.ne-collapsed .ne-software-identity { display:none; }

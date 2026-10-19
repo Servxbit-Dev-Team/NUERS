@@ -199,6 +199,8 @@ class RmcComplianceTest extends TestCase
         $this->assertFalse($policy->gate(DB::table('eis_integrations')->first())['can_transmit']);
         $merchant = $this->user('merchant');
         DB::table('merchants')->insert(['id' => 'seller', 'business_name' => 'Test seller', 'merchant_account_id' => $merchant->id, 'tin' => '123456789','status'=>'active']);
+        // Synthetic funds satisfy the configurable minimum-zero wallet gate.
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit('seller', 600, (string) \Illuminate\Support\Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         DB::table('eis_integrations')->where('id', $integrationId)->update(['merchant_id'=>'seller','environment'=>'production','branch_code'=>'00000']);
         DB::table('taxpayer_authorizations')->insert(['id'=>'fixture-pti','request_id'=>fake()->uuid(),'request_hash'=>str_repeat('a',64),'merchant_id'=>'seller','kind'=>'PTI','reference'=>'TEST-PTI','environment'=>'production','branch_code'=>'00000','scope'=>'Synthetic branch fixture only','issued_at'=>'2026-01-01','valid_until'=>'2027-01-01','status'=>'active','evidence'=>'Synthetic evidence not real','reason'=>'Isolated fixture only','reviewed_by'=>$this->admin->id,'reviewed_at'=>now()]);
         DB::table('invoice_series')->insert(['id'=>'fixture-series','merchant_id'=>'seller','branch_code'=>'00000','document_family'=>'invoice','prefix'=>'TEST-','range_start'=>1,'range_end'=>99,'status'=>'active','authority_reference'=>'Synthetic evidence not real','verified_by'=>$this->admin->id,'valid_from'=>'2026-01-01','valid_until'=>'2027-01-01','created_at'=>now(),'updated_at'=>now()]);
@@ -224,6 +226,8 @@ class RmcComplianceTest extends TestCase
     {
         $merchant = $this->user('merchant');
         DB::table('merchants')->insert(['id' => 'seller', 'business_name' => 'Test seller', 'merchant_account_id' => $merchant->id, 'tin' => '123456789']);
+        // Synthetic funds satisfy the configurable minimum-zero wallet gate.
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit('seller', 600, (string) \Illuminate\Support\Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $invoice = ['invoice_number' => 'TEST-DRAFT', 'document_type' => 'sales_invoice', 'buyer_name' => 'Test buyer', 'buyer_tin' => '987654321', 'issue_date' => '2026-10-15', 'status' => 'draft', 'line_items' => [['line_number' => 1, 'description' => 'Test item', 'quantity' => 1, 'unit_price' => 10000, 'line_total' => 10000]]];
         $this->withToken($merchant->api_token)->postJson('/api/business-invoices', $invoice)->assertCreated()->assertJsonPath('invoice.status', 'draft');
         $this->withToken($merchant->api_token)->postJson('/api/business-invoices', [...$invoice, 'invoice_number' => 'TEST-LIVE', 'status' => 'issued'])->assertStatus(409);

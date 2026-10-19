@@ -1,0 +1,22 @@
+{
+  "deployed": true,
+  "verified_at": "2026-10-18T22:48:53+08:00",
+  "dashboard": {
+    "transaction_amount": "146717.76",
+    "nuers_charged": "18.00",
+    "charged_transactions": 6,
+    "merchant_wallet": "82.00",
+    "merchant_deposit": "100.00",
+    "registered_merchants": 1
+  },
+  "monitor": {
+    "scope": "Today (PHT)",
+    "transaction_amount": "146717.76",
+    "nuers_charged": "18.00"
+  },
+  "currency": "PHP",
+  "financial_mutations": false,
+  "tests": 26,
+  "assertions": 228,
+  "package_sha256": "a6cda146b80da7df6f9f1370c5c7f1b463dfe1715d3313334da9dd1c166a62ce"
+}

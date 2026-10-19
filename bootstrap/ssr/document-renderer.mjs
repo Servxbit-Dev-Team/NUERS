@@ -4,6 +4,10 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import QRCode2 from "qrcode";
 
+// src/lib/statutory-sales.ts
+var SALE_CATEGORIES = { regular: "Regular sale", senior_citizen: "Senior citizen", pwd: "PWD", national_athlete_coach: "National athlete / coach", solo_parent: "Solo parent" };
+var saleLabel = (v) => SALE_CATEGORIES[v] || "Regular sale";
+
 // src/components/invoices/official-receipt.tsx
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
@@ -55,16 +59,19 @@ function OfficialReceipt({ document: d, staticQr = "" }) {
   const warning = payment || ["non_vat_invoice", "vat_exempt_invoice"].includes(d.document_type) || d.document_type === "mixed_sales_invoice" && d.vat_registered === false;
   const fmt = (v) => v == null ? "Not recorded" : `${d.currency === "PHP" || !d.currency ? "\u20B1" : d.currency} ${money(v)}`;
   const registered = d.vat_registered === true || d.vat_registered === "1" ? "VAT Registered" : d.vat_registered === false || d.vat_registered === "0" ? "Non-VAT Registered" : "VAT registration not recorded";
+  const p = d.presentation, template = p ? payment ? p.receipt_template : p.invoice_template : null;
+  const businessLogo = p?.show_logo && p.logo_url && /^\/(?:public\/)?uploads\/(?:business-logos|invoice-logos)\/[a-f0-9-]+\.png$/i.test(p.logo_url) ? p.logo_url : null;
+  const customStyle = p ? { fontFamily: { Inter: "Inter, Arial, sans-serif", Arial: "Arial, sans-serif", Georgia: "Georgia, serif" }[p.font_family] || "Arial, sans-serif", "--doc-primary": p.primary_color, "--doc-secondary": p.secondary_color } : void 0;
   const documentTotal = payment ? "Recorded Payment Amount" : "Document Total";
-  return /* @__PURE__ */ jsx("div", { className: "official-receipt-container", children: /* @__PURE__ */ jsxs("article", { className: "official-receipt", "aria-label": `${documentLabel(d.document_type)} ${d.number}`, children: [
+  return /* @__PURE__ */ jsx("div", { className: "official-receipt-container", children: /* @__PURE__ */ jsxs("article", { className: `official-receipt ${d.sales_benefit ? "or-benefit" : ""} ${p ? `or-custom or-template-${template}` : ""}`, style: customStyle, "aria-label": `${documentLabel(d.document_type)} ${d.number}`, children: [
     /* @__PURE__ */ jsx("div", { className: "or-sun", "aria-hidden": "true" }),
     /* @__PURE__ */ jsxs("header", { className: "or-header", children: [
-      /* @__PURE__ */ jsx("img", { className: "or-logo", src: "/auth-assets/nuers-digital-logo.png", alt: "NUERS National Unified Electronic Receipt System" }),
+      businessLogo ? /* @__PURE__ */ jsx("img", { className: "or-logo", src: businessLogo, alt: `${d.business} logo` }) : !p ? /* @__PURE__ */ jsx("img", { className: "or-logo", src: "/auth-assets/nuers-digital-logo.png", alt: "NUERS National Unified Electronic Receipt System" }) : /* @__PURE__ */ jsx("div", { className: "or-business-brand", children: d.business }),
       /* @__PURE__ */ jsxs("div", { className: "or-ribbon", children: [
         /* @__PURE__ */ jsx("strong", { children: payment ? "ELECTRONIC RECEIPT" : ["credit_memo", "debit_memo", "credit_note", "debit_note"].includes(d.document_type) ? "ELECTRONIC ADJUSTMENT" : "ELECTRONIC INVOICE" }),
         /* @__PURE__ */ jsxs("span", { children: [
           documentLabel(d.document_type).toUpperCase(),
-          draft ? " \xB7 DRAFT" : " \xB7 RECORDED COPY"
+          draft ? " \xB7 DRAFT" : d.record_mode === "source_capture" ? " \xB7 EXTERNAL SOURCE COPY" : " \xB7 RECORDED COPY"
         ] })
       ] })
     ] }),
@@ -80,6 +87,15 @@ function OfficialReceipt({ document: d, staticQr = "" }) {
           "TIN: ",
           d.tin || "Not recorded"
         ] }),
+        p?.seller_phone && /* @__PURE__ */ jsxs("p", { children: [
+          "Tel: ",
+          p.seller_phone
+        ] }),
+        p?.seller_email && /* @__PURE__ */ jsxs("p", { children: [
+          "Email: ",
+          p.seller_email
+        ] }),
+        p?.show_website && p.seller_website && /* @__PURE__ */ jsx("p", { children: p.seller_website }),
         d.seller_business_style && /* @__PURE__ */ jsxs("p", { children: [
           "Business Style: ",
           d.seller_business_style
@@ -109,6 +125,25 @@ function OfficialReceipt({ document: d, staticQr = "" }) {
         /* @__PURE__ */ jsx("span", { children: "TOGETHER FOR A PROGRESSIVE PHILIPPINES" })
       ] })
     ] }),
+    d.sales_benefit && /* @__PURE__ */ jsxs("section", { className: "or-source-notice", children: [
+      /* @__PURE__ */ jsxs("strong", { children: [
+        saleLabel(d.sale_category),
+        " sale \xB7 ",
+        d.sales_benefit.category === "solo_parent" ? "10%" : "20%",
+        " eligible discount"
+      ] }),
+      /* @__PURE__ */ jsxs("p", { children: [
+        "Beneficiary: ",
+        d.sales_benefit.beneficiary_name,
+        " \xB7 ID: ",
+        d.sales_benefit.id_number
+      ] }),
+      /* @__PURE__ */ jsxs("p", { children: [
+        "Evidence: ",
+        d.sales_benefit.evidence_reference
+      ] }),
+      /* @__PURE__ */ jsx("p", { children: "Beneficiary / authorized representative signature: ____________________ (where required)" })
+    ] }),
     warning && /* @__PURE__ */ jsx("div", { className: "or-tax-warning", children: "THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX" }),
     /* @__PURE__ */ jsxs("table", { className: "or-items", children: [
       /* @__PURE__ */ jsx("thead", { children: /* @__PURE__ */ jsxs("tr", { children: [
@@ -126,6 +161,13 @@ function OfficialReceipt({ document: d, staticQr = "" }) {
             "Unit: ",
             item.unit
           ] }),
+          item.discount_reason && /* @__PURE__ */ jsxs("small", { children: [
+            "Manual discount: ",
+            fmt(item.discount || 0),
+            " \xB7 ",
+            item.discount_reason
+          ] }),
+          item.benefit_eligible && /* @__PURE__ */ jsx("small", { children: "Eligible statutory-benefit item" }),
           item.amount_derived && /* @__PURE__ */ jsx("small", { children: "Amount calculated from recorded quantity \xD7 unit price" })
         ] }),
         /* @__PURE__ */ jsx("td", { children: item.quantity == null ? "Not recorded" : Number(item.quantity) }),
@@ -142,7 +184,7 @@ function OfficialReceipt({ document: d, staticQr = "" }) {
         /* @__PURE__ */ jsx("p", { children: d.currency && d.currency !== "PHP" ? "See the recorded currency amount." : amountWords(Number(d.amount)) })
       ] }),
       /* @__PURE__ */ jsxs("section", { className: "or-totals", children: [
-        (payment ? [["Recorded Payment Amount", d.amount]] : [["Recorded Subtotal", d.subtotal], ["Less: Discount", d.discount], ...d.other_charges !== 0 ? [["Other Charges", d.other_charges]] : [], ["Less: Withholding Tax", d.withholding], ...d.net_payable != null && d.net_payable !== d.amount ? [["Net Payable Before Settlements", d.net_payable]] : [], ...d.amount_paid != null && d.amount_paid !== 0 ? [["Recorded Settlements", d.amount_paid]] : [], ...d.balance_due != null && d.balance_due !== d.net_payable ? [["Recorded Balance Due", d.balance_due]] : []]).map(([label, value]) => /* @__PURE__ */ jsxs("div", { children: [
+        (payment ? [["Recorded Payment Amount", d.amount]] : [["Recorded Subtotal", d.subtotal], ["Less: Discount", d.discount], ...d.manual_discount ? [["Of which: Manual Discount", d.manual_discount]] : [], ...d.statutory_discount ? [["Of which: Statutory Discount", d.statutory_discount]] : [], ...d.vat_adjustment ? [["Less: VAT Adjustment", d.vat_adjustment]] : [], ...d.other_charges !== 0 ? [["Other Charges", d.other_charges]] : [], ["Less: Withholding Tax", d.withholding], ...d.net_payable != null && d.net_payable !== d.amount ? [["Net Payable Before Settlements", d.net_payable]] : [], ...d.amount_paid != null && d.amount_paid !== 0 ? [["Recorded Settlements", d.amount_paid]] : [], ...d.balance_due != null && d.balance_due !== d.net_payable ? [["Recorded Balance Due", d.balance_due]] : []]).map(([label, value]) => /* @__PURE__ */ jsxs("div", { children: [
           /* @__PURE__ */ jsx("span", { children: label }),
           /* @__PURE__ */ jsx("span", { children: fmt(value) })
         ] }, String(label))),
@@ -152,7 +194,7 @@ function OfficialReceipt({ document: d, staticQr = "" }) {
         ] })
       ] })
     ] }),
-    !payment && /* @__PURE__ */ jsx("section", { className: "or-tax-breakdown", "aria-label": "Recorded tax breakdown", children: [["VATable Sales", d.vatable], ["VAT Amount", d.vat], ["VAT-Exempt Sales", d.vat_exempt], ["Zero-Rated Sales", d.zero_rated]].map(([label, value]) => /* @__PURE__ */ jsxs("div", { children: [
+    !payment && /* @__PURE__ */ jsx("section", { className: "or-tax-breakdown", "aria-label": "Recorded tax breakdown", children: [...d.sspt_sales != null && d.vat_registered === false ? [["Non-VAT Sales", d.sspt_sales]] : [], ["VATable Sales", d.vatable], ["VAT Amount", d.vat], ["VAT-Exempt Sales", d.vat_exempt], ["Zero-Rated Sales", d.zero_rated]].map(([label, value]) => /* @__PURE__ */ jsxs("div", { children: [
       label,
       /* @__PURE__ */ jsx("strong", { children: fmt(value) })
     ] }, String(label))) }),
@@ -203,6 +245,16 @@ function OfficialReceipt({ document: d, staticQr = "" }) {
       payment ? "Supplementary payment record. Does not create additional primary invoice sales." : "Invoice issuance and BIR transmission are separate controls.",
       " Recorded permit references alone do not establish current approval."
     ] }),
+    p && /* @__PURE__ */ jsxs("section", { className: "or-custom-notes", children: [
+      (d.footer_note || p.footer_text) && /* @__PURE__ */ jsx("p", { children: d.footer_note || p.footer_text }),
+      (d.notes || p.additional_notes) && /* @__PURE__ */ jsx("p", { children: d.notes || p.additional_notes }),
+      p.payment_methods?.length > 0 && /* @__PURE__ */ jsxs("p", { children: [
+        "Accepted payment methods: ",
+        p.payment_methods.map((m) => ({ cash: "Cash", bank_transfer: "Bank Transfer", card: "Card", e_wallet: "E-Wallet" })[m] || m).join(", ")
+      ] }),
+      p.payment_instructions && /* @__PURE__ */ jsx("p", { children: p.payment_instructions }),
+      (d.terms_and_conditions || p.terms_and_conditions) && /* @__PURE__ */ jsx("p", { children: d.terms_and_conditions || p.terms_and_conditions })
+    ] }),
     /* @__PURE__ */ jsx("div", { className: "or-skyline", "aria-hidden": "true", children: /* @__PURE__ */ jsx("img", { src: "/invoice-assets/receipt-reference.png", alt: "" }) }),
     /* @__PURE__ */ jsx("footer", { className: "or-footer", children: /* @__PURE__ */ jsxs("section", { children: [
       "DIGITAL TRANSACTIONS.",
@@ -221,16 +273,31 @@ async function renderDocumentHtml(document) {
   let content = renderToStaticMarkup(/* @__PURE__ */ jsx2("div", { className: "merchant-electronic-preview", children: /* @__PURE__ */ jsx2(OfficialReceipt, { document, staticQr: qr }) }));
   content = content.replace(/<link\b[^>]*>/g, "");
   const assets = ["/auth-assets/nuers-digital-logo.png", "/invoice-assets/receipt-reference.png"];
+  const brand = document.presentation?.show_logo ? document.presentation.logo_url : null;
+  if (brand && /^\/(?:public\/)?uploads\/(?:business-logos|invoice-logos)\/[a-f0-9-]+\.png$/i.test(brand)) assets.push(brand);
   for (const asset of assets) {
-    const data = `data:image/png;base64,${readFileSync(path.resolve("public" + asset)).toString("base64")}`;
+    let data = "";
+    try {
+      data = `data:image/png;base64,${readFileSync(path.resolve(asset.startsWith("/public/") ? asset.slice(1) : "public" + asset)).toString("base64")}`;
+    } catch {
+      if (asset === brand) {
+        content = content.replaceAll(`src="${asset}"`, 'alt="Business logo unavailable"');
+        continue;
+      }
+      throw new Error("Required document asset unavailable");
+    }
     content = content.replaceAll(`src="${asset}"`, `src="${data}"`);
   }
+  const payment = ["payment_receipt", "official_receipt"].includes(document.document_type);
+  const paper = (payment ? document.presentation?.receipt_paper : document.presentation?.invoice_paper) === "Letter" ? "Letter" : "A4";
+  const pageWidth = paper === "Letter" ? 206 : 200;
+  const zoom = pageWidth * 96 / 25.4 / 900;
   const title = document.number.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src data:; base-uri 'none'; form-action 'none'"><title>${title}</title><style>
     *,::before,::after{box-sizing:border-box}html,body{margin:0;padding:0}body{width:900px}img,svg{display:block;vertical-align:middle}img{max-width:100%;height:auto}h1,h2,h3,p{margin:0}table{border-color:inherit;text-indent:0}strong{font-weight:bolder}
     ${styles}
-    @page{size:A4;margin:5mm}
-    @media print{html{width:200mm}body{width:900px;zoom:0.8398950131}.merchant-electronic-preview{overflow:visible}.official-receipt{overflow:visible!important}.or-header,.or-parties,.or-buyer,.or-tax-warning,.or-source-notice,.or-financials,.or-tax-breakdown,.or-validation-row,.or-source-note,.or-footer,.or-items tr{break-inside:avoid}.or-items thead{display:table-header-group}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+    @page{size:${paper};margin:5mm}
+    @media print{html{width:${pageWidth}mm}body{width:900px;zoom:${zoom}}.merchant-electronic-preview{overflow:visible}.official-receipt{overflow:visible!important}.or-header,.or-parties,.or-buyer,.or-tax-warning,.or-source-notice,.or-financials,.or-tax-breakdown,.or-validation-row,.or-source-note,.or-footer,.or-items tr{break-inside:avoid}.or-items thead{display:table-header-group}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
   </style></head><body>${content}</body></html>`;
 }
 if (process.argv[2] === "--stdin") {

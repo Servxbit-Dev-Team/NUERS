@@ -1,48 +1,164 @@
 # NUERS merchant ingestion version 1
 
-This is an internal NUERS contract, not the BIR wire schema. API version: `NUERS-ingestion-1`. Production issuance remains gated by verified solution/version/configuration accreditation, taxpayer/branch/environment-specific maintained PTI and written client authorization. Transmission has its separate PTT/certification/interface/adapter/response-verification gates. Actual BIR materials and taxpayer evidence are currently absent.
+The maintained end-to-end guide is [NUERS API Connection Guide](../../output/pdf/NUERS-API-Connection-Guide.pdf), served at `/guides/NUERS-API-Connection-Guide.pdf`. The machine contract is `resources/data/developer-openapi.json`; the page's examples and readable guide come from `src/lib/integrations/merchant-guide.ts`.
 
-- POST `/api/integrations/transactions` with `X-NUERS-API-Key`. Keys expire after 90 days, are bound to one five-digit branch and are shown once. Existing keys without expiry are rejected; rotate through the merchant API-key screen using real branch evidence. Sandbox keys cannot write the production ledger; developer previews remain synthetic.
-- Supply `schema_version`, `source_system` (letters/digits/underscore/dot/hyphen), `source_event_id`, `external_reference`, `occurred_at` with timezone, `event_type`, `branch_code`, `receipt_number`, `document_type`, `payment_method`, `tax_type`, `vat_inclusive`, the gross amount and complete item lines. API money values are PHP/pesos; the separate portal invoice API uses centavos. Do not mix these units.
-- `invoice.finalized` maps a finalized primary invoice. `payment.recorded` maps supplementary payment evidence; payment receipts are excluded from primary sales submission. Do not emit a second sale when collecting an already invoiced sale. The exact ERP trigger and tax treatment require domain review against its official applicable specifications.
-- The authenticated key controls the branch. `receipt_number` must match the next configured authorized series; an absent or exhausted series blocks issuance. Never derive a branch or permit from a display label.
-- The durable identity includes merchant, branch, source system, document family and external reference. Source event reuse is independently constrained. Retry exactly the same event/document content and original timestamp after a timeout. Changing content under an existing identity returns 409. Preserve originals and use a reviewed corrective-document workflow; arbitrary credit/debit imports are not accepted by this endpoint.
-- 201 means that source event, financial records, sequence reservation, encrypted preparation and blocked delivery metadata committed together. It does not mean BIR acceptance. 200 with `duplicate=true` returns the original resource identifiers, status URL and accepted time. `Location` points to GET `/api/integrations/transactions/{id}`. Read scope, business ownership and exact branch are required to poll it.
-- 401 requires credential correction, 403 requires access/branch review, 409 requires original-source/authority/sequence reconciliation, 422 requires contract correction, and 429 requires bounded backoff. A 5xx or lost response is not permission to change the source identity. Retry the original identity to determine whether the transaction committed.
+## Modes and compatibility
 
-Admission is currently conservative: 600 requests/minute per key plus its configured daily budget and a pre-authentication IP budget. These are protective configuration limits, not measured throughput. A reviewed edge/shared-state deployment and authorized capacity tests must establish production limits.
+`schema_version: NUERS-ingestion-1` supports an additive `record_mode` field:
 
-## Offline and webhook components
+- `source_capture`: copy an already-issued ERP/POS original. Supply `source_profile_id` from the automatically generated owned-system connection for a verified merchant. Historical originals outside its scope require an independently reviewed profile for the merchant, source system, registered location, seller snapshot, effective VAT registration and original issue period. Preserve original number/date. No NUERS series allocation, PTI claim or second issuance. Copies are blocked from BIR reporting until source coverage and duplicate-reporting reconciliation are separately reviewed.
+- `nuers_issuance`: create a new NUERS original. Requires current verified solution/version/configuration accreditation, taxpayer/branch/environment-specific maintained issuance authority, written client authorization and the next authorized series number.
+- Omitted mode preserves legacy NUERS issuance semantics. Accepted historical request hashes and IDs are not rewritten. Identical accepted events replay before tax/profile re-evaluation; a revoked/expired key or inactive business still cannot submit through a write endpoint.
 
-`src/lib/integrations/offline-outbox.ts` is an optional connector SDK, not an installed POS integration. It keeps source event IDs and timestamps, stores AES-GCM ciphertext in IndexedDB, derives a non-exportable key from an unstored recovery passphrase, binds ciphertext to tenant/source identity, preserves accepted/review records and accepts an in-memory credential-aware sender. Responses are also encrypted. Losing the passphrase loses access; do not destroy the original source system's records. Multi-browser restart, storage quota, real POS/ERP adoption and recovery still require staging verification. Crypto unit tests are not an IndexedDB restart/reconnect certification.
+Source profiles are administered in Admin → API Integrations → Merchant Source Profiles. Reviews require an activated business and active registered branch. The profile stores original issuer name/TIN/address, effective registration, original system authority and independent review references. Date intervals cannot overlap for the same system/branch. Profiles are immutable, with audited revocation; wrong evidence requires revocation and replacement. Historical profile reviews remain independent. Verified-owner API key creation prepares the default owned-system profile automatically without another admin approval; it does not approve historical or government issuance authority.
 
-`SignedWebhook` builds durable encrypted event deliveries and HMAC-SHA256 envelopes. Before any network send it requires reviewed code opt-in, current tenant/configuration membership, public IPv4 DNS validation/pinning, HTTPS on port 443, certificate verification, no proxy and no redirects. Bounded retries end in a dead-letter state. The built-in deployment keeps delivery disabled. No external message was sent during remediation. Receivers must verify timestamp/signature and durably deduplicate `X-NUERS-Event` with their business transaction; a signature alone does not prevent reprocessing. Sender retry identity remains stable. Real receiver acknowledgements, egress behavior and replay tests require an approved isolated endpoint.
+## Security boundaries
 
-## Operational commands
+The production endpoints require a live API key, derived tenant ownership, exact five-digit branch, current expiry/status, required scope and exact-IP policy. Sandbox keys use the same URLs but only a separate encrypted test store; responses identify sandbox/test_only. Live financial records, wallet, numbering, reports and BIR queues are never changed. Foreign environment status IDs return 404. The Sandbox wallet is virtual with no real balance. Public previews are synthetic and require `seller_vat_registered` explicitly; this never changes the merchant registration. API money uses PHP pesos; portal form amounts and wallet balances have their separately documented centavo units.
 
-- `eis:prepare-pending --limit=100`: repair missing internal preparations.
-- `eis:enqueue-prepared --limit=100`: register current preparations with blocked durable jobs.
-- `eis:work --limit=100`: default provider is blocked. An actual verified provider implementation is required; database flags cannot supply it.
-- `eis:reconcile`: record internal reminders for uncertain/dead-letter delivery, overdue cases and unreported critical incidents. It sends no external message.
-- `webhooks:work --limit=20`: disabled by default.
-- `security:deployment-check`: fail review when required production settings/evidence are missing.
-- `eis:audit-checkpoint`: requires an independently custodied checkpoint key; a local signed checkpoint still needs independent offsite immutable custody.
+New keys require the registered owner's MFA verified for the current login session and an active merchant. The merchant form requires only a name. The server assigns the registered establishment from the business TIN (or an existing unambiguous active main record for a base-only TIN), materializes its internal location context if missing, and preserves existing inactive/reviewed records. No merchant Branches / Terminals page or physical terminal setup is required. Legacy explicit branch requests remain limited to existing active owned branches. Name-only keys default to live, both supported scopes, 50,000 requests/day and 90 days. Missing/ambiguous business identity requires registration correction; no BIR code is guessed. Supported scopes are `transactions:write` and `transactions:read`. Existing credentials are not automatically broadened, replaced or exposed. Key creation/update/revocation serialize on the business row and commit together with the mandatory audit entry. Acceptance locks the same business and rechecks current key status, expiry, environment, branch, IP-policy snapshot and write scope before proceeding. Conflicting header/Bearer credentials and non-JSON financial writes are rejected.
 
-`EisDelivery` records sending intent before provider calls; expired sending leases become inquiry operations. Unknown/unauthenticated outcomes never become accepted. Only an authenticated inquiry with an explicit safe-to-retry guarantee can permit a replay. Attempts, response hashes/ciphertext, bounded backoff and dead-letter evidence are retained. The default provider cannot transmit or synthesize an official acknowledgement. This local state machine has isolated fake-provider regression tests; official interoperability remains blocked.
+Only `X-Forwarded-For` client-IP forwarding from the explicitly listed Cloudflare networks in `config/trusted_proxies.php` is trusted. Forwarded host/protocol are not trusted. Infrastructure owners must maintain edge ranges and origin restrictions. No firewall or proxy trust expansion is part of this release.
 
-## Prepaid wallet admission (2026-10-17)
+## Tax and financial integrity
 
-`MerchantWallet` is the merchant's prepaid NUERS service-fee ledger, separate from any citizen/customer payment wallet. The current published policy starts at PHP3 per finalized primary sale of PHP500 and above; only Super Admin can change the prospective flat fee in **Wallets & Transaction Pricing**. Read the live published rate rather than hard-coding PHP3. Rate revision, gross amount, original source ID and balance after deduction are retained in an append-only hash chain. Replays of accepted events do not incur another fee. Sub-PHP500 sales, supplementary payment receipts, adjustments and BIR submission/retries do not create an additional primary sale fee.
+VAT sellers may submit `vatable`, `vat_exempt` and `zero_rated` lines. Non-VAT sellers may submit `non_vat` and `vat_exempt`; they cannot charge ordinary VAT or claim VAT zero-rating. VAT sellers cannot submit `non_vat` lines. An exempt Non-VAT-only sale resolves to `non_vat_invoice`; multiple treatments resolve to `mixed_sales_invoice`. Original-source profiles provide historical registration; current account registration governs new issuance. Never select tax treatment from product name or buyer VAT status alone.
 
-- GET `/api/integrations/transactions/wallet` uses a branch-bound key with `transactions:read`. It returns the shared merchant balance, fee and threshold in **integer centavos**, pricing revision and `intake_mode` (`realtime` or `batch`). This preference must be implemented by each external connector.
-- POST `/api/integrations/transactions/batch` uses `transactions:write`, an active live key and `{"events":[...]}` with 1–50 complete finalized events in legal source-number order. Every event uses the original version-1 contract and exact key branch. A batch commits all new financial records, sequence reservations, delivery preparations and wallet debits together, or none. Exact already-accepted duplicates are free; conflicting duplicate content rejects the batch. Batches have an additional 10 requests/minute throttle.
-- HTTP **402** returns `code=INSUFFICIENT_WALLET_BALANCE`, `currency=PHP`, `available_centavos`, `required_centavos`, `shortage_centavos`, `retry_after_topup=true`, `transaction_saved=false`, `retained_by=client`. A failed batch's required amount includes all its new eligible events. No new invoice/receipt, source inbox, fee or sequence allocation commits. Operational quota/HTTP logs can still record the rejected attempt.
-- The POS/ERP must durably retain the source locally until a verified response confirms acceptance. On 402 pause eligible intake, notify the merchant, obtain funding, then retry the **identical original**. On a timeout/5xx the outcome is unknown: repeat the same identity to obtain the original result. Never renumber or redraft an existing finalized source to make it fit.
-- Realtime means the supplied client queue attempts intake after encrypting a new imported source event. Batch mode retains it until manual transmission. Neither mode changes BIR transmission rules or applicable deadlines. Insufficient wallet funds do not extend legal deadlines; operators must fund/escalate promptly. These controls are not an installed external POS adapter.
-- Portal server drafts require sufficient funds for their current eligible fee, without reservation/deduction. Finalization rechecks and charges once; money spent elsewhere can block publishing a saved draft. On 402 the portal preserves its form and offers an encrypted device copy with the same request UUID. API and portal monetary input units remain different; wallet arithmetic always uses centavos.
+Integer-centavo arithmetic reconciles ordinary 12% VAT, inclusive/exclusive prices, discounts and line totals. New API records preserve separate `sspt_sales` and `vat_exempt_sales`. SSPT is a sales classification, not a computation of percentage-tax liability. The shared portal's historical aggregate representation remains supported when reading old records; reports avoid subtracting new SSPT twice.
 
-Funding is **verified manual**: merchants submit a settled-payment reference; an independent Super Admin must confirm actual settled funds before credit. The form does not debit a bank or process GCash/Maya payments. Unique payment and settlement fingerprints prevent repeat credit. No gateway, auto-top-up or invented opening balance is enabled. Credits and debits lock the same merchant/wallet and commit with their associated approval/financial transaction. Never grant BIR authority or mark BIR connected because a wallet is funded.
+Buyer name, TIN and `customer_address`, document/item `tax_basis_reference`, and applicable `withholding_tax` plus `withholding_basis_reference` are retained. Withholding reduces `net_payable`, not the document gross, output VAT, taxable base or wallet threshold. Gross is preserved in the receipt's legacy `total_due` field; the presentation derives net payable separately. Extra charges must be classified lines. Unknown fields, excessive precision, unsupported tax rates and contradictory quantity/price/amount aliases return 422.
 
-The optional browser queue encrypts payloads and responses with AES-GCM and a passphrase-derived key. API keys and login tokens stay in memory outside IndexedDB. Funding failures are preserved as `funding_required`; a manual retry resumes them. Accepted history cannot starve pending events. The queue displays the latest 1,000 metadata rows and preserves older source records. It is device/browser storage, not an unlimited durable POS archive: keep independent source backups and the recovery passphrase. Real POS integration, capacity benchmarking, official BIR interoperability and automated payment settlement remain separate deployment work.
+## Durable acceptance and wallet
 
-The browser queue requires both `transactions:read` and `transactions:write`: before sending external source data, it authenticates the key's wallet endpoint and checks merchant and branch against the open queue. A foreign merchant/branch key sends no source event. Sandbox keys cannot read the production wallet. A 2xx response alone is insufficient: the SDK requires matching source identifiers plus a durable receipt response (or the portal request UUID and saved document); malformed success responses stay pending. Authentication, unknown outcomes and the first unaccepted source stop sequential replay to preserve legal series order.
+Identity includes merchant, branch, source system, family and external reference; source-event identity is independently unique. Requests are canonicalized only across supported fields. Changed content under an accepted identity returns 409. Seller/branch/family/document-number identity is checked against both portal invoices and API receipts. Never create another source ID or change an original number/date to escape a conflict.
+
+Single acceptance serializes on the tenant. Wallet fee, financial records, receipt snapshot, source inbox, encrypted readiness model, mandatory audit and configured signed callback intent commit together. Capture uses the same wallet fee policy as a new eligible primary sale. Accepted retries and supplementary payment copies are free of another primary sale fee. `402 INSUFFICIENT_WALLET_BALANCE` commits none of these new records or sequence changes. Atomic batches contain 1–50 complete events for one branch, with aggregate funding admission and all-or-nothing writes.
+
+201 identifies a newly durable NUERS record; 200 `duplicate=true` returns its original identifiers. Neither means BIR acceptance. GET status requires read scope and the same live business/branch. Preserve original source JSON in a local transactional outbox; check matching source event/reference, nonempty IDs and `durably_recorded` before local acknowledgment. Unknown outcomes retry unchanged with bounded backoff. Funding failures remain local until replenishment. Browser manual retry is encrypted device storage, not a substitute for source backups.
+
+BIR production transport remains disabled; merchant callbacks use owner-configured, verified and enabled HTTPS receivers with signed delivery and bounded retries. See the maintained webhook guide for the receiver contract. Readiness model version 4 preserves buyer address, CWT, SSPT, source mode and profile identity. No official BIR wire schema, transport verification or certification is claimed.
+
+
+## Live and Sandbox isolation (2026-10-18)
+
+Select a name and environment when creating a key. Both environments require an active business, valid unexpired key, exact registered location, scope, quotas and IP rules. Environment is immutable and derived exclusively from the credential. Do not add an environment field to transaction JSON; unknown fields are rejected.
+
+Sandbox source_capture requires a UUID-shaped source_profile_id for contract mapping, but does not authorize or validate the real profile: Sandbox is not approval evidence. Tax calculation uses the merchant's current VAT classification. nuers_issuance omits source_profile_id. Identical retries return the saved test response; changed identity content and reused test document numbers return 409. Batch test writes commit atomically. Sandbox never touches production receipts, transactions, wallet entries, invoice series, BIR outbox or sales reports. Sandbox JSON detail downloads are test artifacts, not invoices.
+
+Live and Sandbox status IDs cannot be retrieved using the other environment's key. Environment namespaces must also be maintained in external connector outboxes. Rotate keys only within the same environment/location when retrying an accepted event. Manual Retry separates encrypted Live and Sandbox queues and verifies the key environment before transmission.
+
+Admin Wallets & Transaction Pricing controls minimum_transaction_centavos and fee_centavos under optimistic revision checks, privileged MFA and mandatory change reason/audit. The current default is PHP0 minimum and PHP3 fee. A minimum_transaction_centavos of 0 charges every new finalized Live primary sale, including amounts below PHP500. A positive minimum exempts amounts strictly below it. Super Admin can change either setting prospectively. Rules apply prospectively to newly accepted primary sales; gross amount includes VAT and precedes withholding. Payment copies and exact accepted replays do not add a primary-sale fee. Insufficient funds returns 402 and transaction_saved=false; the transaction, receipt, inbox, wallet debit and series change all roll back. Batch funding covers every new eligible sale or none commits. Sandbox returns simulated_fee_centavos only.
+
+## Statutory sale categories (18 October 2026)
+
+The API, Create Invoice, document views and filtered exports share these explicit categories: `regular`, `senior_citizen`, `pwd`, `national_athlete_coach`, `solo_parent`. Seller VAT registration remains the verified business/source snapshot, not an API-key toggle.
+
+For a qualifying sale, send `sales_benefit` containing `category`, `scope`, `beneficiary_name`, `id_number`, `evidence_reference`, and `eligibility_confirmed: true`. Mark each qualifying line `benefit_eligible: true`; split shared or partly eligible quantities from ordinary purchases. Send original prices and original tax types before relief. Use `sales_invoice` for automatic document classification and supply the final discounted `gross_amount`, including any remaining VAT. The source original and complete retry payload must remain unchanged.
+
+| Category | Supported calculation | Eligibility boundary |
+|---|---|---|
+| Senior citizen / PWD | 20% off eligible VAT-exclusive price; applicable VAT exemption | Covered goods/services for the beneficiary's exclusive use, with verified evidence |
+| National athlete / coach | 20% off eligible VAT-exclusive price; ordinary VAT remains on discounted base | Qualifying national athlete/coach with valid PSC evidence and covered purchase |
+| Solo parent | 10% off eligible VAT-exclusive price; applicable VAT exemption | Specified child necessities; child six or younger, annual income below PHP250,000, valid SPIC and booklet |
+
+Solo-parent payloads additionally require `child_birth_date`, `id_valid_until`, `booklet_reference`, and `income_below_250000: true`. Dates are evaluated at the original transaction date in Philippine time. The server rejects an expired supplied ID, a child who has reached seven, missing eligibility evidence, eligible lines without a benefit, and unsupported scopes. Eligible lines cannot also claim a promotional `discount_pct` or a zero-rated export classification. Non-VAT sellers never remove VAT they did not charge.
+
+Covered scope enums:
+
+- Senior/PWD: `restaurant`, `hotel`, `recreation`, `admission`, `medicine`, `medical_dental`, `domestic_transport`, `funeral`.
+- National athlete/coach: `restaurant`, `hotel`, `recreation`, `admission`, `medicine`, `sports_equipment`, `domestic_transport`.
+- Solo parent: `baby_milk`, `baby_food`, `micronutrient_supplements`, `diapers`, `medicine`, `vaccines`, `medical_supplements`.
+
+These are bounded supported benefit programs. The separate 5% basic necessities/prime commodities and utility programs are not included. A scope selection is not government proof of entitlement. The seller must verify actual coverage, original ID/prescription/booklet evidence, exclusive share and required signatures, and retain the supporting record privately.
+
+For one eligible PHP1,120 VAT-inclusive item: senior/PWD total PHP800 (PHP200 discount, PHP120 VAT adjustment); national athlete/coach total PHP896 (PHP200 discount, PHP96 remaining VAT, PHP24 VAT adjustment); solo parent total PHP900 (PHP100 discount, PHP120 VAT adjustment). A non-VAT PHP1,120 item totals PHP896 for a 20% benefit, or PHP1,008 for solo parent, with no VAT adjustment. Inclusive input is reconciled with `subtotal - discount - VAT adjustment`; exclusive input instead adds the remaining computed VAT.
+
+Responses and records expose `sale_category`, `statutory_discount_amount`, and `vat_relief_amount` in PHP. The last field is displayed as **VAT Adjustment**, including the reduction of VAT following the athlete/coach discount; it is zero for exclusive input prices. These amounts are not an additional discount. The configured wallet fee threshold uses final primary-sale gross including remaining VAT and before withholding. Matching retries are not charged again; supplementary payment copies do not create another primary-sale charge.
+
+Apply **Sale Category** in merchant reports, merchant Invoices & Receipts, admin Transactions, or Electronic Invoices & Receipts, then export. CSV and report XLSX carry classification and benefit amounts; report PDF includes the same values. Bulk reports omit beneficiary ID/child details. Authorized original-document views and invoice PDFs display the beneficiary and evidence reference. Sandbox metadata stays separate; its detailed private payload remains encrypted. Public synthetic previews require TEST-/DEMO-/SAMPLE- beneficiary details.
+
+API Integration now offers a sale-category example selector. The detailed PDF developer manual includes complete requests, calculations, evidence requirements, filters, export semantics and primary references.
+
+Sources: [PWD RR 5-2017 via NCDA](https://ncda.gov.ph/disability-laws/implementing-rules-and-regulations-irr/revenue-regulations-no-5-2017-rules-and-regulations-implementing-republic-act-no-10754/), [Senior RR 7-2010](https://elibrary.judiciary.gov.ph/thebookshelf/showdocs/10/55830), [NAAC RR 13-2020 discussion by Senate STSRO](https://legacy.senate.gov.ph/publications/STSRO/Taxbits%20June%20-%20July%202020%20%2818pages%29%200723%20Final%20with%20DG%20edits.pdf), [Solo parent RR 1-2023](https://bir-cdn.bir.gov.ph/local/pdf/RR%20No.%201-2023.pdf), [DSWD explanation](https://www.dswd.gov.ph/solo-parents-entitled-to-discounts-vat-exemption-other-perks-dswd-exec/), [invoice particulars RR 7-2024](https://bir-cdn.bir.gov.ph/BIR/pdf/RR%20No.%207-%202024.pdf).
+
+## Manual discounts (PHP amount or percentage)
+
+Use `manual_discount` at the document level **or** on individual `items[]`. Send original unit prices before discount. The new object requires `type` (`amount` or `percentage`), `value` (non-negative, at most two decimals), and a non-blank `reason` (1–500 characters). A percentage must not exceed 100; an amount must not exceed the original line/document price. Fixed line amounts apply to the whole quantity extension, not each unit.
+
+```json
+"manual_discount": {
+  "type": "amount",
+  "value": "112.00",
+  "reason": "Loyalty discount"
+}
+```
+
+For one VAT-inclusive item with quantity 1 and original `unit_price: "1120.00"`, send `gross_amount: "1008.00"`. The result is manual discount PHP112.00, VATable base PHP900.00, VAT PHP108.00, final gross PHP1008.00. `type: "percentage", value: "10.00"` gives the same result. Put the same object inside one item to discount only that line. Existing `items[].discount_pct` remains supported.
+
+Amounts follow the declared `vat_inclusive` price basis: inclusive discounts include VAT; exclusive discounts reduce the pre-VAT base. A document discount is allocated proportionally across original line extensions in integer centavos; remainder centavos go to the largest fractional shares, with original line order breaking ties. VAT is recalculated on each discounted line using its own tax classification. For a precise ERP-specific allocation, send per-line amount discounts instead. Ordinary discounts do not change VAT registration or make a product VAT-exempt.
+
+Use one method per line. Do not combine a document discount with line discounts or `sales_benefit`; do not combine a line manual discount with a non-zero `discount_pct` or a statutory-eligible line. A basket may contain statutory-eligible items and separate non-eligible items with manual discounts. No discount is applied twice. This field records discounts already reflected in the original invoice at sale time; later conditional rebates require the appropriate correction workflow.
+
+The response includes `calculation.manual_discount_amount`, `discount_amount` (manual plus statutory), `statutory_discount_amount`, and final tax totals, all in PHP. Stored lines preserve `discount_reason` and either `discount_pct` or `fixed_discount_amount` (PHP); the latter is a calculated response field, not a request input. Manual discounts appear in merchant records/reports, admin transactions/documents, PDF copies and filtered exports. Report totals already reflect the discount: do not subtract it again. Sandbox records remain isolated and never debit the Live wallet.
+
+Supply the final discounted `gross_amount`, including VAT and before withholding. Mismatched totals, unsupported fields and invalid/stacked discounts return 422. The configured fee threshold uses that final gross. Once accepted, retries must keep the same discount and reason as well as all other original fields; changed content returns 409 and an identical retry has no second wallet charge. An already accepted source with omitted discount details is not silently rewritten; use the reviewed correction process.
+
+
+## NUERS status and automatic customer receipts (19 October 2026)
+
+Every ERP, POS or e-commerce sales row must show NUERS Status, failure reason, environment, NUERS reference and last attempt. Show Success only after a valid 201 or 200 duplicate acknowledgement with matching source_event_id, external_reference and environment, non-empty id/transaction_id/receipt_id, status=durably_recorded and nuers_status=success. Persist these identifiers atomically with the local outbox acknowledgement.
+
+Show Error plus error.reason and applicable errors field messages for a rejected request. Keep the original sale locally. 402 requires wallet funding; 401/403 require credential or permission correction; 409 requires reconciliation; 422 requires mapping correction. For timeouts, invalid JSON, malformed 2xx or error.outcome=unknown, show Pending confirmation and retry the identical original event. Honor Retry-After and bounded backoff for 429/5xx. Never render server messages as HTML or expose credentials to the customer.
+
+Optional customer_email: one valid checkout email address, maximum 254 characters. Omit or send null when absent. Map the checkout email explicitly; NUERS does not scan arbitrary payload fields. Invalid addresses return 422 before acceptance. Never use a customer address as an API credential.
+
+A newly accepted Live event containing customer_email queues one customer PDF email in the same database transaction. Exact retries return the same record and do not queue another email or fee. Failed/rolled-back events queue no email. Sandbox always returns suppressed_sandbox and never emails customers. Existing transactions are not emailed retroactively.
+
+Email attachments use the same receipt renderer and E-Receipt Logo saved under Merchant Invoice Settings → Logo and Branding. This logo is independent from the Business Profile Picture; both uploads save immediately without administrator approval. Original seller identity, lines, taxes, discounts and totals remain the recorded snapshot. Save branding before the email worker renders the PDF; changes affect subsequent renders and cannot recall an already sent attachment.
+
+Poll GET status_url with the same environment and transactions:read scope for customer_receipt.status and reason. States: not_requested, suppressed_sandbox, queued, preparing, sending, smtp_accepted, failed, uncertain, expired, cancelled. smtp_accepted means the SMTP server accepted the message, not confirmed inbox delivery. Email failures never change a successfully recorded sale to Error. Do not retry the sale to resend mail; use the merchant document Send Copy action after investigating an uncertain delivery.
+
+Merchant transaction, batch and wallet responses do not expose bir_acceptance, bir_connection, bir_status or internal preparation blockers. Display NUERS status in the connector. NUERS Success confirms platform recording; it does not assert government acceptance.
+
+```json
+{
+  "environment": "live",
+  "duplicate": false,
+  "nuers_status": "success",
+  "status": "durably_recorded",
+  "message": "Transaction successfully recorded by NUERS.",
+  "error": null,
+  "id": "EXAMPLE-INBOX-ID",
+  "transaction_id": "EXAMPLE-TRANSACTION-ID",
+  "receipt_id": "EXAMPLE-RECEIPT-ID",
+  "source_event_id": "erpA:invoice:0001",
+  "external_reference": "erpA:INV-0001",
+  "status_url": "https://nuers.net/api/integrations/transactions/EXAMPLE-INBOX-ID",
+  "customer_receipt": {
+    "delivery_id": "EXAMPLE-DELIVERY-ID",
+    "status": "queued",
+    "reason": "Customer receipt is queued for email processing."
+  }
+}
+```
+
+```json
+{
+  "nuers_status": "error",
+  "code": "VALIDATION_FAILED",
+  "message": "The customer email field must be a valid email address.",
+  "error": {
+    "code": "VALIDATION_FAILED",
+    "reason": "The customer email field must be a valid email address.",
+    "retryable": false,
+    "outcome": "rejected"
+  },
+  "errors": {
+    "customer_email": [
+      "The customer email field must be a valid email address."
+    ]
+  }
+}
+```
+
+Client adapter: `/guides/NUERS-Transaction-Status.mjs`. Shared documentation contract: `resources/data/merchant-api-receipts.json`.

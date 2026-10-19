@@ -29,7 +29,7 @@ class MerchantTeamController
         abort_unless($m, 403, 'Team access is managed by the registered business owner.');
         if ($write) {
             abort_if(in_array($m->status, ['suspended', 'inactive'], true), 403, 'Business access is suspended.');
-            if (config('security.enforce_privileged_mfa') && (! $u->mfa_secret || ! $u->api_mfa_verified_at || now()->diffInMinutes($u->api_mfa_verified_at, true) > config('security.privileged_step_up_minutes'))) {
+            if (config('security.enforce_privileged_mfa') && ! app(\App\Services\MfaSession::class)->verified($u)) {
                 abort(response()->json(['message' => 'Verify MFA before changing merchant access.', 'code' => 'MFA_REQUIRED', 'enrollment_required' => ! $u->mfa_secret], 403));
             }
             app(AtomicQuota::class)->admit('merchant-team-write:'.$m->id, 300, 30);
@@ -49,6 +49,16 @@ class MerchantTeamController
         }
 
         return array_map(fn ($x) => ['id' => Uuid::uuid5(Uuid::NAMESPACE_URL, 'nuers-team:'.$id.':'.$x[0])->toString(), 'merchant_id' => $id, 'name' => $x[0], 'description' => $x[1], 'color' => $x[2], 'permissions' => $x[3], 'revision' => 1], app(MerchantTeamAccess::class)->defaults());
+    }
+
+    private function directoryRoles(string $merchant): array
+    {
+        $roles = $this->roles($merchant);
+        if (! collect($roles)->contains('name', MerchantTeamAccess::OWNER_ROLE)) {
+            array_unshift($roles, ['id' => Uuid::uuid5(Uuid::NAMESPACE_URL, 'nuers-business-admin:'.$merchant)->toString(), 'merchant_id' => $merchant, 'name' => MerchantTeamAccess::OWNER_ROLE, 'description' => 'Registered business owner. Full business administration; ownership remains protected.', 'color' => 'blue', 'permissions' => array_keys(MerchantTeamAccess::PERMISSIONS), 'revision' => 0, 'owner_only' => true]);
+        }
+
+        return $roles;
     }
 
     private function ensureRoles(string $id): void
@@ -85,7 +95,7 @@ class MerchantTeamController
         $member = app(MerchantTeamAccess::class)->context($r);
         $owner = ! $member;
 
-        return response()->json(['owner' => $owner, 'merchant' => ['id' => $m->id, 'name' => $m->business_name], 'role' => $owner ? 'Business Owner' : DB::table('merchant_team_roles')->where('id', $member->role_id)->value('name'), 'permissions' => $owner ? array_keys(MerchantTeamAccess::PERMISSIONS) : app(MerchantTeamAccess::class)->permissions($member), 'scope' => $owner ? 'all' : $member->scope, 'terminal_scope' => $owner ? 'all' : $member->terminal_scope])->header('Cache-Control', 'private, no-store');
+        return response()->json(['owner' => $owner, 'merchant' => ['id' => $m->id, 'name' => $m->business_name], 'role' => $owner ? MerchantTeamAccess::OWNER_ROLE : DB::table('merchant_team_roles')->where('id', $member->role_id)->value('name'), 'permissions' => $owner ? array_keys(MerchantTeamAccess::PERMISSIONS) : app(MerchantTeamAccess::class)->permissions($member), 'scope' => $owner ? 'all' : $member->scope, 'terminal_scope' => $owner ? 'all' : $member->terminal_scope])->header('Cache-Control', 'private, no-store');
     }
 
     public function index(Request $r)
@@ -95,13 +105,14 @@ class MerchantTeamController
         // Decrypt only this owner's tenant directory; no cross-tenant PII or plaintext indexed email.
         $all = $this->memberQuery((string) $m->id)->orderBy('tm.created_at')->orderBy('tm.id')->get()->map(fn ($x) => $this->row($x));
         $u = $r->attributes->get('api_actor');
-        $all->prepend(['id' => 'owner', 'user_id' => (string) $u->id, 'name' => $u->name ?? $m->business_name, 'email' => $u->email, 'mobile' => '', 'role_id' => 'owner', 'scope' => 'all', 'branch_ids' => [], 'terminal_scope' => 'all', 'terminal_ids' => [], 'status' => 'active', 'revision' => 0, 'expires_at' => null, 'last_login' => $u->api_authenticated_at, 'mfa_enabled' => (bool) $u->mfa_secret, 'created_at' => $u->created_at, 'protected' => true]);
-        $roleLabels = collect($this->roles((string) $m->id))->pluck('name', 'id')->all();
+        $roles = $this->directoryRoles((string) $m->id);
+        $ownerRole = collect($roles)->firstWhere('name', MerchantTeamAccess::OWNER_ROLE);
+        $all->prepend(['id' => 'owner', 'user_id' => (string) $u->id, 'name' => $m->owner_name ?: ($u->name ?? $m->business_name), 'email' => $u->email, 'mobile' => $m->phone ?? '', 'role_id' => $ownerRole['id'], 'scope' => 'all', 'branch_ids' => [], 'terminal_scope' => 'all', 'terminal_ids' => [], 'status' => 'active', 'revision' => 0, 'expires_at' => null, 'last_login' => $u->api_authenticated_at, 'mfa_enabled' => (bool) $u->mfa_secret, 'created_at' => $u->created_at, 'protected' => true]);
+        $roleLabels = collect($roles)->pluck('name', 'id')->all();
         $branchLabels = DB::table('merchant_branches')->where('merchant_id', $m->id)->pluck('name', 'id')->all();
         $filtered = $all->filter(function ($x) use ($v, $roleLabels, $branchLabels) {
-            return (empty($v['search']) || str_contains(mb_strtolower($x['name'].' '.$x['email'].' '.$x['id'].' '.($x['protected'] ? 'Business Owner' : ($roleLabels[$x['role_id']] ?? '')).' '.($x['scope'] === 'all' ? 'All Branches' : implode(' ', array_map(fn ($id) => $branchLabels[$id] ?? '', $x['branch_ids'])))), mb_strtolower($v['search']))) && (empty($v['role']) || $v['role'] === $x['role_id']) && (empty($v['status']) || $v['status'] === $x['status']) && (empty($v['branch']) || $x['scope'] === 'all' || in_array($v['branch'], $x['branch_ids'], true));
+            return (empty($v['search']) || str_contains(mb_strtolower($x['name'].' '.$x['email'].' '.$x['id'].' '.($x['protected'] ? MerchantTeamAccess::OWNER_ROLE : ($roleLabels[$x['role_id']] ?? '')).' '.($x['scope'] === 'all' ? 'All Branches' : implode(' ', array_map(fn ($id) => $branchLabels[$id] ?? '', $x['branch_ids'])))), mb_strtolower($v['search']))) && (empty($v['role']) || $v['role'] === $x['role_id']) && (empty($v['status']) || $v['status'] === $x['status']) && (empty($v['branch']) || $x['scope'] === 'all' || in_array($v['branch'], $x['branch_ids'], true));
         })->values();
-        $roles = $this->roles((string) $m->id);
         $per = (int) ($v['per_page'] ?? 8);
         $page = (int) ($v['page'] ?? 1);
         $events = DB::table('merchant_team_events')->where('merchant_id', $m->id)->orderByDesc('created_at')->limit(12)->get(['id', 'subject_id', 'actor_id', 'action', 'created_at'])->map(fn ($event) => [...(array) $event, 'created_at' => $this->iso($event->created_at)]);
@@ -110,7 +121,7 @@ class MerchantTeamController
             'members' => ['data' => $filtered->slice(($page - 1) * $per, $per)->values(), 'total' => $filtered->count(), 'page' => $page, 'last_page' => max(1, (int) ceil($filtered->count() / $per))],
             'roles' => array_map(fn ($role) => [...$role, 'user_count' => $all->where('role_id', $role['id'])->where('status', 'active')->count()], $roles), 'permissions' => MerchantTeamAccess::PERMISSIONS, 'branches' => DB::table('merchant_branches')->where('merchant_id', $m->id)->get(['id', 'name', 'code', 'bir_branch_code', 'status']),
             'terminals' => DB::table('merchant_terminals')->where('merchant_id', $m->id)->get(['id', 'name', 'code', 'branch_id', 'status']),
-            'invites' => $all->whereIn('status', ['invited', 'expired'])->values(), 'events' => $events, 'security' => ['password_min' => 12, 'idle_minutes' => config('security.token_minutes'), 'absolute_minutes' => config('security.session_absolute_minutes'), 'step_up_minutes' => config('security.privileged_step_up_minutes'), 'mfa_enforced' => config('security.enforce_privileged_mfa'), 'access_changes_ready' => ! config('security.enforce_privileged_mfa') || ($u->mfa_secret && $u->api_mfa_verified_at && now()->diffInMinutes($u->api_mfa_verified_at, true) <= config('security.privileged_step_up_minutes')), 'smtp_enabled' => ! empty(app(PlatformMail::class)->settings()['enabled'])]])->header('Cache-Control', 'private, no-store');
+            'invites' => $all->whereIn('status', ['invited', 'expired'])->values(), 'events' => $events, 'security' => ['password_min' => 12, 'idle_minutes' => config('security.token_minutes'), 'absolute_minutes' => config('security.session_absolute_minutes'), 'step_up_minutes' => null, 'mfa_challenge' => config('security.mfa_challenge'), 'mfa_enforced' => config('security.enforce_privileged_mfa'), 'access_changes_ready' => ! config('security.enforce_privileged_mfa') || app(\App\Services\MfaSession::class)->verified($u), 'smtp_enabled' => ! empty(app(PlatformMail::class)->settings()['enabled'])]])->header('Cache-Control', 'private, no-store');
     }
 
     private function grants(Request $r, object $m): array
@@ -300,8 +311,8 @@ class MerchantTeamController
         $all = $this->memberQuery((string) $m->id)->orderBy('tm.created_at')->orderBy('tm.id')->get()->map(fn ($x) => $this->row($x));
         $roles = collect($rows['roles'])->keyBy('id');
         $owner = $r->attributes->get('api_actor');
-        $all->prepend(['id' => 'owner', 'name' => $owner->name, 'email' => $owner->email, 'role_id' => 'owner', 'status' => 'active', 'scope' => 'all', 'mfa_enabled' => (bool) $owner->mfa_secret]);
-        $roles->put('owner', ['name' => 'Business Owner']);
+        $all->prepend(['id' => 'owner', 'name' => $m->owner_name ?: $owner->name, 'email' => $owner->email, 'role_id' => 'owner', 'status' => 'active', 'scope' => 'all', 'mfa_enabled' => (bool) $owner->mfa_secret]);
+        $roles->put('owner', ['name' => MerchantTeamAccess::OWNER_ROLE]);
         $this->event($m, (string) $m->id, (string) $r->attributes->get('api_actor')->id, 'exported', ['reason' => $r->input('reason'), 'count' => $all->count()]);
 
         return response()->streamDownload(function () use ($all, $roles) {

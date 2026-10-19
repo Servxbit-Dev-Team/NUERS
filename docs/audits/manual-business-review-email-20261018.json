@@ -1,0 +1,121 @@
+{
+  "date": "2026-10-18",
+  "feature": "Manual business review email",
+  "location": [
+    "Registered Businesses > Review / Manage Status",
+    "Business Details > Documents"
+  ],
+  "kinds": [
+    "changes_requested",
+    "documents_verified",
+    "account_approved"
+  ],
+  "verified_controls": [
+    "Authoritative owner recipient only",
+    "Saved decisions and independent document review required",
+    "Account approval email requires active/onboarded state, five verified originals, all five onboarding checks and evidence",
+    "Explicit confirmation and actor/session/business-bound ten-minute preview",
+    "Encrypted snapshot, transactional outbox and plaintext-safe audit references",
+    "Request ID replay safety, pending deduplication, cooldown and reasoned resend",
+    "Stale decisions, changed recipients, revoked administrators and workflow opt-out rechecked before dispatch",
+    "Uncertain SMTP never automatically replayed",
+    "No account approval or live email performed by deployment"
+  ],
+  "verification": {
+    "backend_tests": 384,
+    "assertions": 4275,
+    "focused_tests": 34,
+    "focused_assertions": 821,
+    "builds": "Laravel and static passed",
+    "ui": [
+      "Changes-request preview with saved corrections",
+      "Explicit queue confirmation and recorded history using isolated no-network SMTP stub",
+      "Approved-account preview from synthetic saved decision",
+      "Save Review keeps the modal open and refreshes the email panel",
+      "390px responsive preview"
+    ]
+  },
+  "package": {
+    "sha256": "c3790369c6454ca1f2c6bdc8de0b724f3aa08f58fb70f13cd5c0b207884bc60e",
+    "files": 51
+  },
+  "live": {
+    "deployed": true,
+    "manual_review_mail_enabled": true,
+    "verification": {
+      "manual_review_email_verified": true,
+      "three_saved_decision_templates": true,
+      "signed_actor_session_bound_preview": true,
+      "request_id_and_pending_deduplication": true,
+      "encrypted_history_and_audited_sends": true,
+      "dispatch_state_and_role_recheck": true,
+      "manual_history_records": 0,
+      "currently_eligible_business_counts": {
+        "changes_requested": 1,
+        "documents_verified": 0,
+        "account_approved": 0
+      },
+      "no_manual_review_email_sent": true,
+      "smtp_preserved": true,
+      "smtp_enabled": true,
+      "dispatch_enabled": true,
+      "worker_last_seen": "2026-10-18 15:12:03",
+      "existing_wallet_ledgers_valid": true,
+      "privileged_mfa": true,
+      "step_up_minutes": 15,
+      "php": "8.4.26"
+    },
+    "additive_empty_notification_history_table_only": true,
+    "existing_wallet_balances_and_ledger_preserved": true,
+    "source_and_assets_verified": true,
+    "accounts_and_mfa_credentials_preserved": true,
+    "roles_preserved": true,
+    "environment_preserved": true,
+    "security_policy_preserved": true,
+    "privileged_mfa": true,
+    "step_up_minutes": 15,
+    "application_records_preserved": true,
+    "smtp_preserved": true,
+    "pricing_preserved": true,
+    "synthetic_fixtures_deployed": false,
+    "php": "8.4.26",
+    "backup_directory": "/var/www/vhosts/nuers.net/nuers-manual-review-mail-backup-20261018-151232",
+    "package_sha256": "c3790369c6454ca1f2c6bdc8de0b724f3aa08f58fb70f13cd5c0b207884bc60e"
+  },
+  "live_http_verification": [
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200,
+      "expected_status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/businesses/00000000-0000-4000-8000-000000000001/review-notifications",
+      "status": 401,
+      "expected_status": 401
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/businesses/00000000-0000-4000-8000-000000000001/review-notifications/preview",
+      "status": 401,
+      "expected_status": 401
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/businesses/00000000-0000-4000-8000-000000000001/review-notifications",
+      "status": 401,
+      "expected_status": 401
+    },
+    {
+      "asset": "/assets/index-Et7Nmy_w.js",
+      "status": 200,
+      "checksum_matches": true
+    },
+    {
+      "asset": "/assets/index-BiCBHI73.css",
+      "status": 200,
+      "checksum_matches": true
+    }
+  ]
+}

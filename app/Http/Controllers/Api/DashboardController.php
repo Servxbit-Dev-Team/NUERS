@@ -1347,7 +1347,7 @@ class DashboardController extends Controller
             ['Audit Trail Management', 'audit_events', 'Traceability for every sensitive platform action', 'FileText'],
             ['Fraud Detection Monitoring', 'fraud_signals', 'AI anomaly detection and smart audit recommendations', 'Brain'],
             ['Revenue Analytics', 'merchant_transactions', 'Forecasting, heatmaps, source mix, and national trends', 'BarChart3'],
-            ['Wallets & Transaction Pricing', 'wallets', 'Prepaid merchant funds and the published fee for eligible sales of ₱500 and above', 'CreditCard'],
+            ['Wallets & Transaction Pricing', 'wallets', 'Prepaid merchant funds and the published fee for finalized sales at the configured minimum amount', 'CreditCard'],
             ['Payment Gateway Management', 'payment_gateways', 'QRPH, GCash, Maya, cards, banks, and reconciliation', 'Wallet'],
             ['System Health Monitoring', 'system_health_checks', 'Runtime, database, API, webhook, and BCDR telemetry', 'Server'],
             ['Notification Center', 'notifications', 'Email, SMS, push, and portal notification operations', 'Bell'],

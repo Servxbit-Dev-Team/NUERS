@@ -234,7 +234,6 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
         section: "Account",
         items: [
           { label: "Business Profile", href: "/merchant/profile", icon: Store },
-          { label: "Branch Management", href: "/merchant/branches", icon: GitBranch },
           { label: "Notifications", href: "/merchant/notifications", icon: Bell },
         ],
       },
@@ -1012,7 +1011,6 @@ const cleanSidebarGroups: Partial<Record<PortalType, NavGroup[]>> = {
     {
       section: "Business",
       items: [
-        { label: "Branches", href: "/merchant/branches", icon: GitBranch },
         { label: "POS & Devices", href: "/merchant/pos-settings", icon: Cpu },
         { label: "API Keys", href: "/merchant/api-keys", icon: Key },
         { label: "Profile", href: "/merchant/profile", icon: Store },

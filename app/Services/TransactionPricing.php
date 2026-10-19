@@ -12,7 +12,7 @@ class TransactionPricing
 
     public const FEE_CENTAVOS = 300;
 
-    public const MINIMUM_CENTAVOS = 50000;
+    public const MINIMUM_CENTAVOS = 0;
 
     public const RETENTION_YEARS = 5;
 
@@ -23,10 +23,11 @@ class TransactionPricing
         abort_unless($row, 503, 'NUERS transaction pricing is temporarily unavailable.');
         abort_unless(ctype_digit((string) $row->fee_centavos) && (int) $row->fee_centavos <= 1000000, 503, 'Transaction fee policy requires review.');
 
+        abort_unless(ctype_digit((string)$row->minimum_transaction_centavos) && (int)$row->minimum_transaction_centavos <= 1000000000000, 503, 'Transaction threshold policy requires review.');
         // Legacy catalogue columns remain for historical registration references.
         return (object) array_merge((array) $row, [
             'name' => 'NUERS Transaction Pricing', 'billing_model' => 'per_transaction',
-            'fee_centavos' => (int) $row->fee_centavos, 'minimum_transaction_centavos' => self::MINIMUM_CENTAVOS,
+            'fee_centavos' => (int) $row->fee_centavos, 'minimum_transaction_centavos' => (int)$row->minimum_transaction_centavos,
             'storage_mb' => null, 'retention_years' => self::RETENTION_YEARS,
             'subscription_required' => false, 'recurring_fee_centavos' => 0,
         ]);
@@ -38,6 +39,7 @@ class TransactionPricing
             throw new InvalidArgumentException('Transaction amount must be non-negative.');
         }
 
-        return $amount >= self::MINIMUM_CENTAVOS ? (int) $this->offer()->fee_centavos : 0;
+        $p=$this->offer();
+        return $amount >= $p->minimum_transaction_centavos ? (int)$p->fee_centavos : 0;
     }
 }

@@ -1,3 +1,4 @@
+import { formatTin } from "@/lib/tin";
 import { useState } from "react";
 import {
   FileText, CheckCircle2, Clock, AlertTriangle,
@@ -187,7 +188,7 @@ export function AdminTaxFilings() {
                       return (
                         <tr key={f.id} className="border-b last:border-0 hover:bg-muted/30">
                           <td className="py-3 text-xs font-medium text-foreground">{f.business_name}</td>
-                          <td className="py-3 font-mono text-xs text-muted-foreground">{f.tin}</td>
+                          <td className="py-3 font-mono text-xs text-muted-foreground">{formatTin(f.tin)}</td>
                           <td className="py-3">
                             <Badge variant="outline" className="text-[10px]">{f.filing_type}</Badge>
                           </td>

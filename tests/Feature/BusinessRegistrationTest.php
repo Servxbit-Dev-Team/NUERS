@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\ScopedThrottleRequests;
 use App\Mail\RegistrationCodeMail;
 use App\Services\RegistrationVerification;
 use Carbon\Carbon;
@@ -98,7 +99,7 @@ class BusinessRegistrationTest extends TestCase
 
     public function test_validation_and_email_binding_prevent_partial_or_privileged_accounts(): void
     {
-        $this->withoutMiddleware(\App\Http\Middleware\ScopedThrottleRequests::class);
+        $this->withoutMiddleware(ScopedThrottleRequests::class);
         $p = $this->payload();
         foreach ([['role' => 'admin'], ['status' => 'active'], ['terms_accepted' => false], ['privacy_accepted' => false], ['tin' => '123'], ['mobile' => '+63123'], ['email' => 'different@example.test'], ['verification_token' => str_repeat('x', 64)], ['rdo_code' => '999'], ['city_code' => '1381100000'], ['barangay_code' => '1381100001'], ['zip_code' => '12'], ['region_code' => '0300000000']] as $override) {
             $this->postJson('/api/registration/business', array_replace($p, $override))->assertUnprocessable();
@@ -223,7 +224,51 @@ class BusinessRegistrationTest extends TestCase
     public function test_verification_at_exact_expiry_is_rejected(): void
     {
         [$id,$code] = $this->challenge();
-        $this->travelTo(Carbon::parse(DB::table('registration_email_verifications')->where('id',$id)->value('expires_at')));
-        $this->postJson('/api/registration/verify-code',['challenge_id' => $id, 'code' => $code])->assertUnprocessable();
+        $this->travelTo(Carbon::parse(DB::table('registration_email_verifications')->where('id', $id)->value('expires_at')));
+        $this->postJson('/api/registration/verify-code', ['challenge_id' => $id, 'code' => $code])->assertUnprocessable();
+    }
+
+    public function test_wrong_code_does_not_expire_the_request_and_correct_retry_succeeds(): void
+    {
+        [$id, $code] = $this->challenge();
+        $deadline = DB::table('registration_email_verifications')->where('id', $id)->value('expires_at');
+        $this->travel(43)->seconds();
+        $wrong = $code === '111111' ? '222222' : '111111';
+        $this->postJson('/api/registration/verify-code', ['challenge_id' => $id, 'code' => $wrong])
+            ->assertUnprocessable()->assertJsonPath('code', 'REGISTRATION_CODE_INCORRECT');
+        $this->assertSame($deadline, DB::table('registration_email_verifications')->where('id', $id)->value('expires_at'));
+        $this->travel(15)->seconds();
+        $this->postJson('/api/registration/verify-code', ['challenge_id' => $id, 'code' => $code])->assertOk()->assertJsonPath('expires_in', 900);
+    }
+
+    public function test_expired_locked_and_used_codes_have_distinct_errors_without_consuming_extra_attempts(): void
+    {
+        [$id, $code] = $this->challenge();
+        DB::table('registration_email_verifications')->where('id', $id)->update(['attempts' => 5]);
+        $this->postJson('/api/registration/verify-code', ['challenge_id' => $id, 'code' => $code])
+            ->assertUnprocessable()->assertJsonPath('code', 'REGISTRATION_CODE_LOCKED');
+        $this->assertEquals(5, DB::table('registration_email_verifications')->where('id', $id)->value('attempts'));
+        $this->travel(11)->minutes();
+        $this->postJson('/api/registration/verify-code', ['challenge_id' => $id, 'code' => $code])
+            ->assertUnprocessable()->assertJsonPath('code', 'REGISTRATION_CODE_EXPIRED');
+        [$fresh, $freshCode] = $this->challenge('fresh@example.test');
+        $this->postJson('/api/registration/verify-code', ['challenge_id' => $fresh, 'code' => $freshCode])->assertOk();
+        $proofHash = DB::table('registration_email_verifications')->where('id', $fresh)->value('proof_hash');
+        $this->postJson('/api/registration/verify-code', ['challenge_id' => $fresh, 'code' => $freshCode])
+            ->assertUnprocessable()->assertJsonPath('code', 'REGISTRATION_CODE_USED');
+        $this->assertSame($proofHash, DB::table('registration_email_verifications')->where('id', $fresh)->value('proof_hash'));
+    }
+
+    public function test_deadline_migration_preserves_existing_expired_and_verified_records(): void
+    {
+        [$id] = $this->challenge();
+        $this->travel(11)->minutes();
+        $before = DB::table('registration_email_verifications')->where('id', $id)->first();
+        (require database_path('migrations/2026_10_18_000001_fix_registration_verification_deadline.php'))->up();
+        $this->assertEquals($before, DB::table('registration_email_verifications')->where('id', $id)->first());
+        $this->assertFalse(Carbon::parse($before->expires_at)->isFuture());
+        $p = $this->payload();
+        (require database_path('migrations/2026_10_18_000001_fix_registration_verification_deadline.php'))->up();
+        $this->postJson('/api/registration/business', $p)->assertCreated();
     }
 }

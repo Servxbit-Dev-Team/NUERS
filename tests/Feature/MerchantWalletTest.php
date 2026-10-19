@@ -114,13 +114,14 @@ class MerchantWalletTest extends TestCase
         $this->assertDatabaseCount('merchant_wallet_entries', 4);
     }
 
-    public function test_free_threshold_and_failed_authority_do_not_charge(): void
+    public function test_small_sales_are_charged_and_failed_authority_does_not_charge(): void
     {
         $key = $this->key();
         $this->series();
-        $this->withHeaders(['X-NUERS-API-Key' => $key])->postJson('/api/integrations/transactions', $this->event(1, '499.99'))->assertCreated()->assertJsonPath('wallet.fee_centavos', 0);
-        $this->assertDatabaseCount('merchant_wallet_entries', 0);
-        $this->fund();
+        $this->withHeaders(['X-NUERS-API-Key' => $key])->postJson('/api/integrations/transactions', $this->event(1, '499.99'))->assertStatus(402);
+        $this->fund(600);
+        $this->postJson('/api/integrations/transactions', $this->event(1, '499.99'))->assertCreated()->assertJsonPath('wallet.fee_centavos', 300);
+        $this->assertDatabaseCount('merchant_wallet_entries', 2);
         $this->partialMock(BirCompliance::class, fn ($mock) => $mock->shouldReceive('assertCanIssue')->andThrow(new HttpException(409, 'Synthetic authority block')));
         $this->postJson('/api/integrations/transactions', $this->event(2))->assertConflict();
         $this->assertEquals(300, DB::table('merchant_wallets')->value('available_centavos'));
@@ -227,7 +228,7 @@ class MerchantWalletTest extends TestCase
         $this->withToken($normal->api_token)->putJson('/api/admin/wallets/pricing', $v)->assertForbidden();
         $this->withToken($this->admin->api_token)->putJson('/api/admin/wallets/pricing', $v)->assertOk();
         $this->series();
-        $this->withHeaders(['X-NUERS-API-Key' => $this->key()])->postJson('/api/integrations/transactions', $this->event())->assertCreated()->assertJsonPath('wallet.fee_centavos', 0);
+        $this->withToken('')->withHeaders(['X-NUERS-API-Key' => $this->key()])->postJson('/api/integrations/transactions', $this->event())->assertCreated()->assertJsonPath('wallet.fee_centavos', 0);
         $this->assertDatabaseCount('merchant_wallet_entries', 0);
         $this->withToken($this->owner->api_token)->getJson('/api/merchant/wallet?to=2026-10-17')->assertOk();
     }
@@ -273,7 +274,7 @@ class MerchantWalletTest extends TestCase
         $this->series();
         DB::table('invoice_series')->where('merchant_id', $this->m)->update(['document_family' => 'payment']);
         $event = [...$this->event(), 'event_type' => 'payment.recorded', 'document_type' => 'payment_receipt'];
-        $this->withHeaders(['X-NUERS-API-Key' => $this->key()])->postJson('/api/integrations/transactions', $event)->assertCreated()->assertJsonPath('wallet.fee_centavos', 0);
+        $this->withToken('')->withHeaders(['X-NUERS-API-Key' => $this->key()])->postJson('/api/integrations/transactions', $event)->assertCreated()->assertJsonPath('wallet.fee_centavos', 0);
         $this->assertDatabaseCount('merchant_wallet_entries', 0);
         $v = ['request_id' => (string) Str::uuid(), 'amount_centavos' => 10000, 'payment_method' => 'bank_transfer', 'payment_reference' => 'SYNTHETIC-REJECTED-123', 'payment_date' => today()->toDateString()];
         $id = $this->withToken($this->owner->api_token)->postJson('/api/merchant/wallet/topups', $v)->assertCreated()->json('topup.id');

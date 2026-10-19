@@ -84,4 +84,66 @@ class SessionPersistenceTest extends TestCase
         $this->assertNull($this->user->fresh()->api_mfa_verified_at);
         $this->getJson('/api/admin/configuration')->assertForbidden()->assertJsonPath('code', 'MFA_REQUIRED');
     }
+
+    public function test_verified_merchant_keeps_current_login_assurance_for_twelve_hours_without_rewriting_verification(): void
+    {
+        config(['security.enforce_privileged_mfa' => true]);
+        $token = $this->login();
+        DB::table('users')->where('id', $this->user->id)->update(['mfa_secret' => 'synthetic-test-only', 'api_mfa_verified_at' => now()]);
+        $verified = $this->user->fresh()->getRawOriginal('api_mfa_verified_at');
+        foreach ([16, 180, 720] as $minutes) {
+            $this->travelTo($this->user->fresh()->api_authenticated_at->copy()->addMinutes($minutes));
+            $this->withToken($token)->getJson('/api/auth/session')->assertOk()->assertJsonPath('session.mfa_required', false);
+            $this->getJson('/api/auth/security-overview')->assertOk()->assertJsonPath('mfa.verified', true);
+            $this->getJson('/api/auth/mfa/status')->assertOk()->assertJsonPath('verified', true)->assertJsonPath('fresh', true);
+            $this->assertSame($verified, $this->user->fresh()->getRawOriginal('api_mfa_verified_at'));
+        }
+        // A new sign-in must still complete MFA, even on this browser.
+        $newToken = $this->login();
+        $this->withToken($newToken)->getJson('/api/auth/session')->assertOk()->assertJsonPath('session.mfa_required', true);
+        $this->getJson('/api/auth/security-overview')->assertForbidden()->assertJsonPath('code', 'MFA_REQUIRED');
+    }
+
+    public function test_admin_browsing_and_changes_keep_login_assurance_until_next_sign_in(): void
+    {
+        DB::table('profiles')->where('id', $this->user->id)->update(['role' => 'super_admin']);
+        config(['security.enforce_privileged_mfa' => true]);
+        $token = $this->login();
+        DB::table('users')->where('id', $this->user->id)->update(['mfa_secret' => 'synthetic-test-only', 'api_mfa_verified_at' => now()]);
+        $this->travel(16)->minutes();
+        $this->withToken($token)->getJson('/api/admin/account-profile')->assertOk();
+        $this->getJson('/api/auth/session')->assertOk()->assertJsonPath('session.mfa_required', false);
+        $this->putJson('/api/admin/configuration/smtp', [])->assertUnprocessable();
+        $this->getJson('/api/admin/account-profile')->assertOk();
+        // A verification timestamp from an earlier login cannot authenticate this session.
+        DB::table('users')->where('id', $this->user->id)->update(['api_mfa_verified_at' => $this->user->fresh()->api_authenticated_at->copy()->subSecond()]);
+        $this->getJson('/api/auth/session')->assertOk()->assertJsonPath('session.mfa_required', true);
+        $this->getJson('/api/admin/account-profile')->assertForbidden();
+        $this->putJson('/api/admin/configuration/smtp', [])->assertForbidden()->assertJsonPath('code', 'MFA_REQUIRED');
+    }
+    public function test_real_totp_verification_lasts_for_this_login_and_is_reset_by_next_login(): void
+    {
+        config(['security.enforce_privileged_mfa' => true]);
+        DB::table('profiles')->where('id', $this->user->id)->update(['role' => 'super_admin']);
+        $secret = 'JBSWY3DPEHPK3PXP'; // Isolated synthetic authenticator only.
+        DB::table('users')->where('id', $this->user->id)->update(['mfa_secret' => \Illuminate\Support\Facades\Crypt::encryptString($secret)]);
+        $token = $this->login();
+        $this->withToken($token)->getJson('/api/admin/account-profile')->assertForbidden()->assertJsonPath('code', 'MFA_REQUIRED');
+        $code = app(\App\Services\Totp::class)->code($secret, (int) floor(now()->timestamp / 30));
+        $this->postJson('/api/auth/mfa/verify', ['code' => $code])->assertOk()->assertJsonPath('verified', true);
+        $verifiedAt = $this->user->fresh()->getRawOriginal('api_mfa_verified_at');
+        $this->travel(2)->hours();
+        $this->getJson('/api/auth/mfa/status')->assertOk()->assertJsonPath('verified', true);
+        $this->putJson('/api/admin/account-profile/notifications', ['revision' => 0, 'workflow_email' => true, 'support_email' => true, 'operations_email' => true])->assertOk();
+        $this->assertSame($verifiedAt, $this->user->fresh()->getRawOriginal('api_mfa_verified_at'));
+        $next = $this->login();
+        $this->withToken($next)->getJson('/api/auth/mfa/status')->assertOk()->assertJsonPath('verified', false);
+        $this->putJson('/api/admin/account-profile/notifications', ['revision' => 0, 'workflow_email' => true, 'support_email' => true, 'operations_email' => true])->assertForbidden()->assertJsonPath('code', 'MFA_REQUIRED');
+        $this->postJson('/api/auth/mfa/verify', ['code' => $code])->assertUnprocessable();
+        $nextCode = app(\App\Services\Totp::class)->code($secret, (int) floor(now()->timestamp / 30));
+        $this->postJson('/api/auth/mfa/verify', ['code' => $nextCode])->assertOk();
+        $this->postJson('/api/auth/logout')->assertOk();
+        $this->getJson('/api/admin/account-profile')->assertUnauthorized();
+    }
+
 }

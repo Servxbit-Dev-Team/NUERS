@@ -1,0 +1,4 @@
+Task "nuers-admin-financial-widgets-install.php" successfully completed in 4 seconds.
+        
+            See details
+        {"deployed":true,"admin_financial_widgets_verified":true,"financial_widgets_visible":true,"registered_merchants_label":true,"records_wallets_access_preserved":true,"file_checksums":true,"no_financial_mutations":true,"financial_summary":{"currency":"PHP","environment":"live","period":"all_time","transaction_amount_centavos":14671776,"nuers_charged_centavos":1800,"charged_transactions":6,"merchant_wallet_centavos":8200,"merchant_deposit_centavos":10000},"backup":"nuers-admin-financial-widgets-back...

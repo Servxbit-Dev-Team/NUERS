@@ -1,3 +1,4 @@
+import { MerchantAccountSecurity } from "@/pages/merchant/security";
 import { AdminAccountProfile } from "@/pages/admin/account-profile";
 import { MerchantUsersPage, AcceptTeamInvitation } from "@/pages/merchant/users";
 import { MerchantWalletPage, AdminWalletConsole } from "@/pages/merchant/wallet";
@@ -29,7 +30,7 @@ import { MerchantBilling } from "@/pages/merchant/billing";
 import { MerchantPosSettings } from "@/pages/merchant/pos-settings";
 import { MerchantApiKeys } from "@/pages/merchant/api-keys";
 import { MerchantProfile } from "@/pages/merchant/profile";
-import { MerchantBranches, BranchReviewQueue } from "@/pages/merchant/branches";
+import { BranchReviewQueue } from "@/pages/merchant/branches";
 
 import { MerchantExpenses } from "@/pages/merchant/expenses";
 import { MerchantInvoices, MerchantLegacyTransactions } from "@/pages/merchant/invoices";
@@ -122,7 +123,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, session, loading, sessionError, sessionInvalid } = useAuth();
   if (loading) return <div role="status" className="ne-session-loading">{sessionError||"Checking your session…"}</div>;
   if (!user) return <Navigate to={sessionInvalid?"/login?session=invalid":"/login"} replace />;
-  if (session?.mfa_required) return <Navigate to="/security/mfa" replace />;
+  if (session?.mfa_required) return <Navigate to={`/security/mfa?returnTo=${encodeURIComponent(window.location.pathname+window.location.search+window.location.hash)}`} replace />;
   return <>{children}</>;
 }
 
@@ -133,7 +134,7 @@ function RequireRole({ role, children }: { role: string | string[]; children: Re
   const allowedRoles = Array.isArray(role) ? role : [role];
   if (!profile) return <div role="status" className="ne-session-loading">{sessionError||"Verifying account permissions…"}</div>;
   if (!allowedRoles.includes(profile.role)) return <Navigate to={roleDefaultPath(profile.role)} replace />;
-  if (session?.mfa_required) return <Navigate to="/security/mfa" replace />;
+  if (session?.mfa_required) return <Navigate to={`/security/mfa?returnTo=${encodeURIComponent(window.location.pathname+window.location.search+window.location.hash)}`} replace />;
   return <>{children}</>;
 }
 
@@ -257,11 +258,12 @@ export default function App() {
         <Route path="vat-reports" element={<Navigate to="/merchant/sales-reports" replace />} />
         <Route path="wallet" element={<MerchantWalletPage />} />
         <Route path="users" element={<MerchantUsersPage />} />
+        <Route path="security" element={<MerchantAccountSecurity />} />
         <Route path="billing" element={<MerchantBilling />} />
         <Route path="pos-settings" element={<MerchantPosSettings />} />
         <Route path="api-keys" element={<MerchantApiKeys />} />
         <Route path="profile" element={<MerchantProfile />} />
-        <Route path="branches" element={<MerchantBranches />} />
+        <Route path="branches" element={<Navigate to="/merchant/api-keys" replace />} />
         <Route path="customers" element={<MerchantCustomers />} />
         <Route path="notifications" element={<AccountSecuritySettings />} />
         <Route path="expenses" element={<MerchantExpenses />} />

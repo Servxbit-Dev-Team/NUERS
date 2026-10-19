@@ -21,11 +21,31 @@ test('portal recovery copy keeps request identity and financial values encrypted
 });
 test('only identity-matched durable responses acknowledge buffered sources',async()=>{
  const {acceptedResponse,assertNoCredentials}=await import('../../src/lib/integrations/offline-outbox.ts');
- const accepted={id:'inbox',receipt_id:'receipt',status:'durably_recorded',source_event_id:event.source_event_id,external_reference:event.external_reference};
+ const accepted={id:'inbox',receipt_id:'receipt',status:'durably_recorded',nuers_status:'success',source_event_id:event.source_event_id,external_reference:event.external_reference};
  assert.equal(acceptedResponse(event,accepted),true);
- for(const body of [null,'<html>login</html>',{}, {...accepted,source_event_id:'wrong'}, {...accepted,receipt_id:undefined},{...accepted,status:'queued'}])assert.equal(acceptedResponse(event,body),false);
+ for(const body of [null,'<html>login</html>',{}, {...accepted,source_event_id:'wrong'}, {...accepted,receipt_id:undefined},{...accepted,receipt_id:''},{...accepted,id:'   '},{...accepted,status:'queued'}])assert.equal(acceptedResponse(event,body),false);
  const portal={...event,schema_version:'NUERS-portal-invoice-1'};
  assert.equal(acceptedResponse(portal,{request_id:event.source_event_id,invoice:{id:'document',status:'draft'}}),true);
  assert.equal(acceptedResponse(portal,{request_id:'another',invoice:{id:'document',status:'issued'}}),false);
  assert.throws(()=>assertNoCredentials({...event,metadata:{api_key:'never-store'}}));assertNoCredentials(event);
+});
+
+test('manual replay selects the authenticated branch and keeps another branch pending',async()=>{
+ const {MerchantOfflineOutbox}=await import('../../src/lib/integrations/offline-outbox.ts');
+ const key=await deriveKey('synthetic-private-recovery-key',new Uint8Array(16));
+ const other=await encryptEvent(key,'m',{...event,branch_code:'00001',source_event_id:'other',external_reference:'OTHER-1',receipt_number:'INV-1'});
+ const own=await encryptEvent(key,'m',{...event,receipt_number:'INV-1'});
+ const box=Object.create(MerchantOfflineOutbox.prototype);box.key=key;box.merchant='m';
+ box.envelopes=async(limit=Infinity,predicate=()=>true)=>[other,own].filter(predicate).slice(0,limit);
+ box.save=async()=>{};
+ const sent=[];const result=await box.replay(async source=>{sent.push(source);return{status:201,body:{id:'inbox',receipt_id:'receipt',status:'durably_recorded',nuers_status:'success',source_event_id:source.source_event_id,external_reference:source.external_reference}}},50,'NUERS-ingestion-1','00000');
+ assert.equal(result.accepted,1);assert.equal(sent.length,1);assert.equal(sent[0].branch_code,'00000');assert.equal(other.state,'pending');assert.equal(own.state,'accepted');
+});
+test('atomic batch replay never mixes branches or accepts a partial response',async()=>{
+ const {MerchantOfflineOutbox}=await import('../../src/lib/integrations/offline-outbox.ts');
+ const key=await deriveKey('synthetic-private-recovery-key',new Uint8Array(16));
+ const events=await Promise.all(['00001','00000'].map(branch=>encryptEvent(key,'m',{...event,branch_code:branch,source_event_id:branch,receipt_number:'INV-1'})));
+ const box=Object.create(MerchantOfflineOutbox.prototype);box.key=key;box.merchant='m';box.envelopes=async(limit=Infinity,predicate=()=>true)=>events.filter(predicate).slice(0,limit);box.save=async()=>{};
+ const result=await box.replayBatch(async list=>{assert.equal(list.length,1);assert.equal(list[0].branch_code,'00000');return{status:201,body:{atomic:true,results:[]}}},50,'00000');
+ assert.equal(result.accepted,0);assert.equal(events[0].state,'pending');assert.equal(events[1].state,'pending');
 });

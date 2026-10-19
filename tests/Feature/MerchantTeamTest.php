@@ -183,6 +183,8 @@ class MerchantTeamTest extends TestCase
     {
         config(['security.enforce_privileged_mfa' => true]);
         $this->withToken($this->owner->api_token)->postJson('/api/merchant/team/roles', [])->assertForbidden()->assertJsonPath('code', 'MFA_REQUIRED');
+        DB::table('users')->where('id', $this->owner->id)->update(['mfa_secret' => 'synthetic-test-only', 'api_authenticated_at' => now()->subHour(), 'api_mfa_verified_at' => now()->subMinutes(40)]);
+        $this->postJson('/api/merchant/team/roles', [])->assertUnprocessable();
         config(['security.enforce_privileged_mfa' => false]);
         [$x,$token] = $this->invite();
         $u = $this->accept($token);
@@ -190,6 +192,11 @@ class MerchantTeamTest extends TestCase
         $this->withToken($u->api_token)->getJson('/api/merchant/records')->assertForbidden()->assertJsonPath('code', 'MFA_REQUIRED');
         $this->getJson('/api/business-accounts/current')->assertForbidden()->assertJsonPath('code', 'MFA_REQUIRED');
         $this->getJson('/api/auth/mfa/status')->assertOk();
+        DB::table('users')->where('id', $u->id)->update(['mfa_secret' => 'synthetic-test-only', 'api_mfa_verified_at' => now()]);
+        $this->travel(16)->minutes();
+        $this->getJson('/api/merchant/records')->assertOk();
+        $this->getJson('/api/business-accounts/current')->assertOk();
+        $this->getJson('/api/auth/session')->assertOk()->assertJsonPath('session.mfa_required', false);
     }
 
     public function test_expiry_cancel_resend_password_policy_and_invalid_tokens_fail_closed(): void
@@ -296,5 +303,33 @@ class MerchantTeamTest extends TestCase
         $this->patchJson('/api/merchant/team/members/'.$row->id, ['revision' => 2, 'action' => 'revoke', 'reason' => 'Synthetic merchant membership offboarding'])->assertOk();
         $this->assertSame($hash, User::find($staff->id)->api_token_hash);
         $this->assertSame('super_admin', DB::table('profiles')->where('id', $staff->id)->value('role'));
+    }
+
+    public function test_registering_owner_is_automatically_projected_as_merchant_admin_in_directory_filters_and_access(): void
+    {
+        $roles = $this->roles();
+        $admin = collect($roles)->firstWhere('name', 'Merchant Admin');
+        $this->getJson('/api/merchant/team')->assertOk()->assertJsonPath('members.data.0.email', $this->owner->email)->assertJsonPath('members.data.0.role_id', $admin['id'])->assertJsonPath('members.data.0.protected', true);
+        $this->getJson('/api/merchant/team?role='.$admin['id'])->assertOk()->assertJsonPath('members.total', 1)->assertJsonPath('members.data.0.user_id', (string) $this->owner->id);
+        $this->getJson('/api/merchant/team?search=Merchant%20Admin')->assertOk()->assertJsonPath('members.total', 1);
+        $directory = $this->getJson('/api/merchant/team')->json();
+        $this->assertSame(1, collect($directory['roles'])->firstWhere('name', 'Merchant Admin')['user_count']);
+        $this->getJson('/api/merchant/access')->assertOk()->assertJsonPath('owner', true)->assertJsonPath('role', 'Merchant Admin');
+        $this->assertDatabaseCount('merchant_team_members', 0);
+        $this->assertDatabaseCount('merchant_team_roles', 0);
+        $this->withToken($this->other->api_token)->getJson('/api/merchant/team?search='.$this->owner->email)->assertOk()->assertJsonPath('members.total', 0);
+    }
+
+    public function test_custom_roles_cannot_hide_the_protected_owner_merchant_admin_projection(): void
+    {
+        $role = (string) Str::uuid();
+        DB::table('merchant_team_roles')->insert(['id' => $role, 'merchant_id' => $this->m, 'name' => 'Custom Viewer', 'description' => 'Synthetic custom role', 'color' => 'blue', 'permissions' => '["documents.view"]', 'revision' => 1, 'created_at' => now(), 'updated_at' => now()]);
+        $state = $this->withToken($this->owner->api_token)->getJson('/api/merchant/team')->assertOk()->json();
+        $admin = collect($state['roles'])->firstWhere('name', 'Merchant Admin');
+        $this->assertTrue($admin['owner_only']);
+        $this->assertSame(1, $admin['user_count']);
+        $this->assertSame($admin['id'], $state['members']['data'][0]['role_id']);
+        $this->getJson('/api/merchant/team?role='.$admin['id'])->assertOk()->assertJsonPath('members.total', 1);
+        $this->assertDatabaseCount('merchant_team_roles',1);
     }
 }

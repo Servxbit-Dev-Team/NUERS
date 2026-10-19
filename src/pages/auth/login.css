@@ -167,3 +167,6 @@
 .nuers-login__google:hover:not(:disabled) { background: #edf3fc; box-shadow: 0 2px 8px #183d7320; }
 .nuers-login__google:disabled { opacity: .6; cursor: wait; }
 .nl-session-notice{background:#edf4ff;border:1px solid #cddffb;border-radius:6px;color:#2c5487;font-size:13px;padding:12px 14px;margin:14px 0}.ne-session-loading{display:grid;place-items:center;min-height:100dvh;background:#f5f9ff;color:#315683;font:14px Inter,sans-serif}
+
+
+.nuers-login__card-footer .ne-software-identity { color:#536b90; font-size:12px; font-weight:600; }

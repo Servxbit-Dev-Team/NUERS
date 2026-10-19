@@ -1,0 +1,1602 @@
+NATIONAL UNIFIED ELECTRONIC RECEIPT SYSTEM
+Exit, Migration &
+Data Portability
+Plan
+Continuity • Secure handover • Verified acceptance
+PRESERVE
+TRANSFER
+VALIDATE
+STRUCTURED RECORDS  |  SECURE TRANSFER  |  CONTROLLED CLOSURE
+SOFTWARE VERSION 1.0.0
+Plan edition 1.0  |  19 October 2026
+Enterprise procedures for merchant exit, system migration and data portability. Includes the current export
+baseline, implementation gaps, operational checklists and acceptance forms.
+
+
+NAVIGATION  |  CLICK A TITLE
+Contents
+Controlled plan and purpose
+4
+Executive policy and readiness
+5
+Exit scenarios and boundaries
+6
+Controlled exit lifecycle
+7
+Roles and decision authority
+8
+Request intake and recipient verification
+9
+Commercial terms and continued access
+10
+Core data and relationship inventory
+11
+Files, settings and scope supplements
+12
+Implemented portability endpoint
+13
+Export contents and known limitations
+14
+Proposed enterprise handover package
+15
+Package layout and data dictionary
+16
+NDJSON structure and integrity validation
+17
+Identity and relationship mapping
+18
+Financial, tax and sales-category fidelity
+19
+Document copies, branding and evidence
+20
+Audit lineage and chain continuity
+21
+Encryption, credentials and key boundaries
+22
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+02 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+NAVIGATION  |  CLICK A TITLE
+Contents / continued
+Secure handover and chain of custody
+23
+Preflight and migration rehearsal
+24
+Cutover architecture and write ownership
+25
+Final extract and cutover runbook
+26
+Reconciliation and acceptance criteria
+27
+Rollback and failed migration handling
+28
+Wallet settlement and financial closure
+29
+Retention, legal holds and disposal
+30
+Secure disposal and residual copies
+31
+Access revocation and retained retrieval
+32
+Hosting migration and location disclosure
+33
+Service cessation and emergency exit
+34
+Illustrative exit schedule and support
+35
+Exit request and scope form
+36
+Handover and migration acceptance record
+37
+Retention and disposal record
+38
+Risk register and completion priorities
+39
+Validation evidence and source baseline
+40
+References, approval and revision history
+41
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+03 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+01 | DOCUMENT CONTROL
+Controlled plan and purpose
+A structured route from NUERS service exit to verified handover and closure.
+Field
+Controlled value
+System
+NUERS - National Unified Electronic Receipt System
+Software / plan edition
+1.0.0 / 1.0 | 19 October 2026
+Document ID
+NUERS-EMP-1.0.0-20261019
+Audience
+Merchant owners, NUERS operations, receiving providers, migration
+engineers, finance, security, privacy and assurance reviewers
+Status
+Prepared operating plan. Service commitments, named owners,
+destination design and execution dates require approval.
+Evidence basis
+Local portability/export implementation, relevant tests, related NUERS
+manuals and selected official guidance.
+Distribution
+Controlled technical and operational reference; no production credentials
+or customer records included.
+Print / version control
+A4, duplex, long-edge binding. Mirrored margins. Printed copies become
+uncontrolled after a newer edition is released.
+This plan defines how to preserve usable business records and continuity when a merchant
+leaves NUERS, changes its connected system, moves to another service provider, or when
+NUERS changes its hosting arrangement or ceases a service.
+Evidence labels: IMPLEMENTED = visible in reviewed code, not proof of live deployment. TESTED = the
+stated isolated software test only. PROPOSED = procedure or package requirement not automatically
+delivered by the current system. UNVERIFIED = evidence not available.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+04 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+01 | DOCUMENT CONTROL
+Executive policy and readiness
+Portability succeeds when the recipient can use and reconcile the data.
+Preserve ownership and lawful access: verify the requester and destination, provide the
+approved merchant scope, and maintain required retrieval after transactional service ends.
+Provide usable records: structured originals, relationships, documents, financial control
+totals, schema information and retained provenance are part of the agreed handover.
+Avoid duplicate business events: migration must not issue new invoices, charge another
+fee, resend customer receipts or replay government submissions unintentionally.
+Prove the result: count, hash, map, import and reconcile before acceptance. Download
+completion alone is insufficient.
+Close in stages: cut over service, settle commercial matters, retain legally required records
+and dispose only of eligible copies under recorded authority.
+Current implementation position
+NUERS provides a scoped streaming NDJSON export with a schema label, table-level record
+counts and SHA-256 values. Selected encrypted business fields are made usable. The reviewed
+endpoint does not create a complete binary-document archive, a universal destination importer,
+or an automatic exit/deletion workflow.
+No merchant has been migrated, deactivated or deleted for this document. No production dataset was
+exported. The plan is ready for review and adaptation to a named destination; successful real migration is
+not claimed.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+05 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+02 | SCOPE AND PRINCIPLES
+Exit scenarios and boundaries
+Select the scenario before defining access, transfer and retention.
+Scenario
+Required scope / distinction
+Merchant service exit
+Transfer the authorized merchant dataset and required evidence to
+the merchant or its approved recipient. Preserve other tenants and
+shared platform secrets.
+ERP / POS / e-commerce
+change
+Move connector configuration and source identity mapping. Existing
+NUERS documents and acceptance history remain authoritative; avoid
+re-importing them as new sales.
+Migration to another ESP or
+platform
+Agree destination schema, tax/document semantics, authority
+dependencies, retention and independent acceptance. No automatic
+transfer of accreditation or issuance authority.
+NUERS hosting/provider
+migration
+Move full service dependencies under NUERS control, including
+protected keys and shared services through separate custody. This is
+broader than a merchant export.
+Contract termination or
+dispute
+Separate write/service suspension, data retrieval, settlement, hold
+and deletion decisions. Provide a verified assisted retrieval path
+where self-service is unavailable.
+Service cessation / provider
+failure
+Activate continuity and emergency exit coordination. Preserve
+available backups, access, evidence, recipient contacts and
+authoritative records before infrastructure closure.
+A personal-data portability request and a company-wide service exit are related but different. A
+merchant export may contain multiple individuals' personal information and financial evidence.
+Its scope, authority and transfer safeguards must be established separately.
+This plan does not authorize an export of another merchant's data, a shared master encryption key,
+proprietary source code or confidential platform records unrelated to the approved scope.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+06 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+02 | SCOPE AND PRINCIPLES
+Controlled exit lifecycle
+D01 - Gate each phase with evidence and an accountable decision.
+ PROPOSED CONTROLLED EXIT LIFECYCLE
+ 01 Authorize
+Scope, owner and destination
+ 02 Prepare
+Inventory, holds and field mapping
+ 03 Prove
+Export, verify and rehearse import
+ 04 Transition
+Freeze, final reconcile and cutover
+ 05 Close
+Accept, retain and securely dispose
+An agreed exit scope becomes an inventory, a verified package, a reconciled destination and a controlled closure
+record.
+The first approved package is used for mapping and rehearsal. A final consistent extract or
+validated change set is produced at cutover. The recipient must demonstrate usability and
+financial consistency before the source is released from operational responsibility.
+Where the current exporter cannot provide a continuous change feed, use a planned write
+freeze and complete final extract. Do not assume that an exported_at timestamp identifies
+every concurrent change or guarantees database/object consistency.
+PROPOSED workflow. The present NDJSON endpoint is one input to the process; it does not automatically
+execute these stages or certify migration completion.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+07 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+03 | GOVERNANCE AND AUTHORIZATION
+Roles and decision authority
+Assign named primary and alternate owners before execution.
+Role
+Accountability
+Merchant owner / authorized
+representative
+Requests scope; confirms authority and recipient; accepts business
+records and destination outcomes.
+NUERS service owner / exit
+manager
+Coordinates milestones, support, service boundaries, exceptions
+and final closure approvals.
+Data custodian / export operator
+Inventories tables/files, captures consistency point, creates verified
+exports and records custody.
+Receiving system owner
+Defines schema and import constraints, secures staging, validates
+the package and signs receipt/acceptance.
+Migration engineer
+Builds mapping, preserves source IDs, executes idempotent imports
+and records transformations and exceptions.
+Finance / reconciliation reviewer
+Validates transaction values, taxes, discounts, wallet ledger,
+deposits and settlement.
+Security / privacy / legal
+reviewer
+Confirms lawful transfer, minimization, recipient identity,
+encryption, retention, holds and permitted disposal.
+Independent acceptance
+reviewer
+Reviews tests, totals, rejected records and cutover evidence
+independently from the operator who produced them.
+Use two-person review for release of sensitive export packages, production cutover and
+irreversible disposal. Emergency authority must be recorded with its reason, exact scope and
+retrospective review. A receiver's technical access does not itself prove permission to receive
+data.
+Contact names, legal entities, support channels and contractual notice periods are intentionally left for the
+approved exit record. No service commitments are invented in this plan.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+08 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+03 | GOVERNANCE AND AUTHORIZATION
+Request intake and recipient
+verification
+EX-01 - Confirm who may request, receive and approve the transfer.
+Step
+Procedure and evidence
+1. Register request
+Create case ID; identify merchant account, requested datasets,
+periods/environments, business purpose and target date.
+2. Verify authority
+Confirm registered ownership or documented delegation. Use approved
+identity evidence and existing contact channels; do not rely only on a
+supplied email or company name.
+3. Verify recipient
+Confirm receiving legal entity, named custodians, destination
+domain/storage location and independently verified public key or approved
+secure channel.
+4. Define restrictions
+Record legal holds, investigations, sensitive personal data, third-party rights
+and exclusions. Explain each withheld or supplemental dataset.
+5. Approve transfer
+Record merchant authorization and relevant privacy/security approvals. Bind
+approval to the exact scope and destination.
+6. Establish acceptance
+Agree schema, record totals, document formats, rejection thresholds,
+delivery acknowledgment and completion criteria before export.
+7. Maintain access
+Provide lawful retrieval through normal or assisted access while protecting
+suspended accounts from new unauthorized writes.
+Section 18 of the Philippine Data Privacy Act addresses a data subject's right to obtain qualifying
+electronically processed personal data in a commonly used structured form. It is not a blanket
+authorization to disclose an entire corporate tenant to any requester. [R1, R2]
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+09 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+03 | GOVERNANCE AND AUTHORIZATION
+Commercial terms and continued
+access
+PROPOSED policy - keep settlement separate from lawful retrieval.
+The exit agreement should define the standard export scope, optional migration assistance,
+notice period, support window, archive access, responsibility for destination import, and any
+disclosed cost. Resolve outstanding amounts through the contract and applicable law; do not
+use a technical lockout to defeat a verified right to retrieve retained records.
+Topic
+Required agreement
+Export and assistance
+Identify included structured export, private-file supplements and
+optional engineering services. State the deliverables and acceptance
+conditions.
+Service suspension
+Separate write/API issuance from authorized read/export access.
+Provide an assisted route if a session, owner account or portal is
+unavailable.
+Archive access
+State who may retrieve records after cutover, how identity is verified,
+response process and applicable retention/hold basis.
+Wallet and deposit
+settlement
+Agree final cut-off, pending funding treatment, disputes and approved
+payout/credit process. Do not infer refund entitlement from an export.
+Destination responsibility
+Receiver owns import mapping, target controls and operational
+readiness; NUERS supplies agreed evidence and resolves verified
+export defects.
+Closure and deletion
+Define eligible copies, retention exceptions, required approvals,
+backup expiry and evidence of completed disposal.
+IMPLEMENTED: the API boundary preserves authorized GET retrieval for suspended merchants while
+restricting writes. Recovery of identity/access, end-to-end fee-dispute handling and a guaranteed request
+SLA still require operational procedures and verification.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+10 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+04 | DATA INVENTORY
+Core data and relationship inventory
+Preserve financial meaning and identifiers, not only table rows.
+Data domain
+Portable business information
+Control totals / relationships
+Business identity
+Registered seller, TIN, address, authorized
+business context and historical seller
+snapshots.
+Merchant ID; source seller
+identity; effective dates.
+Sales and documents
+Transactions, invoices, receipts, line items,
+original references, issue dates, status and
+corrections.
+Counts and monetary totals by
+tenant, period, type and
+environment; parent-child links.
+Tax and discounts
+VAT/non-VAT classifications,
+taxable/exempt/zero-rated bases,
+statutory categories and manual discounts
+where recorded.
+Tax and discount sums; rates
+and calculation basis retained.
+Customers
+Authorized customer profiles, history and
+document relationships.
+Stable customer IDs; snapshot
+vs current profile distinction.
+Wallet / funding
+Available balance, ledger, top-ups and
+adjustments in the entitled export scope.
+Opening + credits - debits =
+closing; sequence, entry hash
+and ledger head.
+Integration intake
+Original source system/event/reference,
+accepted NUERS IDs and request/content
+identity.
+Duplicate/conflict boundaries;
+transaction and receipt
+references.
+Regulatory /
+operational evidence
+Outbox preparations, delivery evidence,
+permits/authorizations, review and hold
+records where available.
+Original provider references
+and evidence status; no
+invented acknowledgment.
+A migration must preserve the source meaning of every financial field. Do not recalculate historical totals
+using a new price, fee threshold, tax treatment or destination default.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+11 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+04 | DATA INVENTORY
+Files, settings and scope
+supplements
+Inventory every dependency required for independent use of the records.
+Asset / area
+Required handover treatment
+Private verification and
+supporting files
+List every in-scope version with logical document ID, type, filename,
+bytes and verified plaintext hash. Supply authorized usable bytes in
+an encrypted package.
+Customer document
+attachments
+Keep relationships, reason/history and approved access scope.
+Metadata alone is not the file.
+Receipt branding
+Preserve dedicated receipt logo, template/settings and render context
+where required. Business profile image and receipt logo are different
+assets.
+Printed / PDF copies
+Supply required document renditions with generation time and hash.
+Keep structured financial data alongside PDFs for reuse.
+Sandbox records
+Inventory separately. The reviewed allowlist is not evidence of
+complete dedicated Sandbox export; obtain and validate a separate
+scope supplement.
+Email and webhook history
+Check current receipt-email and merchant callback tables separately.
+Legacy delivery tables in the allowlist do not prove all newer workflow
+records are included.
+Accounts and credentials
+Supply approved identity/role mapping, not passwords, MFA secrets,
+recovery codes or active API secrets. Re-enroll and issue destination
+credentials.
+Shared platform records
+Provide a scoped extract or attestation where necessary; never hand
+over other tenants or a full shared audit/database dump to one
+merchant.
+PROPOSED supplements must be explicitly inventoried, authorized, produced and verified. The current
+structured exporter does not automatically package these assets into a complete exit archive.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+12 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+05 | CURRENT EXPORT CAPABILITY
+Implemented portability endpoint
+Technical reference for the reviewed source, not a new public integration contract.
+Property
+Reviewed behavior
+Route
+GET /api/businesses/{merchant}/portability
+Authentication
+Authenticated human session through ApiAccess and the API boundary;
+tenant/role, session and applicable MFA checks. This is not the merchant
+ingestion API-key route.
+Role handling
+Controller permits merchant, admin, super_admin and bir roles; a
+merchant is checked against its accessible business context. Operational
+authority and lawful recipient scope must still be verified.
+Wallet entitlement
+Wallet tables are included for super_admin or a user whose accessible
+merchant context matches; ordinary regulator/admin access is not
+assumed to include wallet data.
+Format
+application/x-ndjson; schema label NUERS-portability-1; one header,
+record lines, terminal manifest.
+Response handling
+Streamed download; private, no-store cache directive; route throttle is 3
+requests per minute in the reviewed route definition.
+Audit
+Records tenant.portability.exported with schema context before
+streaming. This event is not proof that the download or destination
+import completed.
+Scoping
+Allowlisted direct merchant queries and relationship-scoped child
+records; several sensitive credential/deduplication fields are excluded.
+Use an approved session-driven download or assisted export workflow. Never place a bearer session token,
+device header value, API key or secret in this PDF, a public URL, command history or recipient package.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+13 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+05 | CURRENT EXPORT CAPABILITY
+Export contents and known
+limitations
+The allowlist is a baseline, not proof of full service portability.
+Implemented behavior
+Required qualification
+Financial and evidence records
+Many transaction, invoice, receipt, source, delivery, review, hold
+and related audit tables are scoped. Confirm inventory against
+every feature used by the merchant.
+Usable selected encrypted fields
+Controller decrypts customer profiles/history, selected customer
+document reasons, top-up references/review notes and internal
+outbox documents. Other encrypted fields may remain ciphertext.
+Private document metadata
+Verification/customer/branch document metadata may be present;
+private_path is excluded for selected tables. Binary file contents are
+not streamed by this endpoint.
+Hash manifest
+Table counts and SHA-256 hashes are produced. The manifest is
+not independently signed or authenticated by a recipient key.
+Database transaction
+Streaming occurs inside a database transaction; actual
+consistent-snapshot behavior depends on the deployed
+engine/isolation. No explicit exported snapshot/log-position contract
+is provided.
+No universal importer
+No reviewed route promises automatic import into another vendor,
+exact round-trip restore or destination acceptance.
+No incremental contract
+No explicit resumable batch/checkpoint or change-data-capture
+contract is exposed here. Large exports and final-delta strategy
+need operational testing.
+A stream can fail after HTTP headers and earlier records have been sent. Missing terminal
+manifest, decryption errors, a false hash_verified value or missing required datasets must
+prevent the package being marked complete.
+Do not send a shared application encryption key to solve ciphertext portability. Use an authorized
+tenant-scoped decrypt-and-re-encrypt supplement, with its own inventory and recipient protection.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+14 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+06 | HANDOVER PACKAGE
+Proposed enterprise handover
+package
+D02 - Wrap the current export with the evidence and files needed for migration.
+ CURRENT EXPORT + CONTROLLED SUPPLEMENTS
+ Current NDJSON
+Records + counts +
+ hashes
+ Private file supplement
+Verified bytes + metadata
+ Context supplement
+Schema + totals + holds
+ Proposed encrypted handover package
+Exact inventory, file hashes and recipient binding
+ Destination staging and verification
+Import mapping + financial reconciliation
+Recipient acknowledgment and exceptions
+The wrapper is a proposed operational deliverable. It is separate from the implemented NUERS-portability-1
+NDJSON response.
+Use a unique package ID and revision. Bind the approved merchant, environments, date
+coverage, recipient, source release, consistency point, exclusions and retention restrictions to
+that package. A corrected package receives a new revision and preserves the previous manifest
+as superseded evidence.
+Do not describe a partial package as complete. The release checklist must identify included, excluded,
+unavailable, unreadable and not-applicable items, with a reason and accountable approval for each
+exception.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+15 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+06 | HANDOVER PACKAGE
+Package layout and data dictionary
+PROPOSED - Agree this directory structure with the receiving system.
+Path / component
+Contents and handling
+00-control/
+Approved scope, README, package revision, file inventory,
+checksum manifest, delivery/acceptance forms and exclusions.
+01-records/tenant.ndjson
+Original structured export bytes, preserved unchanged for hash
+verification.
+02-documents/
+Authorized usable private files and selected PDF renditions, with
+version index and plaintext file hashes. Protect the enclosing
+package.
+03-schema/
+Table/field dictionary; data types; null rules; enums; units;
+dates/timezones; foreign-key/relationship mapping.
+04-reconciliation/
+Record counts and financial totals by merchant, environment,
+period, document type and sales category; exception register.
+05-provenance/
+Scoped audit records, source/destination ID map, transformations,
+provider references and chain-verification context.
+06-configuration/
+Permitted presentation/settings and operational references. No
+shared master key or usable sign-in credentials.
+07-retention/
+Retention/hold schedule, archive owner, authorized retrieval
+procedure and disposal eligibility decisions.
+Use UTF-8 for structured text, preserve identifiers as strings, and define exact decimal or
+integer monetary representation. CSV is a convenience view, not the authoritative source if
+nested or typed information would be lost. Protect CSV consumers against formula injection
+without altering the canonical archive.
+Every delivered file needs a size and hash. Keep a recipient-verifiable manifest outside any optional
+human-readable summary; authenticate that manifest through an approved signature or independently
+confirmed secure channel.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+16 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+06 | HANDOVER PACKAGE
+NDJSON structure and integrity
+validation
+Preserve exact source bytes before parsing or transformation.
+Line type
+Current contract
+header
+type=header; schema=NUERS-portability-1; merchant_id; exported_at;
+descriptive note. exported_at is not an engine commit marker.
+record
+type=record; table; record object. The row fields depend on the current
+database schema and the allowlist.
+manifest
+type=manifest; tables mapping each table to records and sha256;
+manifest_sha256. This is the terminal completion record.
+Validation sequence
+Save the original byte stream securely. Require a valid header and terminal manifest; reject
+truncated, malformed or unexpected trailing content.
+For each table, count its record lines and compute SHA-256 over those exact emitted
+record-line bytes including the terminating LF. Do not parse and reserialize first.
+Compare per-table counts/hashes with the manifest; reject missing, duplicate or unexpected
+required datasets after applying the approved scope.
+The manifest hash is computed over PHP JSON serialization of the tables object with its
+original ordering/encoding. Cross-language verification must reproduce those exact bytes;
+ordinary reformatting can change the hash.
+Check every decryption_error and hash_verified flag. Validate relationship and financial
+control totals independently of byte hashes.
+A matching hash shows byte consistency against that manifest. It does not establish who produced it,
+whether the source query was complete, or whether the destination interpreted the records correctly. Keep
+transport authentication and business reconciliation as separate controls.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+17 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+07 | MAPPING AND SEMANTIC PRESERVATION
+Identity and relationship mapping
+Preserve source identities and maintain a durable cross-reference.
+Source identity
+Destination rule
+Merchant / tenant ID
+Map to one approved destination tenant. Do not use business
+name or TIN display text alone as a relational key.
+Transaction / invoice / receipt ID
+Preserve as a source identifier even if the target allocates a
+different internal ID. Keep a one-to-one map and uniqueness
+constraints.
+Source system + source event +
+external reference
+Retain the complete scoped identity and original canonical/content
+hash where permitted. Prevent replay as a newly issued sale.
+Document number / series
+Preserve original numbers, prefixes, business dates, sequence
+history and status. Do not continue a series unless independently
+authorized for the target.
+Customer ID and snapshot
+Map the current customer master separately from immutable
+buyer/seller snapshots on historical documents.
+Parent / correction links
+Keep line items, credit/debit notes, original_invoice_id and other
+corrective relationships attached to the correct original.
+Actor and audit subject
+Map pseudonymous/source actor IDs without importing
+authentication secrets. Explain unresolved legacy identities
+without rewriting audit history.
+Maintain a mapping register with source table/key, destination entity/key, transformation
+version, import batch, result, validation reference and exception ID. Repeated import of the
+same package must update staging safely or return the original result rather than create
+duplicates.
+Do not infer missing relationships from similar amounts, names or timestamps. Quarantine unresolved
+records, obtain evidence and record the mapping decision.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+18 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+07 | MAPPING AND SEMANTIC PRESERVATION
+Financial, tax and sales-category
+fidelity
+Historical amounts retain their original calculation and evidence context.
+Dimension
+Migration requirement
+Currency and units
+Preserve currency and distinguish PHP decimal amounts from integer
+centavos. Never multiply or divide implicitly; document conversion per
+field.
+VAT and non-VAT
+Retain seller registration snapshot, line tax treatment, VAT rates,
+taxable/exempt/zero-rated bases and recorded totals. Mixed line
+treatments must not be flattened.
+Statutory sales categories
+Preserve senior citizen, PWD, national athletes/coaches and solo parent
+classifications where recorded, plus the applicable evidence references
+and discount/VAT treatment.
+Manual discounts
+Carry line/document discount amounts, percentages or basis, reason and
+recorded calculation context where available. Do not overwrite statutory
+discount provenance.
+Fees
+Preserve charged amount and pricing revision. Destination migration must
+not charge the same accepted event again or recompute fees under
+current rules.
+Dates and status
+Retain original business occurrence/issue dates separately from
+ingestion/import time; preserve offsets or documented timezone
+assumptions. Map statuses explicitly.
+Corrections and
+cancellations
+Retain original and corrective documents and review evidence. Do not
+silently erase or mark originals cancelled merely to fit a destination enum.
+Validation compares exported financial totals with the destination; it does not re-adjudicate historical tax
+eligibility. Where a destination cannot represent a field, retain a searchable source archive and record the
+limitation for approval.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+19 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+07 | MAPPING AND SEMANTIC PRESERVATION
+Document copies, branding and
+evidence
+Make the archive readable without confusing a copy with a new original.
+Provide structured financial records and required human-readable copies together. Preserve the
+original document identity and financial content. A destination-rendered copy must remain
+linked to the original and must not be represented as newly issued by the destination merely
+because it uses a different template.
+Component
+Required control
+Encrypted private file
+Authorized operator verifies original size/plaintext hash, decrypts
+within a protected boundary and packages usable bytes encrypted for
+the recipient.
+Version history
+Keep previous versions, upload/review chronology and recorded
+decisions when included in scope. Do not replace historical evidence
+with only the latest upload.
+Receipt logo and profile
+image
+Export the relevant assets independently. Receipt branding is not
+automatically the business profile picture.
+Rendering context
+Record template/settings revision and generation time for exported
+copies. Current branding can differ from an earlier issued visual
+rendition; disclose this.
+Original vs generated PDF
+Mark generated copies as such. Preserve any retained original file with
+its own hash; do not claim exact historical pixel reproduction without
+an original artifact.
+Offline readability
+Test opening a representative PDF/image set without a NUERS session.
+Check page count, fonts, amounts, customer/seller text and links.
+The current NDJSON stream contains metadata and selected usable text, not a complete attachment/PDF
+archive. File export must follow the existing private access controls and an approved supplemental
+packaging process.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+20 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+07 | MAPPING AND SEMANTIC PRESERVATION
+Audit lineage and chain continuity
+Preserve evidence of origin without disclosing other tenants.
+Retain the source export unchanged, the package manifest, each transformation version and
+the source-to-destination map. Record import attempts, rejected rows, operator identity and
+approvals in a separate migration audit trail. Do not rewrite the original audit events to make
+them look native to the target.
+Evidence
+Preservation requirement
+Scoped audit subset
+The export selects events by relevant subject IDs. A filtered subset of a
+shared hash chain may contain gaps and is not a self-contained
+full-chain proof.
+Chain context
+Preserve existing previous/entry hashes and source sequence/time.
+Obtain a scoped attestation or appropriate checkpoint/context through
+controlled review where needed.
+Wallet ledger
+Validate entry ordering, amounts, previous hash, entry hash, balance
+and head before import. Preserve the original ledger as read-only
+evidence.
+Delivery evidence
+Retain provider references, request/response hashes, authentic
+acknowledgments and uncertainty states. An internal preparation is not
+an external acknowledgment.
+Import lineage
+Record package ID/revision, source key, transformation ID, target key,
+import time, result and review.
+Proof custody
+Record who generated, protected, transferred, received and verified
+each package. Retain receipts independently of temporary download
+links.
+Do not export the entire shared platform audit log to complete one merchant's chain. Protect other tenants
+and use an approved evidence method suited to the reviewer's authority.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+21 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+08 | SECURITY AND TRANSFER
+Encryption, credentials and key
+boundaries
+Portability should remove technical dependency without copying sign-in secrets.
+Item
+Merchant exit
+Whole-service hosting move
+Business records
+Authorized usable export
+protected for recipient.
+Consistent protected
+database/object transfer.
+Shared APP_KEY / master
+keys
+Never included in a tenant
+package.
+Move only through separate
+approved custody; test decryption
+and rollback.
+Passwords, MFA and
+recovery codes
+Do not export as migration
+credentials; re-enroll users at
+target.
+Retain or rotate through a
+controlled identity plan, with
+access testing.
+Merchant API / webhook
+secrets
+Issue destination-specific
+replacements; retire old secrets
+after controlled cutover.
+Assess endpoint/signing continuity
+and rotate only with a tested
+coordinated plan.
+Encrypted business fields
+Decrypt/re-encrypt only authorized
+tenant data; document unreadable
+fields.
+Retain required key versions for all
+supported backups and records.
+Provider credentials /
+certificates
+Re-provision for target authority;
+no assumption of transferable
+entitlement.
+Separate secret transfer, owner
+approval, scope and provider
+constraints.
+Use recipient-specific encryption, verified key fingerprints, restricted storage and controlled
+access expiry. Keep decryption material separate from the package delivery channel. Record
+key references and release approvals, never usable key values, in the migration register.
+Role access in the source application is necessary but does not replace recipient verification, purpose
+limitation or approval of a cross-provider/cross-border transfer.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+22 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+08 | SECURITY AND TRANSFER
+Secure handover and chain of
+custody
+EX-02 - Acknowledge receipt and validate content separately.
+Step
+Procedure and evidence
+1. Stage
+Create the package in restricted storage with named custodians;
+scan/validate files; calculate full-file hashes after finalization.
+2. Protect
+Encrypt for the verified recipient; authenticate the manifest; record package
+version, size, protection method and recipient binding.
+3. Deliver
+Use approved HTTPS/SFTP or controlled object transfer with least privilege,
+expiry and logging. Avoid ordinary unprotected email attachments or public
+URLs.
+4. Confirm receipt
+Recipient acknowledges package ID/version, received bytes/hash, time and
+storage location. An HTTP download event alone is insufficient.
+5. Verify
+Recipient verifies integrity, decryptability, completeness and staging access.
+Any mismatch triggers quarantine and a corrected package revision.
+6. Import and reconcile
+Run the agreed mapping and business checks. Record rejected rows and
+exceptions; no production write enablement yet.
+7. Accept / close
+staging
+Sign acceptance only after criteria pass. Expire temporary links and remove
+eligible staging copies under the agreed retention decision.
+Interrupted transfer resumes only through a supported safe transfer mechanism. The reviewed
+NDJSON endpoint does not promise resumable exports; regenerate and reverify a complete
+package when needed. Avoid mixing bytes from different export attempts.
+A delivery receipt proves possession of bytes. A migration acceptance proves agreed usability and
+reconciliation. A deletion certificate proves a separately authorized disposal action. Keep all three records
+distinct.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+23 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+09 | MIGRATION EXECUTION
+Preflight and migration rehearsal
+EX-03 - Prove the mapping before scheduling the production transition.
+Check
+Required evidence
+Target readiness
+Named tenant, storage/region, database/import engine, encryption,
+access, audit, capacity and operational owner.
+Scope baseline
+Approved inventory including all used features, documents, Sandbox
+records, retention restrictions and exclusions.
+Schema compatibility
+Field dictionary and tested mapping for types, lengths, enums, decimal
+precision, timestamps, IDs and null values.
+Representative rehearsal
+Synthetic or specifically authorized isolated data covering normal,
+high-value, discounted, mixed-tax, corrected and incomplete cases.
+Import behavior
+Deterministic mappings; duplicate import safely detected;
+invalid/unknown fields rejected or quarantined without silent truncation.
+Negative tests
+Truncated stream, wrong hash, missing file, wrong recipient key, foreign
+tenant, orphan line item and conflicting event ID fail safely.
+Performance
+Measure export, transfer, decrypt, import, reconciliation and validation
+at representative volume; record memory/disk and elapsed times.
+Release criteria
+Agree allowable downtime, zero-loss consistency boundary, rollback
+owner and destination acceptance checklist.
+No destination importer or real migration was executed for this plan. The previous backup/restore lab does
+not prove cross-system portability or provide a migration outage estimate.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+24 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+09 | MIGRATION EXECUTION
+Cutover architecture and write
+ownership
+D03 - Retain one authoritative writer across the transition.
+ SINGLE-WRITER TRANSITION
+ NUERS active
+Destination rehearsal is read-only
+ Freeze and checkpoint
+Pause intake and mutating/delivery jobs
+ Final extract + reconciliation
+Catch late records and unresolved outcomes
+ Destination accepted
+Enable one writer; revoke old write access
+ NUERS retained archive
+Authorized retrieval and holds continue
+The destination can be used for rehearsal before cutover, but it must not issue duplicate originals or dispatch
+restored historical work.
+Declare a cutover boundary in both technical and business terms: source commit/checkpoint,
+last accepted external event, invoice series boundary, wallet balance and delivery reconciliation
+state. Ensure all participating ERPs/POS systems understand which endpoint is authoritative
+after that boundary.
+A DNS change alone does not disable source writes. Revoke or restrict old write credentials, stop old
+workers and verify that cached clients cannot continue creating accepted financial events on the source.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+25 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+09 | MIGRATION EXECUTION
+Final extract and cutover runbook
+EX-04 - Move from rehearsal evidence to a controlled production transition.
+Stage
+Action / release gate
+1. Approve window
+Confirm merchant, receiver, operations, finance and security readiness;
+communicate impact and rollback decision point.
+2. Preserve recovery
+Take and verify an appropriate recoverable source backup; record
+keys/release and ensure legal holds remain intact.
+3. Freeze
+Pause source intake and mutating jobs as agreed; drain in-flight commits;
+stop outbound mail/webhook/provider workers. Record unresolved external
+outcomes.
+4. Capture final state
+Produce a consistent final export plus required file/configuration
+supplements. Use a verified change-capture method only if implemented and
+rehearsed; otherwise a full final extract.
+5. Import
+Load into controlled destination staging/target; preserve source IDs; suppress
+issue/send/charge side effects; record import map and exceptions.
+6. Reconcile
+Compare final counts, hashes, relationships, money, documents, audit
+context, numbering and pending deliveries with the approved criteria.
+7. Accept and switch
+Obtain signed acceptance; enable one destination writer; coordinate
+connector endpoints and new credentials; retain source read/archive access.
+8. Observe
+Monitor duplicates, rejected events, totals, customer document access and
+delivery queues. Keep an incident and rollback path active.
+Do not disable the only usable source archive or release decrypting keys for destruction merely because
+the destination application is reachable.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+26 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+09 | MIGRATION EXECUTION
+Reconciliation and acceptance
+criteria
+EX-05 - Apply deterministic checks and document every exception.
+Domain
+Minimum acceptance criterion
+Record completeness
+Counts match for each agreed table/type/period/environment;
+exclusions and unavailable records separately enumerated and
+approved.
+Identity / relationships
+Source IDs uniquely mapped; no foreign-tenant rows; no orphan items,
+receipt links, corrections or customer associations.
+Financial control totals
+Source and target totals match in exact units for
+gross/net/tax/discount/fees. No undocumented rounding or duplicated
+sale/payment recognition.
+Wallet / funding
+Ledger balances and references reconcile; pending
+deposits/adjustments/disputes have an owner and resolution plan.
+Documents
+All required file versions present with matching hashes; representative
+copies render correctly without an active NUERS session.
+Audit / status
+Original provenance retained; status mappings approved; external
+acknowledgments remain authentic and distinguishable from internal
+preparation.
+Environment
+Live and Sandbox remain separate; test data cannot affect live balances
+or reporting.
+Operational use
+Authorized destination users can search, view, export and support the
+migrated scope; credentials and tenant restrictions pass.
+Default acceptance rule: no unexplained loss, duplicate business identity, money mismatch or
+missing required document. A documented exception requires the accountable
+merchant/service owner and relevant finance/security reviewer; it must not be disguised as a
+passed control.
+Reconcile at aggregate and record level. Matching totals alone can hide offsetting errors or misassigned
+customers/tenants.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+27 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+09 | MIGRATION EXECUTION
+Rollback and failed migration
+handling
+Keep the business authoritative even when the transition fails.
+Failure point
+Recovery action
+Before source freeze
+Stop rehearsal/import work; preserve diagnostics; correct mapping
+or package defects. Source remains authoritative.
+After freeze, before destination
+writes
+If the agreed window expires or validation fails, discard/quarantine
+failed target staging, confirm no external side effects, then resume
+the source under an approved decision.
+After destination begins writing
+Pause both sides; preserve all new destination events; reconcile
+accepted identities, numbers, wallet effects and external sends
+before reverse synchronization. Never blindly switch to a stale
+source database.
+Corrupt or incomplete package
+Reject the package revision, preserve evidence and obtain a
+complete corrected export. Do not manually patch original bytes
+and reuse the old manifest.
+Recipient compromise
+Suspend delivery/access, revoke transfer credentials, preserve
+evidence, notify approved response owners and assess exposure
+before resuming.
+Unresolvable target limitation
+Retain an approved searchable source archive; agree a revised
+scope or destination. Do not certify complete migration without
+usable required data.
+Rollback is a controlled transition with its own source-of-truth boundary. The exit manager
+records who decided, why, what was restored, where new data was retained and how duplicate
+issuance/transmission was prevented.
+The RTO/RPO targets in the separate recovery plan apply only when approved for their defined service
+scope. Migration downtime must be estimated from its own rehearsals and contractual acceptance.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+28 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+10 | CLOSURE AND CONTINUITY
+Wallet settlement and financial
+closure
+An exported balance is evidence, not an executed payout.
+Item
+Closure procedure
+Final balance
+Record the cut-off timestamp, ledger sequence/head and
+available/reserved amounts. Reconcile charges and credits through
+that boundary.
+Pending deposits
+Identify submitted, reviewed, credited, rejected and uncertain
+deposits; match payment evidence and avoid double credit.
+Adjustments / disputes
+Record unresolved adjustments, refunds, charge disputes and their
+accountable owner. Preserve notes and evidence under authorized
+access.
+Settlement decision
+Apply the contract and approved finance/legal decision for any refund,
+transfer or retained credit. Communicate calculation and timing to the
+merchant.
+Execution
+Use the authorized settlement mechanism; capture external reference
+and approval. Do not issue a refund simply by changing a database
+balance.
+Post-settlement evidence
+Record ledger entries, final reconciliation, receipt of funds if applicable
+and remaining exceptions.
+Destination opening balance
+A destination operational wallet is a separate financial arrangement.
+Do not treat a copied NUERS balance as money received by the new
+provider.
+Preserve historical pricing revisions and recorded fees. Migration/retry of an already accepted
+event must not create a second NUERS transaction fee. Supplementary documents and
+payment records must not be counted as a new original sale merely because they are imported.
+No wallet settlement, refund or financial transfer is performed by this documentation task or by the current
+NDJSON export.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+29 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+10 | CLOSURE AND CONTINUITY
+Retention, legal holds and disposal
+D04 - Separate service termination from data-disposal authority.
+ MIGRATION ACCEPTANCE DOES NOT AUTOMATICALLY DELETE DATA
+ Verified migration acceptance
+Identity, money, documents and lineage
+ Retain under valid basis
+Tax records, legal holds, audit,
+disputes and required backups
+ Dispose when authorized
+Expired temporary exports and
+ eligible copies only
+ Restricted archive
+Owner + review/release date
+ Deletion evidence
+Method + verifier + exceptions
+Closing an account, finishing a migration and deleting retained records are distinct decisions with different
+evidence.
+Create an asset-level retention register with purpose/basis, owner, retention trigger, applicable
+period, hold status, archive location, authorized retrieval and review date. Determine applicable
+tax/privacy/contract retention with qualified review; do not copy a static dashboard label as the
+legal rule.
+IMPLEMENTED: document holds and independently reviewed written release references are recorded.
+Releasing a hold retains originals; the reviewed hold-release response explicitly states that no purge is
+implemented.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+30 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+10 | CLOSURE AND CONTINUITY
+Secure disposal and residual copies
+EX-06 - Dispose only after authority, acceptance and retention checks.
+Scope
+Required treatment
+Temporary export/staging
+Expire transfer access; delete eligible local/download/staging copies after
+acceptance and approved retention. Record residual locations.
+Active source records
+Retain where legally/contractually required or under hold. Any eligible
+tenant disposal needs a separate scoped authorized procedure and
+independent verification.
+Shared storage
+Never wipe a shared database, volume or master key to delete one
+tenant. Identify tenant-specific copies and dependencies safely.
+Backups and replicas
+Record retained backup sets and expiry dates. Prevent routine
+restoration from silently resurrecting disposed data without reapplying
+the approved disposition ledger.
+Keys
+Destroy only keys that are eligible and exclusively associated with the
+disposed scope, with dependencies checked. Shared or still-needed
+decrypting keys must remain.
+Provider-managed media
+Obtain contractual disposal evidence or service-specific attestation
+where appropriate; distinguish logical deletion from physical media
+sanitization.
+Evidence
+Record authority, exact assets, method/tool/version, execution time,
+verifier, failures, retained exceptions and next review.
+Select sanitization methods suited to the medium, confidentiality and custody model. NIST SP
+800-88 Rev. 2 provides a sanitization-program reference; a successful application delete call by
+itself is not a media-sanitization certificate. [R3]
+Deletion must not precede verified handover or override a valid hold/retention obligation. This plan does
+not claim that automated tenant purge or cryptographic erasure is implemented in NUERS.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+31 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+10 | CLOSURE AND CONTINUITY
+Access revocation and retained
+retrieval
+Retire operational access without losing required archive access.
+Access class
+Cutover / closure control
+API write keys
+Disable old writes at the agreed boundary; verify requests fail safely;
+keep required read-only retrieval through approved separate access.
+Webhook and mail dispatch
+Stop historical queue replay; reconcile outstanding outcomes;
+rotate/revoke old receiver secrets after the final agreed delivery state.
+Merchant/team sessions
+Review authorized archive users and revoke unnecessary
+sessions/grants. Re-enroll target MFA and destination roles
+independently.
+Migration operators
+Expire temporary access, storage links and destination permissions
+after acceptance; retain audited break-glass access only if approved.
+Provider administration
+Remove old administrative/service accounts only after backup, DNS,
+key and archive dependencies are verified.
+Archive retrieval
+Publish a controlled request route with identity verification, scope
+approval, access logging, retention limits and escalation.
+Emergency/hold access
+Maintain authorized legal/regulatory access as applicable; verify
+external requester authority and exact scope rather than treating a
+role label as sufficient.
+Complete revocation tests from an independent session/client. A UI status change does not by itself prove
+that cached tokens, background workers, transfer links or provider credentials can no longer act.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+32 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+11 | PROVIDER AND SERVICE CONTINUITY
+Hosting migration and location
+disclosure
+PLANNED providers do not establish current data residency or transfer approval.
+Provider / location
+Planning position and required decision
+Dataplugs
+Intended candidate; exact facility, country, workload and
+primary/recovery role remain unassigned.
+Contabo
+Intended candidate; region, storage role, backup independence and
+operational ownership must be confirmed.
+AWS Singapore / Hong Kong
+Candidate regions ap-southeast-1 / ap-east-1; account, resource
+roles, key locations and replication design remain unassigned.
+Current environment
+Actual production app/database/object/backup/key/log locations
+were not inventoried for this PDF. Obtain verified resource-level
+evidence before migration.
+Cross-border transfer
+Map each dataset, recipient/subprocessor, destination and
+protection. Record required assessments, agreements and
+approvals before moving production data.
+A whole-service move requires consistent database and object recovery, release/configuration
+parity, key custody, network/TLS/DNS changes, identity access, schedulers, callbacks, email and
+monitoring. It must preserve the original tenant boundaries and existing
+ledger/sequence/idempotency controls.
+The owner previously confirmed these providers/regions are intended future choices, not the
+deployed arrangement. Do not list them as active copies, guaranteed failover locations or
+certified residency in a merchant exit statement.
+Personal-data accountability remains relevant when processing is transferred to another party. The
+applicable controller/processor roles and agreements require review for the specific service and transfer.
+[R1]
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+33 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+11 | PROVIDER AND SERVICE CONTINUITY
+Service cessation and emergency
+exit
+Prepare an exit route before the primary operator or provider becomes unavailable.
+Trigger: planned shutdown, contract/provider termination, sustained outage, loss of critical
+access or a formal decision to discontinue a service.
+Stabilize: assign an exit commander, preserve backups/keys/evidence, prevent
+uncoordinated deletion, identify available authoritative copies and stop unsafe new issuance.
+Communicate: notify verified affected merchants with scope, interim retrieval method,
+support contact, proposed transition dates and known limitations; avoid unsupported
+guarantees.
+Recover access: use approved continuity and key-custody procedures; maintain
+independent access to contracts, domains, backups and the authorized contact register.
+Deliver: prioritize complete recoverable merchant datasets and required records; document
+missing or unrecoverable scope; obtain recipient acknowledgment and validation.
+Close responsibly: maintain required retention and retrieval, resolve provider custody and
+settlement, then dispose only eligible copies with evidence.
+Consider contractual escrow or independent custody for necessary continuity artifacts where
+justified. The agreement must define release triggers, beneficiaries, scope, key access and
+testing. No escrow service, insolvency arrangement or automatic fallback operator is claimed to
+exist.
+Use the NUERS Backup Procedure and Disaster Recovery Plan for technical restoration controls. Its isolated
+local test results are not evidence that an emergency cross-provider exit has succeeded.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+34 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+12 | SCHEDULE AND COMMUNICATIONS
+Illustrative exit schedule and
+support
+PROPOSED planning guide - replace with measured and agreed dates.
+Phase
+Indicative working
+window
+Deliverable / gate
+Intake and verification
+Days 1-2
+Approved requester, recipient, scope and
+contacts.
+Inventory and design
+Days 3-5
+Data dictionary, assets, holds, gaps and
+target mapping.
+Package and rehearsal
+Days 6-10
+Verified sample/full package, import tests and
+exception register.
+Final readiness
+Days 11-15
+Performance estimate, resolved defects,
+cutover and rollback approval.
+Cutover
+Agreed maintenance
+window
+Final consistent state, reconciliation, recipient
+acceptance and single writer.
+Observation and closure
+Agreed post-cutover
+period
+Stable operation, settlement, archive access,
+revocation and eligible disposal evidence.
+These intervals are neither legal deadlines nor contractual SLAs. Data volume, recipient
+readiness, provider access, object count, exceptions and retention constraints determine the
+actual schedule. Assign owners and dates in the exit case; communicate a revised plan when a
+gate fails.
+Communication record
+Each update should state case/package ID, completed facts, outstanding gaps, impact on
+access, next action/owner and next update time. Notify the merchant before a write freeze or
+credential change and provide precise retry/cutover guidance to connected-system owners.
+Do not promise that settlement, regulator approval, data deletion or an external provider's import will
+complete by a date not agreed with the responsible party.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+35 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+13 | OPERATIONAL TEMPLATES
+Exit request and scope form
+Use one controlled case per tenant/service scope.
+Field
+Required entry
+Case / authorization
+Case ID; requester; legal entity; merchant/account IDs; authority
+evidence; approving owner.
+Scenario / purpose
+Merchant exit, connector change, provider migration or cessation;
+business purpose; requested completion.
+Destination
+Receiving entity/system/version; named custodian; verified contact;
+data location; transfer method/key fingerprint.
+Data scope
+Environment; periods; document types; customers; taxes/discounts;
+wallet; attachments; audit/evidence; settings.
+Required supplements
+Private files; PDFs; Sandbox; current delivery history; branding;
+decrypted business fields; dictionary.
+Restrictions
+Holds; retention basis; privacy limitations; third-party data; exclusions
+and reason.
+Acceptance
+Counts; totals; file hashes; relationship checks; source-ID mapping;
+permitted exceptions; approvers.
+Service boundary
+Freeze/cutover; source write end; destination write start; retained
+retrieval; observation and rollback.
+Commercial / support
+Agreed assistance; charges if any; wallet settlement; support/notice
+terms; escalation.
+Sign-off
+Merchant authorization; recipient acceptance of scope; NUERS owner;
+security/privacy and finance where relevant.
+Do not attach usable credentials to this form. Keep any sensitive identity proof or customer-level exception
+list in a restricted evidence store referenced by case ID.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+36 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+13 | OPERATIONAL TEMPLATES
+Handover and migration acceptance
+record
+Record received, verified and accepted as separate states.
+Control
+Evidence / sign-off field
+Package receipt
+Package ID/revision; source release; scope; encrypted bytes/hash;
+received time; recipient identity; custody reference.
+Integrity
+Header/schema valid; terminal manifest present; table counts/hashes
+match; package signature/channel verified; decryptability confirmed.
+Import
+Importer/mapping version; target tenant; started/completed time;
+inserted/mapped/rejected counts; idempotent-repeat result.
+Business validation
+Transactions/receipts/items; financial/tax/discount/fee totals; wallet;
+source IDs; status; Live/Sandbox separation.
+Document validation
+File/version completeness; plaintext hashes; sample rendering;
+original/copy distinction; branding context.
+Provenance / access
+Source audit preserved; mapped lineage; required archive access;
+target permissions and confidentiality tests.
+Exceptions
+Exception ID; affected records/value; risk; owner; resolution date;
+explicit acceptance or rejection.
+Cutover decision
+Go/no-go; merchant owner; receiving owner; NUERS exit manager;
+finance/security reviewers; timestamp.
+Closure prerequisites
+Settlement decision; retained-copy register; revocation tests; disposal
+approvals; support owner.
+Acceptance wording: "The undersigned accept package [ID/revision] for the specified scope subject only to
+the recorded exceptions. This confirms agreed migration validation; it does not certify regulatory approval
+or authorize deletion of retained records."
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+37 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+13 | OPERATIONAL TEMPLATES
+Retention and disposal record
+A completion record must identify what remains and why.
+Field
+Required evidence
+Authority
+Case/change ID; owner approval; applicable retention/hold review;
+eligibility decision and reviewer.
+Asset scope
+Exact tenant/dataset/file versions; active/staging/replica/backup
+locations; package and record identifiers.
+Retained exceptions
+Basis; hold reference; archive owner; access route; review/expiry
+trigger; dependency on retained keys.
+Disposal method
+Logical deletion, media sanitization, provider disposal or eligible
+cryptographic erasure; tool/service/version and scope limitations.
+Execution
+Operator; start/end UTC/PHT; job/output reference; failures/retries;
+affected asset count.
+Verification
+Independent verifier; read/access tests; provider evidence; logs and
+hashes where appropriate.
+Backups
+Residual backup sets; scheduled expiry; restrictions; disposition ledger
+to apply after any restoration.
+Certification
+Authorized sign-off stating completed scope and exceptions; no claim
+of physical sanitization without supporting evidence.
+Suggested closure statement: "The specified eligible copies were disposed of using the
+recorded method on [date]. Records listed in the retained-copy register remain protected for
+the stated purpose/basis. This statement does not cover unlisted recipient copies or unverified
+provider media."
+This is a reusable record template. No real NUERS records were deleted, no hold was released and no
+disposal certificate was issued by preparing this PDF.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+38 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+14 | READINESS AND VALIDATION
+Risk register and completion
+priorities
+Close product and operational gaps before promising complete portability.
+Risk / gap
+Required mitigation and accountable role
+Missing assets/new workflows
+Compare every used feature with the export allowlist;
+supplement files, Sandbox, branding and current delivery
+records. Data custodian + application lead.
+Ciphertext without usable content
+Inventory remaining encrypted fields; produce authorized
+tenant-scoped usable supplements without shared keys. Security
++ export operator.
+Inconsistent concurrent export
+Prove engine snapshot/isolation and object boundary or use a
+controlled freeze/final full extract. Database + application leads.
+Unsigned / incomplete stream
+Require terminal manifest, exact hashes and
+recipient-authenticated packaging. Export operator + receiver.
+No validated importer
+Build and rehearse destination mapping; test duplicates, money,
+document rendering and failure cases. Receiving system owner.
+Audit subset not full-chain proof
+Preserve original hashes and provide scoped verification
+context/attestation without foreign-tenant disclosure. Assurance
++ security.
+Access or settlement dispute
+Maintain verified assisted retrieval and clear settlement/retention
+decisions. Service owner + finance/legal.
+Premature deletion
+Separate retention/hold approval, archive acceptance and
+disposal verification. Data owner + independent reviewer.
+Status at issue: these are explicit readiness requirements, not completed remediation claims. Assign dates
+and evidence in the actual exit project; document any accepted residual risk.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+39 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+14 | READINESS AND VALIDATION
+Validation evidence and source
+baseline
+Limited isolated test evidence supports the current export description.
+Three existing portability-related feature tests were executed on 19 October 2026 using
+isolated in-memory SQLite fixtures. Result: 3 tests, 27 assertions passed under PHPUnit
+11.5.55 / PHP 8.5.9, in 0.695 seconds. No production export or third-party migration was
+performed.
+Test / source
+What it supports
+MerchantWalletTest portability case
+Owned wallet data appears; other tenant access is rejected;
+regulator output excludes wallet entries in that tested scenario.
+MerchantCustomerTest portability
+case
+Usable customer profile/history appears; selected identity hash
+is excluded; foreign tenant access is rejected.
+DurableWorkflowTest portability case
+Scoped new evidence export and independent hold-release
+behavior in the tested fixture.
+TenantPortability service
+Current table allowlist, relational scoping and selected column
+exclusions.
+TenantPortabilityController
+NDJSON header/record/manifest behavior, selected decryption,
+wallet entitlement and pre-stream audit event.
+ApiAccess / ApiBoundary / routes
+Human session and role/tenant access, applicable MFA,
+suspended-write restrictions and route throttle.
+The tests are not a complete column-level confidentiality audit, large-volume benchmark,
+all-feature inventory or cross-system round-trip test. Production engine isolation, large exports,
+file supplementation, recipient transfer and destination acceptance require separate evidence.
+Selected source SHA-256 values, the test execution record and PDF quality checks are retained with this
+plan's supporting files. Code review does not prove that the same release is deployed online.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+40 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished
+
+
+15 | REFERENCES AND APPROVAL
+References, approval and revision
+history
+Maintain the plan with each material data-model or provider change.
+[R1] National Privacy Commission - Republic Act No. 10173. Sections 18 and 21 provide
+relevant portability/accountability context. Apply the actual scope and lawful basis through
+qualified review.
+privacy.gov.ph/data-privacy-act-/
+[R2] National Privacy Commission - Right to data portability. Guidance on the
+personal-data right and its scope.
+privacy.gov.ph/right-to-data-portability/
+[R3] NIST SP 800-88 Rev. 2 - Guidelines for Media Sanitization. Reference for the
+disposal program; not a NUERS sanitization certification.
+csrc.nist.gov/pubs/sp/800/88/r2/final
+Internal alignment: NUERS Technical Specifications and System Manual 1.0.0; Backup
+Procedure and Disaster Recovery Plan 1.0.0; reviewed portability/governance source and tests.
+The supplied ESP presentation lists an exit/migration/data-portability plan as a documentary
+item; that source alone is not proof of current accreditation or full compliance.
+Approval and maintenance
+Approval pending: NUERS service owner, data/security/privacy owner, operations lead and
+finance/legal reviewers as relevant. Each executed migration also requires the merchant and
+recipient's scope/acceptance approval. Review at least annually and after significant schema,
+key, storage, provider, legal or service changes.
+Edition 1.0 | 19 October 2026: Initial plan for NUERS software 1.0.0. Includes implemented
+export behavior, explicit gaps, proposed migration/closure procedures, operational forms and
+limited isolated test evidence.
+Official references checked on 19 October 2026. Proposed timelines and procedures are not contractual or
+statutory guarantees. No destination migration, accreditation, settlement or secure-disposal certification is
+asserted.
+NUERS 1.0.0  |  Exit, Migration & Data Portability Plan
+41 / 41
+19 OCT 2026  |  Controlled plan  |  Current capabilities and proposed procedures are distinguished

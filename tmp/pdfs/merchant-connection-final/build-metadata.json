@@ -1,0 +1,174 @@
+{
+  "pages": 42,
+  "titles": [
+    [
+      1,
+      "Merchant API Connection Guide"
+    ],
+    [
+      2,
+      "Your route to a working connection"
+    ],
+    [
+      3,
+      "From verified account to API key"
+    ],
+    [
+      4,
+      "Copy the connection configuration"
+    ],
+    [
+      5,
+      "Keep Sandbox and Live separate"
+    ],
+    [
+      6,
+      "Authentication and credential care"
+    ],
+    [
+      7,
+      "Four endpoints for your connector"
+    ],
+    [
+      8,
+      "Required event fields"
+    ],
+    [
+      9,
+      "Line items and optional details"
+    ],
+    [
+      10,
+      "Document types and tax treatments"
+    ],
+    [
+      11,
+      "Complete non-VAT invoice copy"
+    ],
+    [
+      12,
+      "VAT and mixed-product invoices"
+    ],
+    [
+      13,
+      "Prices, discounts and withholding"
+    ],
+    [
+      14,
+      "Senior, PWD, athlete and solo parent"
+    ],
+    [
+      15,
+      "Benefit example and expected totals"
+    ],
+    [
+      16,
+      "cURL and Postman quick start"
+    ],
+    [
+      17,
+      "Node.js: one controlled send"
+    ],
+    [
+      18,
+      "PHP: request and transport handling"
+    ],
+    [
+      19,
+      "PHP: validate the acknowledgement"
+    ],
+    [
+      20,
+      "Understand a successful acceptance"
+    ],
+    [
+      21,
+      "Look up and reconcile a transaction"
+    ],
+    [
+      22,
+      "Check pricing and available balance"
+    ],
+    [
+      23,
+      "Send up to 50 events atomically"
+    ],
+    [
+      24,
+      "Deliver sales after an internet outage"
+    ],
+    [
+      25,
+      "Duplicate protection and retry policy"
+    ],
+    [
+      26,
+      "Merchant-operated manual retry"
+    ],
+    [
+      27,
+      "Connect your HTTPS receiver"
+    ],
+    [
+      28,
+      "Choose events and process the envelope"
+    ],
+    [
+      29,
+      "Verify every signed request"
+    ],
+    [
+      30,
+      "PHP signature-verification core"
+    ],
+    [
+      31,
+      "Webhook inbox, retries and rotation"
+    ],
+    [
+      32,
+      "HTTP status and recovery reference"
+    ],
+    [
+      33,
+      "Protect the connection in production"
+    ],
+    [
+      34,
+      "Prove the connection before going Live"
+    ],
+    [
+      35,
+      "Reconcile records and request support"
+    ],
+    [
+      36,
+      "Connection essentials at a glance"
+    ],
+    [
+      37,
+      "Amount or percentage, invoice or line"
+    ],
+    [
+      38,
+      "Allocation, reconciliation and reporting"
+    ],
+    [
+      39,
+      "Show a truthful NUERS status"
+    ],
+    [
+      40,
+      "Success and error examples"
+    ],
+    [
+      41,
+      "Map checkout email and saved branding"
+    ],
+    [
+      42,
+      "Track delivery independently"
+    ]
+  ],
+  "minimum_body_y": 104.6
+}

@@ -1,0 +1,2 @@
+Task "nuers-merchant-dashboard-wallet-install.php" successfully completed in 3 seconds. See details
+{"deployed":true,"merchant_dashboard_wallet_verified":true,"wallet_card_available":true,"topup_entry_available":true,"records_wallets_access_preserved":true,"file_checksums":true,"no_financial_mutations":true,"wallet_balances_verified":true,"backup":"nuers-merchant-dashboard-wallet-backup-20261018-225728"}

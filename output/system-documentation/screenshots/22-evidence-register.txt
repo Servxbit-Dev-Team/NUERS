@@ -1,0 +1,286 @@
+- complementary "admin navigation":
+  - link "NUERS dashboard":
+    - /url: /super-admin
+    - img "NUERS — National Unified Electronic Receipt System"
+  - button "Collapse navigation":
+  - navigation:
+    - heading "Overview" [level=2]
+    - link "Dashboard":
+      - /url: /super-admin
+      - generic: Dashboard
+    - link "Live Transaction Monitor":
+      - /url: /monitoring
+      - generic: Live Transaction Monitor
+    - heading "E-Invoicing Operations" [level=2]
+    - link "Electronic Invoices & Receipts":
+      - /url: /invoices
+      - generic: Electronic Invoices & Receipts
+    - button "Expand Electronic Invoices & Receipts":
+    - link "Transactions":
+      - /url: /super-admin/transactions
+      - generic: Transactions
+    - button "Expand Transactions":
+    - link "BIR Transmission Center":
+      - /url: /super-admin/eis-transmissions
+      - generic: BIR Transmission Center
+    - link "Reconciliation & Exceptions":
+      - /url: /super-admin/reconciliation
+      - generic: Reconciliation & Exceptions
+    - link "Summary List of Sales":
+      - /url: /super-admin/tax-filings
+      - generic: Summary List of Sales
+    - heading "Taxpayer Management" [level=2]
+    - link "Registered Businesses":
+      - /url: /super-admin/merchants
+      - generic: Registered Businesses
+    - button "Expand Registered Businesses":
+    - link "Taxpayer Onboarding":
+      - /url: /super-admin/taxpayer-onboarding
+      - generic: Taxpayer Onboarding
+    - button "Expand Taxpayer Onboarding":
+    - link "PTI / PTT Management":
+      - /url: /super-admin/pti-ptt
+      - generic: PTI / PTT Management
+    - button "Expand PTI / PTT Management":
+    - link "API Integrations":
+      - /url: /super-admin/api-platform
+      - generic: API Integrations
+    - heading "Compliance & Security" [level=2]
+    - link "ESP Accreditation":
+      - /url: /accreditation
+      - generic: ESP Accreditation
+    - button "Expand ESP Accreditation":
+    - link "Compliance Management":
+      - /url: /super-admin/compliance
+      - generic: Compliance Management
+    - button "Expand Compliance Management":
+    - link "Security & Incidents":
+      - /url: /super-admin/security
+      - generic: Security & Incidents
+    - button "Expand Security & Incidents":
+    - link "Immutable Audit Logs":
+      - /url: /super-admin/audit
+      - generic: Immutable Audit Logs
+    - button "Expand Immutable Audit Logs":
+    - link "Data Governance & Portability":
+      - /url: /super-admin/data-archive
+      - generic: Data Governance & Portability
+    - heading "Reports" [level=2]
+    - link "Analytics & Reports":
+      - /url: /super-admin/reports
+      - generic: Analytics & Reports
+    - button "Expand Analytics & Reports":
+    - link "BIR Reports & Exports":
+      - /url: /super-admin/tax-filings
+      - generic: BIR Reports & Exports
+    - button "Expand BIR Reports & Exports":
+    - heading "System Administration" [level=2]
+    - link "Infrastructure Health":
+      - /url: /super-admin/system-health
+      - generic: Infrastructure Health
+    - button "Expand Infrastructure Health":
+    - link "Backup & Disaster Recovery":
+      - /url: /super-admin/backups
+      - generic: Backup & Disaster Recovery
+    - link "Configurations & Changes":
+      - /url: /system
+      - generic: Configurations & Changes
+    - button "Expand Configurations & Changes":
+    - link "Users & Permissions":
+      - /url: /super-admin/users-rbac
+      - generic: Users & Permissions
+    - button "Expand Users & Permissions":
+    - link "Support Inbox":
+      - /url: /super-admin/support
+      - generic: Support Inbox
+    - link "Wallets & Transaction Pricing":
+      - /url: /super-admin/wallets
+      - generic: Wallets & Transaction Pricing
+  - generic "Software name and version": NUERS · Version 1.0.0
+  - paragraph:
+    - text: DIGITAL PHILIPPINES.
+    - text: BRIGHTER TOMORROW.
+- banner:
+  - button "Toggle navigation" [expanded]:
+  - searchbox "Search transactions"
+  - link "Notifications":
+    - /url: /super-admin/notifications
+  - link "Settings":
+    - /url: /system
+  - generic "ND NUERS Documentation Admin Super Administrator":
+    - generic: ND
+    - strong: NUERS Documentation Admin
+    - generic: Super Administrator
+- main:
+  - heading "ESP Accreditation & Compliance" [level=1]
+  - paragraph: RMC No. 110-2026 · Solution-specific evidence, review stages and operational deadlines
+  - button "Refresh":
+    - text: Refresh
+  - button "Export evidence":
+    - text: Export evidence
+  - paragraph: Accreditation
+  - paragraph: Pending verification
+  - paragraph: Solution
+  - paragraph: NUERS v1.0.0
+  - paragraph: Certificate
+  - paragraph: No verified certificate
+  - paragraph: Audit journal
+  - paragraph: Hash chain intact
+  - heading "Production authorization" [level=2]
+  - list:
+    - listitem: Verified BIR-issued solution accreditation certificate is not recorded.
+    - listitem: A current accreditation validity period is required.
+    - listitem: Annex A documentary requirements are incomplete or unverified.
+    - listitem: All seven mandatory BIR accreditation stages must pass.
+    - listitem: Taxpayer PTI Electronic Invoice authority and supporting evidence are required; CAS PTU/AC is insufficient.
+    - listitem: Written client-taxpayer authorization is required for ESP integration services.
+    - listitem: Current taxpayer EIS certification is required.
+    - listitem: Taxpayer Permit to Transmit is required separately from PTI.
+    - listitem: BIR production credentials and key material are not registered.
+    - listitem: Verified BIR production transport is not implemented; certification acknowledgements are simulations.
+    - listitem: The authorized BIR interface and official schema mapping have not been verified.
+    - listitem: Authenticated BIR production response verification is not implemented.
+  - paragraph: PTI, taxpayer EIS certification, PTT and ESP accreditation are separate approvals. Recording evidence does not issue a government permit.
+  - paragraph: Transmission
+  - paragraph: Within 3 calendar days
+  - paragraph: From the transaction date; original due date retained.
+  - paragraph: Outage recovery
+  - paragraph: 3 calendar days
+  - paragraph: From recorded restoration; separate recovery deadline.
+  - paragraph: Critical incident report
+  - paragraph: Within 24 hours
+  - paragraph: Written report to the concerned RDO/LTS.
+  - paragraph: Accreditation lifecycle
+  - paragraph: 5 years · annual review
+  - paragraph: Renewal at least 60 days before expiry. Certificate evidence pending.
+  - paragraph: Start the local evidence register for this solution version. All requirements begin as pending.
+  - button "Start evidence register":
+    - text: Start evidence register
+  - text: Annex A · 17 documentary requirements
+  - generic: 0/17 verified
+  - generic: "01"
+  - paragraph: Sworn statement, notarized, electronically notarized or apostilled
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "02"
+  - paragraph: SEC Certificate of Registration
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "03"
+  - paragraph: Latest General Information Sheet received by SEC, if applicable
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "04"
+  - paragraph: Authority of representative and certifying employee, resolution and government IDs
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "05"
+  - paragraph: Latest audited financial statements
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "06"
+  - paragraph: Required insurance or financial assurance
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "07"
+  - paragraph: Company profile
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "08"
+  - paragraph: SEC registration of joint venture, contract or agreement, as applicable
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "09"
+  - paragraph: Standard service-level agreement between ESP and client
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "10"
+  - paragraph: Screenshots showing software name and version
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "11"
+  - paragraph: Online/offline indicator screenshot, if applicable
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "12"
+  - paragraph: List and samples of principal and supplementary documents
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "13"
+  - paragraph: "Report samples: senior citizen, PWD, athletes/coaches, solo parent, audit trail and others as applicable"
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "14"
+  - paragraph: "System manual: architecture, lineage, hosting/data location, security, identity/key management, incident response and service levels"
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "15"
+  - paragraph: "Third-party assessments: EO 119, layered security, code review/VAPT, ISO 27001/27017/27018 and SOC 1/2"
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "16"
+  - paragraph: Backup and disaster recovery plan with tested RTO and RPO
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "17"
+  - paragraph: Exit, migration and data portability plan
+  - paragraph: Evidence pending
+  - generic: pending
+  - text: Seven mandatory stages
+  - generic: 0/7 verified
+  - generic: "01"
+  - paragraph: Documentary completeness review
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "02"
+  - paragraph: Fit-and-proper and financial capacity review
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "03"
+  - paragraph: Technical architecture and end-to-end data-flow review
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "04"
+  - paragraph: Data privacy, EO 119 and cybersecurity assessment
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "05"
+  - paragraph: System/solution demonstration
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "06"
+  - paragraph: Interoperability and end-to-end transmission testing
+  - paragraph: Evidence pending
+  - generic: pending
+  - generic: "07"
+  - paragraph: Load, stress, concurrency, scalability, failover, backup and recovery testing
+  - paragraph: Evidence pending
+  - generic: pending
+  - heading "Evidence beyond dashboard counts" [level=3]
+  - paragraph: Independently verifiable systems must collectively support 5 million transactions and 1,000 active accounts annually for each of the preceding three years. Local transaction totals do not establish this requirement.
+  - paragraph: Material changes require prior BIR approval and revalidation. Documentary completeness alone does not establish accreditation.
+  - generic: Operational incidents & restoration
+  - text: Incident title
+  - textbox "Incident title"
+  - text: Severity
+  - combobox "Severity":
+    - option "Critical" [selected]
+    - option "High"
+    - option "Medium"
+    - option "Low"
+  - text: Detected at (PHT)
+  - textbox "Detected at (PHT)"
+  - text: Evidence reference
+  - textbox "Evidence reference"
+  - paragraph: Record actual incidents. This register does not send reports or notifications to BIR.
+  - button "Record incident"
+  - paragraph: No operational incidents recorded.
+  - generic: Source interpretation & records
+  - paragraph: The supplied circular and Annex A are the primary implementation references.
+  - paragraph: Annex A contains 17 requirements. Slides 32–33 omit joint-venture item 8 and renumber subsequent items.
+  - paragraph: The capacity requirement concerns verifiable supported systems over each preceding year; current NUERS dashboard totals alone do not establish it.
+  - paragraph: External certificates, BIR-supervised testing, hosting/data-residency attestations and legal approval require actual evidence.
+  - paragraph: Preserve taxpayer records through service exit and migration. The monitor exports transaction records and transmission history without a payment-status restriction. Requested BIR extracts and incident reports still require authorized delivery through the prescribed channels.
+- contentinfo:
+  - generic: © 2026 NUERS. All rights reserved.
+- region "Notifications alt+T"

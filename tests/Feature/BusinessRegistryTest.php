@@ -79,6 +79,7 @@ class BusinessRegistryTest extends TestCase
         $this->putJson('/api/business-registry/'.$x['id'], $p)->assertOk()->assertJsonPath('business.registry_revision', 2);
         $this->putJson('/api/business-registry/'.$x['id'], $p)->assertConflict();
         $csv = $this->get('/api/business-registry/export?per_page=1')->assertOk()->streamedContent();
+        $this->assertStringNotContainsString('eis_status', strtok($csv, "\n"));
         $this->assertStringContainsString("'=FORMULA()", $csv);
         $this->getJson('/api/business-registry/'.$x['id'])->assertOk()->assertJsonPath('business.documents', 0)->assertJsonMissingPath('business.account.api_token');
     }

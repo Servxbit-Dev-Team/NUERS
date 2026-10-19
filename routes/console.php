@@ -158,6 +158,16 @@ Schedule::command('notifications:reconcile')->hourly()->withoutOverlapping();
 // Unclaimed registration documents expire; claimed account evidence is retained.
 Artisan::command('registration:prune-staged-documents', function () {
     if (!Schema::hasTable('merchant_verification_documents')) return;
+    if (Schema::hasTable('verification_upload_sessions')) {
+        foreach (DB::table('verification_upload_sessions')->where('expires_at', '<', now())->limit(500)->get() as $upload) {
+            DB::transaction(function () use ($upload) {
+                $current = DB::table('verification_upload_sessions')->where('id', $upload->id)->where('expires_at', '<', now())->lockForUpdate()->first();
+                if (! $current) return;
+                \Illuminate\Support\Facades\Storage::disk('local')->deleteDirectory('verification-uploads/'.$current->id);
+                DB::table('verification_upload_sessions')->where('id', $current->id)->delete();
+            });
+        }
+    }
     $count=0;
     foreach(DB::table('merchant_verification_documents')->whereNull('merchant_id')->where('created_at','<',now()->subDay())->orderBy('id')->limit(500)->get() as $row) {
         DB::transaction(function () use($row,&$count) {
@@ -172,3 +182,14 @@ Artisan::command('registration:prune-staged-documents', function () {
     $this->info("Removed {$count} expired, unclaimed registration uploads; account evidence retained.");
 });
 Schedule::command('registration:prune-staged-documents')->daily()->withoutOverlapping();
+
+Schedule::command('merchant-webhooks:work --limit=100 --max-seconds=45')->everyMinute()->withoutOverlapping(5);
+
+// Erase expired unused authenticator setup secrets; active devices stay intact.
+Artisan::command('security:prune-mfa-setups', function () {
+    if (!Schema::hasTable('account_mfa_devices')) return;
+    $count = DB::table('account_mfa_devices')->where('state', 'pending')->where('expires_at', '<=', now())
+        ->update(['state'=>'expired', 'encrypted_secret'=>null, 'setup_binding'=>null, 'updated_at'=>now()]);
+    $this->info("Expired {$count} unused authenticator setups.");
+})->purpose('Erase expired authenticator setup secrets');
+Schedule::command('security:prune-mfa-setups')->everyTenMinutes()->withoutOverlapping();

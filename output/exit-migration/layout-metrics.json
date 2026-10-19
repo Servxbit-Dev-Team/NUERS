@@ -1,0 +1,192 @@
+[
+  {
+    "page": 4,
+    "title": "Controlled plan and purpose",
+    "bottom": 257.7
+  },
+  {
+    "page": 5,
+    "title": "Executive policy and readiness",
+    "bottom": 329.9
+  },
+  {
+    "page": 6,
+    "title": "Exit scenarios and boundaries",
+    "bottom": 235.7
+  },
+  {
+    "page": 7,
+    "title": "Controlled exit lifecycle",
+    "bottom": 149.9
+  },
+  {
+    "page": 8,
+    "title": "Roles and decision authority",
+    "bottom": 217.5
+  },
+  {
+    "page": 9,
+    "title": "Request intake and recipient verification",
+    "bottom": 261.5
+  },
+  {
+    "page": 10,
+    "title": "Commercial terms and continued access",
+    "bottom": 216.9
+  },
+  {
+    "page": 11,
+    "title": "Core data and relationship inventory",
+    "bottom": 240.5
+  },
+  {
+    "page": 12,
+    "title": "Files, settings and scope supplements",
+    "bottom": 185.1
+  },
+  {
+    "page": 13,
+    "title": "Implemented portability endpoint",
+    "bottom": 251.3
+  },
+  {
+    "page": 14,
+    "title": "Export contents and known limitations",
+    "bottom": 167.9
+  },
+  {
+    "page": 15,
+    "title": "Proposed enterprise handover package",
+    "bottom": 149.9
+  },
+  {
+    "page": 16,
+    "title": "Package layout and data dictionary",
+    "bottom": 193.1
+  },
+  {
+    "page": 17,
+    "title": "NDJSON structure and integrity validation",
+    "bottom": 200.5
+  },
+  {
+    "page": 18,
+    "title": "Identity and relationship mapping",
+    "bottom": 219.1
+  },
+  {
+    "page": 19,
+    "title": "Financial, tax and sales-category fidelity",
+    "bottom": 211.9
+  },
+  {
+    "page": 20,
+    "title": "Document copies, branding and evidence",
+    "bottom": 204.5
+  },
+  {
+    "page": 21,
+    "title": "Audit lineage and chain continuity",
+    "bottom": 233.1
+  },
+  {
+    "page": 22,
+    "title": "Encryption, credentials and key boundaries",
+    "bottom": 219.1
+  },
+  {
+    "page": 23,
+    "title": "Secure handover and chain of custody",
+    "bottom": 217.9
+  },
+  {
+    "page": 24,
+    "title": "Preflight and migration rehearsal",
+    "bottom": 288.5
+  },
+  {
+    "page": 25,
+    "title": "Cutover architecture and write ownership",
+    "bottom": 161.9
+  },
+  {
+    "page": 26,
+    "title": "Final extract and cutover runbook",
+    "bottom": 263.7
+  },
+  {
+    "page": 27,
+    "title": "Reconciliation and acceptance criteria",
+    "bottom": 151.3
+  },
+  {
+    "page": 28,
+    "title": "Rollback and failed migration handling",
+    "bottom": 206.7
+  },
+  {
+    "page": 29,
+    "title": "Wallet settlement and financial closure",
+    "bottom": 180.3
+  },
+  {
+    "page": 30,
+    "title": "Retention, legal holds and disposal",
+    "bottom": 178.9
+  },
+  {
+    "page": 31,
+    "title": "Secure disposal and residual copies",
+    "bottom": 221.7
+  },
+  {
+    "page": 32,
+    "title": "Access revocation and retained retrieval",
+    "bottom": 273.5
+  },
+  {
+    "page": 33,
+    "title": "Hosting migration and location disclosure",
+    "bottom": 212.1
+  },
+  {
+    "page": 34,
+    "title": "Service cessation and emergency exit",
+    "bottom": 289.9
+  },
+  {
+    "page": 35,
+    "title": "Illustrative exit schedule and support",
+    "bottom": 167.1
+  },
+  {
+    "page": 36,
+    "title": "Exit request and scope form",
+    "bottom": 210.9
+  },
+  {
+    "page": 37,
+    "title": "Handover and migration acceptance record",
+    "bottom": 208.7
+  },
+  {
+    "page": 38,
+    "title": "Retention and disposal record",
+    "bottom": 217.5
+  },
+  {
+    "page": 39,
+    "title": "Risk register and completion priorities",
+    "bottom": 222.3
+  },
+  {
+    "page": 40,
+    "title": "Validation evidence and source baseline",
+    "bottom": 210.1
+  },
+  {
+    "page": 41,
+    "title": "References, approval and revision history",
+    "bottom": 185.9
+  }
+]

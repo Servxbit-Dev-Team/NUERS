@@ -1,6 +1,6 @@
 {
-  "_jspdf.es.min-BGwtXShk.js": {
-    "file": "assets/jspdf.es.min-BGwtXShk.js",
+  "_jspdf.es.min-D6cACiDb.js": {
+    "file": "assets/jspdf.es.min-D6cACiDb.js",
     "name": "jspdf.es.min",
     "isDynamicEntry": true,
     "imports": [
@@ -29,13 +29,13 @@
     "src": "node_modules/@fontsource/inter/files/inter-latin-700-normal.woff2"
   },
   "node_modules/canvg/lib/index.es.js": {
-    "file": "assets/index.es-C4djaSw3.js",
+    "file": "assets/index.es-b6sdLELe.js",
     "name": "index.es",
     "src": "node_modules/canvg/lib/index.es.js",
     "isDynamicEntry": true,
     "imports": [
       "src/main.tsx",
-      "_jspdf.es.min-BGwtXShk.js"
+      "_jspdf.es.min-D6cACiDb.js"
     ]
   },
   "node_modules/dompurify/dist/purify.es.mjs": {
@@ -56,19 +56,31 @@
     "src": "node_modules/html2canvas/dist/html2canvas.esm.js",
     "isDynamicEntry": true
   },
+  "node_modules/pdfjs-dist/build/pdf.mjs": {
+    "file": "assets/pdf-CfhDiWmk.js",
+    "name": "pdf",
+    "src": "node_modules/pdfjs-dist/build/pdf.mjs",
+    "isDynamicEntry": true
+  },
+  "node_modules/pdfjs-dist/build/pdf.worker.min.mjs": {
+    "file": "assets/pdf.worker.min-CjEcRF4W.mjs",
+    "src": "node_modules/pdfjs-dist/build/pdf.worker.min.mjs"
+  },
   "src/main.tsx": {
-    "file": "assets/main-B66esMF2.js",
+    "file": "assets/main-D4jLDpSh.js",
     "name": "main",
     "src": "src/main.tsx",
     "isEntry": true,
     "dynamicImports": [
+      "node_modules/pdfjs-dist/build/pdf.mjs",
       "node_modules/html-to-image/es/index.js",
-      "_jspdf.es.min-BGwtXShk.js"
+      "_jspdf.es.min-D6cACiDb.js"
     ],
     "css": [
-      "assets/main-Drxdqttp.css"
+      "assets/main-ZlRM-NwI.css"
     ],
     "assets": [
+      "assets/pdf.worker.min-CjEcRF4W.mjs",
       "assets/inter-latin-400-normal-C38fXH4l.woff2",
       "assets/inter-latin-600-normal-LgqL8muc.woff2",
       "assets/inter-latin-700-normal-Yt3aPRUw.woff2",

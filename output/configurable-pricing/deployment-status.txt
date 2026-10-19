@@ -1,0 +1,2 @@
+Task "nuers-configurable-pricing-install.php" successfully completed in 4 seconds. See details
+{"deployed":true,"configurable_pricing_verified":true,"configurable_minimum_available":true,"invoice_filters_fixed":true,"records_wallets_access_preserved":true,"file_checksums":true,"historical_wallet_entries_unchanged":true,"pricing":{"minimum_centavos":0,"fee_centavos":300,"revision":3,"admin_configurable":true},"wallet_balances_verified":true,"backup":"nuers-configurable-pricing-backup-20261018-232523"}

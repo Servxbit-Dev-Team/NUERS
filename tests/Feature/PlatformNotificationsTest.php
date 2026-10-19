@@ -77,6 +77,18 @@ class PlatformNotificationsTest extends TestCase
         $this->assertDatabaseHas('notification_outbox', ['state' => 'smtp_accepted', 'encrypted_payload' => null, 'attempts' => 1]);
     }
 
+    public function test_review_request_notice_rechecks_admin_role_before_delivery(): void
+    {
+        DB::table('profiles')->where('id', $this->owner->id)->update(['role' => 'admin']);
+        $this->n()->admins('business.profile.review_requested', 'submission', 'Review requested', 'Open the private review workspace.');
+        DB::table('profiles')->where('id', $this->owner->id)->update(['role' => 'client']);
+        $mail = Mockery::mock(PlatformMail::class)->makePartial();
+        $mail->shouldNotReceive('send');
+        $this->app->instance(PlatformMail::class, $mail);
+        $this->assertTrue($this->n()->runOne());
+        $this->assertDatabaseHas('notification_outbox', ['event' => 'business.profile.review_requested', 'state' => 'cancelled', 'encrypted_payload' => null]);
+    }
+
     public function test_smtp_timeout_is_uncertain_and_is_never_automatically_replayed(): void
     {
         $mail = Mockery::mock(PlatformMail::class)->makePartial();

@@ -132,5 +132,19 @@
     "Interactive forms were exercised on isolated QA data; live authenticated merchant view was not exercised because the reset database has no merchant fixture.",
     "Selection lists are bounded to 500 branches and 1000 terminals/keys/devices; CSV exports are capped at 5000 records.",
     "The live verification helper used an incorrect MFA config key and returned null for privileged_mfa; this deployment did not modify security configuration or the environment."
-  ]
+  ],
+  "address_workflow_2026_10_18": {
+    "source": "Registration PSGC location hierarchy and maintained city/barangay RDO mappings",
+    "source_choices": [
+      "Enter branch address",
+      "Use existing business address",
+      "Keep saved branch address (legacy records only)"
+    ],
+    "autofill": "Copy current merchant registration snapshot only when it matches the current business address; historical mismatched snapshots are ignored",
+    "rdo": "Automatically select maintained mapping; searchable confirmation of the mapped office; all active offices searchable when manual confirmation is needed",
+    "validation": "Server validates hierarchy and canonical address, rejects mismatched mapped RDO, and derives city/region labels",
+    "storage": "Additive nullable merchant_branches.address_details JSON; existing rows remain unchanged",
+    "review": "Material address changes return the branch to draft; unchanged canonical data preserves existing review status",
+    "side_effects": "Copying a business address does not update that business profile"
+  }
 }

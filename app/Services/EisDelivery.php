@@ -54,6 +54,11 @@ class EisDelivery
         $attempt = (string) Str::uuid();
         try {
             $document = json_decode(Crypt::decryptString($o->encrypted_document), true);
+            // Imported originals must never be submitted again by a future enabled adapter.
+            if (($document['record_mode'] ?? null) === 'source_capture') {
+                $this->settle($j->id, $lease, ['state' => 'blocked', 'last_error' => 'External source copy requires separate reviewed reporting coverage and duplicate-reporting reconciliation.', 'available_at' => now()->addMinutes(5)]);
+                return ['state' => 'blocked'];
+            }
             $gate = app(BirCompliance::class)->gate(app(BirCompliance::class)->integration($j->merchant_id, $document['seller']['branch_code'] ?? null, 'production'));
             if (! $gate['can_transmit']) {
                 $this->settle($j->id, $lease, ['state' => 'blocked', 'last_error' => implode(' ', $gate['blockers']), 'available_at' => now()->addMinutes(5)]);

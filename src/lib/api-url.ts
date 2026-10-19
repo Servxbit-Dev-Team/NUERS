@@ -84,7 +84,7 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
     headers,
   });
   if(response.status===401&&headers.get("Authorization")===`Bearer ${token}`)invalidateToken(token);
-  if(response.status===403){const body=await response.clone().json().catch(()=>null);if(body?.code==="MFA_REQUIRED"&&window.location.pathname!=="/security/mfa")window.location.assign("/security/mfa");}
+  if(response.status===403){const body=await response.clone().json().catch(()=>null);if(body?.code==="MFA_REQUIRED"&&window.location.pathname!=="/security/mfa")window.location.assign(`/security/mfa?returnTo=${encodeURIComponent(window.location.pathname+window.location.search+window.location.hash)}`);}
   return response;
 }
 

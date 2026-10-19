@@ -17,8 +17,9 @@ class ApiBoundary
         abort_if((int) $r->server('CONTENT_LENGTH', 0) > config('security.max_request_bytes') || strlen($r->getContent()) > config('security.max_request_bytes'), 413, 'Request body exceeds the supported limit.');
         $path = $r->decodedPath();
         // Limit rejected traffic before credential lookup. Shared store required across web nodes.
-        $key = 'api-ip:'.hash('sha256', $r->ip());
-        if (RateLimiter::tooManyAttempts($key, 300)) {
+        $uploadPart = $r->isMethod('POST') && Str::is(['api/merchant/verification-uploads/*/chunks', 'api/registration/document-uploads/*/chunks'], $path);
+        $key = ($uploadPart ? 'api-upload-ip:' : 'api-ip:').hash('sha256', $r->ip());
+        if (RateLimiter::tooManyAttempts($key, $uploadPart ? 600 : 300)) {
             return response()->json(['code' => 'NETWORK_RATE_LIMITED', 'message' => 'This network has reached the request limit. Please wait before trying again.', 'retry_after' => max(1, RateLimiter::availableIn($key))], 429)->header('Retry-After', max(1, RateLimiter::availableIn($key)))->header('Cache-Control', 'no-store');
         }
         RateLimiter::hit($key, 60);
@@ -40,7 +41,7 @@ class ApiBoundary
                 $access->require($r, ['admin', 'super_admin', 'bir', 'rdo']);
             }
             if (config('security.enforce_privileged_mfa') && (in_array($role, config('security.privileged_roles'), true) || (bool) $u->mfa_secret) && ! Str::is(['api/auth/mfa/*'], $path) && ! ($path === 'api/tables/profiles' && $r->isMethod('GET') && (string) (json_decode($r->query('eq', '{}'), true)['id'] ?? '') === (string) $u->id)) {
-                if (! $u->mfa_secret || ! $u->api_mfa_verified_at || now()->diffInMinutes($u->api_mfa_verified_at, true) > config('security.privileged_step_up_minutes')) {
+                if (! app(\App\Services\MfaSession::class)->verified($u)) {
                     return response()->json(['message' => 'Complete multifactor verification to continue.', 'code' => 'MFA_REQUIRED', 'enrollment_required' => ! $u->mfa_secret], 403);
                 }
             }

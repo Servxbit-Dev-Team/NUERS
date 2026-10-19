@@ -1,3 +1,4 @@
+import { formatTin } from "@/lib/tin";
 import { useLocation } from "react-router-dom";
 import { useEffect, useState, useCallback, useRef } from "react";
 import {
@@ -316,7 +317,7 @@ function ReceiptModal({ receipt, onClose }: { receipt: Receipt | null; onClose: 
         <div className="rounded-lg border bg-muted/30 p-4 text-center space-y-0.5">
           <p className="text-sm font-bold text-foreground">{currentReceipt.merchant_name}</p>
           <p className="text-xs text-muted-foreground">{currentReceipt.merchant_address}</p>
-          <p className="text-xs text-muted-foreground">TIN: {currentReceipt.merchant_tin}</p>
+          <p className="text-xs text-muted-foreground">TIN: {formatTin(currentReceipt.merchant_tin)}</p>
           <p className="text-xs text-muted-foreground">RDO: {currentReceipt.rdo_branch ?? "Unassigned RDO"}</p>
           <p className="text-xs text-muted-foreground">VAT Reg: {currentReceipt.merchant_vat_reg}</p>
           <p className="text-xs text-muted-foreground">BIR Accreditation: {currentReceipt.bir_accreditation}</p>
@@ -335,7 +336,7 @@ function ReceiptModal({ receipt, onClose }: { receipt: Receipt | null; onClose: 
           {(currentReceipt.buyer_name || currentReceipt.buyer_tin) && (
             <div className="rounded border p-2.5 text-xs space-y-0.5">
               {currentReceipt.buyer_name && <div className="flex gap-2"><span className="text-muted-foreground w-16">Sold to:</span><span className="font-medium">{currentReceipt.buyer_name}</span></div>}
-              {currentReceipt.buyer_tin && <div className="flex gap-2"><span className="text-muted-foreground w-16">TIN:</span><span className="font-mono">{currentReceipt.buyer_tin}</span></div>}
+              {currentReceipt.buyer_tin && <div className="flex gap-2"><span className="text-muted-foreground w-16">TIN:</span><span className="font-mono">{formatTin(currentReceipt.buyer_tin)}</span></div>}
             </div>
           )}
 
@@ -1136,7 +1137,7 @@ export function AdminTransactions() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t px-4 py-3">
+                <div data-slot="table-pagination" className="flex items-center justify-between border-t px-4 py-3">
                   <p className="text-xs text-muted-foreground">
                     Showing {pagination.total === 0 ? 0 : ((page - 1) * PAGE_SIZE) + 1}–{Math.min(page * PAGE_SIZE, pagination.total)} of {pagination.total}
                   </p>
@@ -1180,7 +1181,7 @@ export function AdminTransactions() {
                       <tr key={r.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
                         <td className="px-4 py-3 font-mono font-medium text-foreground">{r.receipt_number}</td>
                         <td className="px-4 py-3 text-muted-foreground max-w-36 truncate">{r.merchant_name}</td>
-                        <td className="px-4 py-3 font-mono text-muted-foreground">{r.merchant_tin}</td>
+                        <td className="px-4 py-3 font-mono text-muted-foreground">{formatTin(r.merchant_tin)}</td>
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{new Date(r.issued_at).toLocaleDateString("en-PH")}</td>
                         <td className="px-4 py-3 text-right font-mono">₱{Number(r.vatable_sales).toFixed(2)}</td>
                         <td className="px-4 py-3 text-right font-mono text-success font-semibold">₱{Number(r.vat_amount).toFixed(2)}</td>

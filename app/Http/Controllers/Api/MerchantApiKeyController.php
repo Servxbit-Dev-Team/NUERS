@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\ApiAccess;
+use App\Services\BirCompliance;
+use App\Services\IntegrationContract;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,36 +19,77 @@ class MerchantApiKeyController extends Controller
     private const DEFAULT_SCOPES = [
         'transactions:write',
         'transactions:read',
-        'receipts:write',
-        'receipts:read',
-        'reports:read',
     ];
 
     public function index(Request $request): JsonResponse
     {
         $merchant = $this->currentMerchant($request);
+        $environment=$request->validate(['environment'=>'nullable|in:live,sandbox'])['environment']??null;
 
         abort_unless(Schema::hasTable('merchant_api_keys'), 500, 'merchant_api_keys table is not migrated.');
 
         $keys = DB::table('merchant_api_keys')
             ->where('merchant_id', $merchant->id)
+            ->when($environment,fn($q)=>$q->where('environment',$environment))
             ->orderByDesc('created_at')
             ->get()
             ->map(fn ($key) => $this->keyPayload($key))
             ->values();
 
         return response()->json([
-            'summary' => $this->summary($merchant->id),
+            'environment'=>$environment??'all', 'summary' => $this->summary($merchant->id,$environment),
             'keys' => $keys,
             'webhooks' => $this->webhooks($merchant->id),
-            'hourly_requests' => $this->hourlyRequests($merchant->id),
-            'latency_data' => $this->latencyData($merchant->id),
+            'hourly_requests' => $this->hourlyRequests($merchant->id,$environment),
+            'latency_data' => $this->latencyData($merchant->id,$environment),
+            'merchant' => ['id' => $merchant->id, 'name' => $merchant->business_name, 'status' => $merchant->status, 'vat_registered' => (bool) $merchant->vat_registered],
+            'source_profiles' => DB::table('integration_source_profiles')->where('merchant_id', $merchant->id)->orderByDesc('created_at')->limit(500)->get()->map(function ($p) use ($merchant) {
+                $ready = $p->status === 'active' && ($p->profile_kind !== 'account_connection' || app(\App\Services\MerchantApiOnboarding::class)->matches($p, $merchant));
+                return ['id'=>$p->id,'branch_code'=>$p->branch_code,'source_system'=>$p->source_system,'vat_registered'=>(bool)$p->vat_registered,
+                    'seller_name'=>$p->seller_name,'valid_from'=>$p->valid_from,'valid_until'=>$p->valid_until,'profile_kind'=>$p->profile_kind,
+                    'status'=>$ready ? 'active' : ($p->status === 'active' ? 'review_required' : $p->status)];
+            }),
+            'registered_branches' => DB::table('merchant_branches')->where('merchant_id', $merchant->id)->where('status','active')->get(['bir_branch_code','name','branch_type']),
+            'access' => ['owner' => (string) $merchant->merchant_account_id === (string) $this->userFromRequest($request)->id, 'credential_mfa_required' => (bool) config('security.enforce_privileged_mfa')],
             'integration' => [
                 'transaction_endpoint' => url('/api/integrations/transactions'),
                 'auth_header' => 'X-NUERS-API-Key',
                 'accepted_tax_types' => ['vatable', 'vat_exempt', 'zero_rated', 'non_vat'],
+                'schema_version' => 'NUERS-ingestion-1',
+                'document_types' => app(IntegrationContract::class)->documentCatalog(),
+                'webhook_delivery_enabled' => (bool) config('security.merchant_webhook_delivery_enabled'),
+                'key_validity_days' => 90,
             ],
-        ]);
+        ])->header('Cache-Control', 'private, no-store');
+    }
+
+    public function logs(Request $request): JsonResponse
+    {
+        $m = $this->currentMerchant($request);
+        $v = $request->validate(['from' => 'nullable|date_format:Y-m-d', 'to' => ['nullable', 'date_format:Y-m-d', ...($request->filled('from') ? ['after_or_equal:from'] : [])], 'page' => 'sometimes|integer|min:1|max:100000', 'key' => 'nullable|uuid', 'result' => 'nullable|in:success,error','environment'=>'nullable|in:live,sandbox']);
+        $envKeys=DB::table('merchant_api_keys')->where('merchant_id',$m->id)->pluck('environment','id');
+        $q = $this->environmentLogs($m->id,$v['environment']??null);
+        if (! empty($v['key'])) {
+            $q->where('merchant_api_key_id', $v['key']);
+        }
+        if (! empty($v['from'])) {
+            $q->where('created_at', '>=', $v['from'].' 00:00:00');
+        }
+        if (! empty($v['to'])) {
+            $q->where('created_at', '<', Carbon::parse($v['to'])->addDay());
+        }
+        if (! empty($v['result'])) {
+            $q->where('status_code', $v['result'] === 'success' ? '<' : '>=', 400);
+        }
+        $rows = $q->orderByDesc('created_at')->orderByDesc('id')->paginate(20, ['id', 'merchant_api_key_id', 'endpoint', 'method', 'status_code', 'latency_ms', 'request_reference', 'source_system', 'created_at'], 'page', $v['page'] ?? 1);
+        $rows->getCollection()->transform(function ($row) use($envKeys) {
+            $row->environment=$envKeys[$row->merchant_api_key_id]??'unknown';
+            $row->created_at = Carbon::parse($row->created_at)->toIso8601String();
+
+            return $row;
+        });
+
+        return response()->json($rows)->header('Cache-Control', 'private, no-store');
     }
 
     public function connections(Request $request): JsonResponse
@@ -153,45 +197,54 @@ class MerchantApiKeyController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'environment' => ['required', Rule::in(['live', 'sandbox'])],
-            'scopes' => ['nullable', 'array','max:5'],
-            'scopes.*' => ['string', Rule::in(self::DEFAULT_SCOPES)],
-            'ip_whitelist' => ['nullable', 'array','max:30'],
+            'environment' => ['sometimes', Rule::in(['live', 'sandbox'])],
+            'scopes' => ['sometimes', 'required', 'array', 'min:1', 'max:2'],
+            'scopes.*' => ['distinct', 'string', Rule::in(self::DEFAULT_SCOPES)],
+            'ip_whitelist' => ['nullable', 'array', 'max:30'],
             'ip_whitelist.*' => ['ip'],
             'rate_limit_per_day' => ['nullable', 'integer', 'min:100', 'max:1000000'],
             'branch_type' => ['nullable', Rule::in(['main', 'branch'])],
-            'branch_code' => ['required', 'regex:/^[0-9]{5}$/'],
+            'branch_code' => ['sometimes', 'required', 'regex:/^[0-9]{5}$/'],
             'branch_name' => ['nullable', 'string', 'max:255'],
             'branch_location' => ['nullable', 'string', 'max:255'],
         ]);
 
+        $validated['name'] = trim($validated['name']);
+        abort_if($validated['name'] === '', 422, 'Enter an API key name.');
+        $validated['environment'] ??= 'live';
         $plainKey = $this->generateKey($validated['environment']);
         $id = (string) Str::uuid();
         $now = now();
 
+        return DB::transaction(function () use ($request, $merchant, $user, $validated, $plainKey, $id, $now) {
+        $registered = $this->lockMerchant($request, $merchant->id);
+        $branch = app(\App\Services\MerchantApiContext::class)->resolve($registered, (string) $user->id, $validated['branch_code'] ?? null);
+        $profile = app(\App\Services\MerchantApiOnboarding::class)->prepare($registered, (string) $user->id, false, $branch, true);
+        abort_unless($profile, 422, 'Your verified business identity needs review before connection setup. Confirm the registered name, TIN, address and VAT registration in Business Profile.');
+        abort_unless($profile->status === 'active', 409, 'This source connection is unavailable. Confirm your account is active and your registered details are current.');
         DB::table('merchant_api_keys')->insert([
             'id' => $id,
             'merchant_id' => $merchant->id,
             'created_by_user_id' => $user?->id,
             'name' => $validated['name'],
             'environment' => $validated['environment'],
-            'branch_type' => $validated['branch_type'] ?? 'main',
-            'branch_code' => $this->normalizeBranchCode($validated['branch_code'] ?? (($validated['branch_type'] ?? 'main') === 'main' ? 'MAIN' : $validated['branch_name'] ?? 'BRANCH')),
-            'branch_name' => $validated['branch_name'] ?? (($validated['branch_type'] ?? 'main') === 'main' ? 'Main Office' : $validated['name']),
-            'branch_location' => $validated['branch_location'] ?? null,
+            'branch_type' => $branch->branch_type,
+            'branch_code' => $branch->bir_branch_code,
+            'branch_name' => $branch->name,
+            'branch_location' => $branch->address,
             'key_prefix' => Str::substr($plainKey, 0, 18),
             'key_hash' => hash('sha256', $plainKey),
-            'expires_at'=>now()->addDays(90),
+            'expires_at' => now()->addDays(90),
             'key_last_four' => Str::substr($plainKey, -4),
             'status' => 'active',
-            'scopes' => json_encode($validated['scopes'] ?? self::DEFAULT_SCOPES),
+            'scopes' => json_encode($validated['scopes'] ?? ['transactions:write', 'transactions:read']),
             'ip_whitelist' => json_encode($validated['ip_whitelist'] ?? []),
             'rate_limit_per_day' => $validated['rate_limit_per_day'] ?? ($validated['environment'] === 'live' ? 50000 : 5000),
             'created_at' => $now,
             'updated_at' => $now,
         ]);
 
-        app(\App\Services\BirCompliance::class)->audit('api_key.created',$id,(string)$user->id,['merchant_id'=>$merchant->id,'environment'=>$validated['environment'],'branch_code'=>$validated['branch_code']]);
+        app(BirCompliance::class)->audit('api_key.created', $id, (string) $user->id, ['merchant_id' => $merchant->id, 'environment' => $validated['environment'], 'branch_code' => $branch->bir_branch_code]);
         $record = DB::table('merchant_api_keys')->where('id', $id)->first();
 
         return response()->json([
@@ -199,87 +252,97 @@ class MerchantApiKeyController extends Controller
                 ...$this->keyPayload($record),
                 'plain_key' => $plainKey,
             ],
+            'connection' => app(\App\Services\MerchantApiOnboarding::class)->connection($profile),
             'message' => 'Store this key now. NUERS will only show it once.',
-        ], 201);
+        ], 201)->header('Cache-Control', 'private, no-store');
+        }, 3);
     }
 
     public function update(Request $request, string $id): JsonResponse
     {
-        $merchant = $this->currentMerchant($request);
+        return DB::transaction(function () use ($request, $id) {
+            $merchant = $this->currentMerchant($request);
+            $this->lockMerchant($request, $merchant->id);
 
-        $key = DB::table('merchant_api_keys')
-            ->where('merchant_id', $merchant->id)
-            ->where('id', $id)
-            ->first();
+            $key = DB::table('merchant_api_keys')
+                ->where('merchant_id', $merchant->id)
+                ->where('id', $id)
+                ->lockForUpdate()->first();
 
-        abort_unless($key, 404, 'API key was not found for this Business Account.');
+            abort_unless($key, 404, 'API key was not found for this Business Account.');
 
-        $validated = $request->validate([
-            'active' => ['nullable', 'boolean'],
-            'name' => ['nullable', 'string', 'max:255'],
-            'scopes' => ['nullable', 'array','max:5'],
-            'scopes.*' => ['string', Rule::in(self::DEFAULT_SCOPES)],
-            'ip_whitelist' => ['nullable', 'array','max:30'],
-            'ip_whitelist.*' => ['ip'],
-            'rate_limit_per_day' => ['nullable', 'integer', 'min:100', 'max:1000000'],
-            'branch_type' => ['nullable', Rule::in(['main', 'branch'])],
-            'branch_code' => ['sometimes','required', 'regex:/^[0-9]{5}$/'],
-            'branch_name' => ['nullable', 'string', 'max:255'],
-            'branch_location' => ['nullable', 'string', 'max:255'],
-        ]);
+            $validated = $request->validate([
+                'active' => ['nullable', 'boolean'],
+                'name' => ['nullable', 'string', 'max:255'],
+                'scopes' => ['sometimes', 'required', 'array', 'min:1', 'max:2'],
+                'scopes.*' => ['distinct', 'string', Rule::in(self::DEFAULT_SCOPES)],
+                'ip_whitelist' => ['nullable', 'array', 'max:30'],
+                'ip_whitelist.*' => ['ip'],
+                'rate_limit_per_day' => ['nullable', 'integer', 'min:100', 'max:1000000'],
+                'branch_type' => ['nullable', Rule::in(['main', 'branch'])],
+                'branch_code' => ['sometimes', 'required', 'regex:/^[0-9]{5}$/'],
+                'branch_name' => ['nullable', 'string', 'max:255'],
+                'branch_location' => ['nullable', 'string', 'max:255'],
+            ]);
 
-        abort_if($key->status==='revoked' && ($validated['active']??false),409,'Revoked keys cannot be reactivated. Create a replacement.');
-        abort_if(isset($validated['branch_code']) && $validated['branch_code']!==$key->branch_code,409,'Key branch is immutable. Revoke and replace this key.');
-        $updates = ['updated_at' => now()];
+            abort_if($request->filled('environment') && $request->input('environment') !== $key->environment, 409, 'Key environment is immutable. Revoke and replace this key.');
+            abort_if($key->status === 'revoked', 409, 'Revoked keys are read-only. Create a replacement.');
+            abort_if(isset($validated['branch_code']) && $validated['branch_code'] !== $key->branch_code, 409, 'Key branch is immutable. Revoke and replace this key.');
+            $updates = ['updated_at' => now()];
 
-        if (array_key_exists('active', $validated)) {
-            $updates['status'] = $validated['active'] ? 'active' : 'inactive';
-            $updates['revoked_at'] = $validated['active'] ? null : now();
-        }
-
-        foreach (['name', 'rate_limit_per_day', 'branch_type', 'branch_name', 'branch_location'] as $field) {
-            if (array_key_exists($field, $validated)) {
-                $updates[$field] = $validated[$field];
+            if (array_key_exists('active', $validated)) {
+                $updates['status'] = $validated['active'] ? 'active' : 'inactive';
+                $updates['revoked_at'] = $validated['active'] ? null : now();
             }
-        }
 
-        if (array_key_exists('branch_code', $validated)) {
-            $updates['branch_code'] = $this->normalizeBranchCode($validated['branch_code'] ?: ($validated['branch_name'] ?? $key->branch_name ?? $key->name));
-        }
+            foreach (['name', 'rate_limit_per_day', 'branch_type', 'branch_name', 'branch_location'] as $field) {
+                if (array_key_exists($field, $validated)) {
+                    $updates[$field] = $validated[$field];
+                }
+            }
 
-        if (array_key_exists('scopes', $validated)) {
-            $updates['scopes'] = json_encode($validated['scopes']);
-        }
+            if (array_key_exists('branch_code', $validated)) {
+                $updates['branch_code'] = $this->normalizeBranchCode($validated['branch_code'] ?: ($validated['branch_name'] ?? $key->branch_name ?? $key->name));
+            }
 
-        if (array_key_exists('ip_whitelist', $validated)) {
-            $updates['ip_whitelist'] = json_encode($validated['ip_whitelist']);
-        }
+            if (array_key_exists('scopes', $validated)) {
+                $updates['scopes'] = json_encode($validated['scopes']);
+            }
 
-        DB::table('merchant_api_keys')->where('id', $id)->update($updates);
-        app(\App\Services\BirCompliance::class)->audit('api_key.updated',$id,(string)$this->userFromRequest($request)->id,['merchant_id'=>$merchant->id,'fields'=>array_keys($updates)]);
+            if (array_key_exists('ip_whitelist', $validated)) {
+                $updates['ip_whitelist'] = json_encode($validated['ip_whitelist']);
+            }
 
-        return response()->json([
-            'key' => $this->keyPayload(DB::table('merchant_api_keys')->where('id', $id)->first()),
-        ]);
+            DB::table('merchant_api_keys')->where('id', $id)->update($updates);
+            app(BirCompliance::class)->audit('api_key.updated', $id, (string) $this->userFromRequest($request)->id, ['merchant_id' => $merchant->id, 'fields' => array_keys($updates)]);
+
+            return response()->json([
+                'key' => $this->keyPayload(DB::table('merchant_api_keys')->where('id', $id)->first()),
+            ]);
+        }, 3);
     }
 
     public function destroy(Request $request, string $id): JsonResponse
     {
         $merchant = $this->currentMerchant($request);
 
-        $updated = DB::table('merchant_api_keys')
-            ->where('merchant_id', $merchant->id)
-            ->where('id', $id)
-            ->update([
-                'status' => 'revoked',
-                'revoked_at' => now(),
-                'updated_at' => now(),
-            ]);
+        return DB::transaction(function () use ($request, $merchant, $id) {
+            $this->lockMerchant($request, $merchant->id);
+            $key = DB::table('merchant_api_keys')->where('merchant_id', $merchant->id)->where('id', $id)->lockForUpdate()->first();
+            abort_unless($key, 404, 'API key was not found for this Business Account.');
+            if ($key->status !== 'revoked') {
+                DB::table('merchant_api_keys')->where('id', $id)->update(['status' => 'revoked', 'revoked_at' => now(), 'updated_at' => now()]);
+                app(BirCompliance::class)->audit('api_key.revoked', $id, (string) $this->userFromRequest($request)->id, ['merchant_id' => $merchant->id]);
+            }
+            return response()->json(['ok' => true])->header('Cache-Control', 'private, no-store');
+        }, 3);
+    }
 
-        abort_unless($updated, 404, 'API key was not found for this Business Account.');
-        app(\App\Services\BirCompliance::class)->audit('api_key.revoked',$id,(string)$this->userFromRequest($request)->id,['merchant_id'=>$merchant->id]);
-
-        return response()->json(['ok' => true]);
+    private function lockMerchant(Request $request, string $id): object
+    {
+        $merchant = DB::table('merchants')->where('id', $id)->lockForUpdate()->first();
+        abort_unless($merchant && $merchant->status === 'active' && (string) $merchant->merchant_account_id === (string) $this->userFromRequest($request)->id, 403, 'Business ownership or activation changed. Refresh before managing credentials.');
+        return $merchant;
     }
 
     private function currentMerchant(Request $request): object
@@ -288,11 +351,18 @@ class MerchantApiKeyController extends Controller
 
         abort_unless($user, 401, 'Authenticated Business Account session is required.');
 
-        $merchant = app(\App\Services\ApiAccess::class)->merchants($user)->first();
+        $merchant = app(ApiAccess::class)->merchants($user)->first();
 
         abort_unless($merchant, 404, 'No Business Account registry record is linked to this login.');
 
-        if (!$request->isMethod('GET')) abort_unless($merchant->status==='active',403,'Only active businesses can manage credentials.');
+        if (! $request->isMethod('GET')) {
+            abort_unless((string) $merchant->merchant_account_id === (string) $user->id, 403, 'Only the registered business owner may manage integration credentials.');
+            abort_unless($merchant->status === 'active', 403, 'Only active businesses can manage credentials.');
+            if (config('security.enforce_privileged_mfa') && ! app(\App\Services\MfaSession::class)->verified($user)) {
+                abort(response()->json(['message' => 'Complete MFA verification for this login to manage API credentials.', 'code' => 'MFA_REQUIRED', 'enrollment_required' => ! $user->mfa_secret], 403));
+            }
+        }
+
         return $merchant;
     }
 
@@ -304,7 +374,7 @@ class MerchantApiKeyController extends Controller
             return null;
         }
 
-        return app(\App\Services\ApiAccess::class)->user($request);
+        return app(ApiAccess::class)->require($request, ['merchant', 'admin', 'super_admin']);
     }
 
     private function keyPayload(object $key): array
@@ -317,14 +387,14 @@ class MerchantApiKeyController extends Controller
             'name' => $key->name,
             'key_preview' => "{$key->key_prefix}••••••••••••{$key->key_last_four}",
             'env' => $key->environment,
-            'created' => $key->created_at ? Carbon::parse($key->created_at)->toDateString() : '',
+            'created' => $key->created_at ? Carbon::parse($key->created_at)->toIso8601String() : '',
             'last_used' => $key->last_used_at ? $this->humanTime($key->last_used_at) : 'Never',
-            'last_used_at' => $key->last_used_at,
+            'last_used_at' => $key->last_used_at ? Carbon::parse($key->last_used_at)->toIso8601String() : null,
             'requests_today' => $today,
             'requests_month' => $month,
             'rate_limit' => (int) $key->rate_limit_per_day,
-            'expires_at'=>$key->expires_at??null,'active' => $key->status === 'active' && !empty($key->expires_at) && now()->lt($key->expires_at),
-            'status' => $key->status,
+            'expires_at' => ! empty($key->expires_at) ? Carbon::parse($key->expires_at)->toIso8601String() : null, 'active' => $key->status === 'active' && ! empty($key->expires_at) && now()->lt($key->expires_at),
+            'status' => $key->status === 'active' && (! $key->expires_at || now()->gte($key->expires_at)) ? 'expired' : $key->status,
             'permissions' => $this->jsonArray($key->scopes),
             'ip_whitelist' => $this->jsonArray($key->ip_whitelist),
             'branch_type' => $key->branch_type ?? 'main',
@@ -334,33 +404,41 @@ class MerchantApiKeyController extends Controller
         ];
     }
 
-    private function summary(string $merchantId): array
+    private function environmentLogs(string $merchantId,?string $environment=null) { return DB::table('merchant_api_request_logs')->where('merchant_id',$merchantId)->when($environment,fn($q)=>$q->whereIn('merchant_api_key_id',DB::table('merchant_api_keys')->select('id')->where('merchant_id',$merchantId)->where('environment',$environment))); }
+
+    private function summary(string $merchantId,?string $environment=null): array
     {
-        $keys = DB::table('merchant_api_keys')->where('merchant_id', $merchantId);
+        $keys = DB::table('merchant_api_keys')->where('merchant_id', $merchantId)->when($environment,fn($q)=>$q->where('environment',$environment));
 
         if (! Schema::hasTable('merchant_api_request_logs')) {
             return [
-                'active_keys' => (clone $keys)->where('status', 'active')->count(),
+                'active_keys' => (clone $keys)->where('status', 'active')->where('expires_at', '>', now())->count(),
                 'total_keys' => (clone $keys)->count(),
                 'requests_today' => 0,
                 'requests_month' => 0,
-                'active_webhooks' => Schema::hasTable('merchant_webhooks') ? DB::table('merchant_webhooks')->where('merchant_id', $merchantId)->where('status', 'active')->count() : 0,
-                'avg_latency_ms' => 0,
+                'active_webhooks' => $this->activeWebhookCount($merchantId,$environment),
+                'avg_latency_ms' => null,
             ];
         }
 
-        $todayLogs = DB::table('merchant_api_request_logs')->where('merchant_id', $merchantId)->where('created_at', '>=', now()->startOfDay());
-        $monthLogs = DB::table('merchant_api_request_logs')->where('merchant_id', $merchantId)->where('created_at', '>=', now()->startOfMonth());
-        $avgLatency = (clone $todayLogs)->avg('latency_ms') ?: 0;
+        $todayLogs = $this->environmentLogs($merchantId,$environment)->where('created_at', '>=', now()->startOfDay());
+        $monthLogs = $this->environmentLogs($merchantId,$environment)->where('created_at', '>=', now()->startOfMonth());
+        $avgLatency = (clone $todayLogs)->avg('latency_ms');
 
         return [
-            'active_keys' => (clone $keys)->where('status', 'active')->count(),
+            'active_keys' => (clone $keys)->where('status', 'active')->where('expires_at', '>', now())->count(),
             'total_keys' => (clone $keys)->count(),
             'requests_today' => (clone $todayLogs)->count(),
             'requests_month' => (clone $monthLogs)->count(),
-            'active_webhooks' => Schema::hasTable('merchant_webhooks') ? DB::table('merchant_webhooks')->where('merchant_id', $merchantId)->where('status', 'active')->count() : 0,
-            'avg_latency_ms' => round((float) $avgLatency, 1),
+            'active_webhooks' => $this->activeWebhookCount($merchantId,$environment),
+            'avg_latency_ms' => $avgLatency === null ? null : round((float) $avgLatency, 1),
         ];
+    }
+
+    private function activeWebhookCount(string $merchantId,?string $environment): int
+    {
+        if(!Schema::hasTable('merchant_webhook_endpoints'))return 0;
+        return DB::table('merchant_webhook_endpoints')->where('merchant_id',$merchantId)->when($environment,fn($q)=>$q->where('environment',$environment))->where('status','active')->whereNotNull('verified_at')->count();
     }
 
     private function webhooks(string $merchantId): array
@@ -386,18 +464,17 @@ class MerchantApiKeyController extends Controller
             ->all();
     }
 
-    private function hourlyRequests(string $merchantId): array
+    private function hourlyRequests(string $merchantId,?string $environment=null): array
     {
         if (! Schema::hasTable('merchant_api_request_logs')) {
             return [];
         }
 
         return collect(range(11, 0))
-            ->map(function ($offset) use ($merchantId) {
+            ->map(function ($offset) use ($merchantId,$environment) {
                 $hour = now()->subHours($offset)->startOfHour();
                 $next = $hour->copy()->addHour();
-                $base = DB::table('merchant_api_request_logs')
-                    ->where('merchant_id', $merchantId)
+                $base = $this->environmentLogs($merchantId,$environment)
                     ->whereBetween('created_at', [$hour, $next]);
 
                 return [
@@ -410,18 +487,17 @@ class MerchantApiKeyController extends Controller
             ->all();
     }
 
-    private function latencyData(string $merchantId): array
+    private function latencyData(string $merchantId,?string $environment=null): array
     {
         if (! Schema::hasTable('merchant_api_request_logs')) {
             return [];
         }
 
         return collect(range(11, 0))
-            ->map(function ($offset) use ($merchantId) {
+            ->map(function ($offset) use ($merchantId,$environment) {
                 $hour = now()->subHours($offset)->startOfHour();
                 $next = $hour->copy()->addHour();
-                $latency = DB::table('merchant_api_request_logs')
-                    ->where('merchant_id', $merchantId)
+                $latency = $this->environmentLogs($merchantId,$environment)
                     ->whereBetween('created_at', [$hour, $next])
                     ->avg('latency_ms') ?: 0;
 
@@ -500,7 +576,7 @@ class MerchantApiKeyController extends Controller
             'rate_limit' => (int) $key->rate_limit_per_day,
             'permissions' => $this->jsonArray($key->scopes),
             'ip_whitelist' => $this->jsonArray($key->ip_whitelist),
-            'created' => $key->created_at ? Carbon::parse($key->created_at)->toDateString() : '',
+            'created' => $key->created_at ? Carbon::parse($key->created_at)->toIso8601String() : '',
         ];
     }
 

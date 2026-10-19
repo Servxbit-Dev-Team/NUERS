@@ -169,6 +169,8 @@ class BusinessInvoiceController extends Controller
             'notes' => ['nullable', 'string', 'max:5000'],
             'terms_and_conditions' => ['nullable', 'string', 'max:5000'],
             'footer_note' => ['nullable', 'string', 'max:2000'],
+            'sales_benefit' => ['nullable', 'array'],
+            'line_items.*.benefit_eligible' => ['sometimes', 'boolean'],
             'line_items' => ['required', 'array', 'min:1', 'max:100'],
             'line_items.*.line_number' => ['required', 'integer', 'min:1'],
             'line_items.*.item_code' => ['nullable', 'string', 'max:80'],
@@ -185,6 +187,9 @@ class BusinessInvoiceController extends Controller
             'line_items.*.tax_type' => ['nullable', Rule::in(['vatable', 'zero_rated', 'vat_exempt', 'non_vat'])],
         ]);
 
+        $validated['sales_benefit'] = app(\App\Services\StatutorySales::class)->validate($validated['sales_benefit'] ?? null, $validated['issue_date']);
+        $request->merge(['sales_benefit' => $validated['sales_benefit']]);
+        $request->validate(['prices_include_vat'=>'sometimes|boolean']);
         $totals = $this->totalsFromRequest($request, (bool) $merchant->vat_registered);
         $validated['line_items'] = $totals['_items'];
         $documentType = $this->normalizeDocumentType($validated['document_type'], $validated['line_items'], $totals, (bool) ($merchant->vat_registered ?? false));
@@ -205,7 +210,7 @@ class BusinessInvoiceController extends Controller
 
         $requestHash = hash('sha256', json_encode([$validated, $totals], JSON_THROW_ON_ERROR));
         $customerResult = DB::transaction(function () use ($request, $validated, $merchant, $invoiceId, $status, $totals, $documentType, $templateCode, $now, $authority, $requestHash) {
-            DB::table('merchants')->where('id', $merchant->id)->lockForUpdate()->first();
+            $merchant = DB::table('merchants')->where('id', $merchant->id)->lockForUpdate()->first();
             app(\App\Services\MerchantTeamAccess::class)->recheckMutation($request);
             if (! empty($validated['request_id'])) {
                 $previous = DB::table('invoice_create_requests')->where('merchant_id', $merchant->id)->where('request_id', $validated['request_id'])->first();
@@ -218,6 +223,7 @@ class BusinessInvoiceController extends Controller
                 }
             }
 
+            app(\App\Services\MerchantInvoiceSettings::class)->assertPolicy($merchant,$validated['line_items'],$validated['buyer_tin']??null);
             abort_if(DB::table('business_invoices')->where('merchant_id', $merchant->id)->where('invoice_number', $validated['invoice_number'])->exists(), 422, 'This invoice number already exists for your Business Account.');
             if (! empty($validated['buyer_phone'])) {
                 abort_unless(strlen(preg_replace('/\D/', '', $validated['buyer_phone'])) >= 7 && strlen(preg_replace('/\D/', '', $validated['buyer_phone'])) <= 15, 422, 'Buyer phone must contain between seven and fifteen digits.');
@@ -256,6 +262,7 @@ class BusinessInvoiceController extends Controller
                 'period_start' => $request->input('period_start') ?: null,
                 'period_end' => $request->input('period_end') ?: null,
                 'subtotal_amount' => $totals['subtotal_amount'],
+                ...app(\App\Services\StatutorySales::class)->storage($validated['sales_benefit'], $totals),
                 'discount_amount' => $totals['discount_amount'],
                 'taxable_amount' => $totals['taxable_amount'],
                 'vat_amount' => $totals['vat_amount'],
@@ -295,6 +302,7 @@ class BusinessInvoiceController extends Controller
                 $invoiceRow['seller_branch_code'] = $status === 'draft' ? null : app(BirCompliance::class)->integration((string) $merchant->id, null, 'production')?->branch_code;
                 $invoiceRow['seller_rdo_code'] = $merchant->rdo_code ?? null;
             }
+            $invoiceRow['presentation_settings']=json_encode(app(\App\Services\MerchantInvoiceSettings::class)->snapshot($merchant),JSON_THROW_ON_ERROR);
             DB::table('business_invoices')->insert($invoiceRow);
             if (! empty($validated['customer_id'])) {
                 app(MerchantCustomers::class)->link($merchant->id, $validated['customer_id'], (string) $request->attributes->get('api_actor')->id, 'invoice', $invoiceId);
@@ -313,6 +321,7 @@ class BusinessInvoiceController extends Controller
                     'quantity' => $line['quantity'],
                     'unit_price' => $this->fromCentavos($line['unit_price']),
                     'discount_pct' => $line['discount_pct'] ?? 0,
+                    'benefit_details' => isset($line['benefit_details']) ? json_encode($line['benefit_details']) : null,
                     'discount_amount' => $this->fromCentavos($line['discount_amount'] ?? 0),
                     'taxable_amount' => $this->fromCentavos($line['taxable_amount'] ?? 0),
                     'vat_rate' => $line['vat_rate'] ?? 12,
@@ -437,6 +446,8 @@ class BusinessInvoiceController extends Controller
             'period_start' => $invoice->period_start,
             'period_end' => $invoice->period_end,
             'subtotal_amount' => $this->toCentavos($invoice->subtotal_amount),
+            'sales_benefit' => json_decode($invoice->sales_benefit ?? 'null', true), 'sale_category' => $invoice->sale_category ?? 'regular',
+            'statutory_discount_amount' => $this->toCentavos($invoice->statutory_discount_amount ?? 0), 'vat_relief_amount' => $this->toCentavos($invoice->vat_relief_amount ?? 0),
             'discount_amount' => $this->toCentavos($invoice->discount_amount),
             'taxable_amount' => $this->toCentavos($invoice->taxable_amount),
             'vat_amount' => $this->toCentavos($invoice->vat_amount),
@@ -487,6 +498,7 @@ class BusinessInvoiceController extends Controller
                     'quantity' => (float) $line->quantity,
                     'unit_price' => $this->toCentavos($line->unit_price),
                     'discount_pct' => (float) $line->discount_pct,
+                    'benefit_details' => json_decode($line->benefit_details ?? 'null', true), 'benefit_eligible' => !empty($line->benefit_details),
                     'discount_amount' => $this->toCentavos($line->discount_amount),
                     'taxable_amount' => $this->toCentavos($line->taxable_amount),
                     'vat_rate' => (float) $line->vat_rate,
@@ -505,7 +517,7 @@ class BusinessInvoiceController extends Controller
         $calculator = app(InvoiceCalculator::class);
         $computed = $calculator->calculate($request->input('line_items', []), $vatRegistered,
             0,
-            $calculator->cents($request->input('other_charges', 0), 'other_charges', true));
+            $calculator->cents($request->input('other_charges', 0), 'other_charges', true), $request->boolean('prices_include_vat', true), $request->input('sales_benefit'));
         $rate = $request->input('withholding_pct', 0);
         if (! is_numeric($rate) || $rate < 0 || $rate > 100 || abs($rate * 100 - round($rate * 100)) > 0.00001) {
             throw ValidationException::withMessages(['withholding_pct' => 'Use a percentage from 0 to 100 with at most two decimals.']);

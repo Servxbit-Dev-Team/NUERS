@@ -24,12 +24,16 @@
       "PNG",
       "JPEG"
     ],
-    "maximum_bytes_per_file": 2097152,
+    "maximum_bytes_per_file": 104857600,
     "pre_account_uploads": "Only after email verification; tied to an unconsumed proof.",
     "staging_retention": "Unclaimed uploads expire after 24 hours; scheduled cleanup is capped at 500 rows per run.",
     "claimed_evidence": "Encrypted private files, authenticated scoped downloads, hash integrity checks, retained replacement history.",
     "activation": "New self-registrations remain pending until all five latest files are independently verified and the existing administrator onboarding checks/evidence pass.",
-    "legacy_accounts": "Existing active accounts are not reset or retroactively deactivated."
+    "legacy_accounts": "Existing active accounts are not reset or retroactively deactivated.",
+    "transport": "Authenticated, ordered 1 MiB encrypted parts with bounded retries and idempotent completion; verification proof required on every pre-account upload request.",
+    "encryption": "New files use individually authenticated encrypted frames and whole-file SHA-256/length verification. Existing encrypted files remain readable.",
+    "partial_upload_retention": "Upload sessions expire after two hours; the daily staged-document task removes expired encrypted parts and session metadata without deleting committed account documents.",
+    "administrator_review": "Private image/PDF workspace with page/zoom/rotation controls, retained version history, actor/session/hash-bound preview proof, independent checks, confirmation, reason and immutable decision/audit evidence."
   },
   "source_evidence": [
     "src/pages/auth/register.tsx",

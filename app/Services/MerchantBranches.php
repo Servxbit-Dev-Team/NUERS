@@ -31,9 +31,9 @@ class MerchantBranches
 
     public function branchRow(object $r): array
     {
-        $contact = json_decode(Crypt::decryptString($r->contact_encrypted), true, flags: JSON_THROW_ON_ERROR);
+        $contact = array_replace(['manager_name' => null, 'email' => null, 'phone' => null], json_decode(Crypt::decryptString($r->contact_encrypted), true, flags: JSON_THROW_ON_ERROR));
 
-        return [...array_diff_key((array) $r, array_flip(['contact_encrypted', 'request_hash', 'request_id'])), ...$contact];
+        return [...array_diff_key((array) $r, array_flip(['contact_encrypted', 'request_hash', 'request_id', 'address_details'])), ...$contact, 'structured_address' => !empty($r->address_details) ? app(RegistrationAddress::class)->formValue(json_decode($r->address_details, true, flags: JSON_THROW_ON_ERROR), (array) $r) : null];
     }
 
     public function event(string $merchant, ?string $branch, ?string $terminal, string $action, string $actor, array $details): void

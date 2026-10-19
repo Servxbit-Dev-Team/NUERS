@@ -26,6 +26,6 @@ class SubscriptionPlanController extends Controller
     public function update(Request $request, int $id)
     {
         $this->admin($request);
-        abort(422, 'NUERS uses one transaction pricing policy: the published fee at ₱500 and above; Super Admin manages the prospective fee in Wallets & Transaction Pricing, unlimited storage and five-year retention. Subscription tiers are not available.');
+        abort(422, 'NUERS uses one transaction pricing policy: the published fee at the configured minimum transaction amount (₱0 charges every finalized sale); Super Admin manages the prospective fee in Wallets & Transaction Pricing, unlimited storage and five-year retention. Subscription tiers are not available.');
     }
 }

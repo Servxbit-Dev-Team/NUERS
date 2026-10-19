@@ -3,7 +3,7 @@
 return [
     'reference' => 'RMC No. 110-2026 (October 12, 2026)',
     'solution_name' => 'NUERS',
-    'solution_version' => env('NUERS_SOLUTION_VERSION', '0.0.1'),
+    'solution_version' => env('NUERS_SOLUTION_VERSION', '1.0.0'),
     'configuration_reference' => env('NUERS_APPROVED_CONFIGURATION', ''),
     // A credential flag is not an implementation of the BIR transport protocol.
     'transport_implemented' => false,

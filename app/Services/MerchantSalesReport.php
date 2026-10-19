@@ -27,6 +27,7 @@ class MerchantSalesReport
         if (($filters['type'] ?? 'all') !== 'all') {
             $q->where('document_type', $filters['type']);
         }
+        if (($filters['sale_category'] ?? 'all') !== 'all') $q->where('sale_category', $filters['sale_category']);
         if ($search = trim($filters['search'] ?? '')) {
             // Binding and literal wildcard escaping prevent both SQL injection and wildcard broadening.
             $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $search).'%';
@@ -75,19 +76,20 @@ class MerchantSalesReport
                 $reason = 'Original line amounts / tax allocation do not reconcile';
             }
             $sign = $source->document_family === 'credit' ? -1 : 1;
-            $row = ['id' => (string) $source->id, 'source' => $source->document_source, 'document_id' => $source->document_id, 'number' => $source->receipt_number, 'date' => $source->document_source === 'invoice' ? substr($source->business_date, 0, 10) : CarbonImmutable::parse($source->business_date, config('app.timezone'))->setTimezone('Asia/Manila')->toDateString(),
+            $row = ['manual_discount' => $reason ? 0 : $sign * $this->cents($source->manual_discount_amount), 'discount' => $reason ? 0 : $sign * $this->cents($source->discount_amount), 'sale_category' => $source->sale_category, 'statutory_discount' => $reason ? 0 : $sign * $this->cents($source->statutory_discount_amount), 'vat_adjustment' => $reason ? 0 : $sign * $this->cents($source->vat_relief_amount), 'id' => (string) $source->id, 'source' => $source->document_source, 'document_id' => $source->document_id, 'number' => $source->receipt_number, 'date' => $source->document_source === 'invoice' ? substr($source->business_date, 0, 10) : CarbonImmutable::parse($source->business_date, config('app.timezone'))->setTimezone('Asia/Manila')->toDateString(),
                 'date_precision' => $source->document_source === 'invoice' ? 'day' : 'instant', 'customer' => $source->customer_name ?: 'Not recorded', 'tin' => $source->customer_tin, 'customer_type' => $customerType, 'branch' => $branch, 'type' => $source->document_type, 'family' => $source->document_family, 'original_invoice_id' => $source->original_invoice_id,
                 'bir_status' => $bir, 'included' => $reason === null, 'exclusion_reason' => $reason, 'source_amount' => $this->cents($source->amount)];
             foreach (['gross' => 'amount', 'vatable' => 'vatable_sales', 'vat' => 'vat_amount', 'zero' => 'zero_rated_sales', 'exempt' => 'vat_exempt_sales', 'net' => 'net_amount'] as $key => $field) {
                 $row[$key] = $reason ? 0 : $sign * $this->cents($source->$field);
             }
             $row['non_vat'] = $reason ? 0 : $sign * collect($inspection['model']['items'])->where('tax_type', 'non_vat')->sum('line_total_centavos');
-            $row['exempt'] -= $row['non_vat'];
+            // Legacy rows aggregate non-VAT into exempt; new API copies persist a separate SSPT column.
+            $row['exempt'] -= $row['non_vat'] - ($reason ? 0 : $sign * $this->cents($source->sspt_sales ?? 0));
             // Do not allocate unclassified taxable bases or guess VAT rates to force totals.
             if (! $reason && $row['gross'] !== $row['net'] + $row['vat']) {
                 $row['included'] = false;
                 $row['exclusion_reason'] = 'Source tax bases and VAT do not equal the document total';
-                foreach (['gross', 'vatable', 'vat', 'zero', 'exempt', 'non_vat', 'net'] as $key) {
+                foreach (['gross', 'vatable', 'vat', 'zero', 'exempt', 'non_vat', 'net', 'statutory_discount', 'vat_adjustment', 'manual_discount', 'discount'] as $key) {
                     $row[$key] = 0;
                 }
             }
@@ -97,7 +99,7 @@ class MerchantSalesReport
                 $excluded[] = $row;
             }
         }
-        $totals = array_fill_keys(['gross', 'vatable', 'vat', 'zero', 'exempt', 'non_vat', 'net'], 0);
+        $totals = array_fill_keys(['gross', 'vatable', 'vat', 'zero', 'exempt', 'non_vat', 'net', 'statutory_discount', 'vat_adjustment', 'manual_discount', 'discount'], 0);
         $birCounts = array_fill_keys(['acknowledged', 'queued', 'needs_review', 'blocked', 'not_verified'], 0);
         foreach ($included as $r) {
             foreach ($totals as $k => $_) {

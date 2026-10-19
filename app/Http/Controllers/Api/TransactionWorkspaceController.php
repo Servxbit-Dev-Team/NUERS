@@ -47,7 +47,7 @@ class TransactionWorkspaceController extends Controller
 
     protected function filtered(Request $r)
     {
-        $v = $r->validate(['search' => 'nullable|string|max:200', 'from' => 'nullable|date_format:Y-m-d', 'to' => 'nullable|date_format:Y-m-d', 'status' => ['nullable', Rule::in(['all', 'success', 'failed', 'pending', 'cancelled'])], 'type' => ['nullable', Rule::in(['all', 'invoices', 'receipts', 'notes', 'cancelled'])], 'bir' => ['nullable', Rule::in(['all', 'not_submitted', 'processing', 'acknowledged', 'rejected', 'test', 'unverified'])], 'vat' => ['nullable', Rule::in(['all', 'vatable', 'exempt', 'zero'])],
+        $v = $r->validate(['sale_category' => ['nullable', Rule::in(['all', ...\App\Services\StatutorySales::CATEGORIES])], 'search' => 'nullable|string|max:200', 'from' => 'nullable|date_format:Y-m-d', 'to' => 'nullable|date_format:Y-m-d', 'status' => ['nullable', Rule::in(['all', 'success', 'failed', 'pending', 'cancelled'])], 'type' => ['nullable', Rule::in(['all', 'invoices', 'receipts', 'notes', 'cancelled'])], 'bir' => ['nullable', Rule::in(['all', 'not_submitted', 'processing', 'acknowledged', 'rejected', 'test', 'unverified'])], 'vat' => ['nullable', Rule::in(['all', 'vatable', 'exempt', 'zero'])],
             'branch' => 'nullable|string|max:200', 'payment' => 'nullable|string|max:60', 'region' => 'nullable|string|max:100', 'rdo' => 'nullable|string|max:20', 'min' => 'nullable|numeric|min:0', 'max' => 'nullable|numeric|min:0', 'page' => 'nullable|integer|min:1', 'per_page' => 'nullable|integer|min:1|max:100', 'sort' => ['nullable', Rule::in(['newest', 'oldest', 'amount_desc', 'amount_asc'])]]);
         $q = DB::query()->fromSub($this->ledger(), 'ledger');
         if (! empty($v['from']) && ! empty($v['to']) && $v['to'] < $v['from']) {
@@ -65,7 +65,7 @@ class TransactionWorkspaceController extends Controller
         }if (! empty($v['to'])) {
             $q->whereDate('business_date', '<=', $v['to']);
         }
-        foreach (['status' => 'status', 'bir' => 'bir_status', 'branch' => 'branch', 'payment' => 'payment_method', 'region' => 'region', 'rdo' => 'rdo_code'] as $param => $col) {
+        foreach (['sale_category' => 'sale_category', 'status' => 'status', 'bir' => 'bir_status', 'branch' => 'branch', 'payment' => 'payment_method', 'region' => 'region', 'rdo' => 'rdo_code'] as $param => $col) {
             if (! empty($v[$param]) && $v[$param] !== 'all') {
                 $q->where($col, $v[$param]);
             }
@@ -97,7 +97,8 @@ class TransactionWorkspaceController extends Controller
     protected function row(object $row): array
     {
         $r = (array) $row;
-        foreach (['amount', 'vat_amount', 'vatable_sales', 'net_amount'] as $k) {
+        $r['intake_environment']='live';
+        foreach (['amount', 'vat_amount', 'vatable_sales', 'net_amount', 'discount_amount', 'manual_discount_amount', 'statutory_discount_amount', 'vat_relief_amount'] as $k) {
             $r[$k] = (float) $r[$k];
         }
         foreach (['created_at', 'submitted_at', 'acknowledged_at', 'due_at', 'next_retry_at', 'acknowledgement_received_at'] as $k) {
@@ -132,7 +133,7 @@ class TransactionWorkspaceController extends Controller
         $q->orderBy(str_starts_with($sort, 'amount') ? 'amount' : 'created_at', in_array($sort, ['oldest', 'amount_asc']) ? 'asc' : 'desc')->orderBy('id');
         $page = $q->paginate($v['per_page'] ?? 10);
 
-        return response()->json(['data' => array_map(fn ($x) => $this->row($x), $page->items()), 'tabs' => $tabs, 'summary' => $stats, 'total' => $page->total(), 'last_page' => $page->lastPage(), 'page' => $page->currentPage(), 'payment_summary' => ['total' => DB::table('merchant_transactions')->count(), 'successful_amount' => (float) DB::table('merchant_transactions')->whereIn('status', ['completed', 'paid', 'settled', 'verified'])->sum('amount')], 'population' => 'canonical_documents', 'generated_at' => now()->toIso8601String(), 'gateway' => ['status' => 'not_verified', 'message' => config('bir_compliance.transport_implemented') ? 'No current gateway health probe is recorded.' : 'Production BIR transport is not configured.'], 'options' => ['branches' => DB::table('merchant_transactions')->whereNotNull('branch')->distinct()->orderBy('branch')->pluck('branch'), 'payments' => DB::table('merchant_transactions')->whereNotNull('payment_method')->distinct()->orderBy('payment_method')->pluck('payment_method'), 'regions' => DB::table('merchant_transactions')->whereNotNull('region')->distinct()->orderBy('region')->pluck('region'), 'rdos' => DB::table('rdo_offices')->where('status', 'active')->orderBy('rdo_code')->get(['rdo_code', 'rdo_name'])]]);
+        return response()->json(['intake_environment'=>'live', 'data' => array_map(fn ($x) => $this->row($x), $page->items()), 'tabs' => $tabs, 'summary' => $stats, 'total' => $page->total(), 'last_page' => $page->lastPage(), 'page' => $page->currentPage(), 'payment_summary' => ['total' => DB::table('merchant_transactions')->count(), 'successful_amount' => (float) DB::table('merchant_transactions')->whereIn('status', ['completed', 'paid', 'settled', 'verified'])->sum('amount')], 'population' => 'canonical_documents', 'generated_at' => now()->toIso8601String(), 'gateway' => ['status' => 'not_verified', 'message' => config('bir_compliance.transport_implemented') ? 'No current gateway health probe is recorded.' : 'Production BIR transport is not configured.'], 'options' => ['branches' => DB::table('merchant_transactions')->whereNotNull('branch')->distinct()->orderBy('branch')->pluck('branch'), 'payments' => DB::table('merchant_transactions')->whereNotNull('payment_method')->distinct()->orderBy('payment_method')->pluck('payment_method'), 'regions' => DB::table('merchant_transactions')->whereNotNull('region')->distinct()->orderBy('region')->pluck('region'), 'rdos' => DB::table('rdo_offices')->where('status', 'active')->orderBy('rdo_code')->get(['rdo_code', 'rdo_name'])]]);
     }
 
     public function show(Request $r, string $id)
@@ -165,11 +166,11 @@ class TransactionWorkspaceController extends Controller
         return response()->streamDownload(function () use ($q) {
             $f = fopen('php://output', 'w');
             fwrite($f, "\xEF\xBB\xBF");
-            fputcsv($f, ['Transaction ID', 'Transaction No.', 'Receipt No.', 'Business', 'TIN', 'Date / Time', 'Document Type', 'Amount PHP', 'VAT PHP', 'Transaction Status', 'BIR Status', 'Transmission ID', 'Environment', 'Acknowledgment No.', 'BIR Reference', 'Document Source', 'Document ID', 'Original Document Date', 'Transmission Applicability', 'Original Target', 'Recovery Target', 'Identity Source Count', 'Payment Events', 'Payment Amount PHP']);
+            fputcsv($f, ['Record Environment', 'Transaction ID', 'Transaction No.', 'Receipt No.', 'Business', 'TIN', 'Date / Time', 'Document Type', 'Amount PHP', 'VAT PHP', 'Transaction Status', 'BIR Status', 'Transmission ID', 'Environment', 'Acknowledgment No.', 'BIR Reference', 'Document Source', 'Document ID', 'Original Document Date', 'Transmission Applicability', 'Original Target', 'Recovery Target', 'Identity Source Count', 'Payment Events', 'Payment Amount PHP', 'Sale Category', 'Statutory Discount PHP', 'VAT Adjustment PHP', 'Manual Discount PHP', 'Total Discount PHP']);
             foreach ($q->orderBy('id')->cursor() as $row) {
                 $x = $this->row($row);
                 $text = fn ($s) => preg_match('/^\s*[=+@\-]/', (string) $s) ? "'".$s : (string) $s;
-                fputcsv($f, [$text($x['id']), $text($x['transaction_ref']), $text($x['receipt_number']), $text($x['business']), $text($x['tin']), $x['created_at'], $text($x['document_type']), number_format($x['amount'], 2, '.', ''), number_format($x['vat_amount'], 2, '.', ''), $x['status'], $x['bir_status'], $text($x['transmission_id']), $text($x['environment']), $text($x['acknowledgement_number']), $text($x['bir_reference_number']), $x['document_source'], $text($x['document_id']), $x['business_date'], $x['submission_applicability'], $x['original_transmission_target'], $x['recovery_transmission_target'], $x['source_record_count'], $x['payment_count'], $x['payment_amount']]);
+                fputcsv($f, ['Live', $text($x['id']), $text($x['transaction_ref']), $text($x['receipt_number']), $text($x['business']), $text($x['tin']), $x['created_at'], $text($x['document_type']), number_format($x['amount'], 2, '.', ''), number_format($x['vat_amount'], 2, '.', ''), $x['status'], $x['bir_status'], $text($x['transmission_id']), $text($x['environment']), $text($x['acknowledgement_number']), $text($x['bir_reference_number']), $x['document_source'], $text($x['document_id']), $x['business_date'], $x['submission_applicability'], $x['original_transmission_target'], $x['recovery_transmission_target'], $x['source_record_count'], $x['payment_count'], $x['payment_amount'], $x['sale_category'], $x['statutory_discount_amount'], $x['vat_relief_amount'], $x['manual_discount_amount'], $x['discount_amount']]);
             }fclose($f);
         }, 'NUERS-transactions-'.now()->format('Y-m-d-His').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8', 'Cache-Control' => 'private, no-store']);
     }

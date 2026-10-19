@@ -1,0 +1,396 @@
+- complementary "admin navigation":
+  - link "NUERS dashboard":
+    - /url: /super-admin
+    - img "NUERS — National Unified Electronic Receipt System"
+  - button "Collapse navigation":
+  - navigation:
+    - heading "Overview" [level=2]
+    - link "Dashboard":
+      - /url: /super-admin
+      - generic: Dashboard
+    - link "Live Transaction Monitor":
+      - /url: /monitoring
+      - generic: Live Transaction Monitor
+    - heading "E-Invoicing Operations" [level=2]
+    - link "Electronic Invoices & Receipts":
+      - /url: /invoices
+      - generic: Electronic Invoices & Receipts
+    - button "Expand Electronic Invoices & Receipts":
+    - link "Transactions":
+      - /url: /super-admin/transactions
+      - generic: Transactions
+    - button "Expand Transactions":
+    - link "BIR Transmission Center":
+      - /url: /super-admin/eis-transmissions
+      - generic: BIR Transmission Center
+    - link "Reconciliation & Exceptions":
+      - /url: /super-admin/reconciliation
+      - generic: Reconciliation & Exceptions
+    - link "Summary List of Sales":
+      - /url: /super-admin/tax-filings
+      - generic: Summary List of Sales
+    - heading "Taxpayer Management" [level=2]
+    - link "Registered Businesses":
+      - /url: /super-admin/merchants
+      - generic: Registered Businesses
+    - button "Expand Registered Businesses":
+    - link "Taxpayer Onboarding":
+      - /url: /super-admin/taxpayer-onboarding
+      - generic: Taxpayer Onboarding
+    - button "Expand Taxpayer Onboarding":
+    - link "PTI / PTT Management":
+      - /url: /super-admin/pti-ptt
+      - generic: PTI / PTT Management
+    - button "Expand PTI / PTT Management":
+    - link "API Integrations":
+      - /url: /super-admin/api-platform
+      - generic: API Integrations
+    - heading "Compliance & Security" [level=2]
+    - link "ESP Accreditation":
+      - /url: /accreditation
+      - generic: ESP Accreditation
+    - button "Expand ESP Accreditation":
+    - link "Compliance Management":
+      - /url: /super-admin/compliance
+      - generic: Compliance Management
+    - button "Expand Compliance Management":
+    - link "Security & Incidents":
+      - /url: /super-admin/security
+      - generic: Security & Incidents
+    - button "Expand Security & Incidents":
+    - link "Immutable Audit Logs":
+      - /url: /super-admin/audit
+      - generic: Immutable Audit Logs
+    - button "Expand Immutable Audit Logs":
+    - link "Data Governance & Portability":
+      - /url: /super-admin/data-archive
+      - generic: Data Governance & Portability
+    - heading "Reports" [level=2]
+    - link "Analytics & Reports":
+      - /url: /super-admin/reports
+      - generic: Analytics & Reports
+    - button "Expand Analytics & Reports":
+    - link "BIR Reports & Exports":
+      - /url: /super-admin/tax-filings
+      - generic: BIR Reports & Exports
+    - button "Expand BIR Reports & Exports":
+    - heading "System Administration" [level=2]
+    - link "Infrastructure Health":
+      - /url: /super-admin/system-health
+      - generic: Infrastructure Health
+    - button "Expand Infrastructure Health":
+    - link "Backup & Disaster Recovery":
+      - /url: /super-admin/backups
+      - generic: Backup & Disaster Recovery
+    - link "Configurations & Changes":
+      - /url: /system
+      - generic: Configurations & Changes
+    - button "Expand Configurations & Changes":
+    - link "Users & Permissions":
+      - /url: /super-admin/users-rbac
+      - generic: Users & Permissions
+    - button "Expand Users & Permissions":
+    - link "Support Inbox":
+      - /url: /super-admin/support
+      - generic: Support Inbox
+    - link "Wallets & Transaction Pricing":
+      - /url: /super-admin/wallets
+      - generic: Wallets & Transaction Pricing
+  - generic "Software name and version": NUERS · Version 1.0.0
+  - paragraph:
+    - text: DIGITAL PHILIPPINES.
+    - text: BRIGHTER TOMORROW.
+- banner:
+  - button "Toggle navigation" [expanded]:
+  - searchbox "Search transactions"
+  - link "Notifications":
+    - /url: /super-admin/notifications
+  - link "Settings":
+    - /url: /system
+  - generic "ND NUERS Documentation Admin Super Administrator":
+    - generic: ND
+    - strong: NUERS Documentation Admin
+    - generic: Super Administrator
+- main:
+  - navigation "Transaction environment":
+    - generic: Record Environment
+    - link "Live":
+      - /url: /super-admin/transactions?environment=live
+      - text: Live
+    - link "Sandbox":
+      - /url: /super-admin/transactions?environment=sandbox
+      - text: Sandbox
+    - generic: Real business records · Live wallet pricing applies
+  - link "Dashboard":
+    - /url: /super-admin
+  - generic: Transactions
+  - time:
+    - text: Monday, October 19, 2026
+    - generic: 2:03:50 AM
+  - heading "Transactions" [level=1]
+  - paragraph: View and manage electronic transactions, receipts, and documents in real time.
+  - img "Bureau of Internal Revenue official seal"
+  - strong: BUREAU OF INTERNAL REVENUE
+  - generic: REPUBLIC OF THE PHILIPPINES
+  - generic: Working together for a fair and progressive tax system.
+  - heading "Document Records" [level=2]
+  - strong: "8"
+  - paragraph: One record per document identity
+  - heading "Issued / Recorded" [level=2]
+  - strong: "8"
+  - paragraph: Document status; not BIR acceptance
+  - heading "Failed" [level=2]
+  - strong: "0"
+  - paragraph: Requires investigation
+  - heading "Pending" [level=2]
+  - strong: "0"
+  - paragraph: Awaiting completion
+  - heading "Recorded Invoice Amount" [level=2]
+  - strong: ₱ 12,320.00
+  - paragraph: Source amounts · pending source review
+  - generic: "BIR API access pending · Payment ledger: 8 events, ₱ 12,320.00 successful payments. Document totals are calculated separately."
+  - button "EIS Readiness":
+    - text: EIS Readiness
+  - generic: From
+  - textbox "From date"
+  - generic: To
+  - textbox "To date"
+  - generic: Document Type
+  - combobox "Document Type":
+    - generic: All Types
+  - generic: Status
+  - combobox "Status":
+    - generic: All Status
+  - generic: Business Name / TIN / Reference
+  - textbox "Business name, TIN or reference":
+    - /placeholder: Search business, TIN, receipt or transaction...
+  - button "Search":
+    - text: Search
+  - button "Reset"
+  - button "Advanced Filters":
+    - text: Advanced Filters
+  - button "All Documents (8)"
+  - button "Sales Invoices (8)"
+  - button "Official Receipts (0)"
+  - button "Credit/Debit Notes (0)"
+  - button "Cancelled/Voided (0)"
+  - heading "Transaction Records" [level=2]
+  - button "Export CSV":
+    - text: Export CSV
+  - button "Refresh records":
+  - button "Toggle TIN column" [pressed]:
+  - table:
+    - rowgroup:
+      - 'row "Record Environment Select all visible records # Date & Time Transaction No. Receipt / Invoice No. Business Name TIN Document Type Amount (₱) Status BIR Status Actions"':
+        - columnheader "Record Environment"
+        - columnheader "Select all visible records":
+          - checkbox "Select all visible records"
+        - columnheader "#"
+        - columnheader "Date & Time"
+        - columnheader "Transaction No."
+        - columnheader "Receipt / Invoice No."
+        - columnheader "Business Name"
+        - columnheader "TIN"
+        - columnheader "Document Type"
+        - columnheader "Amount (₱)"
+        - columnheader "Status"
+        - columnheader "BIR Status"
+        - columnheader "Actions"
+    - rowgroup:
+      - row "Live Select DEMO-SALE-0008 1 Oct 19, 2026, 01:26:49 DEMO-SALE-0008 DEMO-INV-0008 Demo Trading Company 123-456-789-000 VAT Invoice Regular sale Manual discount ₱ 0.00 ₱ 2,800.00 Success Not Submitted View DEMO-SALE-0008 Download DEMO-SALE-0008":
+        - cell "Live":
+          - generic: Live
+        - cell "Select DEMO-SALE-0008":
+          - checkbox "Select DEMO-SALE-0008"
+        - cell "1"
+        - cell "Oct 19, 2026, 01:26:49"
+        - cell "DEMO-SALE-0008"
+        - cell "DEMO-INV-0008"
+        - cell "Demo Trading Company"
+        - cell "123-456-789-000"
+        - cell "VAT Invoice Regular sale Manual discount ₱ 0.00":
+          - generic: VAT Invoice
+          - text: Regular sale
+          - text: Manual discount ₱ 0.00
+        - cell "₱ 2,800.00"
+        - cell "Success":
+          - generic: Success
+        - cell "Not Submitted":
+          - generic: Not Submitted
+        - cell "View DEMO-SALE-0008 Download DEMO-SALE-0008":
+          - button "View DEMO-SALE-0008":
+          - button "Download DEMO-SALE-0008":
+      - row "Live Select DEMO-SALE-0007 2 Oct 19, 2026, 01:21:49 DEMO-SALE-0007 DEMO-INV-0007 Demo Trading Company 123-456-789-000 VAT Invoice Regular sale Manual discount ₱ 0.00 ₱ 1,680.00 Success Not Submitted View DEMO-SALE-0007 Download DEMO-SALE-0007":
+        - cell "Live":
+          - generic: Live
+        - cell "Select DEMO-SALE-0007":
+          - checkbox "Select DEMO-SALE-0007"
+        - cell "2"
+        - cell "Oct 19, 2026, 01:21:49"
+        - cell "DEMO-SALE-0007"
+        - cell "DEMO-INV-0007"
+        - cell "Demo Trading Company"
+        - cell "123-456-789-000"
+        - cell "VAT Invoice Regular sale Manual discount ₱ 0.00":
+          - generic: VAT Invoice
+          - text: Regular sale
+          - text: Manual discount ₱ 0.00
+        - cell "₱ 1,680.00"
+        - cell "Success":
+          - generic: Success
+        - cell "Not Submitted":
+          - generic: Not Submitted
+        - cell "View DEMO-SALE-0007 Download DEMO-SALE-0007":
+          - button "View DEMO-SALE-0007":
+          - button "Download DEMO-SALE-0007":
+      - row "Live Select DEMO-SALE-0006 3 Oct 19, 2026, 01:16:49 DEMO-SALE-0006 DEMO-INV-0006 Demo Trading Company 123-456-789-000 VAT Invoice Regular sale Manual discount ₱ 0.00 ₱ 112.00 Success Not Submitted View DEMO-SALE-0006 Download DEMO-SALE-0006":
+        - cell "Live":
+          - generic: Live
+        - cell "Select DEMO-SALE-0006":
+          - checkbox "Select DEMO-SALE-0006"
+        - cell "3"
+        - cell "Oct 19, 2026, 01:16:49"
+        - cell "DEMO-SALE-0006"
+        - cell "DEMO-INV-0006"
+        - cell "Demo Trading Company"
+        - cell "123-456-789-000"
+        - cell "VAT Invoice Regular sale Manual discount ₱ 0.00":
+          - generic: VAT Invoice
+          - text: Regular sale
+          - text: Manual discount ₱ 0.00
+        - cell "₱ 112.00"
+        - cell "Success":
+          - generic: Success
+        - cell "Not Submitted":
+          - generic: Not Submitted
+        - cell "View DEMO-SALE-0006 Download DEMO-SALE-0006":
+          - button "View DEMO-SALE-0006":
+          - button "Download DEMO-SALE-0006":
+      - row "Live Select DEMO-SALE-0005 4 Oct 19, 2026, 01:11:49 DEMO-SALE-0005 DEMO-INV-0005 Demo Trading Company 123-456-789-000 VAT Invoice Regular sale Manual discount ₱ 0.00 ₱ 3,360.00 Success Not Submitted View DEMO-SALE-0005 Download DEMO-SALE-0005":
+        - cell "Live":
+          - generic: Live
+        - cell "Select DEMO-SALE-0005":
+          - checkbox "Select DEMO-SALE-0005"
+        - cell "4"
+        - cell "Oct 19, 2026, 01:11:49"
+        - cell "DEMO-SALE-0005"
+        - cell "DEMO-INV-0005"
+        - cell "Demo Trading Company"
+        - cell "123-456-789-000"
+        - cell "VAT Invoice Regular sale Manual discount ₱ 0.00":
+          - generic: VAT Invoice
+          - text: Regular sale
+          - text: Manual discount ₱ 0.00
+        - cell "₱ 3,360.00"
+        - cell "Success":
+          - generic: Success
+        - cell "Not Submitted":
+          - generic: Not Submitted
+        - cell "View DEMO-SALE-0005 Download DEMO-SALE-0005":
+          - button "View DEMO-SALE-0005":
+          - button "Download DEMO-SALE-0005":
+      - row "Live Select DEMO-SALE-0004 5 Oct 19, 2026, 01:06:49 DEMO-SALE-0004 DEMO-INV-0004 Demo Trading Company 123-456-789-000 VAT Invoice Regular sale Manual discount ₱ 0.00 ₱ 448.00 Success Not Submitted View DEMO-SALE-0004 Download DEMO-SALE-0004":
+        - cell "Live":
+          - generic: Live
+        - cell "Select DEMO-SALE-0004":
+          - checkbox "Select DEMO-SALE-0004"
+        - cell "5"
+        - cell "Oct 19, 2026, 01:06:49"
+        - cell "DEMO-SALE-0004"
+        - cell "DEMO-INV-0004"
+        - cell "Demo Trading Company"
+        - cell "123-456-789-000"
+        - cell "VAT Invoice Regular sale Manual discount ₱ 0.00":
+          - generic: VAT Invoice
+          - text: Regular sale
+          - text: Manual discount ₱ 0.00
+        - cell "₱ 448.00"
+        - cell "Success":
+          - generic: Success
+        - cell "Not Submitted":
+          - generic: Not Submitted
+        - cell "View DEMO-SALE-0004 Download DEMO-SALE-0004":
+          - button "View DEMO-SALE-0004":
+          - button "Download DEMO-SALE-0004":
+      - row "Live Select DEMO-SALE-0003 6 Oct 19, 2026, 01:01:49 DEMO-SALE-0003 DEMO-INV-0003 Demo Trading Company 123-456-789-000 VAT Invoice Regular sale Manual discount ₱ 0.00 ₱ 560.00 Success Not Submitted View DEMO-SALE-0003 Download DEMO-SALE-0003":
+        - cell "Live":
+          - generic: Live
+        - cell "Select DEMO-SALE-0003":
+          - checkbox "Select DEMO-SALE-0003"
+        - cell "6"
+        - cell "Oct 19, 2026, 01:01:49"
+        - cell "DEMO-SALE-0003"
+        - cell "DEMO-INV-0003"
+        - cell "Demo Trading Company"
+        - cell "123-456-789-000"
+        - cell "VAT Invoice Regular sale Manual discount ₱ 0.00":
+          - generic: VAT Invoice
+          - text: Regular sale
+          - text: Manual discount ₱ 0.00
+        - cell "₱ 560.00"
+        - cell "Success":
+          - generic: Success
+        - cell "Not Submitted":
+          - generic: Not Submitted
+        - cell "View DEMO-SALE-0003 Download DEMO-SALE-0003":
+          - button "View DEMO-SALE-0003":
+          - button "Download DEMO-SALE-0003":
+      - row "Live Select DEMO-SALE-0002 7 Oct 19, 2026, 00:56:49 DEMO-SALE-0002 DEMO-INV-0002 Demo Trading Company 123-456-789-000 VAT Invoice Regular sale Manual discount ₱ 0.00 ₱ 2,240.00 Success Not Submitted View DEMO-SALE-0002 Download DEMO-SALE-0002":
+        - cell "Live":
+          - generic: Live
+        - cell "Select DEMO-SALE-0002":
+          - checkbox "Select DEMO-SALE-0002"
+        - cell "7"
+        - cell "Oct 19, 2026, 00:56:49"
+        - cell "DEMO-SALE-0002"
+        - cell "DEMO-INV-0002"
+        - cell "Demo Trading Company"
+        - cell "123-456-789-000"
+        - cell "VAT Invoice Regular sale Manual discount ₱ 0.00":
+          - generic: VAT Invoice
+          - text: Regular sale
+          - text: Manual discount ₱ 0.00
+        - cell "₱ 2,240.00"
+        - cell "Success":
+          - generic: Success
+        - cell "Not Submitted":
+          - generic: Not Submitted
+        - cell "View DEMO-SALE-0002 Download DEMO-SALE-0002":
+          - button "View DEMO-SALE-0002":
+          - button "Download DEMO-SALE-0002":
+      - row "Live Select DEMO-SALE-0001 8 Oct 19, 2026, 00:51:49 DEMO-SALE-0001 DEMO-INV-0001 Demo Trading Company 123-456-789-000 VAT Invoice Regular sale Manual discount ₱ 0.00 ₱ 1,120.00 Success Not Submitted View DEMO-SALE-0001 Download DEMO-SALE-0001":
+        - cell "Live":
+          - generic: Live
+        - cell "Select DEMO-SALE-0001":
+          - checkbox "Select DEMO-SALE-0001"
+        - cell "8"
+        - cell "Oct 19, 2026, 00:51:49"
+        - cell "DEMO-SALE-0001"
+        - cell "DEMO-INV-0001"
+        - cell "Demo Trading Company"
+        - cell "123-456-789-000"
+        - cell "VAT Invoice Regular sale Manual discount ₱ 0.00":
+          - generic: VAT Invoice
+          - text: Regular sale
+          - text: Manual discount ₱ 0.00
+        - cell "₱ 1,120.00"
+        - cell "Success":
+          - generic: Success
+        - cell "Not Submitted":
+          - generic: Not Submitted
+        - cell "View DEMO-SALE-0001 Download DEMO-SALE-0001":
+          - button "View DEMO-SALE-0001":
+          - button "Download DEMO-SALE-0001":
+  - generic: Showing 1 to 8 of 8 entries
+  - combobox "Per page":
+    - generic: 10 per page
+  - button "Previous page" [disabled]:
+  - button "Page 1": "1"
+  - button "Next page" [disabled]:
+  - generic: NUERS records available
+  - generic: "BIR Gateway: Not verified"
+  - generic: "Last Sync: Oct 19, 2026, 02:03:51 (PHT)"
+  - generic: "Server display: Asia/Manila"
+- contentinfo:
+  - generic: © 2026 NUERS. All rights reserved.
+- region "Notifications alt+T"

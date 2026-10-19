@@ -684,7 +684,7 @@ export function MerchantVatReports() {
             </table>
           </div>
 
-          <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/20">
+          <div data-slot="table-pagination" className="flex items-center justify-between px-4 py-3 border-t bg-muted/20">
             <p className="text-xs text-muted-foreground">
               Showing <strong className="text-foreground">{data.ledger.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, data.ledger.length)}</strong> of <strong className="text-foreground">{data.ledger.length}</strong> records
             </p>

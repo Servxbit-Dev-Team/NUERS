@@ -1,0 +1,12 @@
+﻿"NUERS Sales Report — Internal"
+Business,"NUERS Demo VAT Merchant - SAMPLE",TIN,000-000-000-00000
+"Date From (PHT)",2026-10-19,"Date To (PHT)",2026-10-19
+Generated,2026-10-19T09:00:00+08:00
+"Snapshot SHA-256",382f90603b88f189ad56728cd9b3eb4406b7d5c9b6f8f72b1878772484b68720
+"Applied filters","{""from"":""2026-10-19"",""to"":""2026-10-19"",""sale_category"":""all"",""branch"":""all"",""type"":""all"",""bir"":""all"",""customer_type"":""all"",""search"":""""}"
+"SAMPLE DATA ONLY. Fictional records rendered by NUERS. Not issued or valid for filing. Payment/supplementary records do not add sales."
+
+"Date (PHT)","Document No.","Customer / Buyer","Buyer TIN","Document Type",Branch,"Customer Type (current registry)","Gross incl. VAT (PHP)","VATable Base (PHP)","VAT (PHP)","Zero-Rated Base (PHP)","Exempt Base (PHP)","Non-VAT Base (PHP)","Net excl. VAT (PHP)","BIR Evidence",Included,"Exclusion reason","Original Source Amount (PHP)",Source,"Source ID","Original Invoice ID","Sale Category","Statutory Discount (PHP)","VAT Adjustment (PHP)","Manual Discount PHP","Total Discount PHP"
+2026-10-19,SAMPLE-VAT-01,"Sample VAT-01",,vat_invoice,00000,unclassified,2240,2000,240,0,0,0,2000,not_verified,Yes,,2240,invoice,sample-VAT-01,,regular,0,0,0,0
+2026-10-19,SAMPLE-MIX-01,"Sample MIX-01",,mixed_sales_invoice,00000,unclassified,1300,0,0,800,500,0,1300,not_verified,Yes,,1300,invoice,sample-MIX-01,,regular,0,0,0,0
+"RECONCILED TOTAL",,,,,,,3540,2000,240,800,500,0,3300,,,,,,,,,0,0,0,0

@@ -1,0 +1,306 @@
+- complementary "merchant navigation":
+  - link "NUERS dashboard":
+    - /url: /merchant
+    - img "NUERS — National Unified Electronic Receipt System"
+  - navigation:
+    - heading "Overview" [level=2]
+    - link "Dashboard":
+      - /url: /merchant
+      - generic: Dashboard
+    - heading "Sales & Invoicing" [level=2]
+    - link "Create Invoice":
+      - /url: /merchant/invoices/create
+      - generic: Create Invoice
+    - link "Invoices & Receipts":
+      - /url: /merchant/invoices
+      - generic: Invoices & Receipts
+    - button "Expand Invoices & Receipts":
+    - link "Customers":
+      - /url: /merchant/customers
+      - generic: Customers
+    - link "Wallet":
+      - /url: /merchant/wallet
+      - generic: Wallet
+    - heading "Reports" [level=2]
+    - link "Sales Reports":
+      - /url: /merchant/sales-reports
+      - generic: Sales Reports
+    - heading "Settings" [level=2]
+    - link "Business Profile":
+      - /url: /merchant/profile
+      - generic: Business Profile
+    - link "User Management":
+      - /url: /merchant/users
+      - generic: User Management
+    - link "Account Security":
+      - /url: /merchant/security
+      - generic: Account Security
+    - link "API Integration":
+      - /url: /merchant/api-keys
+      - generic: API Integration
+    - link "Invoice Settings":
+      - /url: /merchant/pos-settings
+      - generic: Invoice Settings
+    - link "Transaction Fees & Storage":
+      - /url: /merchant/billing
+      - generic: Transaction Fees & Storage
+    - heading "Support" [level=2]
+    - link "Help & Documentation":
+      - /url: /merchant?panel=help
+      - generic: Help & Documentation
+    - link "Submit a Request":
+      - /url: /merchant?panel=support
+      - generic: Submit a Request
+  - strong: Connected to NUERS
+  - generic: Application response received
+  - generic: "BIR connection: not verified"
+  - generic "Software name and version": NUERS · Version 1.0.0
+  - paragraph:
+    - text: DIGITAL PHILIPPINES.
+    - text: BRIGHTER TOMORROW.
+- banner:
+  - button "Toggle navigation" [expanded]:
+  - searchbox "Search users"
+  - link "Help":
+    - /url: /merchant?panel=help
+    - generic: Help
+  - link "Merchant notices":
+    - /url: /merchant?panel=alerts
+  - generic "DT Demo Trading Company Business Account":
+    - generic: DT
+    - strong: Demo Trading Company
+    - generic: Business Account
+- main:
+  - heading "User Management" [level=1]:
+    - text: User Management
+  - text: Manage merchant users, roles, permissions, access scopes, and security controls.
+  - paragraph:
+    - text: Secure Access.
+    - text: Stronger Businesses.
+  - generic: Monday, October 19, 2026
+  - strong: 2:07:12 AM
+  - generic: NUERS responding
+  - article:
+    - heading "Total Users" [level=2]
+    - strong: "1"
+    - generic: Accepted work accounts + owner
+  - article:
+    - heading "Active Users" [level=2]
+    - strong: "1"
+    - generic: Current business access
+  - article:
+    - heading "Pending Invites" [level=2]
+    - strong: "0"
+    - generic: Unexpired invitations
+  - article:
+    - heading "Roles Configured" [level=2]
+    - strong: "7"
+    - generic: Merchant permissions only
+  - article:
+    - heading "MFA Enrolled Users" [level=2]
+    - strong: "1"
+    - generic: Active accounts with an authenticator
+  - article:
+    - heading "Branch / Terminal Users" [level=2]
+    - strong: "0"
+    - generic: Active users with a restricted scope
+  - heading "User Directory" [level=2]
+  - paragraph: Business owner controls invitations and access grants. Financial records remain immutable.
+  - button "Invite User":
+    - text: Invite User
+  - button "Create Role":
+    - text: Create Role
+  - button "Export Users":
+    - text: Export Users
+  - button "Pending Invites (0)":
+    - text: Pending Invites (0)
+  - generic: Search users
+  - textbox "Search users":
+    - /placeholder: Search by name, email, or user ID…
+  - combobox "Filter role":
+    - option "All Roles" [selected]
+    - option "Merchant Admin"
+    - option "Branch Manager"
+    - option "Cashier"
+    - option "Accountant"
+    - option "Compliance Officer"
+    - option "Viewer / Auditor"
+    - option "API Operator"
+  - combobox "Filter branch":
+    - option "All Branches" [selected]
+  - combobox "Filter status":
+    - option "All Statuses" [selected]
+    - option "active"
+    - option "invited"
+    - option "expired"
+    - option "suspended"
+    - option "revoked"
+  - button "Search"
+  - button "Reset"
+  - paragraph: Scroll horizontally to view all columns and user actions.
+  - table:
+    - rowgroup:
+      - row "User ID Full Name / Email Mobile Role Assigned Branches Terminal Scope Status Last Sign-in (PHT) MFA Actions":
+        - columnheader "User ID"
+        - columnheader "Full Name / Email"
+        - columnheader "Mobile"
+        - columnheader "Role"
+        - columnheader "Assigned Branches"
+        - columnheader "Terminal Scope"
+        - columnheader "Status"
+        - columnheader "Last Sign-in (PHT)"
+        - columnheader "MFA"
+        - columnheader "Actions"
+    - rowgroup:
+      - row "OWNER Demo Merchant Owner merchant-docs@example.test +639170000000 Merchant Admin All Branches All Terminals active Oct 19, 2026, 2:04 AM View Demo Merchant Owner Protected business owner":
+        - cell "OWNER":
+          - button "OWNER"
+        - cell "Demo Merchant Owner merchant-docs@example.test":
+          - strong: Demo Merchant Owner
+          - generic "merchant-docs@example.test"
+        - cell "+639170000000"
+        - cell "Merchant Admin":
+          - generic: Merchant Admin
+        - cell "All Branches"
+        - cell "All Terminals"
+        - cell "active":
+          - generic: active
+        - cell "Oct 19, 2026, 2:04 AM"
+        - cell:
+          - generic "Authenticator enrolled":
+        - cell "View Demo Merchant Owner Protected business owner":
+          - button "View Demo Merchant Owner":
+          - img "Protected business owner"
+  - generic: Showing 1 to 1 of 1 users
+  - button "‹" [disabled]
+  - strong: "1"
+  - generic: of 1
+  - button "›" [disabled]
+  - text: Rows per page
+  - combobox "Rows per page":
+    - option "8" [selected]
+    - option "10"
+    - option "25"
+    - option "50"
+  - heading "Role Definitions (RBAC)" [level=2]
+  - paragraph: Merchant roles stay within this business.
+  - button "Create Role":
+    - text: Create Role
+  - button "Merchant Admin 1 active user Business-wide operational access. Team grants remain owner-controlled.":
+    - strong: Merchant Admin
+    - generic: 1 active user
+    - paragraph: Business-wide operational access. Team grants remain owner-controlled.
+  - button "Branch Manager 0 active users Read and export documents within assigned branches / terminals.":
+    - strong: Branch Manager
+    - generic: 0 active users
+    - paragraph: Read and export documents within assigned branches / terminals.
+  - button "Cashier 0 active users Create invoices and manage buyers with business-wide access.":
+    - strong: Cashier
+    - generic: 0 active users
+    - paragraph: Create invoices and manage buyers with business-wide access.
+  - button "Accountant 0 active users Review documents and sales reports.":
+    - strong: Accountant
+    - generic: 0 active users
+    - paragraph: Review documents and sales reports.
+  - button "Compliance Officer 0 active users Review recorded documents and reporting evidence. No BIR approval authority.":
+    - strong: Compliance Officer
+    - generic: 0 active users
+    - paragraph: Review recorded documents and reporting evidence. No BIR approval authority.
+  - button "Viewer / Auditor 0 active users Read recorded documents within the assigned access scope.":
+    - strong: Viewer / Auditor
+    - generic: 0 active users
+    - paragraph: Read recorded documents within the assigned access scope.
+  - button "API Operator 0 active users Inspect integration metadata; credential changes remain owner-controlled.":
+    - strong: API Operator
+    - generic: 0 active users
+    - paragraph: Inspect integration metadata; credential changes remain owner-controlled.
+  - heading "Access Matrix / Permissions" [level=2]
+  - paragraph: Select a role to review its enforced actions.
+  - button "Edit Role":
+    - text: Edit Role
+  - text: Selected role
+  - combobox "Selected role":
+    - option "Merchant Admin" [selected]
+    - option "Branch Manager"
+    - option "Cashier"
+    - option "Accountant"
+    - option "Compliance Officer"
+    - option "Viewer / Auditor"
+    - option "API Operator"
+  - generic: View invoices & receipts
+  - generic: Download document copies / CSV
+  - generic: Create invoices (business-wide)
+  - generic: View customers (business-wide)
+  - generic: Manage customers (business-wide)
+  - generic: View sales reports (business-wide)
+  - generic: Export sales reports (business-wide)
+  - generic: View wallet (business-wide)
+  - generic: View integration metadata (business-wide)
+  - heading "User Invitation & Approval" [level=2]
+  - paragraph: Invite, verify email ownership, then enroll MFA.
+  - button "Invite User":
+    - text: Invite User
+  - button "Review Invitations":
+    - text: Review Invitations
+  - paragraph: Single-use links expire after 72 hours. Existing personal or privileged accounts cannot be converted into work accounts.
+  - heading "Pending Invitations (0)" [level=2]
+  - button "View All":
+    - text: View All
+  - paragraph: No pending invitations. Invite a work user when needed.
+  - heading "Branch / Terminal Access Scope" [level=2]
+  - paragraph: Exact registered branch and terminal restrictions.
+  - text: Select User
+  - combobox "Select User":
+    - option "Select a visible user" [selected]
+    - option "Demo Merchant Owner"
+  - term: Access scope
+  - definition: Select a user
+  - term: Assigned branches
+  - definition: —
+  - term: Terminal access
+  - definition: —
+  - button "Edit Access Scope" [disabled]
+  - paragraph: Scoped roles can read / export matching documents. Historical records without exact provenance are excluded.
+  - heading "Security & Access Controls" [level=2]
+  - paragraph: Current NUERS security policy.
+  - article:
+    - strong: Multi-Factor Authentication
+    - generic: Required for team operations and owner access changes
+    - generic: Enforced
+  - article:
+    - strong: Password Policy
+    - generic: At least 12 characters, letters and numbers
+    - generic: Enforced
+  - article:
+    - strong: Session Lifetime
+    - generic: 24h idle · 7 days maximum · device-bound
+    - generic: Protected
+  - article:
+    - strong: Sensitive Access Changes
+    - generic: Owner-only · MFA verified for this login · reason required
+    - generic: Audited
+  - article:
+    - strong: Security Email Notifications
+    - generic: Invitations, access changes and password recovery
+    - generic: Configure SMTP
+  - link "My Account Security":
+    - /url: /merchant/security
+    - text: My Account Security
+  - heading "Recent Access Activity" [level=2]
+  - paragraph: Append-only events linked to the platform audit chain.
+  - button "Refresh":
+    - text: Refresh
+  - paragraph: No team access changes recorded.
+- contentinfo:
+  - img "NUERS"
+  - generic: © 2026 NUERS. All rights reserved.
+  - navigation "Merchant legal and support":
+    - link "Privacy Policy":
+      - /url: /privacy-notice
+    - link "Terms of Service":
+      - /url: /terms-of-service
+    - link "Support":
+      - /url: /merchant?panel=help
+- button "Chat with NUERS support":
+  - generic: Chat with us
+- region "Notifications alt+T"

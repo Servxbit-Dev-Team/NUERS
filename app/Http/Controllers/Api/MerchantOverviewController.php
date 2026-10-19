@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\ApiAccess;
 use App\Services\EisDocumentReadiness;
 use App\Services\IssuedDocumentLedger;
+use App\Services\MerchantWallet;
 use App\Services\SubmissionEvidence;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
@@ -93,7 +94,9 @@ class MerchantOverviewController extends Controller
             $drafts ? ['id' => 'drafts', 'title' => 'Draft invoices', 'message' => $drafts.' draft(s) remain unissued.', 'href' => '/merchant/invoices'] : null,
         ]));
 
+        $wallet = app(MerchantWallet::class)->state($merchant->id);
         return response()->json([
+            'wallet' => ['available_centavos' => (int) $wallet->available_centavos, 'currency' => 'PHP'],
             'account' => ['id' => $merchant->id, 'name' => $merchant->business_name, 'tin' => $merchant->tin, 'logo' => $merchant->logo_url ?? null, 'rdo' => $merchant->rdo_code ?? null, 'rdo_name' => $merchant->rdo_name ?? null, 'vat_registered' => (bool) $merchant->vat_registered, 'status' => $merchant->status, 'plan' => $merchant->subscription_tier ?? $merchant->plan ?? null],
             'today' => $today->toDateString(), 'days' => $days, 'current' => $current, 'previous' => $previous,
             'sales' => array_values(array_map(fn ($r) => [...$r, 'sales' => $r['sales'] / 100], $series)),

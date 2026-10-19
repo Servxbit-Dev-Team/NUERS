@@ -5,6 +5,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { useAuth } from "@/lib/auth";
 import { apiUrl } from "@/lib/api-url";
 import "./login.css";
+import { SoftwareIdentity } from "@/components/enterprise/software-identity";
 
 const REMEMBERED_EMAIL_KEY = "nuers_remembered_email";
 
@@ -60,7 +61,7 @@ export function LoginPage() {
         email_link_unavailable: "This Google account cannot be linked automatically. Please use your NUERS email and password.",
         account_not_found: "No NUERS account is registered with that Google email. Please register first.",
         account_unavailable: "This NUERS account is unavailable. Please contact your administrator.",
-        identity_conflict: "This NUERS account is already linked to a different Google account.",
+        identity_conflict: "The registered email and linked Google account do not match. Use your NUERS email and password.",
       };
       setError(messages[googleError] ?? "Unable to sign in with Google. Please try again.");
       const next = new URLSearchParams(searchParams);
@@ -158,11 +159,12 @@ export function LoginPage() {
                 <img src="/auth-assets/google-g.svg" alt="" aria-hidden="true" />
                 <span>Sign in with Google</span>
               </button>
+              <p className="text-center text-xs text-slate-500 mt-2">Use the email already registered with NUERS. Google sign-in does not create an account.</p>
             </div>
             <p className="nuers-login__register">Don’t have an account? <Link to="/register">Register Now</Link></p>
           </div>
           <footer className="nuers-login__card-footer">
-            <span>© 2026 NUERS. All rights reserved.</span>
+            <span>© 2026 NUERS. All rights reserved.</span><SoftwareIdentity />
             
           </footer>
         </section>

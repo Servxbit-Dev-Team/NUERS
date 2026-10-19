@@ -1,0 +1,127 @@
+- complementary "merchant navigation":
+  - link "NUERS dashboard":
+    - /url: /merchant
+    - img "NUERS — National Unified Electronic Receipt System"
+  - navigation:
+    - heading "Overview" [level=2]
+    - link "Dashboard":
+      - /url: /merchant
+      - generic: Dashboard
+    - heading "Sales & Invoicing" [level=2]
+    - link "Create Invoice":
+      - /url: /merchant/invoices/create
+      - generic: Create Invoice
+    - link "Invoices & Receipts":
+      - /url: /merchant/invoices
+      - generic: Invoices & Receipts
+    - button "Expand Invoices & Receipts":
+    - link "Customers":
+      - /url: /merchant/customers
+      - generic: Customers
+    - link "Wallet":
+      - /url: /merchant/wallet
+      - generic: Wallet
+    - heading "Reports" [level=2]
+    - link "Sales Reports":
+      - /url: /merchant/sales-reports
+      - generic: Sales Reports
+    - heading "Settings" [level=2]
+    - link "Business Profile":
+      - /url: /merchant/profile
+      - generic: Business Profile
+    - link "User Management":
+      - /url: /merchant/users
+      - generic: User Management
+    - link "Account Security":
+      - /url: /merchant/security
+      - generic: Account Security
+    - link "API Integration":
+      - /url: /merchant/api-keys
+      - generic: API Integration
+    - link "Invoice Settings":
+      - /url: /merchant/pos-settings
+      - generic: Invoice Settings
+    - link "Transaction Fees & Storage":
+      - /url: /merchant/billing
+      - generic: Transaction Fees & Storage
+    - heading "Support" [level=2]
+    - link "Help & Documentation":
+      - /url: /merchant?panel=help
+      - generic: Help & Documentation
+    - link "Submit a Request":
+      - /url: /merchant?panel=support
+      - generic: Submit a Request
+  - strong: NUERS connection
+  - generic: Open dashboard to check
+  - generic: "BIR connection: not verified"
+  - generic "Software name and version": NUERS · Version 1.0.0
+  - paragraph:
+    - text: DIGITAL PHILIPPINES.
+    - text: BRIGHTER TOMORROW.
+- banner:
+  - button "Toggle navigation" [expanded]:
+  - searchbox "Search transactions"
+  - link "Help":
+    - /url: /merchant?panel=help
+    - generic: Help
+  - link "Merchant notices":
+    - /url: /merchant?panel=alerts
+  - generic "DT Demo Trading Company Business Account":
+    - generic: DT
+    - strong: Demo Trading Company
+    - generic: Business Account
+- main:
+  - button "Back":
+    - text: Back
+  - heading "New VAT Invoice" [level=1]
+  - paragraph: VI-2026-001002
+  - button "Save Draft":
+    - text: Save Draft
+  - button "Save & Send":
+    - text: Save & Send
+  - button "1. Document Type"
+  - button "2. Parties"
+  - button "3. Line Items"
+  - button "4. Tax & Totals"
+  - button "5. Sign & Validate"
+  - button "6. Preview"
+  - progressbar
+  - generic: Select Document Type
+  - button "VAT Invoice VI-YYYY-XXXXXX":
+    - paragraph: VAT Invoice
+    - paragraph: VI-YYYY-XXXXXX
+  - button "Non-VAT Invoice NVI-YYYY-XXXXXX":
+    - paragraph: Non-VAT Invoice
+    - paragraph: NVI-YYYY-XXXXXX
+  - button "VAT-Exempt Sales Invoice VEI-YYYY-XXXXXX":
+    - paragraph: VAT-Exempt Sales Invoice
+    - paragraph: VEI-YYYY-XXXXXX
+  - button "Zero-Rated Sales Invoice ZRI-YYYY-XXXXXX" [disabled]:
+    - paragraph: Zero-Rated Sales Invoice
+    - paragraph: ZRI-YYYY-XXXXXX
+  - button "Mixed Sales Invoice MSI-YYYY-XXXXXX":
+    - paragraph: Mixed Sales Invoice
+    - paragraph: MSI-YYYY-XXXXXX
+  - button "Payment Receipt PR-YYYY-XXXXXX":
+    - paragraph: Payment Receipt
+    - paragraph: PR-YYYY-XXXXXX
+  - generic: Invoice Number
+  - textbox: VI-2026-001002
+  - generic: Issue Date
+  - textbox: 2026-10-19
+  - generic: Due Date
+  - textbox: 2026-11-18
+  - 'button "Next: Parties"'
+- contentinfo:
+  - img "NUERS"
+  - generic: © 2026 NUERS. All rights reserved.
+  - navigation "Merchant legal and support":
+    - link "Privacy Policy":
+      - /url: /privacy-notice
+    - link "Terms of Service":
+      - /url: /terms-of-service
+    - link "Support":
+      - /url: /merchant?panel=help
+- button "Chat with NUERS support":
+  - generic: Chat with us
+- region "Notifications alt+T"

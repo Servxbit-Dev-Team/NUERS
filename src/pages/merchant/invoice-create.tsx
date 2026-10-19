@@ -1,3 +1,6 @@
+import {SalesBenefitForm} from '@/components/invoices/sales-benefit-form';
+import {benefitLine,benefitError,type SalesBenefit} from '@/lib/statutory-sales';
+import type {InvoicePreferences} from '@/lib/merchant-invoice-settings';
 import { SavePendingInvoice } from "@/components/merchant/client-queue";
 import { useState, useCallback, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -71,6 +74,7 @@ function emptyLine(n: number, tax: TaxType = "vatable"): LineItem {
 const STEPS = ["Document Type", "Parties", "Line Items", "Tax & Totals", "Sign & Validate", "Preview"];
 
 type BusinessAccountLookup = {
+  invoice_preferences?: InvoicePreferences;
   id: string;
   type?: string;
   business_name: string;
@@ -160,13 +164,19 @@ export function InvoiceCreate() {
   const [originalInvoice, setOriginalInvoice] = useState(searchParams.get("original") || "");
 
   // Line items
-  const [lines, setLines] = useState<LineItem[]>([emptyLine(1, taxForDocument(initialType))]);
+  const [salesBenefit,setSalesBenefit]=useState<SalesBenefit|null>(null);
+  const [rawLines, setLines] = useState<LineItem[]>([emptyLine(1, taxForDocument(initialType))]);
 
   // Tax/charges
   const [withholdingPct, setWithholdingPct] = useState(0);
   const otherCharges = 0;
+  const [preferences,setPreferences]=useState<InvoicePreferences|null>(null);
+  const [pricesIncludeVat,setPricesIncludeVat]=useState(true);
+  const [footerNote,setFooterNote]=useState("");
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("Payment due within 30 days of invoice date.");
+
+  const lines=rawLines.map(l=>benefitLine(l,salesBenefit,pricesIncludeVat));
 
   // Signing
   const [signature, setSignature] = useState("");
@@ -203,6 +213,17 @@ export function InvoiceCreate() {
         setMerchantTin(formatTin(account.tin));
         setMerchantAddress(account.address || "");
         setMerchantVatRegistered(typeof account.vat_registered === "boolean" ? account.vat_registered : null);
+        const prefs=account.invoice_preferences;
+        if(prefs){
+          setPreferences(prefs);setPricesIncludeVat(prefs.price_display==='inclusive');setNotes(prefs.additional_notes);setFooterNote(prefs.footer_text);setTerms(prefs.terms_and_conditions);
+          const type=(requestedType&&requestedType in DOC_TYPE_META?requestedType:prefs.default_document_type) as DocumentType;
+          setDocType(type);setInvoiceNumber(generateInvoiceNumber(type));
+          const forced=taxForDocument(type),tax=account.vat_registered?forced:(forced==='vatable'?'non_vat':forced);
+          setLines([emptyLine(1,tax)]);
+          const current=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Manila'});setIssueDate(prefs.invoice_date==='current'?current:'');
+          if(prefs.invoice_date==='current'){const due=new Date(current+'T12:00:00+08:00');due.setDate(due.getDate()+prefs.payment_terms_days);setDueDate(due.toLocaleDateString('en-CA',{timeZone:'Asia/Manila'}));}
+        }
+
         setSellerMessage(account.tin ? "Seller loaded from your logged-in Business Account." : "Seller loaded. TIN is still pending in the Business Account registry.");
       } catch (error) {
         if (!active) return;
@@ -251,7 +272,7 @@ export function InvoiceCreate() {
     if (forcedTax) {
       setLines((current) => current.map((line) => {
         const updated = { ...line, tax_type: forcedTax, vat_rate: forcedTax === "vatable" ? 12 : 0 };
-        return { ...updated, ...computeLineItem(updated.unit_price, updated.quantity, updated.discount_pct, updated.vat_rate, updated.tax_type) };
+        return { ...updated, ...computeLineItem(updated.unit_price, updated.quantity, updated.discount_pct, updated.vat_rate, updated.tax_type,pricesIncludeVat) };
       }));
     }
   };
@@ -263,16 +284,18 @@ export function InvoiceCreate() {
       const updated = { ...l, ...patch };
       const computed = computeLineItem(
         updated.unit_price, updated.quantity, updated.discount_pct,
-        updated.vat_rate, updated.tax_type
+        updated.vat_rate, updated.tax_type,pricesIncludeVat
       );
       return { ...updated, ...computed };
     }));
-  }, []);
+  }, [pricesIncludeVat]);
 
-  const addLine = () => setLines(prev => [...prev, emptyLine(prev.length + 1, taxForDocument(docType))]);
+  const addLine = () => setLines(prev => [...prev, emptyLine(prev.length + 1, merchantVatRegistered===false?'non_vat':taxForDocument(docType))]);
   const removeLine = (id: string) => setLines(prev => prev.filter(l => l.id !== id).map((l, i) => ({ ...l, line_number: i + 1 })));
 
   // ── Totals ─────────────────────────────────────────────────────────────
+  const statutoryDiscount=lines.reduce((s,l)=>s+(l.benefit_details?.discount_centavos||0),0);
+  const vatAdjustment=lines.reduce((s,l)=>s+(l.benefit_details?.vat_adjustment_centavos||0),0);
   const totals = computeInvoiceTotals(lines, withholdingPct, toCentavos(otherCharges));
 
   // ── Sign & validate ────────────────────────────────────────────────────
@@ -295,9 +318,12 @@ export function InvoiceCreate() {
 
   };
 
-  useEffect(() => { setIsValidated(false); setIsSigned(false); setSignature(""); setQrPayload(""); setValidationHash(""); }, [lines, docType, merchantName, merchantTin, merchantAddress, buyerName, buyerTin, buyerAddress, buyerEmail, buyerPhone, buyerType, issueDate, withholdingPct, originalInvoice, refNumber, poNumber, soNumber, merchantVatRegistered]);
+  useEffect(() => { setIsValidated(false); setIsSigned(false); setSignature(""); setQrPayload(""); setValidationHash(""); }, [rawLines, salesBenefit, docType, merchantName, merchantTin, merchantAddress, buyerName, buyerTin, buyerAddress, buyerEmail, buyerPhone, buyerType, issueDate, withholdingPct, originalInvoice, refNumber, poNumber, soNumber, merchantVatRegistered]);
 
   const handleValidate = () => {
+    const error=benefitError(salesBenefit,rawLines,issueDate);if(error){toast.error(error);return;}
+    if(preferences?.require_customer_tin&&!buyerTin.trim()){toast.error("Your Invoice Settings require a customer TIN.");return;}
+    if(preferences&&!preferences.allow_zero_rated&&lines.some(l=>l.tax_type==="zero_rated")){toast.error("Enable eligible zero-rated transactions in Invoice Settings first.");return;}
     if (merchantVatRegistered === false && lines.some(line => line.tax_type === "vatable")) { toast.error("This seller is recorded as Non-VAT. Select the correct document and line tax classification."); return; }
     const result = validateInvoice(
       { buyer_name: buyerName, merchant_tin: merchantTin, total_amount: totals.total, issue_date: issueDate, document_type: docType, original_invoice_id: originalInvoice || undefined, reference_number: refNumber || undefined },
@@ -316,6 +342,7 @@ export function InvoiceCreate() {
     setSaving(true);
 
     try {
+      if(preferences?.require_customer_tin&&!buyerTin.trim())throw new Error("Your Invoice Settings require a customer TIN.");
       if (send || isValidated) {
         const result = validateInvoice(
           {
@@ -370,6 +397,7 @@ export function InvoiceCreate() {
           sales_order: soNumber || null,
           original_invoice_id: originalInvoice || null,
           correction_reason: correctionReason || null,
+          sales_benefit: salesBenefit,
           subtotal_amount: totals.subtotal,
           discount_amount: totals.discount,
           taxable_amount: totals.taxable,
@@ -384,6 +412,8 @@ export function InvoiceCreate() {
           vat_exempt_amount: totals.vat_exempt,
           notes,
           terms_and_conditions: terms,
+          footer_note: footerNote,
+          prices_include_vat: pricesIncludeVat,
           formats_generated: formats.length ? formats : ["pdf", "json"],
           qr_payload: qrPayload || null,
           digital_signature: null,
@@ -398,10 +428,11 @@ export function InvoiceCreate() {
             discount_pct: line.discount_pct,
             discount_amount: line.discount_amount,
             taxable_amount: line.taxable_amount,
-            vat_rate: line.vat_rate,
+            benefit_eligible: !!salesBenefit && !!line.benefit_eligible,
+            vat_rate: (line.benefit_details?.original_tax_type||line.tax_type)==='vatable'?12:0,
             vat_amount: line.vat_amount,
             line_total: line.line_total,
-            tax_type: line.tax_type,
+            tax_type: line.benefit_details?.original_tax_type||line.tax_type,
           })),
         };
       const response = await apiFetch("/api/business-invoices",{method:"POST",headers,body:JSON.stringify(invoicePayload)});
@@ -477,7 +508,7 @@ export function InvoiceCreate() {
                 return (
                   <button
                     key={type}
-                    onClick={() => handleDocTypeChange(type)}
+                    disabled={type==="zero_rated_invoice"&&!!preferences&&!preferences.allow_zero_rated} onClick={() => handleDocTypeChange(type)}
                     className={cn(
                       "flex flex-col items-start p-4 rounded-lg border text-left transition-all hover:border-primary/50",
                       docType === type ? "border-primary bg-primary/5" : "border-border"
@@ -626,7 +657,7 @@ export function InvoiceCreate() {
           </Card>
           <div className="lg:col-span-2 flex justify-between">
             <Button variant="outline" size="sm" onClick={() => setStep(0)}>Back</Button>
-            <Button size="sm" onClick={() => setStep(2)} disabled={!buyerName.trim()}>Next: Line Items</Button>
+            <Button size="sm" onClick={() => setStep(2)} disabled={!buyerName.trim()||!!preferences?.require_customer_tin&&!buyerTin.trim()}>Next: Line Items</Button>
           </div>
         </div>
       )}
@@ -641,6 +672,7 @@ export function InvoiceCreate() {
             </Button>
           </CardHeader>
           <CardContent className="px-5 pb-5">
+            <SalesBenefitForm value={salesBenefit} onChange={setSalesBenefit}/>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
@@ -658,7 +690,7 @@ export function InvoiceCreate() {
                         <Input value={line.item_code} onChange={e => updateLine(line.id, { item_code: e.target.value })} className="h-7 w-20 text-xs font-mono" placeholder="CODE" />
                       </td>
                       <td className="py-2 pr-2">
-                        <Input value={line.description} onChange={e => updateLine(line.id, { description: e.target.value })} className="h-7 w-48 text-xs" placeholder="Description *" />
+                        <Input value={line.description} onChange={e => updateLine(line.id, { description: e.target.value })} className="h-7 w-48 text-xs" placeholder="Description *" />{salesBenefit&&<label className="flex items-center gap-2 mt-2 text-xs"><input type="checkbox" checked={!!line.benefit_eligible} onChange={e=>updateLine(line.id,{benefit_eligible:e.target.checked,discount_pct:0})}/>Eligible beneficiary item</label>}
                       </td>
                       <td className="py-2 pr-2">
                         <Select value={line.unit} onValueChange={v => updateLine(line.id, { unit: v })}>
@@ -677,10 +709,10 @@ export function InvoiceCreate() {
                         <Input type="number" value={fromCentavos(line.unit_price)} min={0} step={0.01} onChange={e => updateLine(line.id, { unit_price: toCentavos(+e.target.value) })} className="h-7 w-24 text-xs text-right" />
                       </td>
                       <td className="py-2 pr-2">
-                        <Input type="number" value={line.discount_pct} min={0} max={100} step={0.01} onChange={e => updateLine(line.id, { discount_pct: +e.target.value })} className="h-7 w-14 text-xs text-right" />
+                        <Input type="number" value={line.discount_pct} disabled={!!salesBenefit && !!line.benefit_eligible} min={0} max={100} step={0.01} onChange={e => updateLine(line.id, { discount_pct: +e.target.value })} className="h-7 w-14 text-xs text-right" />
                       </td>
                       <td className="py-2 pr-2">
-                        <Select value={line.tax_type} onValueChange={v => updateLine(line.id, { tax_type: v as TaxType })}>
+                        <Select value={line.benefit_details?.original_tax_type||line.tax_type} onValueChange={v => updateLine(line.id, { tax_type: v as TaxType })}>
                           <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="vatable">Vatable</SelectItem>
@@ -767,7 +799,8 @@ export function InvoiceCreate() {
                 {[
                   { label: "Gross Sales",       val: totals.subtotal,   bold: false },
                   { label: "Less: Discounts",    val: -totals.discount,  bold: false, neg: true },
-                  { label: "Net Sales",          val: totals.subtotal - totals.discount, bold: false },
+                  { label: "Less: VAT Adjustment", val: -vatAdjustment, bold:false, neg:true },
+                  { label: "Sales After Discounts", val: totals.total - totals.vat, bold: false },
                   null,
                   { label: "Taxable Sales",      val: totals.taxable,    bold: false },
                   { label: "Zero-Rated Sales",   val: totals.zero_rated, bold: false },
@@ -897,7 +930,7 @@ export function InvoiceCreate() {
             <span className="text-sm text-muted-foreground">Unsaved draft preview</span>
           </CardHeader>
           <CardContent className="px-5 pb-5">
-            <BirDocumentPreview
+            <BirDocumentPreview salesBenefit={salesBenefit} statutoryDiscount={statutoryDiscount} vatAdjustment={vatAdjustment}
               documentType={docType}
               documentNumber={invoiceNumber}
               issueDate={issueDate}

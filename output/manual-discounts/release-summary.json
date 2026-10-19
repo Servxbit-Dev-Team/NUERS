@@ -1,0 +1,33 @@
+{
+  "deployed": true,
+  "manual_amount_and_percentage": true,
+  "discount_reporting_available": true,
+  "verification": {
+    "manual_discounts_verified": true,
+    "amount_and_percentage": true,
+    "invalid_discount_rejected": true,
+    "report_query_valid": true,
+    "wallet_count": 0,
+    "existing_wallet_ledgers_valid": true,
+    "privileged_mfa": true,
+    "mfa_challenge": "login_session",
+    "no_financial_writes": true
+  },
+  "no_schema_changes": true,
+  "existing_branch_records_preserved": true,
+  "existing_wallet_balances_and_ledger_preserved": true,
+  "source_and_assets_verified": true,
+  "accounts_and_mfa_credentials_preserved": true,
+  "roles_preserved": true,
+  "environment_preserved": true,
+  "security_policy_preserved": true,
+  "privileged_mfa": true,
+  "mfa_challenge": "login_session",
+  "application_records_preserved": true,
+  "smtp_preserved": true,
+  "pricing_preserved": true,
+  "synthetic_fixtures_deployed": false,
+  "php": "8.4.26",
+  "backup_directory": "/var/www/vhosts/nuers.net/nuers-manual-discounts-backup-20261018-235721",
+  "package_sha256": "b91802b8e7511ac7bc29a8f89f18a466451e7738eaefadabbb6b2ff44a6ce4e8"
+}

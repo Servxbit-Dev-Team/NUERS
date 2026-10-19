@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-17.wallet",
+  "version": "2026-10-19.receipts-status",
   "title": "NUERS Developer API",
   "description": "Implemented NUERS application routes. This is not an official BIR EIS API specification. Live BIR transport remains unavailable.",
   "sample": {
@@ -191,6 +191,18 @@
           "type": "string",
           "required": true,
           "description": "Original event timestamp with explicit timezone; preserve on every retry."
+        },
+        {
+          "name": "manual_discount",
+          "type": "object",
+          "required": false,
+          "description": "Optional {type: amount|percentage, value, reason}; document OR items[].manual_discount. PHP/percent up to two decimals, nonblank reason up to 500 characters; no stacking. Existing per-line discount_pct remains valid."
+        },
+        {
+          "name": "customer_email",
+          "type": "string",
+          "required": false,
+          "description": "Optional customer_email: one valid checkout email address, maximum 254 characters. Omit or send null when absent. Map the checkout email explicitly; NUERS does not scan arbitrary payload fields. Invalid addresses return 422 before acceptance. Never use a customer address as an API credential."
         }
       ],
       "query": [],
@@ -216,25 +228,42 @@
         "source_event_id": "TEST-EVENT-000001",
         "event_type": "invoice.finalized",
         "occurred_at": "2026-10-17T10:00:00+08:00",
-        "receipt_number": "TEST-00000001"
+        "receipt_number": "TEST-00000001",
+        "customer_email": "customer@example.test"
       },
       "response": {
+        "environment": "live",
         "duplicate": false,
-        "source_event_id": "TEST-EVENT-000001",
-        "external_reference": "TEST-POS-000001",
+        "nuers_status": "success",
         "status": "durably_recorded",
-        "wallet": {
-          "fee_centavos": 300,
-          "pricing_revision": 1
-        },
-        "bir_acceptance": "not_verified"
+        "message": "Transaction successfully recorded by NUERS.",
+        "error": null,
+        "id": "EXAMPLE-INBOX-ID",
+        "transaction_id": "EXAMPLE-TRANSACTION-ID",
+        "receipt_id": "EXAMPLE-RECEIPT-ID",
+        "source_event_id": "erpA:invoice:0001",
+        "external_reference": "erpA:INV-0001",
+        "status_url": "https://nuers.net/api/integrations/transactions/EXAMPLE-INBOX-ID",
+        "customer_receipt": {
+          "delivery_id": "EXAMPLE-DELIVERY-ID",
+          "status": "queued",
+          "reason": "Customer receipt is queued for email processing."
+        }
       },
       "notes": [
         "Example fee is illustrative; read GET /api/integrations/transactions/wallet for the current platform fee. API money input is PHP/pesos; wallet amounts are integer centavos.",
         "The merchant comes from the key. Sandbox keys cannot write financial records.",
         "Exact identity/content replay returns 200 and the original response without another fee. Conflicting content under an existing identity returns 409. Preserve original event ID, timestamp and number.",
         "402 returns code=INSUFFICIENT_WALLET_BALANCE, available_centavos, required_centavos, shortage_centavos and transaction_saved=false. No financial record, debit or numbering advance commits. Retain the source on the client and retry the same identity after funding.",
-        "The fee applies once per eligible finalized primary sale of PHP500 or above. Smaller sales, payment copies and accepted retries do not add a sale fee. Funding does not bypass branch, tax, series, authority or BIR delivery gates."
+        "The fee applies once per finalized primary Live sale meeting the current Admin-configured minimum. Default: PHP3 fee and PHP0 minimum, so every amount is chargeable. A positive minimum exempts amounts strictly below it. Payment copies and accepted retries do not add another sale fee. Funding does not bypass branch, tax, series, authority or BIR delivery gates.",
+        "Manual discounts are included in final gross and returned as calculation.manual_discount_amount, separately from statutory relief. VAT is recalculated after discount. Document discounts allocate proportionally by original line extensions with deterministic centavo rounding. See merchant guide pages 37\u201338.",
+        "Merchant transaction, batch and wallet responses do not expose bir_acceptance, bir_connection, bir_status or internal preparation blockers. Display NUERS status in the connector. NUERS Success confirms platform recording; it does not assert government acceptance.",
+        "Every ERP, POS or e-commerce sales row must show NUERS Status, failure reason, environment, NUERS reference and last attempt. Show Success only after a valid 201 or 200 duplicate acknowledgement with matching source_event_id, external_reference and environment, non-empty id/transaction_id/receipt_id, status=durably_recorded and nuers_status=success. Persist these identifiers atomically with the local outbox acknowledgement.",
+        "Show Error plus error.reason and applicable errors field messages for a rejected request. Keep the original sale locally. 402 requires wallet funding; 401/403 require credential or permission correction; 409 requires reconciliation; 422 requires mapping correction. For timeouts, invalid JSON, malformed 2xx or error.outcome=unknown, show Pending confirmation and retry the identical original event. Honor Retry-After and bounded backoff for 429/5xx. Never render server messages as HTML or expose credentials to the customer.",
+        "Optional customer_email: one valid checkout email address, maximum 254 characters. Omit or send null when absent. Map the checkout email explicitly; NUERS does not scan arbitrary payload fields. Invalid addresses return 422 before acceptance. Never use a customer address as an API credential.",
+        "A newly accepted Live event containing customer_email queues one customer PDF email in the same database transaction. Exact retries return the same record and do not queue another email or fee. Failed/rolled-back events queue no email. Sandbox always returns suppressed_sandbox and never emails customers. Existing transactions are not emailed retroactively.",
+        "Email attachments use the same receipt renderer and E-Receipt Logo saved under Merchant Invoice Settings → Logo and Branding. This logo is independent from the Business Profile Picture; both uploads save immediately without administrator approval. Original seller identity, lines, taxes, discounts and totals remain the recorded snapshot. Save branding before the email worker renders the PDF; changes affect subsequent renders and cannot recall an already sent attachment.",
+        "Poll GET status_url with the same environment and transactions:read scope for customer_receipt.status and reason. States: not_requested, suppressed_sandbox, queued, preparing, sending, smtp_accepted, failed, uncertain, expired, cancelled. smtp_accepted means the SMTP server accepted the message, not confirmed inbox delivery. Email failures never change a successfully recorded sale to Error. Do not retry the sale to resend mail; use the merchant document Send Copy action after investigating an uncertain delivery."
       ],
       "errors": [
         401,
@@ -812,7 +841,9 @@
       "query": [],
       "sample": null,
       "response": null,
-      "notes": [],
+      "notes": [
+        "Merchant transaction, batch and wallet responses do not expose bir_acceptance, bir_connection, bir_status or internal preparation blockers. Display NUERS status in the connector. NUERS Success confirms platform recording; it does not assert government acceptance."
+      ],
       "errors": [
         401,
         403,
@@ -867,21 +898,42 @@
         ]
       },
       "response": {
+        "nuers_status": "success",
         "atomic": true,
         "accepted": 1,
         "results": [
           {
-            "source_event_id": "TEST-EVENT-000001",
-            "external_reference": "TEST-POS-000001",
-            "duplicate": false
+            "environment": "live",
+            "duplicate": false,
+            "nuers_status": "success",
+            "status": "durably_recorded",
+            "message": "Transaction successfully recorded by NUERS.",
+            "error": null,
+            "id": "EXAMPLE-INBOX-ID",
+            "transaction_id": "EXAMPLE-TRANSACTION-ID",
+            "receipt_id": "EXAMPLE-RECEIPT-ID",
+            "source_event_id": "erpA:invoice:0001",
+            "external_reference": "erpA:INV-0001",
+            "status_url": "https://nuers.net/api/integrations/transactions/EXAMPLE-INBOX-ID",
+            "customer_receipt": {
+              "delivery_id": "EXAMPLE-DELIVERY-ID",
+              "status": "queued",
+              "reason": "Customer receipt is queued for email processing."
+            }
           }
-        ],
-        "bir_acceptance": "not_verified"
+        ]
       },
       "notes": [
         "A failed batch returns 402 if the total fee for new eligible events exceeds available funds. Existing exact duplicates require no new fee. Any validation, authority, sequence or source conflict rejects the entire batch. Retain every unaccepted original on the client.",
         "Batches are limited to 10 requests/minute plus key admission budgets. These are protective limits, not measured throughput.",
-        "Client preference can be realtime or batch. External POS/ERP connectors must implement the preference, durable source retention and bounded identical retries."
+        "Client preference can be realtime or batch. External POS/ERP connectors must implement the preference, durable source retention and bounded identical retries.",
+        "Merchant transaction, batch and wallet responses do not expose bir_acceptance, bir_connection, bir_status or internal preparation blockers. Display NUERS status in the connector. NUERS Success confirms platform recording; it does not assert government acceptance.",
+        "Every ERP, POS or e-commerce sales row must show NUERS Status, failure reason, environment, NUERS reference and last attempt. Show Success only after a valid 201 or 200 duplicate acknowledgement with matching source_event_id, external_reference and environment, non-empty id/transaction_id/receipt_id, status=durably_recorded and nuers_status=success. Persist these identifiers atomically with the local outbox acknowledgement.",
+        "Show Error plus error.reason and applicable errors field messages for a rejected request. Keep the original sale locally. 402 requires wallet funding; 401/403 require credential or permission correction; 409 requires reconciliation; 422 requires mapping correction. For timeouts, invalid JSON, malformed 2xx or error.outcome=unknown, show Pending confirmation and retry the identical original event. Honor Retry-After and bounded backoff for 429/5xx. Never render server messages as HTML or expose credentials to the customer.",
+        "Optional customer_email: one valid checkout email address, maximum 254 characters. Omit or send null when absent. Map the checkout email explicitly; NUERS does not scan arbitrary payload fields. Invalid addresses return 422 before acceptance. Never use a customer address as an API credential.",
+        "A newly accepted Live event containing customer_email queues one customer PDF email in the same database transaction. Exact retries return the same record and do not queue another email or fee. Failed/rolled-back events queue no email. Sandbox always returns suppressed_sandbox and never emails customers. Existing transactions are not emailed retroactively.",
+        "Email attachments use the same receipt renderer and E-Receipt Logo saved under Merchant Invoice Settings → Logo and Branding. This logo is independent from the Business Profile Picture; both uploads save immediately without administrator approval. Original seller identity, lines, taxes, discounts and totals remain the recorded snapshot. Save branding before the email worker renders the PDF; changes affect subsequent renders and cannot recall an already sent attachment.",
+        "Poll GET status_url with the same environment and transactions:read scope for customer_receipt.status and reason. States: not_requested, suppressed_sandbox, queued, preparing, sending, smtp_accepted, failed, uncertain, expired, cancelled. smtp_accepted means the SMTP server accepted the message, not confirmed inbox delivery. Email failures never change a successfully recorded sale to Error. Do not retry the sale to resend mail; use the merchant document Send Copy action after investigating an uncertain delivery."
       ],
       "errors": [
         401,

@@ -95,12 +95,35 @@ return $q;
         $keys = DB::table('merchant_api_keys')->where('merchant_id', $m->id)->select('id', 'name', 'branch_code', 'status', 'environment', 'expires_at')->orderBy('name')->limit(1000)->get();
         $devices = DB::table('taxpayer_devices as d')->join('taxpayer_authorizations as a', 'a.id', '=', 'd.authorization_id')->where('a.merchant_id', $m->id)->select('d.id', 'd.name', 'd.branch', 'd.status', 'a.branch_code', 'a.environment')->orderBy('d.name')->limit(1000)->get();
 
-        return response()->json(['branches' => ['data' => $rows, 'total' => $branches->total(), 'page' => $branches->currentPage(), 'last_page' => $branches->lastPage()], 'terminals' => ['data' => $this->registry()->terminals($m->id, array_map(fn ($t) => (array) $t, $terminals->items())), 'total' => $terminals->total(), 'page' => $terminals->currentPage(), 'last_page' => $terminals->lastPage()], 'selected' => $details, 'summary' => ['total_branches' => (clone $base)->count(), 'active_branches' => (clone $base)->where('status', 'active')->count(), 'registered_terminals' => DB::table('merchant_terminals')->where('merchant_id', $m->id)->count(), 'active_terminals' => DB::table('merchant_terminals')->where('merchant_id', $m->id)->where('status', 'active')->whereIn('branch_id', (clone $base)->where('status', 'active')->select('id'))->count(), 'pending_verification' => (clone $base)->where('review_status', 'pending_review')->count(), 'latest_update' => $last], 'options' => ['branches' => (clone $base)->select('id', 'code', 'name', 'bir_branch_code', 'status')->orderBy('name')->limit(500)->get(), 'cities' => (clone $base)->distinct()->orderBy('city')->pluck('city'), 'regions' => (clone $base)->distinct()->orderBy('region')->pluck('region'), 'keys' => $keys, 'terminals' => DB::table('merchant_terminals')->where('merchant_id', $m->id)->orderBy('name')->limit(1000)->get(['id', 'code', 'name', 'identifier', 'branch_id', 'pos_type', 'status', 'api_key_id', 'taxpayer_device_id', 'revision']), 'devices' => $devices, 'rdos' => app(RegistrationAddress::class)->offices(), 'document_kinds' => Registry::DOCUMENTS], 'activities' => DB::table('merchant_branch_events')->where('merchant_id', $m->id)->orderByDesc('created_at')->limit(8)->get(['id', 'branch_id', 'action', 'created_at']), 'merchant' => ['name' => $m->business_name, 'tin' => $m->tin], 'updated_at' => now()->toIso8601String()])->header('Cache-Control', 'private, no-store');
+        return response()->json(['branches' => ['data' => $rows, 'total' => $branches->total(), 'page' => $branches->currentPage(), 'last_page' => $branches->lastPage()], 'terminals' => ['data' => $this->registry()->terminals($m->id, array_map(fn ($t) => (array) $t, $terminals->items())), 'total' => $terminals->total(), 'page' => $terminals->currentPage(), 'last_page' => $terminals->lastPage()], 'selected' => $details, 'summary' => ['total_branches' => (clone $base)->count(), 'active_branches' => (clone $base)->where('status', 'active')->count(), 'registered_terminals' => DB::table('merchant_terminals')->where('merchant_id', $m->id)->count(), 'active_terminals' => DB::table('merchant_terminals')->where('merchant_id', $m->id)->where('status', 'active')->whereIn('branch_id', (clone $base)->where('status', 'active')->select('id'))->count(), 'pending_verification' => (clone $base)->where('review_status', 'pending_review')->count(), 'latest_update' => $last], 'options' => ['branches' => (clone $base)->select('id', 'code', 'name', 'bir_branch_code', 'status')->orderBy('name')->limit(500)->get(), 'cities' => (clone $base)->distinct()->orderBy('city')->pluck('city'), 'regions' => (clone $base)->distinct()->orderBy('region')->pluck('region'), 'keys' => $keys, 'terminals' => DB::table('merchant_terminals')->where('merchant_id', $m->id)->orderBy('name')->limit(1000)->get(['id', 'code', 'name', 'identifier', 'branch_id', 'pos_type', 'status', 'api_key_id', 'taxpayer_device_id', 'revision']), 'devices' => $devices, 'rdos' => app(RegistrationAddress::class)->offices(), 'document_kinds' => Registry::DOCUMENTS], 'activities' => DB::table('merchant_branch_events')->where('merchant_id', $m->id)->orderByDesc('created_at')->limit(8)->get(['id', 'branch_id', 'action', 'created_at']), 'merchant' => ['name' => $m->business_name, 'tin' => $m->tin, 'registered_address' => app(RegistrationAddress::class)->merchantFormValue($m)], 'updated_at' => now()->toIso8601String()])->header('Cache-Control', 'private, no-store');
     }
 
     private function branchInput(Request $r, bool $edit): array
     {
-        return $r->validate(['name' => 'required|string|min:2|max:160', 'bir_branch_code' => ['nullable', 'regex:/^\d{5}$/'], 'address' => 'required|string|min:8|max:1000', 'city' => 'required|string|min:2|max:100', 'region' => 'required|string|min:2|max:100', 'rdo_code' => ['required', Rule::in(array_column(app(RegistrationAddress::class)->offices(), 'rdo_code'))], 'branch_type' => 'required|in:main,branch', 'status' => 'required|in:active,inactive', 'manager_name' => 'nullable|string|min:2|max:160', 'email' => 'nullable|email:rfc|max:254', 'phone' => ['nullable', 'regex:/^(?=(?:\D*\d){7,15}\D*$)\+?[0-9 ()-]{7,30}$/'], 'reason' => 'required|string|min:10|max:1000', ...($edit ? ['revision' => 'required|integer|min:1'] : ['request_id' => 'required|uuid']), 'review_status' => 'prohibited', 'merchant_id' => 'prohibited', 'reviewed_by' => 'prohibited']);
+        $v = $r->validate(['name' => 'required|string|min:2|max:160', 'bir_branch_code' => ['nullable', 'regex:/^\d{5}$/'],
+            'address' => 'nullable|required_without:structured_address|string|min:8|max:1000', 'city' => 'nullable|required_without:structured_address|string|min:2|max:100', 'region' => 'nullable|required_without:structured_address|string|min:2|max:100',
+            'rdo_code' => ['nullable', 'required_without:structured_address', Rule::in(array_column(app(RegistrationAddress::class)->offices(), 'rdo_code'))],
+            'structured_address' => 'nullable|array:region_code,province_code,city_code,barangay_code,street_address,zip_code,rdo_code,address',
+            'structured_address.region_code' => 'required_with:structured_address|digits:10', 'structured_address.province_code' => 'required_with:structured_address|digits:10',
+            'structured_address.city_code' => 'required_with:structured_address|digits:10', 'structured_address.barangay_code' => 'required_with:structured_address|digits:10',
+            'structured_address.street_address' => 'required_with:structured_address|string|min:1|max:500', 'structured_address.zip_code' => 'required_with:structured_address|digits:4',
+            'structured_address.rdo_code' => ['nullable', Rule::in(array_column(app(RegistrationAddress::class)->offices(), 'rdo_code'))], 'structured_address.address' => 'nullable|string|max:1000',
+            'branch_type' => 'required|in:main,branch', 'status' => 'required|in:active,inactive', 'manager_name' => 'nullable|string|min:2|max:160', 'email' => 'nullable|email:rfc|max:254',
+            'phone' => ['nullable', 'regex:/^(?=(?:\D*\d){7,15}\D*$)\+?[0-9 ()-]{7,30}$/'], 'reason' => 'required|string|min:10|max:1000',
+            ...($edit ? ['revision' => 'required|integer|min:1'] : ['request_id' => 'required|uuid']), 'review_status' => 'prohibited', 'merchant_id' => 'prohibited', 'reviewed_by' => 'prohibited']);
+        if (!empty($v['structured_address'])) {
+            $a = $v['structured_address'];
+            $address = app(RegistrationAddress::class);
+            $resolved = $address->resolve($a['city_code'], $a['barangay_code']);
+            $a['rdo_code'] = $a['rdo_code'] ?? $v['rdo_code'] ?? $resolved['rdo']['rdo_code'] ?? '';
+            abort_unless($a['rdo_code'] !== '', 422, 'Confirm the registered RDO for this branch address.');
+            $canonical = $address->validate($a);
+            $v['address'] = $canonical['address']; $v['city'] = $canonical['details']['city']['name']; $v['region'] = $canonical['details']['region']['name']; $v['rdo_code'] = $a['rdo_code'];
+            $v['address_details'] = json_encode($canonical['details'], JSON_THROW_ON_ERROR);
+            // Hash the validated canonical snapshot, not client-provided derived labels.
+            unset($v['structured_address']);
+        }
+        return $v;
     }
 
     public function store(Request $r)
@@ -139,9 +162,12 @@ return $q;
                 $contact[$k] = $contact[$k] ?? null;
             }
             $row = array_intersect_key($v, array_flip(['name', 'bir_branch_code', 'address', 'city', 'region', 'rdo_code', 'branch_type', 'status']));
+            $sameAddress = $old && collect(['address', 'city', 'region', 'rdo_code'])->every(fn ($k) => ($old->$k ?? null) === ($row[$k] ?? null));
+            $row['address_details'] = $v['address_details'] ?? ($sameAddress ? ($old->address_details ?? null) : null);
             $row['bir_branch_code'] = $row['bir_branch_code'] ?? null;
             $row += ['contact_encrypted' => Crypt::encryptString(json_encode($contact)), 'revision' => $old ? $old->revision + 1 : 1, 'updated_at' => now()];
             $material = ! $old || collect(['name', 'bir_branch_code', 'address', 'city', 'region', 'rdo_code', 'branch_type'])->contains(fn ($k) => ($old->$k ?? null) !== $row[$k]) || ($old && json_decode(Crypt::decryptString($old->contact_encrypted), true) != $contact);
+            $material = $material || ($old && json_decode($old->address_details ?? 'null', true) != json_decode($row['address_details'] ?? 'null', true));
             if ($material) {
                 $row += ['review_status' => 'draft', 'reviewed_by' => null, 'reviewed_at' => null, 'review_reference' => null, 'requested_at' => null];
             }

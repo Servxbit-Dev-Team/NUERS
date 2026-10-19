@@ -17,7 +17,7 @@ class MerchantSalesReportController extends Controller
 {
     private function filters(Request $request): array
     {
-        $v = $request->validate(['from' => 'nullable|date_format:Y-m-d|after_or_equal:2000-01-01|before:2101-01-01', 'to' => 'nullable|date_format:Y-m-d|after_or_equal:2000-01-01|before:2101-01-01', 'branch' => 'nullable|string|max:20', 'type' => 'nullable|string|max:60', 'search' => 'nullable|string|max:200',
+        $v = $request->validate(['sale_category' => ['nullable', Rule::in(['all', ...\App\Services\StatutorySales::CATEGORIES])], 'from' => 'nullable|date_format:Y-m-d|after_or_equal:2000-01-01|before:2101-01-01', 'to' => 'nullable|date_format:Y-m-d|after_or_equal:2000-01-01|before:2101-01-01', 'branch' => 'nullable|string|max:20', 'type' => 'nullable|string|max:60', 'search' => 'nullable|string|max:200',
             'customer_type' => ['nullable', Rule::in(['all', 'business', 'retail', 'walk_in', 'unclassified'])], 'bir' => ['nullable', Rule::in(['all', 'acknowledged', 'queued', 'needs_review', 'blocked', 'not_verified'])], 'view' => ['nullable', Rule::in(['sales', 'review'])], 'page' => 'sometimes|integer|min:1|max:100000', 'per_page' => 'sometimes|integer|in:10,25,50,100', 'format' => ['sometimes', Rule::in(['csv', 'xlsx', 'pdf'])]]);
         $today = CarbonImmutable::now('Asia/Manila');
         $v['from'] = $v['from'] ?? $today->startOfMonth()->toDateString();
@@ -25,7 +25,7 @@ class MerchantSalesReportController extends Controller
         abort_if($v['to'] < $v['from'], 422, 'Date To must be on or after Date From.');
         abort_if(CarbonImmutable::parse($v['from'])->diffInDays(CarbonImmutable::parse($v['to'])) > 366, 422, 'Choose a report period of no more than 367 days.');
 
-        return array_intersect_key($v, array_flip(['from', 'to', 'branch', 'type', 'search', 'customer_type', 'bir']));
+        return array_intersect_key($v, array_flip(['from', 'to', 'branch', 'type', 'search', 'customer_type', 'bir', 'sale_category']));
     }
 
     public function show(Request $request)

@@ -51,10 +51,11 @@ class MerchantWallet
     public function check(string $merchant, int $gross, string $type): array
     {
         abort_unless($gross >= 0, 422, 'Gross amount must be non-negative.');
-        if ($gross < TransactionPricing::MINIMUM_CENTAVOS || in_array($type, ['payment_receipt', 'official_receipt', 'delivery_receipt', 'purchase_invoice', 'credit_memo', 'debit_memo', 'credit_note', 'debit_note'], true)) {
+        if (in_array($type, ['payment_receipt', 'official_receipt', 'delivery_receipt', 'purchase_invoice', 'credit_memo', 'debit_memo', 'credit_note', 'debit_note'], true)) {
             return ['fee_centavos' => 0, 'pricing_revision' => null];
         }
         $p = app(TransactionPricing::class)->offer(DB::transactionLevel() > 0);
+        if ($gross < (int)$p->minimum_transaction_centavos) return ['fee_centavos'=>0,'pricing_revision'=>(int)$p->revision];
         $fee = (int) $p->fee_centavos;
         $w = $this->locked($merchant);
         if ((int) $w->available_centavos < $fee) {
@@ -116,6 +117,22 @@ class MerchantWallet
         DB::table('merchant_wallets')->where('merchant_id', $w->merchant_id)->update(['available_centavos' => $balance, 'sequence' => $row['sequence'], 'ledger_head' => $row['entry_hash'], 'low_alerted' => $balance > $w->low_balance_threshold ? false : $w->low_alerted, 'updated_at' => now()]);
 
         return (object) $row;
+    }
+
+    public function withdraw(string $merchant, int $amount, string $id, string $actor): object
+    {
+        $w = $this->locked($merchant);
+        abort_unless($amount > 0, 422, 'Withdrawal must be positive.');
+        $event = hash('sha256', 'withdrawal|'.$id);
+        $old = DB::table('merchant_wallet_entries')->where('merchant_id', $merchant)->where('event_key', $event)->first();
+        if ($old) {
+            abort_unless((int) $old->amount_centavos === -$amount, 409, 'Withdrawal conflicts with its original amount.');
+
+            return $old;
+        }
+        abort_unless((int) $w->available_centavos >= $amount, 409, 'Withdrawal exceeds the current available balance. Refresh the wallet.');
+
+        return $this->append($w, -$amount, 'withdrawal', 'manual_withdrawal', $id, 'WDR-'.substr($id, 0, 8), null, 'verified_manual', 0, null, $actor, $event);
     }
 
     public function hash(array $row): string

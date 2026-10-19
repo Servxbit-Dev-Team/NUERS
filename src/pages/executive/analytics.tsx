@@ -1,3 +1,4 @@
+import { formatTin } from "@/lib/tin";
 import {
   TrendingUp, Users, FileText, Shield,
   Globe, Zap, Activity, DollarSign, CheckCircle2,
@@ -187,14 +188,14 @@ export function ExecutiveAnalytics() {
                 </thead>
                 <tbody>
                   {topTaxpayers.map((tp, i) => (
-                    <tr key={tp.tin} className={i % 2 === 0 ? "border-b" : "border-b bg-muted/20"}>
+                    <tr key={formatTin(tp.tin)} className={i % 2 === 0 ? "border-b" : "border-b bg-muted/20"}>
                       <td className="px-4 py-2.5">
                         <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs">
                           {tp.rank}
                         </div>
                       </td>
                       <td className="px-4 py-2.5 font-medium">{tp.name}</td>
-                      <td className="px-4 py-2.5 font-mono text-muted-foreground">{tp.tin}</td>
+                      <td className="px-4 py-2.5 font-mono text-muted-foreground">{formatTin(tp.tin)}</td>
                       <td className="px-4 py-2.5 font-medium">{tp.invoices}</td>
                       <td className="px-4 py-2.5 font-medium">{tp.revenue}</td>
                       <td className="px-4 py-2.5">

@@ -27,7 +27,7 @@ class MerchantWalletController
 
     private function dates(Request $r): array
     {
-        $v = $r->validate(['from' => 'nullable|date_format:Y-m-d', 'to' => ['nullable', 'date_format:Y-m-d', ...($r->filled('from') ? ['after_or_equal:from'] : [])], 'page' => 'sometimes|integer|min:1|max:100000', 'kind' => 'nullable|in:fee,topup']);
+        $v = $r->validate(['from' => 'nullable|date_format:Y-m-d', 'to' => ['nullable', 'date_format:Y-m-d', ...($r->filled('from') ? ['after_or_equal:from'] : [])], 'page' => 'sometimes|integer|min:1|max:100000', 'kind' => 'nullable|in:fee,topup,withdrawal']);
 
         return $v;
     }
@@ -67,15 +67,16 @@ class MerchantWalletController
         $count = (clone $fees)->where('created_at', '>=', now()->startOfMonth())->count();
         $start = today()->subDays(29);
         $balance = (int) (clone $base)->where('created_at', '<', $start)->sum('amount_centavos');
-        $daily = (clone $base)->where('created_at', '>=', $start)->selectRaw("DATE(created_at) as day, SUM(CASE WHEN kind='topup' THEN amount_centavos ELSE 0 END) as credits,SUM(CASE WHEN kind='fee' THEN -amount_centavos ELSE 0 END) as fees")->groupByRaw('DATE(created_at)')->get()->keyBy('day');
+        $daily = (clone $base)->where('created_at', '>=', $start)->selectRaw("DATE(created_at) as day, SUM(CASE WHEN kind='topup' THEN amount_centavos ELSE 0 END) as credits,SUM(CASE WHEN kind='fee' THEN -amount_centavos ELSE 0 END) as fees,SUM(CASE WHEN kind='withdrawal' THEN -amount_centavos ELSE 0 END) as withdrawals")->groupByRaw('DATE(created_at)')->get()->keyBy('day');
         $chart = [];
         for ($i = 0; $i < 30; $i++) {
             $day = $start->copy()->addDays($i)->toDateString();
             $x = $daily[$day] ?? null;
             $credits = (int) ($x->credits ?? 0);
             $deducted = (int) ($x->fees ?? 0);
-            $balance += $credits - $deducted;
-            $chart[] = ['date' => $day, 'topups_centavos' => $credits, 'fees_centavos' => $deducted, 'balance_centavos' => $balance];
+            $withdrawn = (int) ($x->withdrawals ?? 0);
+            $balance += $credits - $deducted - $withdrawn;
+            $chart[] = ['date' => $day, 'topups_centavos' => $credits, 'fees_centavos' => $deducted, 'withdrawals_centavos' => $withdrawn, 'balance_centavos' => $balance];
         }
 
         return response()->json(['merchant' => ['id' => $m->id, 'name' => $m->business_name, 'status' => $m->status], 'wallet' => ['available_centavos' => (int) $w->available_centavos, 'reserved_centavos' => (int) $w->reserved_centavos, 'low_balance_threshold' => (int) $w->low_balance_threshold, 'alerts_enabled' => (bool) $w->alerts_enabled, 'intake_mode' => $w->intake_mode, 'revision' => (int) $w->revision, 'updated_at' => $w->updated_at, 'integrity' => $this->wallet()->headValid($w)], 'pricing' => app(TransactionPricing::class)->offer(), 'summary' => ['fees_today_centavos' => -(int) $today, 'fees_month_centavos' => -(int) $month, 'charged_this_month' => $count, 'average_fee_centavos' => $count ? (int) round(-$month / $count) : 0, 'credited_total_centavos' => (int) (clone $base)->where('kind', 'topup')->sum('amount_centavos'), 'pending_topups' => DB::table('merchant_wallet_topups')->where('merchant_id', $m->id)->where('status', 'pending')->count()], 'chart' => $chart, 'entries' => ['data' => $rows->items(), 'total' => $rows->total(), 'page' => $rows->currentPage(), 'last_page' => $rows->lastPage()], 'topups' => DB::table('merchant_wallet_topups')->where('merchant_id', $m->id)->orderByDesc('created_at')->limit(10)->get()->map(fn ($x) => $this->topupRow($x)), 'currency' => 'PHP', 'funding_mode' => 'verified_manual', 'bir_acceptance' => 'not_verified'])->header('Cache-Control', 'private, no-store');
@@ -136,7 +137,7 @@ class MerchantWalletController
     public function pricing(Request $r)
     {
         $u = $this->admin($r);
-        $v = $r->validate(['fee_centavos' => 'required|integer|min:0|max:1000000', 'revision' => 'required|integer|min:1', 'reason' => 'required|string|min:10|max:1000']);
+        $v = $r->validate(['fee_centavos' => 'required|integer|min:0|max:1000000', 'minimum_transaction_centavos'=>'sometimes|required|integer|min:0|max:1000000000000', 'revision' => 'required|integer|min:1', 'reason' => 'required|string|min:10|max:1000']);
 
         $v['reason'] = trim($v['reason']);
         abort_unless(mb_strlen($v['reason']) >= 10, 422, 'Enter a meaningful change reference.');
@@ -145,10 +146,11 @@ class MerchantWalletController
             $p = DB::table('website_subscription_plans')->where('slug', TransactionPricing::SLUG)->where('published', true)->lockForUpdate()->first();
             abort_unless($p, 503);
             abort_unless((int) $p->revision === (int) $v['revision'], 409, 'Pricing changed. Refresh before saving.');
-            DB::table('website_subscription_plans')->where('id', $p->id)->update(['fee_centavos' => (int) $v['fee_centavos'], 'description' => 'Pay ₱'.number_format($v['fee_centavos'] / 100, 2, '.', ',').' per eligible transaction of ₱500 and above. Unlimited storage with five-year retention.', 'revision' => $p->revision + 1, 'updated_at' => now()]);
+            $v['minimum_transaction_centavos'] ??= (int)$p->minimum_transaction_centavos;
+            DB::table('website_subscription_plans')->where('id', $p->id)->update(['minimum_transaction_centavos'=>(int)$v['minimum_transaction_centavos'], 'fee_centavos' => (int) $v['fee_centavos'], 'description' => 'Pay ₱'.number_format($v['fee_centavos'] / 100, 2, '.', ',').((int)$v['minimum_transaction_centavos'] === 0 ? ' per finalized sale, with no minimum amount.' : ' per finalized sale of ₱'.number_format($v['minimum_transaction_centavos']/100,2,'.',',').' and above.').' Unlimited storage with five-year retention.', 'revision' => $p->revision + 1, 'updated_at' => now()]);
             $id = (string) Str::uuid();
-            DB::table('wallet_pricing_history')->insert(['id' => $id, 'revision' => $p->revision + 1, 'previous_fee_centavos' => $p->fee_centavos, 'fee_centavos' => $v['fee_centavos'], 'actor_id' => (string) $u->id, 'reason' => $v['reason'], 'created_at' => now()]);
-            app(BirCompliance::class)->audit('wallet.pricing.updated', $id, (string) $u->id, ['revision' => $p->revision + 1, 'fee_centavos' => $v['fee_centavos']]);
+            DB::table('wallet_pricing_history')->insert(['id' => $id, 'revision' => $p->revision + 1, 'previous_minimum_transaction_centavos'=>(int)$p->minimum_transaction_centavos, 'minimum_transaction_centavos'=>(int)$v['minimum_transaction_centavos'], 'previous_fee_centavos' => $p->fee_centavos, 'fee_centavos' => $v['fee_centavos'], 'actor_id' => (string) $u->id, 'reason' => $v['reason'], 'created_at' => now()]);
+            app(BirCompliance::class)->audit('wallet.pricing.updated', $id, (string) $u->id, ['previous_minimum_transaction_centavos'=>(int)$p->minimum_transaction_centavos, 'minimum_transaction_centavos'=>(int)$v['minimum_transaction_centavos'], 'revision' => $p->revision + 1, 'fee_centavos' => $v['fee_centavos']]);
 
             return response()->json(['pricing' => app(TransactionPricing::class)->offer()]);
         });

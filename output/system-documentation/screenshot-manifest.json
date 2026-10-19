@@ -1,0 +1,397 @@
+{
+  "document_id": "NUERS-SYS-SCREEN-001",
+  "document_revision": "1.0",
+  "software_name": "NUERS",
+  "software_full_name": "National Unified Electronic Receipt System",
+  "software_version": "1.0.0",
+  "document_date": "2026-10-19",
+  "timezone": "Asia/Manila (UTC+08:00)",
+  "classification": "Controlled technical reference - demonstration data",
+  "capture_method": "Unmodified viewport screenshots of the running application, captured through Chrome browser UI. Detail insets in the PDF are explicitly labelled enlargements of original pixels.",
+  "screenshots": [
+    {
+      "id": "01-login",
+      "title": "Secure sign-in",
+      "role": "Access",
+      "route": "/login",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:04:49.779Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "9c7ac0462eb0967ee9972c991c2ddd152f6a80eaf5d61c1b27e83d56f9c4aba8",
+      "file": "screenshots/01-login.png"
+    },
+    {
+      "id": "02-merchant-dashboard",
+      "title": "Merchant dashboard",
+      "role": "Merchant",
+      "route": "/merchant",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:06:23.605Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "a23c7407522166001013e23e39e8166d7f296b0455466d1e35ed1618b57ece65",
+      "file": "screenshots/02-merchant-dashboard.png"
+    },
+    {
+      "id": "03-business-profile",
+      "title": "Business profile and documents",
+      "role": "Merchant",
+      "route": "/merchant/profile",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:06:23.867Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "ac52ff06de4a8f1279960d77c4ffe4851e1b37bc918811c087308e9455bf545a",
+      "file": "screenshots/03-business-profile.png"
+    },
+    {
+      "id": "04-merchant-invoices",
+      "title": "Invoice and receipt directory",
+      "role": "Merchant",
+      "route": "/merchant/invoices",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:06:42.103Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "72901de3e60e2b293d783e6667b94fc81379473041102c85b24c2013815ed488",
+      "file": "screenshots/04-merchant-invoices.png"
+    },
+    {
+      "id": "05-create-invoice",
+      "title": "Invoice creation workflow",
+      "role": "Merchant",
+      "route": "/merchant/invoices/create",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:06:42.327Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "3addb98f6c5e9a5ff9323667184ea7f6a49ae5a852f55891a59a0fe0e00202f3",
+      "file": "screenshots/05-create-invoice.png"
+    },
+    {
+      "id": "06-sales-reports",
+      "title": "Sales reporting and exports",
+      "role": "Merchant",
+      "route": "/merchant/sales-reports",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:06:42.668Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "0311b19624a8c6aa77d9c9305cf165dfb6d9bd636a646f86fb0ade7a917fea77",
+      "file": "screenshots/06-sales-reports.png"
+    },
+    {
+      "id": "07-merchant-wallet",
+      "title": "Prepaid wallet and funding",
+      "role": "Merchant",
+      "route": "/merchant/wallet",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:06:56.310Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "577320c7b067d1fdda86e647ac882a14c635c729d43f4da29719a5ab60e6b1b7",
+      "file": "screenshots/07-merchant-wallet.png"
+    },
+    {
+      "id": "08-api-integration",
+      "title": "API credentials and connection setup",
+      "role": "Merchant",
+      "route": "/merchant/api-keys",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:06:56.779Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "bfdaa6acfb7fb96ed97147db55e1458a1b9e27c5b984853825e850e4b63dff2a",
+      "file": "screenshots/08-api-integration.png"
+    },
+    {
+      "id": "09-webhooks",
+      "title": "Webhook configuration and delivery logs",
+      "role": "Merchant",
+      "route": "/merchant/api-keys - Webhooks",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:06:57.086Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "5132c0d5247c4e7ac5e42ea296ef2ea5da5b642605c36305012654193d107b87",
+      "file": "screenshots/09-webhooks.png"
+    },
+    {
+      "id": "10-invoice-settings",
+      "title": "Invoice settings and receipt branding",
+      "role": "Merchant",
+      "route": "/merchant/pos-settings",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:07:12.041Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "ee4f67c87f49e1d128c09d09503f16363be2f64fd8e073c4163d49eb58841163",
+      "file": "screenshots/10-invoice-settings.png"
+    },
+    {
+      "id": "11-account-security",
+      "title": "Account security and authenticator devices",
+      "role": "Merchant",
+      "route": "/merchant/security",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:07:12.291Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "60c38425627414075e892fda966d194d4655a1619723026e71380df5f24bbc91",
+      "file": "screenshots/11-account-security.png"
+    },
+    {
+      "id": "12-user-management",
+      "title": "Merchant user directory",
+      "role": "Merchant",
+      "route": "/merchant/users",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:07:12.550Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "67938c5850be31c60c93f293f4cc4c3a4048d44536b380b1ca36e42dc79efa37",
+      "file": "screenshots/12-user-management.png"
+    },
+    {
+      "id": "13-admin-dashboard",
+      "title": "Administrator dashboard",
+      "role": "Administrator",
+      "route": "/super-admin",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:03:38.752Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "0926466348993f683a92e192ac3c07cf81f3ea2d2fe048205250921bc3c2fda4",
+      "file": "screenshots/13-admin-dashboard.png"
+    },
+    {
+      "id": "14-live-monitoring",
+      "title": "Live transaction monitoring",
+      "role": "Administrator",
+      "route": "/monitoring",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:03:39.001Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "80381dd3484da29399a4eb3f311fd066e815df6486dbfabde9df5d67b8ddf66b",
+      "file": "screenshots/14-live-monitoring.png"
+    },
+    {
+      "id": "15-admin-invoices",
+      "title": "Electronic invoice and receipt center",
+      "role": "Administrator",
+      "route": "/invoices",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:03:50.854Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "5dcae8a209dcfe42247a703bed6552d662736f7cc1664a1ee4f03ea591078e20",
+      "file": "screenshots/15-admin-invoices.png"
+    },
+    {
+      "id": "16-admin-transactions",
+      "title": "Transaction workspace",
+      "role": "Administrator",
+      "route": "/super-admin/transactions",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:03:51.102Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "0508089827ebe0503f2328cb24011da4cd1a726a8ef87770529befd325415bac",
+      "file": "screenshots/16-admin-transactions.png"
+    },
+    {
+      "id": "17-business-registry",
+      "title": "Registered business directory",
+      "role": "Administrator",
+      "route": "/super-admin/merchants",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:03:51.361Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "767e24464c8586834fd8fc38399a8b0af1e735ac57460ffc2e9f0e8d72b68e97",
+      "file": "screenshots/17-business-registry.png"
+    },
+    {
+      "id": "18-onboarding",
+      "title": "Onboarding administration",
+      "role": "Administrator",
+      "route": "/super-admin/taxpayer-onboarding",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:04:09.889Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "7df726990be28c4aa18d2ea5a05a784b589a520e904a9c8b78af6b81665d2569",
+      "file": "screenshots/18-onboarding.png"
+    },
+    {
+      "id": "19-admin-api",
+      "title": "Merchant source profiles and connections",
+      "role": "Administrator",
+      "route": "/super-admin/api-platform",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:03:38.430Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "63fda2fa39375192369da4048dde9292b91fed0ee2f90ffa9cb296907455feef",
+      "file": "screenshots/19-admin-api.png"
+    },
+    {
+      "id": "20-admin-wallets",
+      "title": "Wallets and transaction pricing",
+      "role": "Administrator",
+      "route": "/super-admin/wallets",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:04:10.163Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "cad373bad2bf4765979d5bac0ba4e8e03231004c7c932956503ca1de7633b9f2",
+      "file": "screenshots/20-admin-wallets.png"
+    },
+    {
+      "id": "21-audit-journal",
+      "title": "Compliance audit journal",
+      "role": "Administrator",
+      "route": "/super-admin/audit",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:04:10.395Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "e8fe58981794f0ea7cdf0243a7f1a838687d094719fd34c99643a4ea4276f2c1",
+      "file": "screenshots/21-audit-journal.png"
+    },
+    {
+      "id": "22-evidence-register",
+      "title": "Solution identity and evidence register",
+      "role": "Administrator",
+      "route": "/accreditation",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:04:36.064Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "fae5a810de8fccf8996107d8a71adbea902251417616f879cc14a184a0f916a3",
+      "file": "screenshots/22-evidence-register.png"
+    },
+    {
+      "id": "23-backup-recovery",
+      "title": "Backup and disaster recovery workspace",
+      "role": "Administrator",
+      "route": "/super-admin/backups",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:04:36.339Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "8448315ea989317881327c92db07177a8acf18d01d8dc3bef1dee6206bf85ba9",
+      "file": "screenshots/23-backup-recovery.png"
+    },
+    {
+      "id": "24-security-readiness",
+      "title": "Operational security readiness",
+      "role": "Administrator",
+      "route": "/super-admin/security",
+      "environment": "Isolated local demonstration",
+      "software_name": "NUERS",
+      "software_version": "1.0.0",
+      "captured_at_utc": "2026-10-18T18:04:36.602Z",
+      "dimensions": [
+        3440,
+        1352
+      ],
+      "sha256": "070ced0d977cb9a1306c946773e1fe23c0a08e3ae339fa11075485eb1a7922d5",
+      "file": "screenshots/24-security-readiness.png"
+    }
+  ]
+}

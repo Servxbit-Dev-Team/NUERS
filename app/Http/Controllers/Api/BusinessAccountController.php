@@ -29,105 +29,18 @@ class BusinessAccountController extends Controller
 
     public function update(Request $request): JsonResponse
     {
-        $user = $this->userFromRequest($request);
-
-        abort_unless($user, 401, 'Authenticated Business Account session is required.');
-
-        $merchant = $this->merchantForUser($user);
-
-        abort_unless($merchant, 404, 'No Business Account registry record is linked to this login.');
-
-        $validated = $request->validate([
-            'business_name' => ['required', 'string', 'max:255'],
-            'owner_name' => ['nullable', 'string', 'max:255'],
-            'tin' => ['nullable', 'string', 'max:80'],
-            'sector' => ['nullable', 'string', 'max:120'],
-            'business_type' => ['nullable', 'string', 'max:120'],
-            'bir_registration_date' => ['nullable', 'date'],
-            'vat_registered' => ['nullable', 'boolean'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:80'],
-            'address' => ['nullable', 'string'],
-            'country' => ['nullable', 'string', 'max:80'],
-            'country_code' => ['nullable', 'string', 'max:8'],
-            'city' => ['nullable', 'string', 'max:255'],
-            'city_code' => ['nullable', 'string', 'max:80'],
-            'barangay' => ['nullable', 'string', 'max:255'],
-            'barangay_code' => ['nullable', 'string', 'max:80'],
-            'zip_code' => ['nullable', 'string', 'max:40'],
-            'region' => ['nullable', 'string', 'max:120'],
-            'rdo_code' => ['nullable', 'string', 'max:20'],
-            'rdo_name' => ['nullable', 'string', 'max:255'],
-            'website' => ['nullable', 'string', 'max:255'],
-            'employee_count' => ['nullable', 'integer', 'min:0'],
-            'annual_revenue' => ['nullable', 'numeric', 'min:0'],
-            'pos_system' => ['nullable', 'string', 'max:255'],
-            'branch_count' => ['nullable', 'integer', 'min:0'],
-            'notes' => ['nullable', 'string'],
-        ]);
-
-        foreach(['business_name','tin','business_type','bir_registration_date','vat_registered','address','country','country_code','city','city_code','barangay','barangay_code','zip_code','region','rdo_code','rdo_name','branch_count'] as $field) {
-            if(array_key_exists($field,$validated) && (string)($validated[$field] ?? '')!==(string)($merchant->$field ?? '')) abort(409,'Registered identity, address, tax and branch changes require the reviewed Business Registry workflow.');
-        }
-        $updates = [
-            ...$validated,
-            'compliance_score' => $this->computedComplianceScore((object) [...(array) $merchant, ...$validated]),
-            'updated_at' => now(),
-        ];
-
-        DB::table('merchants')->where('id', $merchant->id)->update($updates);
-
-        if (array_key_exists('email',$validated) && ($validated['email']??null) !== ($merchant->email??null)) app(\App\Services\PlatformNotifications::class)->user($user->id,'security.business_contact.changed',(string)\Illuminate\Support\Str::uuid(),'Business profile contact changed','The contact information for your NUERS business profile was updated. Review Business Profile if this was unexpected.','security');
-        $this->audit('business_account.profile.updated', $merchant->id, $user, $request, [
-            'updated_fields' => array_keys($validated),
-            'notes' => $validated['notes'] ?? null,
-        ]);
-
-        $fresh = DB::table('merchants')->where('id', $merchant->id)->first();
-
-        return response()->json([
-            'data' => $this->merchantPayload($fresh, $request),
-        ]);
+        // Legacy clients must use the same strict owner/revision boundary as Business Profile.
+        app(MerchantBusinessProfileController::class)->update($request);
+        return $this->current($request);
     }
 
     public function uploadLogo(Request $request): JsonResponse
     {
-        $user = $this->userFromRequest($request);
-
-        abort_unless($user, 401, 'Authenticated Business Account session is required.');
-        abort_unless(Schema::hasColumn('merchants', 'logo_url'), 500, 'Business Account logo storage is not migrated yet.');
-
-        $merchant = $this->merchantForUser($user);
-
-        abort_unless($merchant, 404, 'No Business Account registry record is linked to this login.');
-
-        $request->validate([
-            'logo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
-        ]);
-
-        $file = $request->file('logo');
-        $directory = public_path('uploads/business-logos');
-        File::ensureDirectoryExists($directory);
-
-        $fileName = app(\App\Services\SafeImage::class)->store($file,$directory);
-
-        $logoUrl = '/uploads/business-logos/'.$fileName;
-
-        DB::table('merchants')->where('id', $merchant->id)->update([
-            'logo_url' => $logoUrl,
-            'updated_at' => now(),
-        ]);
-
-        $this->audit('business_account.logo.updated', $merchant->id, $user, $request, [
-            'logo_url' => $logoUrl,
-            'original_name' => $file->getClientOriginalName(),
-        ]);
-
-        $fresh = DB::table('merchants')->where('id', $merchant->id)->first();
-
-        return response()->json([
-            'data' => $this->merchantPayload($fresh, $request),
-        ]);
+        $merchant=$this->merchantForUser($this->userFromRequest($request) ?? abort(401));
+        abort_unless($merchant,404,'Business account not found.');
+        if(!$request->exists('expected_logo'))$request->merge(['expected_logo'=>$merchant->logo_url??null]);
+        app(MerchantBrandController::class)->update($request);
+        return response()->json(['data'=>$this->merchantPayload(DB::table('merchants')->where('id',$merchant->id)->first(),$request)]);
     }
 
     public function lookupByTin(Request $request): JsonResponse
@@ -193,6 +106,7 @@ class BusinessAccountController extends Controller
     private function merchantPayload(object $merchant, ?Request $request = null): array
     {
         return [
+            'invoice_preferences' => app(\App\Services\MerchantInvoiceSettings::class)->get($merchant)['settings'],
             'id' => (string) $merchant->id,
             'business_name' => (string) $merchant->business_name,
             'owner_name' => $merchant->owner_name,

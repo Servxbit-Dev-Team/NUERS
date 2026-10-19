@@ -1,0 +1,212 @@
+- complementary "merchant navigation":
+  - link "NUERS dashboard":
+    - /url: /merchant
+    - img "NUERS — National Unified Electronic Receipt System"
+  - navigation:
+    - heading "Overview" [level=2]
+    - link "Dashboard":
+      - /url: /merchant
+      - generic: Dashboard
+    - heading "Sales & Invoicing" [level=2]
+    - link "Create Invoice":
+      - /url: /merchant/invoices/create
+      - generic: Create Invoice
+    - link "Invoices & Receipts":
+      - /url: /merchant/invoices
+      - generic: Invoices & Receipts
+    - button "Expand Invoices & Receipts":
+    - link "Customers":
+      - /url: /merchant/customers
+      - generic: Customers
+    - link "Wallet":
+      - /url: /merchant/wallet
+      - generic: Wallet
+    - heading "Reports" [level=2]
+    - link "Sales Reports":
+      - /url: /merchant/sales-reports
+      - generic: Sales Reports
+    - heading "Settings" [level=2]
+    - link "Business Profile":
+      - /url: /merchant/profile
+      - generic: Business Profile
+    - link "User Management":
+      - /url: /merchant/users
+      - generic: User Management
+    - link "Account Security":
+      - /url: /merchant/security
+      - generic: Account Security
+    - link "API Integration":
+      - /url: /merchant/api-keys
+      - generic: API Integration
+    - link "Invoice Settings":
+      - /url: /merchant/pos-settings
+      - generic: Invoice Settings
+    - link "Transaction Fees & Storage":
+      - /url: /merchant/billing
+      - generic: Transaction Fees & Storage
+    - heading "Support" [level=2]
+    - link "Help & Documentation":
+      - /url: /merchant?panel=help
+      - generic: Help & Documentation
+    - link "Submit a Request":
+      - /url: /merchant?panel=support
+      - generic: Submit a Request
+  - strong: Connected to NUERS
+  - generic: Application response received
+  - generic: "BIR connection: not verified"
+  - generic "Software name and version": NUERS · Version 1.0.0
+  - paragraph:
+    - text: DIGITAL PHILIPPINES.
+    - text: BRIGHTER TOMORROW.
+- banner:
+  - button "Toggle navigation" [expanded]:
+  - searchbox "Search transactions"
+  - link "Help":
+    - /url: /merchant?panel=help
+    - generic: Help
+  - link "Merchant notices":
+    - /url: /merchant?panel=alerts
+  - generic "DT Demo Trading Company Business Account":
+    - generic: DT
+    - strong: Demo Trading Company
+    - generic: Business Account
+- main:
+  - paragraph: Account Settings › Security
+  - heading "Account Security" [level=1]
+  - heading "Manage your password, account protection, sessions, and notification preferences." [level=2]
+  - complementary:
+    - strong: Keep Your Account Secure
+    - paragraph: Review your protection settings and sign-in activity.
+  - heading "Security Overview" [level=2]
+  - button "Refresh account security":
+  - strong: Core protections enabled
+  - paragraph: Authenticator is enabled. Review your settings regularly.
+  - generic: Current Sign-in
+  - strong: Oct 19, 2026, 2:04 AM
+  - generic: Current IP Address
+  - strong: 127.0.0.1
+  - heading "Password & Login" [level=2]
+  - paragraph: Manage your password and sign-in settings.
+  - strong: Password
+  - paragraph: "Last changed: Not recorded"
+  - button "Change Password"
+  - strong: Session Protection
+  - paragraph: 24 hours idle · 7 days maximum
+  - generic: Device-bound
+  - paragraph: Signing in on another browser replaces your active session. Your browser identifier alone cannot grant access.
+  - heading "Two-Factor Authentication (2FA)" [level=2]
+  - paragraph: Add an extra layer of security to your account.
+  - text: Enabled
+  - strong: Authenticator App (Recommended)
+  - paragraph: Use Google Authenticator, Microsoft Authenticator, or a compatible app.
+  - text: Verified for this login
+  - strong: Your authenticator devices
+  - paragraph: Use a separate setup key for each device. Any verified device can complete your sign-in.
+  - button "Add Device":
+    - text: Add Device
+  - list:
+    - strong: Primary authenticator
+    - generic: Primary
+    - generic: "Last verified: Oct 19, 2026, 10:06 AM"
+    - button "Remove Primary authenticator" [disabled]:
+      - text: Remove
+  - paragraph: 1 of 5 devices · Keep at least one active authenticator. Recovery codes remain shared across your account.
+  - strong: Backup Codes
+  - paragraph: 0 unused recovery codes remaining.
+  - button "Recovery Options"
+  - paragraph: Verify MFA once per login. Your verification remains valid while this login session is active. Codes and setup keys stay private.
+  - heading "Login & Email Notifications" [level=2]
+  - paragraph: NUERS sends important account messages to your sign-in email.
+  - strong: merchant-docs@example.test
+  - text: Verified
+  - strong: Essential Security Alerts
+  - generic: Password changes, account access, and security events. Always enabled.
+  - switch "Essential security alerts always enabled" [checked] [disabled]
+  - strong: Account & Compliance Updates
+  - generic: Registration, document review, and account updates.
+  - switch "Account & Compliance Updates" [checked]
+  - strong: Support Notifications
+  - generic: Replies and updates for your support cases.
+  - switch "Support Notifications" [checked]
+  - strong: Operational Reminders
+  - generic: Action summaries and operational notices.
+  - switch "Operational Reminders" [checked]
+  - generic: Email delivery depends on your receiving provider.
+  - button "Save Preferences" [disabled]
+  - heading "Active Sessions" [level=2]
+  - paragraph: Your account has one active browser session.
+  - button "Sign Out This Device":
+    - text: Sign Out This Device
+  - table:
+    - rowgroup:
+      - row "Device IP Address Observed (PHT) Status":
+        - columnheader "Device"
+        - columnheader "IP Address"
+        - columnheader "Observed (PHT)"
+        - columnheader "Status"
+    - rowgroup:
+      - row "Chrome (macOS) 127.0.0.1 Oct 19, 2026, 2:07 AM Current Session":
+        - cell "Chrome (macOS)":
+          - generic: Chrome (macOS)
+        - cell "127.0.0.1"
+        - cell "Oct 19, 2026, 2:07 AM"
+        - cell "Current Session":
+          - text: Current Session
+  - text: "Idle expiry: Oct 20, 2026, 2:04 AM"
+  - text: "Maximum session expiry: Oct 26, 2026, 2:04 AM"
+  - paragraph: The IP address belongs to this request. Location is not inferred. Successful sign-in on another browser invalidates this session.
+  - heading "Recent Security Activity" [level=2]
+  - paragraph: Recorded account events and your current browser sign-in.
+  - button "View All Events"
+  - table:
+    - rowgroup:
+      - row "Date & Time (PHT) Account Activity Record":
+        - columnheader "Date & Time (PHT)"
+        - columnheader "Account Activity"
+        - columnheader "Record"
+    - rowgroup:
+      - row "Oct 19, 2026, 2:04 AM Current browser sign-in Active session":
+        - cell "Oct 19, 2026, 2:04 AM"
+        - cell "Current browser sign-in"
+        - cell "Active session":
+          - text: Active session
+      - row "Oct 19, 2026, 2:06 AM MFA verified Recorded":
+        - cell "Oct 19, 2026, 2:06 AM"
+        - cell "MFA verified"
+        - cell "Recorded":
+          - generic: Recorded
+      - row "Oct 19, 2026, 1:43 AM MFA verified Recorded":
+        - cell "Oct 19, 2026, 1:43 AM"
+        - cell "MFA verified"
+        - cell "Recorded":
+          - generic: Recorded
+  - paragraph: Shows the latest 30 recorded password, authenticator, and email verification events. Earlier login attempts are not reconstructed.
+  - heading "Account Security Recommendations" [level=2]
+  - paragraph: Review these steps to protect your account.
+  - list:
+    - generic: Use a strong, unique password
+    - generic: 12+ characters required
+    - generic: Enable authenticator verification
+    - text: Enabled
+    - generic: Verify your sign-in email
+    - text: Verified
+    - generic: Keep unused recovery codes privately
+    - generic: 0 remaining
+    - generic: Review your active session regularly
+    - generic: Recommended
+  - link "Contact NUERS Support":
+    - /url: /merchant?panel=support
+    - text: Contact NUERS Support
+- contentinfo:
+  - img "NUERS"
+  - generic: © 2026 NUERS. All rights reserved.
+  - navigation "Merchant legal and support":
+    - link "Privacy Policy":
+      - /url: /privacy-notice
+    - link "Terms of Service":
+      - /url: /terms-of-service
+    - link "Support":
+      - /url: /merchant?panel=help
+- button "Chat with NUERS support":
+  - generic: Chat with us
+- region "Notifications alt+T"

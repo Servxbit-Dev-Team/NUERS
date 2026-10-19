@@ -1,3 +1,4 @@
+import { formatTin } from "@/lib/tin";
 import { useEffect, useMemo, useState } from "react";
 import {
   Edit,
@@ -364,7 +365,7 @@ export function AdminUsers({
                       <div className="mt-0.5 flex flex-wrap items-center gap-3">
                         <span className="text-xs text-muted-foreground">{profile.email}</span>
                         {profile.organization && <span className="text-xs text-muted-foreground">{profile.organization}</span>}
-                        {profile.tin && <span className="font-mono text-xs text-muted-foreground">{profile.tin}</span>}
+                        {profile.tin && <span className="font-mono text-xs text-muted-foreground">{formatTin(profile.tin)}</span>}
                         <span className="text-xs text-muted-foreground">Updated: {dateLabel(profile.updated_at)}</span>
                       </div>
                     </div>

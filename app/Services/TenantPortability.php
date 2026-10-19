@@ -11,13 +11,13 @@ class TenantPortability
     public function queries(string $merchant): array
     {
         $queries = [];
-        foreach (['merchants', 'merchant_transactions', 'transaction_receipts', 'business_invoices', 'business_invoice_items', 'merchant_expenses', 'eis_invoice_payloads', 'eis_transmissions', 'eis_retry_queue', 'eis_document_outbox', 'eis_reporting_obligations', 'integration_inbox', 'invoice_series', 'invoice_lifecycle_events', 'document_review_requests', 'document_legal_holds', 'eis_delivery_jobs', 'operational_notifications', 'webhook_deliveries', 'taxpayer_authorizations', 'eis_operational_incidents'] as $table) {
+        foreach (['merchants', 'merchant_transactions', 'transaction_receipts', 'business_invoices', 'business_invoice_items', 'merchant_expenses', 'eis_invoice_payloads', 'eis_transmissions', 'eis_retry_queue', 'eis_document_outbox', 'eis_reporting_obligations', 'integration_inbox', 'integration_source_profiles', 'invoice_series', 'invoice_lifecycle_events', 'document_review_requests', 'document_legal_holds', 'eis_delivery_jobs', 'operational_notifications', 'webhook_deliveries', 'taxpayer_authorizations', 'eis_operational_incidents'] as $table) {
             if (! Schema::hasTable($table)) {
                 continue;
             }
             $queries[$table] = DB::table($table)->where($table === 'merchants' ? 'id' : 'merchant_id', $merchant);
         }
-        foreach (['merchant_customers', 'merchant_customer_documents', 'merchant_customer_history', 'merchant_customer_imports', 'merchant_branches', 'merchant_terminals', 'merchant_branch_documents', 'merchant_branch_events', 'merchant_verification_documents', 'merchant_wallets', 'merchant_wallet_entries', 'merchant_wallet_topups'] as $table) {
+        foreach (['merchant_customers', 'merchant_customer_documents', 'merchant_customer_history', 'merchant_customer_imports', 'merchant_branches', 'merchant_terminals', 'merchant_branch_documents', 'merchant_branch_events', 'merchant_verification_documents', 'merchant_wallets', 'merchant_wallet_entries', 'merchant_wallet_topups', 'merchant_wallet_adjustments'] as $table) {
             if (Schema::hasTable($table)) {
                 $columns = array_values(array_diff(Schema::getColumnListing($table), ['request_hash', 'identity_hash', 'request_id', 'name_hash', 'tin_hash', 'email_hash', 'phone_hash', 'private_path', 'payment_reference_hash', 'payment_credit_hash', 'settlement_hash']));
                 $queries[$table] = DB::table($table)->where('merchant_id', $merchant)->select($columns);
@@ -50,7 +50,7 @@ class TenantPortability
         foreach (['merchant_transactions', 'transaction_receipts', 'business_invoices', 'eis_document_outbox', 'eis_delivery_jobs', 'document_review_requests', 'document_legal_holds', 'taxpayer_authorizations', 'integration_inbox', 'merchant_expenses'] as $table) {
             $subjects->union(DB::table($table)->where('merchant_id', $merchant)->select('id'));
         }
-        foreach (['merchant_customers', 'merchant_customer_imports', 'merchant_branches', 'merchant_terminals', 'merchant_branch_documents', 'merchant_branch_events', 'merchant_verification_documents', 'merchant_wallet_entries', 'merchant_wallet_topups'] as $table) {
+        foreach (['merchant_customers', 'merchant_customer_imports', 'merchant_branches', 'merchant_terminals', 'merchant_branch_documents', 'merchant_branch_events', 'merchant_verification_documents', 'merchant_wallet_entries', 'merchant_wallet_topups', 'merchant_wallet_adjustments'] as $table) {
             if (Schema::hasTable($table)) {
                 $subjects->union(DB::table($table)->where('merchant_id', $merchant)->select('id'));
             }

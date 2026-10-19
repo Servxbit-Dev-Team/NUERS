@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\ApiAccess;
 use App\Services\AtomicQuota;
 use App\Services\BirCompliance;
+use App\Services\DeviceSession;
 use App\Services\NotificationEvents;
 use App\Services\PlatformMail;
 use App\Services\PlatformNotifications;
@@ -18,6 +19,30 @@ use Illuminate\Validation\Rules\Password;
 
 class AccountSecurityController
 {
+    /** Self-service security facts; never return token, MFA or audit detail payloads. */
+    public function overview(Request $r)
+    {
+        $u = app(ApiAccess::class)->require($r);
+        $at = fn ($v, $zone = null) => $v ? CarbonImmutable::parse($v, $zone ?? config('app.timezone'))->toIso8601String() : null;
+        $events = DB::table('eis_audit_events')->where('actor_id', (string) $u->id)->where('subject_id', (string) $u->id)
+            ->whereIn('event', ['security.password.changed', 'security.password.reset', 'security.mfa.enrollment_started', 'security.mfa.enrolled', 'security.mfa.verified', 'security.mfa.device_setup_started', 'security.mfa.device_added', 'security.mfa.device_removed', 'security.email.verified'])
+            ->orderByDesc('id')->limit(30)->get(['id', 'event', 'occurred_at']);
+        $changed = DB::table('eis_audit_events')->where('subject_id', (string) $u->id)->whereIn('event', ['security.password.changed', 'security.password.reset'])->orderByDesc('id')->value('occurred_at');
+        $ua = (string) $r->userAgent();
+        $browser = str_contains($ua, 'Edg/') ? 'Edge' : (str_contains($ua, 'Chrome/') ? 'Chrome' : (str_contains($ua, 'Firefox/') ? 'Firefox' : (str_contains($ua, 'Safari/') ? 'Safari' : 'Browser')));
+        $device = str_contains($ua, 'Windows') ? 'Windows' : (str_contains($ua, 'Android') ? 'Android' : (str_contains($ua, 'iPhone') || str_contains($ua, 'iPad') ? 'iOS' : (str_contains($ua, 'Macintosh') ? 'macOS' : (str_contains($ua, 'Linux') ? 'Linux' : 'This device'))));
+        $hashes = json_decode($u->getRawOriginal('mfa_recovery_hashes') ?? '[]', true);
+
+        return response()->json([
+            'email' => $u->email, 'email_verified' => (bool) $u->email_verified_at,
+            'mfa' => ['enrolled' => (bool) $u->mfa_secret, 'verified' => app(\App\Services\MfaSession::class)->verified($u), 'fresh' => app(\App\Services\MfaSession::class)->verified($u), 'recovery_codes_remaining' => $u->mfa_secret && is_array($hashes) ? count($hashes) : 0],
+            'password_changed_at' => $at($changed, 'UTC'),
+            'policy' => ['password_min' => 12, 'idle_minutes' => config('security.token_minutes'), 'absolute_minutes' => config('security.session_absolute_minutes'), 'step_up_minutes' => null, 'mfa_challenge' => config('security.mfa_challenge'), 'single_browser' => true, 'security_email_required' => true, 'sms_available' => false, 'login_pin_available' => false],
+            'session' => ['browser' => $browser, 'device' => $device, 'ip' => $r->ip(), 'started_at' => $u->api_authenticated_at?->toIso8601String(), ...app(DeviceSession::class)->metadata($u), 'observed_at' => now()->toIso8601String(), 'current' => true],
+            'activity' => $events->map(fn ($e) => ['id' => (string) $e->id, 'event' => $e->event, 'at' => $at($e->occurred_at, 'UTC')]),
+        ])->header('Cache-Control', 'private, no-store');
+    }
+
     private function passwordRules(): array
     {
         return ['required', 'string', 'confirmed', 'max:72', Password::min(12)->letters()->numbers(), function ($attribute, $value, $fail) {

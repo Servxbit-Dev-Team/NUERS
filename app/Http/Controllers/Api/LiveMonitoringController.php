@@ -20,7 +20,8 @@ class LiveMonitoringController extends Controller
     public function show(Request $request)
     {
         $policy = app(BirCompliance::class);
-        $policy->administrativeUser($request);
+        $user = $policy->administrativeUser($request);
+        $canViewFinancials = in_array(DB::table('profiles')->where('id', $user->id)->value('role'), ['admin', 'super_admin'], true);
         $now = CarbonImmutable::now('Asia/Manila');
         $today = $this->summary($now->startOfDay(), $now);
         $yesterday = $this->summary($now->subDay()->startOfDay(), $now->subDay());
@@ -52,6 +53,7 @@ class LiveMonitoringController extends Controller
         $activities = $this->activities();
         return response()->json([
             'generated_at' => $now->toIso8601String(), 'today' => $today, 'yesterday' => $yesterday,
+            'financial_summary' => $canViewFinancials ? app(\App\Services\AdminFinancialSummary::class)->overview($now->startOfDay(), $now) : null,
             'tps' => round($lastMinute / 60, 2), 'tps_count' => $lastMinute, 'queue' => $queue,
             'flow' => array_values($minuteRows), 'top_taxpayers' => $top, 'transactions' => $this->formatRows($rows),
             'pagination' => ['page' => $page, 'per_page' => $perPage, 'total' => $total, 'pages' => max(1, (int) ceil($total / $perPage))],

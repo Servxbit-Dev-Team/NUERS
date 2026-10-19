@@ -1,0 +1,591 @@
+NUERS API INTEGRATION / REVIEW EDITION
+IMPLEMENTATION HANDBOOK
+Connect your system to NUERS
+NUERS-ingestion-1 | Review draft v1.0 | 18 October 2026
+Read this before connecting
+This guide documents the current API and clearly labels proposed changes. The audit found tax, data and
+environment gaps. Use synthetic data in isolated staging until the review findings are resolved; do not treat the
+examples as authorization to send a live sale.
+Your ERP / POS NUERS intake Reconciliation
+> >
+Finalizes the source and saves its Authenticates, checks funds, validates Matches source identity and stores
+durable outbox and records acceptance IDs
+Who this is for
+Developers integrating ERP, POS and ecommerce backends; merchant administrators configuring account and branch
+access; operations teams reconciling pending and accepted transactions. No SDK installation automatically connects an
+external business system.
+How to use this guide
+Pages Topic
+2-3 Scope, readiness, credentials and endpoints
+4-5 Request fields, units and source identity
+6-8 VAT design, mixed worked examples and supported cases
+9-11 Version-1 JSON, PHP and Node.js examples
+12-14 Acknowledgement, wallet, errors and batch recovery
+15-16 Offline source outbox and manual portal retry
+17-18 Security, reconciliation, acceptance tests and references
+Legend: CURRENT = implemented contract observed locally. PROPOSED = requires approval and implementation. PENDING = requires
+real deployment or connector evidence. All examples use synthetic identifiers and contain no real keys.
+NUERS | Internal review | Application changes pending approval 1
+NUERS API INTEGRATION / REVIEW EDITION
+CURRENT / READINESS
+Before the first transaction
+Review edition | 18 October 2026
+Check Owner / action Current API effect
+Business account Merchant Admin completes Business Profile and Pending or inactive business cannot create keys
+administrator review. or submit new events.
+Seller registration Review VAT status and relevant tax facts against The server reads merchant.vat_registered. Do not
+business registration. derive registration from an API payload.
+Branch identity Confirm the exact five-digit BIR branch, preserving Payload branch_code must equal the key's
+leading zeros. branch.
+Issuance evidence Maintain the authority currently required by NUERS Active status alone does not satisfy
+and branch/system configuration. assertCanIssue().
+Legal series Set up exactly one current supported series per Source number must be the next prefix +
+branch / document family. eight-digit number. Missing, expired or exhausted
+series returns 409.
+Wallet Read available balance, fee revision, threshold and New eligible events need sufficient available
+intake preference. balance at commit time.
+Connector readiness Install and test a server-side source outbox and The NUERS page cannot retrieve unsent records
+reconciliation process. from an offline external ERP.
+Current integration scope
+The version-1 API persists finalized source events but also creates issued receipt records under the NUERS series. It is
+not a generic historical archive importer. Arbitrary existing ERP numbering, multiple concurrent legal series per family
+and backfill require design review; never renumber an issued source merely to pass validation.
+Proposed readiness panel
+Show account activation, registration, branch, capture/issuance mode, authority, series, wallet and connector
+status separately. An active account should not produce an unexplained generic “not ready” state.
+NUERS | Internal review | Application changes pending approval 2
+NUERS API INTEGRATION / REVIEW EDITION
+CURRENT / CREDENTIALS
+Keys, permissions and endpoints
+Review edition | 18 October 2026
+1. Sign in as the registered Merchant Admin. Open API Integration and complete fresh MFA for credential changes. 2.
+Generate one key for the intended system, exact branch and environment. 3. Copy its secret once into a server-side
+secret manager. 4. Restrict backend egress IPs where stable. 5. Rotate before its 90-day expiry and revoke the old key
+after controlled cutover.
+Method / path Purpose Required scope
+POST /api/integrations/transactions Submit one finalized source event. transactions:write
+POST /api/integrations/transactions/batch Submit 1-50 complete events atomically. transactions:write
+GET /api/integrations/transactions/{id} Read the durable intake result identified by transactions:read
+inbox id.
+GET /api/integrations/transactions/wallet Read the merchant wallet, pricing and transactions:read
+intake preference.
+X-NUERS-API-Key: <server-held-key>
+Content-Type: application/json
+Accept: application/json
+Base example: https://nuers.net. Use the transaction_endpoint published by your merchant API metadata, particularly
+when a deployment has a path prefix. No separate auth/token exchange is required for these merchant integration
+endpoints.
+Current sandbox limitation
+Synthetic Testing Tools performs validation without writing records. A sandbox key is not a complete isolated
+staged ledger. The audit reproduced a sandbox-to-live status-read gap; close that gap before distributing sandbox
+credentials broadly.
+Least privilege
+Grant write only to a sender and read only to a status monitor where appropriate. The portal Manual Retry tool requires
+both read and write for its merchant/branch wallet preflight. Never put a key in storefront JavaScript, mobile app code, a
+URL, a PDF, a payload, a screenshot or a support message.
+NUERS | Internal review | Application changes pending approval 3
+NUERS API INTEGRATION / REVIEW EDITION
+CURRENT / SCHEMA
+Required envelope and identity fields
+Review edition | 18 October 2026
+Field Version-1 requirement / meaning
+schema_version Exactly NUERS-ingestion-1.
+source_system Stable connector identifier, maximum 120 characters; letters, numbers, underscore, dot or hyphen.
+Never change it for a retry.
+source_event_id Immutable event identifier, maximum 120 characters. Generate once in the source.
+external_reference Original source document reference, maximum 120 characters. Do not replace it with a retry counter.
+event_type invoice.finalized for a primary invoice; payment.recorded for supplementary payment evidence.
+occurred_at Original ISO 8601 timestamp with Z or an explicit offset, e.g. 2026-10-18T10:00:00+08:00. At most five
+minutes in the future.
+branch_code Exactly five digits; must match the credential branch, including leading zeros.
+receipt_number Original legal document number. Under current issuance logic it must match the next configured
+NUERS series value.
+document_type One of the documented eight enum values; must match event family and computed classifications. See
+page 8 for limits.
+payment_method cash, card, bank_transfer, e_wallet, credit or other.
+tax_type vatable, vat_exempt, zero_rated or non_vat. Supplies a default for lines, not seller registration.
+gross_amount Recommended explicit final invoice total in PHP pesos, including VAT. Use a decimal string with no
+more than two decimal places.
+items One to 100 complete line objects. No aggregate-only sales import.
+Prefer gross_amount and omit legacy amount to avoid ambiguous VAT-exclusive input. Supplying both is not an extra reconciliation check
+today: gross_amount takes precedence. Tenant and wallet ownership are derived from the authenticated credential, never a merchant_id in
+JSON.
+NUERS | Internal review | Application changes pending approval 4
+NUERS API INTEGRATION / REVIEW EDITION
+CURRENT / MONEY
+Lines, totals and preserved originals
+Review edition | 18 October 2026
+Field Current handling
+description Required nonempty description; maximum 1,000 characters.
+quantity Positive, maximum 1,000,000; calculation supports up to four decimal places. Prefer quantity over the
+qty alias.
+unit_price PHP pesos, at most two money decimals, maximum 100,000,000 per unit. Prefer unit_price over price.
+tax_type Optional line classification; defaults to header. Send it explicitly on every line for mixed documents.
+vat_rate Ordinary VATable lines require 12; zero/exempt/non_vat compute zero VAT. Do not encode an
+exemption only by setting a VAT rate to zero.
+discount_pct Optional 0-100 percentage. This generic discount is not a complete statutory discount eligibility model.
+line_total Optional supplied total; server reconciles it. The current calculator rounds per line using centavo
+arithmetic.
+vat_inclusive One document-level boolean, default true; applies to every item price. Normalize mixed source pricing
+conventions before import.
+customer_name / Optional name and supported TIN format. Buyer address and CWT are not preserved by this API
+customer_tin today; see proposal on page 8.
+Units must stay explicit
+Transaction API amounts are PHP pesos: "560.00" means PHP560. Wallet available_centavos and fee_centavos are
+integer centavos: 300 means PHP3. The separate portal invoice API uses a different monetary contract. Do not reuse its
+raw values without conversion.
+Identity and immutability
+NUERS independently constrains the source event and the merchant + branch + source system + document family +
+external reference. An exact normalized validated replay returns the original result. Changed accepted content returns
+409. Preserve field types, source time and complete original values; do not add or remove optional fields during a retry.
+Version 1 currently hashes validated fields, so unsupported fields are not protected as part of that identity.
+NUERS | Internal review | Application changes pending approval 5
+NUERS API INTEGRATION / REVIEW EDITION
+PROPOSED / TAX MODEL
+Two levels of tax classification
+Review edition | 18 October 2026
+Seller registration is authoritative
+An API key identifies a system and branch. It must not offer a VAT / Non-VAT switch that can override the seller's
+reviewed registration. Provide a read-only registration summary and a configurable default line treatment instead.
+Seller profile Permitted proposed line treatment Document outcome
+VAT registered VATable 12%; VAT-Exempt; Zero-Rated, subject to the VAT invoice family; mixed totals when
+applicable transaction facts and evidence. treatments differ.
+Non-VAT Non-VAT taxable / SSPT, or legally exempt, as applicable to Non-VAT invoice; retain SSPT and exempt
+that seller and transaction. separation when required. No VAT
+charged.
+Product mapping is a default, not a legal decision
+Proposed mapping: source SKU → default category → transaction-specific eligibility → reviewed effective-date rule →
+immutable line snapshot. Customer circumstances, export or incentive qualification, statutory exemptions and dates can
+alter treatment. Do not classify solely from the product name, zero amount, the buyer's VAT registration or a zero tax
+rate.
+Keep these cases distinct
+VAT-Exempt: an exempt transaction does not become a zero-rated transaction. Zero-Rated: a qualifying taxable
+transaction at 0%, with its own legal basis. Non-VAT: describes the seller's registration and relevant non-VAT treatment.
+It is not the label for every untaxed line sold by a VAT registrant.
+Source basis: [S1-S3], with ordinary VAT rate context [S6]. This matrix is the proposed software rule, subject to the relevant facts. Qualified
+RBE/EOE zero-rating evidence must follow current applicable rules [S7-S8]; do not impose a blanket prior-BIR-approval rule or assume every
+business buyer qualifies.
+NUERS | Internal review | Application changes pending approval 6
+NUERS API INTEGRATION / REVIEW EDITION
+TAX WORKED EXAMPLES
+Mixed products on one VAT invoice
+Review edition | 18 October 2026
+Illustrative amounts in PHP. Assume a reviewed VAT-registered seller and that the exempt and zero-rated lines have
+valid treatment. These values demonstrate arithmetic; they do not classify actual products.
+Line / treatment Price basis Sales base VAT Line total
+Ordinary taxable item 112.00 inclusive 100.00 12.00 112.00
+Qualifying exempt item 100.00 100.00 0.00 100.00
+Qualifying zero-rated item 200.00 200.00 0.00 200.00
+Invoice totals 400.00 12.00 412.00
+Reconciliation
+VATable sales = 100.00
+VAT amount = 12.00
+VAT-exempt sales = 100.00
+Zero-rated sales = 200.00
+Gross invoice total = 412.00
+Inclusive ordinary VAT: base = price / 1.12; VAT is the difference after the prescribed line rounding. Exclusive ordinary
+VAT: VAT = base × 12%; line total = base + VAT. The current calculator was checked against this 412.00 mixed
+example.
+Default and override
+A merchant may default products to VATable, then set a qualifying line to VAT-Exempt or Zero-Rated with a recorded
+basis. Do not change the whole API to Non-VAT for that exempt item. Proposed UI should show the resulting document
+type and grouped totals before the mapping is enabled.
+Non-VAT mixed example
+If a Non-VAT seller has PHP300 SSPT sales and PHP200 legally exempt sales, preserve a PHP500 Non-VAT
+invoice with those two distinct subtotals and zero VAT. Current version 1 collapses both into vat_exempt_sales; do
+not use it as a complete SSPT reporting model.
+NUERS | Internal review | Application changes pending approval 7
+NUERS API INTEGRATION / REVIEW EDITION
+CONTRACT BOUNDARIES
+Document types and missing fields
+Review edition | 18 October 2026
+Current API value Meaning / important limit
+vat_invoice Primary VAT invoice with VATable lines.
+non_vat_invoice Primary Non-VAT invoice. Current server does not consistently enforce seller-family
+compatibility.
+vat_exempt_invoice VAT invoice for VAT-exempt sales; not a substitute for a Non-VAT seller's invoice.
+zero_rated_invoice VAT invoice for qualifying zero-rated sales.
+mixed_sales_invoice Current resolver selects this when more than one line tax_type occurs. Registration-specific
+mixed handling needs repair.
+sales_invoice Auto-classifies from lines. It does not solve the registration defects.
+payment_receipt Supplementary payment evidence, event payment.recorded; not an additional primary sale.
+official_receipt Payment alias of payment_receipt. Do not use it to represent a second primary sale.
+Proposed versioned additions - not accepted fields today
+Preserve buyer registered address; a line tax-basis/effective-date reference; distinct Non-VAT SSPT and exempt
+subtotals; CWT amount and basis; gross invoice total and amount due; original source-system/authority snapshot; and
+explicit source-capture, issuance, replacement or correction linkage. Final names and schema version require review.
+Example design: invoice total PHP1,120 and applicable CWT PHP20 produce amount due PHP1,100 while preserving
+PHP1,000 VATable sales and PHP120 VAT. This illustrates separate balances only, not a withholding-rate
+determination. A CWT deduction must not silently reduce the original VAT base.
+Do not silently send unsupported financial fields
+Version 1 drops customer_address, withholding_tax and tax_basis_reference supplied by a connector. Until
+supported, hold documents requiring those fields for reviewed integration handling. RR 6-2026 requires applicable
+CWT shown separately [S4].
+NUERS | Internal review | Application changes pending approval 8
+NUERS API INTEGRATION / REVIEW EDITION
+CURRENT / JSON EXAMPLE
+Version-1 mixed invoice payload
+Review edition | 18 October 2026
+Synthetic example only. Change source identities, branch and legal series once when creating a real event; then
+preserve the saved payload for every retry. Configure the series and authorization first. Do not send this sample as a live
+sale. New proposal fields are deliberately excluded.
+{
+"schema_version": "NUERS-ingestion-1",
+"source_system": "sample-erp",
+"source_event_id": "SAMPLE-invoice-0001",
+"external_reference": "SAMPLE-INV-0001",
+"event_type": "invoice.finalized",
+"occurred_at": "2026-10-18T10:00:00+08:00",
+"branch_code": "00000",
+"receipt_number": "INV-00000001",
+"document_type": "mixed_sales_invoice",
+"payment_method": "cash",
+"gross_amount": "412.00",
+"tax_type": "vatable",
+"vat_inclusive": true,
+"customer_name": "SAMPLE Customer",
+"items": [
+{
+"description": "SAMPLE taxable item",
+"quantity": 1,
+"unit_price": "112.00",
+"tax_type": "vatable"
+},
+{
+"description": "SAMPLE exempt item",
+"quantity": 1,
+"unit_price": "100.00",
+"tax_type": "vat_exempt"
+},
+{
+"description": "SAMPLE zero-rated item",
+"quantity": 1,
+"unit_price": "200.00",
+"tax_type": "zero_rated"
+}
+]
+}
+Top-level tax_type defaults unclassified lines; it is not the seller registration. In mixed documents, send explicit tax_type on every item. Do not
+set the header to "mixed": that value is not accepted by current validation.
+NUERS | Internal review | Application changes pending approval 9
+NUERS API INTEGRATION / REVIEW EDITION
+CURRENT / PHP TRANSPORT
+Send the original JSON from PHP
+Review edition | 18 October 2026
+Read the immutable payload from your durable source outbox. Load the endpoint and key from server configuration.
+This transport returns an HTTP outcome; a separate acknowledgement transaction must decide whether the outbox
+entry was accepted.
+<?php
+$eventJson = $outboxRow['original_json'];
+$url = rtrim(getenv('NUERS_ENDPOINT'), '/');
+// NUERS_ENDPOINT is the published transaction endpoint.
+$key = getenv('NUERS_API_KEY');
+if (!$key || !$url) throw new RuntimeException('Config missing');
+$ch = curl_init($url);
+curl_setopt_array($ch, [
+CURLOPT_POST => true,
+CURLOPT_RETURNTRANSFER => true,
+CURLOPT_CONNECTTIMEOUT => 10,
+CURLOPT_TIMEOUT => 30,
+CURLOPT_FOLLOWLOCATION => false,
+CURLOPT_SSL_VERIFYPEER => true,
+CURLOPT_SSL_VERIFYHOST => 2,
+CURLOPT_HTTPHEADER => [
+'X-NUERS-API-Key: '.$key,
+'Content-Type: application/json',
+'Accept: application/json',
+],
+CURLOPT_POSTFIELDS => $eventJson,
+]);
+$raw = curl_exec($ch);
+$http = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+$networkError = ($raw === false);
+curl_close($ch);
+if ($networkError) {
+// UNKNOWN outcome: keep pending, retry identical JSON later.
+return;
+}
+try {
+$body = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+} catch (JsonException $e) {
+// Never acknowledge HTML, a login page, or malformed JSON.
+return;
+}
+// Apply the identity-matched acknowledgement on page 12.
+// 402: funding required; 409/422: operator review.
+// 429/5xx: bounded backoff, without changing the source.
+Do not log $key, full headers or buyer data. Sanitize errors. A timeout does not prove that the transaction failed at NUERS; the server may
+have committed before the connection dropped.
+NUERS | Internal review | Application changes pending approval 10
+NUERS API INTEGRATION / REVIEW EDITION
+CURRENT / NODE.JS TRANSPORT
+Send the original JSON from Node.js
+Review edition | 18 October 2026
+Server-side example. Supply the exact configured HTTPS endpoint; do not accept a destination URL from an untrusted
+customer request. The original JSON comes from the source database, not a new object assembled at retry time.
+async function sendOriginal(originalJson) {
+const endpoint = process.env.NUERS_ENDPOINT;
+const key = process.env.NUERS_API_KEY;
+if (!endpoint || !key) throw new Error('Config missing');
+let response;
+try {
+response = await fetch(endpoint, {
+method: 'POST',
+redirect: 'error',
+headers: {
+'X-NUERS-API-Key': key,
+'Content-Type': 'application/json',
+'Accept': 'application/json'
+},
+body: originalJson,
+signal: AbortSignal.timeout(30000)
+});
+} catch (error) {
+return {kind: 'unknown'};
+}
+let body;
+try { body = await response.json(); }
+catch { return {kind: 'unknown'}; }
+return {
+kind: 'http', status: response.status, body,
+retryAfter: response.headers.get('retry-after')
+};
+}
+// Store outcome using source identity checks on page 12.
+// Do not acknowledge every 2xx response automatically.
+Wallet and status requests
+// Reuse the same server-only key with transactions:read.
+// GET <published endpoint>/wallet
+// GET <published endpoint>/<inbox id>
+// Keep HTTPS, no redirect, timeout and error handling.
+// Use id from a validated response, not receipt_id.
+These examples are transport recipes, not a full connector worker. Your adapter must add transactional local storage, retry scheduling,
+alerting, access controls, redaction and reconciliation. It must also implement the merchant's realtime or batch preference.
+NUERS | Internal review | Application changes pending approval 11
+NUERS API INTEGRATION / REVIEW EDITION
+CURRENT / ACCEPTANCE
+Acknowledge exactly one durable event
+Review edition | 18 October 2026
+Send original Validate result Commit ACK
+> >
+Keep local record pending Match immutable source IDs Save NUERS IDs atomically
+Expected success shape - illustrative
+{
+"id": "<inbox-uuid>",
+"receipt_id": "<receipt-uuid>",
+"transaction_id": "<transaction-uuid>",
+"source_event_id": "SAMPLE-invoice-0001",
+"external_reference": "SAMPLE-INV-0001",
+"status": "durably_recorded",
+"duplicate": false,
+"bir_acceptance": "not_verified",
+"status_url": "<published status URL>",
+"wallet": { "fee_centavos": 0 }
+}
+A first acceptance returns 201. An exact replay returns 200 with duplicate=true and the original resource IDs and
+accepted time. Current batch responses use 201 even when all results are already accepted; inspect every result instead
+of inferring new sales from the HTTP status.
+Required acknowledgement checks
+Require HTTP 200/201, parsed JSON, status=durably_recorded, matching source_event_id and external_reference,
+and nonempty inbox id and receipt_id. Save the IDs and original response in the same local transaction that marks the
+outbox accepted. If identity or schema checks fail, leave it pending for reconciliation.
+Duplicate identity is independent of key rotation
+Rotate a credential for the same merchant/branch without changing the source event. A different key does not require a
+new invoice. A known accepted ID can be polled with an authorized same-branch read key. If the response was lost
+before the ID was known, resend the same original event to retrieve the prior result.
+Three statuses to keep separate
+Client finalized → NUERS durably recorded → BIR outcome. NUERS acceptance and a PDF or QR code do not
+establish BIR acceptance. Current integration responses explicitly report bir_acceptance=not_verified.
+NUERS | Internal review | Application changes pending approval 12
+NUERS API INTEGRATION / REVIEW EDITION
+CURRENT / WALLET
+Fee admission and error recovery
+Review edition | 18 October 2026
+The published starting policy is PHP3 per eligible primary sale of PHP500 and above. Fees may be changed
+prospectively by Super Admin. Read the current fee, threshold and revision rather than hard-coding this starting rate.
+This is a NUERS service fee, not the sale's VAT or a payment-gateway fee.
+Outcome What the connector should do
+201 / 200 duplicate Validate identities, save original response and acknowledge locally. Accepted retries do not incur
+another fee.
+402 / insufficient funds Pause eligible intake. Keep the original on the client, notify the merchant, obtain confirmed funding
+and retry unchanged. No new financial write or series advance commits. HTTP logs and quota use
+may still be recorded.
+401 / 403 Stop repeated automatic authentication attempts; inspect key, expiry, scopes, IP, branch and account
+status. Preserve sources. Resume after correction.
+409 Review identity conflict, changed content, environment, series, authority or exhausted numbering. Do
+not change a legal number to force acceptance.
+422 Fix the connector mapping before first acceptance; keep the original source record and a traceable
+rejected-attempt history. An accepted original cannot be overwritten.
+429 Honor Retry-After where supplied; bounded exponential backoff and jitter. Shared network quotas
+may apply before a key's own limit.
+Timeout / 5xx / bad success Outcome unknown. Reconcile by exact replay; never create a new source ID or assume failure.
+body
+Limits observed in the current contract
+100 lines/event; 50 events/batch; 600 requests/minute/key plus configured daily budget; batch route adds 10
+requests/minute; network protection can limit first. These are configuration ceilings, not measured production throughput.
+Use bounded polling and an authorized staging load test.
+Sub-PHP500 primary sales, supplementary payment receipts and already accepted replays do not create an extra primary-sale fee under the
+current policy. Wallet checks are repeated at commit time; a preflight balance is not a reservation.
+NUERS | Internal review | Application changes pending approval 13
+NUERS API INTEGRATION / REVIEW EDITION
+CURRENT / BATCH
+Realtime, batch and all-or-none writes
+Review edition | 18 October 2026
+Mode Connector action
+Realtime Commit the finalized source and local outbox first; attempt submission promptly. If funds or internet are
+unavailable, retain the outbox event.
+Batch Retain finalized source events and transmit on the configured schedule or operator action. Group by branch
+and source series. The portal preference alone does not install a worker.
+Manual Export the unchanged original events from the source and use a reviewed server sender or the NUERS
+Manual Retry tab. Do not retype accepted invoices.
+Batch request
+POST <published transaction endpoint>/batch
+X-NUERS-API-Key: <server-held-key>
+{
+"events": [
+<complete original event 1>,
+<complete original event 2>
+]
+}
+Use 1-50 complete version-1 events for one exact credential branch. Sort by the current legal series order. A failure in
+any new item rolls back every new financial write, sequence reservation, preparation and debit in that request. A
+previously accepted exact duplicate remains accepted and free.
+Accept the batch only when every result matches
+Require atomic=true, the expected result count, and identity-matched durable results for every original event. Store
+acknowledgements transactionally in the source. A partial or malformed result leaves the local group pending until
+reconciled by unchanged replay.
+Series discipline
+Stop on the first unaccepted document in a series. Do not send later source numbers around a wallet, validation or
+authority failure. For historical or differently formatted legal numbers, use the proposed external-capture design;
+current v1 requires its exact next series number.
+NUERS | Internal review | Application changes pending approval 14
+NUERS API INTEGRATION / REVIEW EDITION
+CONNECTOR DESIGN
+Survive internet loss without duplicates
+Review edition | 18 October 2026
+Recommended source adapter design. This is a connector responsibility; the NUERS server cannot save an event it has
+never received. A browser queue is an additional recovery tool, not the primary source of truth.
+BEGIN local database transaction
+finalize source document using authorized source workflow
+INSERT outbox (
+stable_source_event_id, original_document_reference,
+original_occurred_at, original_json, payload_hash,
+branch_code, state = 'pending', next_attempt_at
+)
+COMMIT
+worker locks next due source event in series order
+send the saved original_json
+if validated durable acceptance:
+BEGIN local database transaction
+save NUERS IDs and response; set state = 'accepted'
+COMMIT
+else if 402: state = 'funding_required'; alert merchant
+else if 409/422: state = 'review'; alert operator
+else: retain pending; schedule bounded retry
+Four common failure scenarios
+Scenario Safe recovery
+Internet fails before request Source outbox remains pending. Send the same saved event after recovery.
+NUERS commits, response is lost Exact replay returns the original IDs and no extra fee.
+Source crashes before saving Read its pending row and replay unchanged. Do not generate a replacement identity.
+ACK
+Wallet becomes insufficient Keep the source locally; after confirmed funding, resume the earliest blocked event and
+reconcile.
+Offline invoice issuance has its own legal workflow. RMC 98-2026 IV.11 addresses authorized manual invoices and linked electronic
+replacements after recovery [S5]. A pending outbox or low wallet balance is not an extension of an invoicing deadline. The current API lacks
+an explicit replacement-reference field; that workflow is proposed, not implemented.
+NUERS | Internal review | Application changes pending approval 15
+NUERS API INTEGRATION / REVIEW EDITION
+CURRENT / OPERATOR RUNBOOK
+Use Manual Retry from the portal
+Review edition | 18 October 2026
+1. Export. From the external system export the original source events as an array or {"events":[...]}. Limit the file to 50
+events and 2 MB. Exclude credentials and unrelated customer data.
+2. Sign in. Open Merchant → API Integration → Manual Retry for the correct merchant. Keep the source system's
+independent backup.
+3. Unlock. Use a private recovery passphrase of at least 16 characters. It derives an encryption key; NUERS cannot
+recover this browser queue if the passphrase is lost. Store it securely outside the queue.
+4. Import and review. Check branch, source system, original reference, timestamp and values. The queue encrypts
+payloads and responses using AES-GCM and tenant-bound associated data. Do not clear browser storage while
+pending records exist.
+5. Authenticate. Supply a valid matching live branch key with read and write scopes in memory. Wallet preflight verifies
+merchant and branch before source submission. Do not put the key into the imported JSON.
+6. Transmit. Resume after funds are sufficient. The sender selects that branch's queued events. A different branch
+remains pending; use its own matching credential. The first unaccepted source stops ordered replay.
+7. Reconcile. Match accepted source IDs in Invoices & Receipts and persist NUERS IDs back in the source system.
+Preserve review/funding rows until resolved. Protect both source backups and browser recovery material.
+Storage limitations
+The portal displays the latest 1,000 queue metadata rows and retains older encrypted records. Browser storage can be
+deleted, evicted or exhausted; it is not the merchant's five-year server archive. Local crypto tests do not prove browser
+restart, quota or device-recovery behavior in every deployment.
+Credential or passphrase issue
+For an expired/revoked key, replace it with a permitted same-merchant, same-branch credential and retry unchanged.
+For the wrong recovery passphrase, preserve encrypted data and use the correct passphrase. If browser storage is lost,
+recover the original JSON from the authoritative source outbox; do not reconstruct new source IDs.
+No automatic external-system access
+The NUERS portal cannot reach an ERP that is offline or export its local data. The customer's connector or
+operator must provide the saved source event when the connection is restored.
+NUERS | Internal review | Application changes pending approval 16
+NUERS API INTEGRATION / REVIEW EDITION
+OPERATIONAL CONTROLS
+Security, reconciliation and support
+Review edition | 18 October 2026
+Protect data and access
+Use TLS with certificate verification; do not follow unexpected redirects with credentials. Keep API keys in a backend
+secret manager and restrict exact egress IPs where possible. An empty allowlist permits any IP possessing the valid key.
+Maintain trusted-edge proxy configuration rather than trusting arbitrary forwarded headers.
+Separate environments, merchant tenants and branches. Apply least privilege, redact headers and buyer data from logs,
+limit queue access, encrypt source backups, track credential expiry and revoke compromised keys. A rotated key must
+not change transaction identity. Current findings A3 and A4 require remediation before full security sign-off.
+Reconcile daily and after outages
+Compare Resolve
+Source finalized vs NUERS Match branch, source event, source reference and original amount. Pending sources remain
+durable visible to operators.
+Sales totals vs payment Count the primary invoice once. A supplementary payment collection must not add a second
+evidence sale.
+Wallet debits vs accepted Match fee revision, original resource, debit and balance. Do not charge exact replay again.
+eligible sales
+Tax buckets and copies Compare source line categories, grouped bases, VAT and due amounts. Hold documents
+needing unsupported fields.
+Delivery status vs BIR status Recorded in NUERS and sent to customer are separate from authenticated BIR response
+evidence.
+Logs and webhooks
+Usage & Logs records scoped intake-attempt metadata with status and latency. It is not a complete performance/APM
+system or proof that every network request reached the application. Merchant callbacks remain platform-controlled and
+paused on the current page. Use polling with bounded backoff; a saved callback URL does not prove delivery.
+Support evidence should contain a sanitized source reference, branch, timestamp, HTTP status, request correlation or inbox ID, and redacted
+error. Never send a live API key, password, recovery code or full customer payload in a ticket.
+NUERS | Internal review | Application changes pending approval 17
+NUERS API INTEGRATION / REVIEW EDITION
+ACCEPTANCE / SOURCES
+Staging sign-off and reference material
+Review edition | 18 October 2026
+Test before production Expected result
+Pending / inactive merchant New writes denied; no financial side effects.
+Wrong tenant, branch or environment No source data leakage or cross-boundary write. Environment-read defect must
+be fixed.
+First event / same event / changed event One record and one eligible fee; exact replay original IDs; changed accepted
+payload conflict.
+VAT / Non-VAT / mixed / CWT Registration-safe family, preserved fields and all grouped totals reconcile. Resolve
+A1-A2 before sign-off.
+Insufficient funds / late batch error No new financial writes, fees or series progress commit.
+Lost response / restart / key rotation Identical source replay restores acknowledgement; no duplicate or extra fee.
+Audit storage failure on key change Key change and audit roll back together; resolve A4 first.
+[S1] RR 7-2024, Section 6(B), pp. 12-14
+Open official source
+[S2] RMC 77-2024, Q25 and Q28, pp. 9-10
+Open official source
+[S3] RMC 77-2024, official samples A1-A2 / B1-B6
+Open official source
+[S4] RR 6-2026, Sections 2, 3 and 6
+Open official source
+[S5] RMC 98-2026, IV.2, IV.11-15
+Open official source
+[S6] RA 10963, amendments to Sections 106 and 108
+Open official source
+[S7] RMC 66-2025, qualified RBE zero-rating evidence
+Open official source
+[S8] BIR advisory, 11 June 2025, EOE/RBE zero-rating
+Open official source
+Research checked 18 October 2026. Product eligibility and legal evidence must be maintained as rules change. The detailed audit
+accompanies this draft. Proposed fields, capture modes, PDF download wiring and environment fixes have not been implemented.
+NUERS | Internal review | Application changes pending approval 18

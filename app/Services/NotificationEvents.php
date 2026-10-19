@@ -19,8 +19,8 @@ class NotificationEvents
     {
         // Do not add recipient lookups or emails to the real-time ingestion hot path.
         if (! in_array($event, [
-            'wallet.balance.low', 'wallet.topup.requested', 'wallet.topup.reviewed', 'bcdr.requests.created', 'bcdr.requests.reviewed', 'bcdr.evidence.created', 'bcdr.evidence.reviewed', 'security.mfa.enrolled', 'security.mfa.verified', 'api_key.created', 'api_key.updated', 'api_key.revoked',
-            'business_registry.reviewed', 'business_registry.account.activated', 'business.registration.submitted', 'business.verification.document_uploaded', 'business.verification.document_reviewed',
+            'wallet.adjustment.posted', 'wallet.balance.low', 'wallet.topup.requested', 'wallet.topup.reviewed', 'bcdr.requests.created', 'bcdr.requests.reviewed', 'bcdr.evidence.created', 'bcdr.evidence.reviewed', 'security.mfa.enrolled', 'security.mfa.verified', 'api_key.created', 'api_key.updated', 'api_key.revoked',
+            'business_registry.reviewed', 'business_registry.account.activated', 'business.registration.submitted', 'business.profile.review_requested', 'business.verification.document_uploaded', 'business.verification.document_reviewed',
             'identity.claim.requested', 'identity.claim.reviewed', 'document.cancellation.requested', 'document.correction.requested',
             'document.hold.recorded', 'document.hold.released', 'permit.registered', 'permit.reviewed',
             'integration.configuration_saved', 'integration.credential_replaced', 'integration.credential_revoked',
@@ -37,7 +37,9 @@ class NotificationEvents
         }
         if (str_starts_with($event, 'wallet.')) {
             $merchant = (string) $subject;
-            if ($event === 'wallet.balance.low') {
+            if ($event === 'wallet.adjustment.posted') {
+                $n->merchant($merchant, $event, $key, 'Wallet adjustment recorded', 'NUERS recorded a manual wallet top-up or withdrawal. Sign in and open Wallet to review the transaction reference and current balance. Contact NUERS support if this was unexpected.', 'operations');
+            } elseif ($event === 'wallet.balance.low') {
                 $n->merchant($merchant, $event, $key, 'NUERS wallet balance is low', 'Your prepaid wallet reached its low-balance threshold. Open Wallet in NUERS to review the current balance and request funding. Unfunded eligible sales remain on your client until you retry after funding.', 'operations');
             } elseif ($event === 'wallet.topup.requested') {
                 $n->merchant($merchant, $event, $key, 'Wallet funding request received', 'Your NUERS funding request is awaiting independent verification. No funds are credited until a Super Admin confirms settlement. Track the decision in Wallet.');
@@ -88,6 +90,20 @@ class NotificationEvents
             if ($m) {
                 $n->merchant($m->id, $event, $key, 'Business account update', 'Your NUERS business account status is '.str_replace('_', ' ', $m->status).'. '.$message);
             }
+
+            return;
+        }
+        if ($event === 'business.profile.review_requested') {
+            $m = DB::table('merchants')->where('id', $subject)->first();
+            if (! $m) {
+                return;
+            }
+            // The persisted submission revision is stable across retries and notification repairs.
+            // Keep the existing administrator key so older queued notices are not duplicated.
+            $submission = isset($details['submission_revision']) ? $m->id.':'.$details['submission_revision'] : $key;
+            $business = 'Business: '.$m->business_name."\n\n";
+            $n->merchant($m->id, $event, $submission, 'Business profile submitted for review', $business.'NUERS received your business profile and required documents for review. Authorized NUERS administrators will independently review the evidence. Sign in and open Business Profile to track the decision and any requested changes. Your account remains pending until an administrator approves activation. NUERS account review does not establish BIR approval or enable EIS transmission.', action: $n->url('merchant/profile'));
+            $n->admins($event, $submission, 'Business profile ready for review', $business.'A merchant submitted a complete document checklist. Open Registered Businesses, select the business and choose Review / Manage Status to inspect the private evidence before deciding account activation. Uploads and NUERS account review do not grant BIR authority.', $n->url('super-admin/merchants'));
 
             return;
         }

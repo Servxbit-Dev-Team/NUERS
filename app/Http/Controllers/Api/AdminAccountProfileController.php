@@ -45,7 +45,7 @@ class AdminAccountProfileController
         $role = DB::table('profiles')->where('id', $u->id)->lockForUpdate()->value('role');
         abort_unless(in_array($role, ['admin', 'super_admin'], true), 403);
         if (config('security.enforce_privileged_mfa')) {
-            abort_unless($u->mfa_secret && $u->api_mfa_verified_at && now()->diffInMinutes($u->api_mfa_verified_at, true) <= config('security.privileged_step_up_minutes'), 403, 'Complete fresh MFA verification.');
+            abort_unless(app(\App\Services\MfaSession::class)->verified($u), 403, 'Complete MFA verification for this login.');
         }
 
         return $u;
@@ -70,7 +70,7 @@ class AdminAccountProfileController
 
         return response()->json(['profile' => ['full_name' => $p->full_name ?: $u->name, 'organization' => $p->organization ?? '', 'mobile' => $d['mobile'] ?? '', 'position' => $d['position'] ?? '', 'department' => $d['department'] ?? '', 'office_address' => $d['office_address'] ?? '', 'telephone' => $d['telephone'] ?? '', 'alternate_email' => $d['alternate_email'] ?? '', 'timezone' => $d['timezone'] ?? 'Asia/Manila', 'time_format' => $d['time_format'] ?? '12', 'density' => $d['density'] ?? 'comfortable'],
             'account' => ['email' => $u->email, 'email_verified' => (bool) $u->email_verified_at, 'id' => 'NUERS-ADM-'.str_pad((string) $u->id, 6, '0', STR_PAD_LEFT), 'role' => $p->role, 'created_at' => $u->created_at?->toIso8601String(), 'has_avatar' => (bool) $row?->avatar_path, 'revision' => (int) ($row->revision ?? 0)],
-            'security' => ['mfa_enrolled' => (bool) $u->mfa_secret, 'mfa_verified_at' => $this->date($u->getRawOriginal('api_mfa_verified_at')), 'password_changed_at' => $this->date($lastPassword, 'UTC'), 'idle_minutes' => config('security.token_minutes'), 'absolute_minutes' => config('security.session_absolute_minutes'), 'step_up_minutes' => config('security.privileged_step_up_minutes'), 'login_alerts' => true],
+            'security' => ['mfa_enrolled' => (bool) $u->mfa_secret, 'mfa_verified_at' => $this->date($u->getRawOriginal('api_mfa_verified_at')), 'password_changed_at' => $this->date($lastPassword, 'UTC'), 'idle_minutes' => config('security.token_minutes'), 'absolute_minutes' => config('security.session_absolute_minutes'), 'step_up_minutes' => null, 'mfa_challenge' => config('security.mfa_challenge'), 'login_alerts' => true],
             'notifications' => ['security_email' => true, 'workflow_email' => (bool) ($prefs->workflow_email ?? true), 'support_email' => (bool) ($prefs->support_email ?? true), 'operations_email' => (bool) ($prefs->operations_email ?? true)],
             'session' => ['device' => $os, 'browser' => $browser, 'ip' => $r->ip(), 'started_at' => $u->api_authenticated_at?->toIso8601String(), ...app(DeviceSession::class)->metadata($u), 'observed_at' => now()->toIso8601String(), 'current' => true],
             'activity' => $events, 'generated_at' => now()->toIso8601String()])->header('Cache-Control', 'private, no-store');

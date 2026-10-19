@@ -1,3 +1,4 @@
+import { formatTin } from "@/lib/tin";
 import {
   AlertTriangle,
   Shield,
@@ -147,9 +148,9 @@ export function AdminRiskDetection() {
               </thead>
               <tbody>
                 {suspiciousMerchants.map((m) => (
-                  <tr key={m.tin} className="border-b last:border-0">
+                  <tr key={formatTin(m.tin)} className="border-b last:border-0">
                     <td className="py-3 text-xs font-medium text-foreground">{m.name}</td>
-                    <td className="py-3 text-xs text-muted-foreground font-mono">{m.tin}</td>
+                    <td className="py-3 text-xs text-muted-foreground font-mono">{formatTin(m.tin)}</td>
                     <td className="py-3">
                       <Badge variant="secondary" className="text-[10px]">{m.type}</Badge>
                     </td>

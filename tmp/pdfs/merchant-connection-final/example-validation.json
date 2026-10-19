@@ -1,0 +1,60 @@
+{
+    "passed": 11,
+    "checks": [
+        {
+            "case": "non-vat",
+            "document": "non_vat_invoice",
+            "totals_match": true
+        },
+        {
+            "case": "vat-inclusive",
+            "document": "vat_invoice",
+            "totals_match": true
+        },
+        {
+            "case": "vat-mixed",
+            "document": "mixed_sales_invoice",
+            "totals_match": true
+        },
+        {
+            "case": "vat-exclusive",
+            "document": "vat_invoice",
+            "totals_match": true
+        },
+        {
+            "case": "withholding",
+            "document": "vat_invoice",
+            "totals_match": true
+        },
+        {
+            "case": "senior_citizen",
+            "document": "vat_exempt_invoice",
+            "totals_match": true
+        },
+        {
+            "case": "pwd",
+            "document": "vat_exempt_invoice",
+            "totals_match": true
+        },
+        {
+            "case": "national_athlete_coach",
+            "document": "vat_invoice",
+            "totals_match": true
+        },
+        {
+            "case": "solo_parent",
+            "document": "vat_exempt_invoice",
+            "totals_match": true
+        },
+        {
+            "case": "discount",
+            "document": "vat_invoice",
+            "totals_match": true
+        },
+        {
+            "case": "payment",
+            "document": "payment_receipt",
+            "totals_match": true
+        }
+    ]
+}

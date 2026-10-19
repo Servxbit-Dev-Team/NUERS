@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 
 class MerchantVerificationDocuments
 {
+    public const MAX_BYTES = 100 * 1024 * 1024;
     public const KINDS = [
         'bir_cor' => ['name' => 'BIR Certificate of Registration', 'description' => 'Form 2303 showing the registered business name, TIN and address.'],
         'business_registration' => ['name' => 'Business Registration Certificate', 'description' => 'DTI, SEC, CDA or the applicable business registration document.'],
@@ -37,33 +38,66 @@ class MerchantVerificationDocuments
     public function present(string $merchant): array
     {
         $rows = $this->available() ? $this->latest($merchant) : collect();
+        $versions = $this->available() ? DB::table('merchant_verification_documents')->where('merchant_id', $merchant)->selectRaw('kind, COUNT(*) as versions')->groupBy('kind')->pluck('versions', 'kind') : collect();
+        $names = $this->actorNames($rows);
         $items = [];
         foreach (self::KINDS as $kind => $meta) {
             $r = $rows[$kind] ?? null;
-            $items[] = ['kind' => $kind, ...$meta, 'id' => $r?->document_id, 'status' => $r?->status ?? 'missing', 'filename' => $r ? Crypt::decryptString($r->filename_encrypted) : null, 'bytes' => $r?->bytes, 'created_at' => $r?->created_at, 'reviewed_at' => $r?->reviewed_at, 'review_note' => $r?->review_encrypted ? Crypt::decryptString($r->review_encrypted) : null];
+            $items[] = ['kind' => $kind, ...$meta, ...($r ? $this->presentRow($r, $names) : ['id' => null, 'status' => 'missing', 'filename' => null, 'bytes' => null, 'created_at' => null, 'reviewed_at' => null, 'review_note' => null]), 'version' => (int) ($versions[$kind] ?? 0), 'is_current' => true];
         }
         $uploaded = $rows->count();
         $verified = $rows->where('status', 'verified')->count();
 
-        return ['items' => $items, 'required' => $this->required($merchant), 'uploaded' => $uploaded, 'verified' => $verified, 'total' => count(self::KINDS), 'ready_for_activation' => $verified === count(self::KINDS), 'notice' => 'Documents are required for NUERS account verification and activation. Uploading a file does not verify the account or establish BIR approval.'];
+        $account = DB::table('merchants')->where('id', $merchant)->first(['status', 'registry_details']);
+        $details = json_decode($account->registry_details ?? '{}', true) ?: [];
+        $status = $account->status ?? 'pending';
+        $stage = $details['stage'] ?? ($status === 'active' ? 'onboarded' : 'evaluation');
+        $active = $status === 'active';
+        $notice = $active
+            ? 'This account is onboarded and active. The registered Merchant Admin can generate API keys without another account approval.'
+            : (in_array($status, ['suspended', 'inactive'], true)
+                ? 'Account access is '.$status.'. The saved account-access decision applies even when all documents are verified.'
+                : ($verified === count(self::KINDS)
+                    ? 'All document categories are verified. Complete the initial onboarding decision to activate this account.'
+                    : 'Upload the required documents and record their review decisions before completing account activation.'));
+
+        return ['items' => $items, 'required' => $this->required($merchant), 'uploaded' => $uploaded, 'verified' => $verified, 'total' => count(self::KINDS),
+            'ready_for_activation' => $verified === count(self::KINDS),
+            'account' => ['status' => $status, 'stage' => $stage, 'active' => $active], 'notice' => $notice];
+    }
+
+    public function actorNames($rows): array
+    {
+        return DB::table('users')->whereIn('id', $rows->flatMap(fn ($r) => [$r->uploaded_by, $r->reviewed_by])->filter()->unique())->pluck('name', 'id')->all();
+    }
+
+    public function presentRow(object $r, array $names): array
+    {
+        return ['id' => $r->document_id, 'kind' => $r->kind, ...self::KINDS[$r->kind], 'status' => $r->status,
+            'filename' => Crypt::decryptString($r->filename_encrypted), 'bytes' => (int) $r->bytes, 'mime' => $r->mime, 'sha256' => $r->sha256,
+            'created_at' => $r->created_at, 'uploaded_by' => $names[$r->uploaded_by] ?? ($r->uploaded_by ? 'Account user' : 'Registration upload'),
+            'reviewed_at' => $r->reviewed_at, 'reviewed_by' => $names[$r->reviewed_by] ?? null,
+            'review_note' => $r->review_encrypted ? Crypt::decryptString($r->review_encrypted) : null];
     }
 
     public function store(?string $merchant, ?string $challenge, string $kind, UploadedFile $file, ?string $actor): object
     {
         abort_unless($this->available(), 503, 'Verification document storage is not available.');
-        $raw = file_get_contents($file->getRealPath());
-        $sha = hash('sha256', $raw);
+        abort_unless($file->getSize() > 0 && $file->getSize() <= self::MAX_BYTES, 422, 'Choose a document no larger than 100 MB.');
+        $sha = hash_file('sha256', $file->getRealPath());
         $scope = DB::table('merchant_verification_documents')->where('merchant_id', $merchant)->when(! $merchant, fn ($q) => $q->where('challenge_id', $challenge))->where('kind', $kind);
         $last = (clone $scope)->orderByDesc('id')->first();
-        if ($last && hash_equals($last->sha256, $sha)) {
+        // An explicit resubmission after a correction request is a new reviewable version,
+        // even when the merchant selects the same bytes. Pending/verified retries still dedupe.
+        if ($last && $last->status !== 'needs_changes' && hash_equals($last->sha256, $sha)) {
             return $last;
         }
         abort_if(! $merchant && (clone $scope)->count() >= 2, 429, 'Staged file limit reached. Complete registration, then manage documents in Business Profile.');
         $uuid = (string) Str::uuid();
         $path = 'merchant-verification/'.($merchant ?? 'staging').'/'.$uuid.'.enc';
-        abort_unless(Storage::disk('local')->put($path, Crypt::encryptString(base64_encode($raw))), 503, 'Private document storage is unavailable.');
+        app(PrivateDocumentStream::class)->store($file->getRealPath(), $path);
         try {
-            $id = DB::table('merchant_verification_documents')->insertGetId(['document_id' => $uuid, 'merchant_id' => $merchant, 'challenge_id' => $challenge, 'kind' => $kind, 'status' => 'pending', 'filename_encrypted' => Crypt::encryptString(basename($file->getClientOriginalName())), 'private_path' => $path, 'sha256' => $sha, 'bytes' => strlen($raw), 'mime' => $file->getMimeType(), 'uploaded_by' => $actor, 'created_at' => now(), 'claimed_at' => $merchant ? now() : null]);
+            $id = DB::table('merchant_verification_documents')->insertGetId(['document_id' => $uuid, 'merchant_id' => $merchant, 'challenge_id' => $challenge, 'kind' => $kind, 'status' => 'pending', 'filename_encrypted' => Crypt::encryptString(basename($file->getClientOriginalName())), 'private_path' => $path, 'sha256' => $sha, 'bytes' => $file->getSize(), 'mime' => $file->getMimeType(), 'uploaded_by' => $actor, 'created_at' => now(), 'claimed_at' => $merchant ? now() : null]);
         } catch (\Throwable$e) {
             Storage::disk('local')->delete($path);
             throw $e;
@@ -90,20 +124,18 @@ class MerchantVerificationDocuments
         $p = $this->present($merchant);
         abort_unless($p['ready_for_activation'], 422, 'All required verification documents must be uploaded and independently verified before activating this account.');
         foreach ($this->latest($merchant) as $row) {
-            $this->contents($row);
+            $this->assertIntegrity($row);
         }
     }
 
     public function contents(object $row): string
     {
-        abort_unless(Storage::disk('local')->exists($row->private_path), 409, 'The private document is unavailable. Upload a new copy for review.');
-        try {
-            $raw = base64_decode(Crypt::decryptString(Storage::disk('local')->get($row->private_path)), true);
-        } catch (\Throwable) {
-            abort(409, 'Document integrity check failed. Upload a new copy for review.');
-        }
-        abort_unless($raw !== false && hash_equals($row->sha256, hash('sha256', $raw)), 409, 'Document integrity check failed. Upload a new copy for review.');
+        $stream = app(PrivateDocumentStream::class)->verified($row);
+        try { return stream_get_contents($stream); } finally { fclose($stream); }
+    }
 
-        return $raw;
+    public function assertIntegrity(object $row): void
+    {
+        fclose(app(PrivateDocumentStream::class)->verified($row));
     }
 }

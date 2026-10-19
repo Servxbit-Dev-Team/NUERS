@@ -27,6 +27,9 @@ class IssuedDocumentLedger
             $rbranch = "COALESCE($rbranch,(SELECT br.branch_code FROM eis_document_branch_reviews br WHERE br.document_source='receipt' AND br.document_id=r.id ORDER BY br.revision DESC LIMIT 1))";
             $bbranch = "COALESCE($bbranch,(SELECT br.branch_code FROM eis_document_branch_reviews br WHERE br.document_source='invoice' AND br.document_id=b.id ORDER BY br.revision DESC LIMIT 1))";
         }
+        $benefitCols = fn ($table, $alias) => implode(',', array_map(fn ($c) => $this->col($table, $alias, $c, $c === 'sale_category' ? "'regular'" : '0').' as '.$c, ['sale_category', 'statutory_discount_amount', 'vat_relief_amount', 'discount_amount']));
+        $rb = $benefitCols('transaction_receipts', 'r'); $bb = $benefitCols('business_invoices', 'b');
+        $sspt = $this->col('transaction_receipts', 'r', 'sspt_sales', '0');
         $brdo = $this->col('business_invoices', 'b', 'seller_rdo_code');
         // At most one representative payment per receipt. All payment events remain in merchant_transactions.
         $receipts = DB::table('transaction_receipts as r')->leftJoin('merchant_transactions as t', function ($j) {
@@ -34,8 +37,8 @@ class IssuedDocumentLedger
         })->selectRaw('COALESCE(t.id,'.$this->prefix('receipt:', 'r.id').") as id, 'receipt' as document_source,r.id as document_id,t.id as transaction_id,r.merchant_id,t.transaction_ref,r.id as receipt_id,r.receipt_number as receipt_number,
             r.merchant_name as business,r.merchant_tin as tin,r.merchant_address as seller_address,$rbranch as branch_code,r.rdo_code,
             COALESCE(r.document_type,r.receipt_type) as document_type,r.status as record_status,t.status as transaction_status,
-            r.total_due as amount,r.vat_amount,r.vatable_sales,r.vat_exempt_sales,r.zero_rated_sales,
-            (r.vatable_sales+r.vat_exempt_sales+r.zero_rated_sales) as net_amount,
+            r.total_due as amount,$rb,r.vat_amount,r.vatable_sales,r.vat_exempt_sales,r.zero_rated_sales,$sspt as sspt_sales,
+            (r.vatable_sales+r.vat_exempt_sales+r.zero_rated_sales+$sspt) as net_amount,
             r.issued_at as business_date,COALESCE(r.issued_at,r.created_at,t.created_at) as created_at,r.created_at as recorded_at,
             t.payment_method,t.region,t.branch,t.channel,r.buyer_name as customer_name,r.buyer_tin as customer_tin,
             NULL as original_invoice_id,
@@ -44,7 +47,7 @@ class IssuedDocumentLedger
         $invoices = DB::table('business_invoices as b')->whereNotIn('b.status', ['draft'])->selectRaw($this->prefix('invoice:', 'b.id')." as id,'invoice' as document_source,b.id as document_id,NULL as transaction_id,b.merchant_id,b.invoice_number as transaction_ref,NULL as receipt_id,b.invoice_number as receipt_number,
             b.merchant_name as business,b.merchant_tin as tin,b.merchant_address as seller_address,$bbranch as branch_code,$brdo as rdo_code,
             b.document_type,b.status as record_status,NULL as transaction_status,
-            b.total_amount as amount,b.vat_amount,b.taxable_amount as vatable_sales,b.vat_exempt_amount as vat_exempt_sales,b.zero_rated_amount as zero_rated_sales,
+            b.total_amount as amount,$bb,b.vat_amount,b.taxable_amount as vatable_sales,b.vat_exempt_amount as vat_exempt_sales,b.zero_rated_amount as zero_rated_sales,0 as sspt_sales,
             (b.taxable_amount+b.vat_exempt_amount+b.zero_rated_amount) as net_amount,
             b.issue_date as business_date,COALESCE(b.issue_date,b.created_at) as created_at,b.created_at as recorded_at,
             NULL as payment_method,NULL as region,$bbranch as branch,NULL as channel,b.buyer_name as customer_name,b.buyer_tin as customer_tin,b.original_invoice_id,
@@ -54,7 +57,7 @@ class IssuedDocumentLedger
         })->selectRaw("t.id,'transaction' as document_source,NULL as document_id,t.id as transaction_id,t.merchant_id,t.transaction_ref,NULL as receipt_id,NULL as receipt_number,
             'Unlinked transaction' as business,NULL as tin,NULL as seller_address,NULL as branch_code,t.rdo_code,
             t.transaction_type as document_type,t.status as record_status,t.status as transaction_status,
-            t.amount,t.vat_amount,t.vatable_sales,0 as vat_exempt_sales,0 as zero_rated_sales,t.net_amount,
+            t.amount,'regular' as sale_category,0 as statutory_discount_amount,0 as vat_relief_amount,0 as discount_amount,t.vat_amount,t.vatable_sales,0 as vat_exempt_sales,0 as zero_rated_sales,0 as sspt_sales,t.net_amount,
             NULL as business_date,t.created_at,t.created_at as recorded_at,t.payment_method,t.region,t.branch,t.channel,t.customer_name,t.customer_tin,NULL as original_invoice_id,
             1 as payment_count,t.amount as payment_amount");
 
@@ -63,7 +66,7 @@ class IssuedDocumentLedger
 
     public function normalizedCandidates(): Builder
     {
-        $typed = $this->candidates()->selectRaw("documents.*, REPLACE(REPLACE(REPLACE(COALESCE(tin,''),'-',''),' ',''),'.','') as tin_digits,
+        $typed = $this->candidates()->selectRaw("documents.*, CASE WHEN discount_amount>statutory_discount_amount THEN discount_amount-statutory_discount_amount ELSE 0 END as manual_discount_amount, REPLACE(REPLACE(REPLACE(COALESCE(tin,''),'-',''),' ',''),'.','') as tin_digits,
             CASE WHEN record_status IN ('cancelled','canceled','voided','void','refunded','refund') THEN 'cancelled' WHEN record_status IN ('issued','sent','paid','partially_paid','validated','completed','settled','verified','valid','overdue') THEN 'success' WHEN record_status IN ('failed','rejected') THEN 'failed' ELSE 'pending' END as status,
             CASE WHEN document_type IN ('credit_note','credit_memo') THEN 'credit' WHEN document_type IN ('debit_note','debit_memo') THEN 'debit' WHEN document_type IN ('official_receipt','payment_receipt') THEN 'receipt' WHEN document_type IN ('purchase_invoice','delivery_receipt') THEN 'supplementary' ELSE 'invoice' END as document_family");
         $embedded = $this->prefix('00', 'SUBSTR(tin_digits,10,3)');

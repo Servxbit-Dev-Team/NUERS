@@ -98,20 +98,32 @@ class BusinessRegistrationController extends Controller
         $v = $request->validate(['challenge_id' => 'required|uuid', 'code' => 'required|digits:6']);
         $result = DB::transaction(function () use ($v) {
             $row = DB::table('registration_email_verifications')->where('id', $v['challenge_id'])->lockForUpdate()->first();
-            if (! $row || $row->verified_at || $row->consumed_at || ! Carbon::parse($row->expires_at)->isFuture() || $row->attempts >= 5) {
-                return null;
+            if (! $row) {
+                return ['error_code' => 'REGISTRATION_CODE_NOT_FOUND', 'message' => 'This verification request is no longer available. Send a new code.'];
             }
-            DB::table('registration_email_verifications')->where('id', $row->id)->increment('attempts');
+            if ($row->verified_at || $row->consumed_at) {
+                return ['error_code' => 'REGISTRATION_CODE_USED', 'message' => 'This code has already been verified. Continue registration, or send a new code if needed.'];
+            }
+            if (! Carbon::parse($row->expires_at)->isFuture()) {
+                return ['error_code' => 'REGISTRATION_CODE_EXPIRED', 'message' => 'This code has expired or was replaced by a newer code. Send a new code.'];
+            }
+            if ($row->attempts >= 5) {
+                return ['error_code' => 'REGISTRATION_CODE_LOCKED', 'message' => 'Five incorrect codes were entered. Send a new code to continue.'];
+            }
+            // Explicitly preserve the deadline, including on legacy MySQL schemas with automatic timestamp updates.
+            DB::table('registration_email_verifications')->where('id', $row->id)->update(['attempts' => $row->attempts + 1, 'expires_at' => $row->expires_at]);
             if (! Hash::check($v['code'], $row->code_hash)) {
-                return null;
+                return $row->attempts + 1 >= 5
+                    ? ['error_code' => 'REGISTRATION_CODE_LOCKED', 'message' => 'Five incorrect codes were entered. Send a new code to continue.']
+                    : ['error_code' => 'REGISTRATION_CODE_INCORRECT', 'message' => 'The code does not match this verification request. Check the latest email and try again.'];
             }
             $proof = Str::random(64);
             DB::table('registration_email_verifications')->where('id', $row->id)->update(['verified_at' => now(), 'proof_hash' => hash('sha256', $proof), 'expires_at' => now()->addMinutes(15), 'updated_at' => now()]);
 
             return ['verification_token' => $proof, 'email' => $row->email, 'expires_in' => 900, 'expires_at' => now()->addMinutes(15)->toIso8601String(), 'development_delivery' => (bool) $row->development_delivery];
         });
-        if (! $result) {
-            throw ValidationException::withMessages(['code' => 'The code is invalid, expired, or has reached its attempt limit. Request a new code.']);
+        if (isset($result['error_code'])) {
+            return response()->json(['code' => $result['error_code'], 'message' => $result['message'], 'errors' => ['code' => [$result['message']]]], 422)->header('Cache-Control', 'no-store');
         }
 
         return response()->json($result)->header('Cache-Control', 'no-store');
@@ -172,7 +184,7 @@ class BusinessRegistrationController extends Controller
             DB::table('registration_email_verifications')->where('id', $verification->id)->update(['consumed_at' => now(), 'updated_at' => now()]);
             app(BirCompliance::class)->audit('business.registration.submitted', $merchant->id, (string) $user->id, ['registration_id' => $id, 'status' => 'pending_review', 'email_verified' => ! $verification->development_delivery]);
 
-            return response()->json(['registration_id' => $id, 'business_name' => $merchant->business_name, 'status' => 'pending_review', 'email_verified' => ! $verification->development_delivery, 'development_delivery' => (bool) $verification->development_delivery, 'documents_uploaded' => count($v['uploaded_document_ids'] ?? []), 'documents_required' => 5],201);
+            return response()->json(['registration_id' => $id, 'business_name' => $merchant->business_name, 'status' => 'pending_review', 'email_verified' => ! $verification->development_delivery, 'development_delivery' => (bool) $verification->development_delivery, 'documents_uploaded' => count($v['uploaded_document_ids'] ?? []), 'documents_required' => 5], 201);
         });
     }
 }

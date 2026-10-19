@@ -1,3 +1,4 @@
+import { formatTin } from "@/lib/tin";
 import { useEffect, useState, useMemo } from "react";
 import {
   Building2, Search, Plus, MoreHorizontal,
@@ -1152,7 +1153,7 @@ export function AdminMerchants() {
                               </div>
                             </div>
                           </td>
-                          <td className="py-3 font-mono text-xs text-muted-foreground whitespace-nowrap">{m.tin}</td>
+                          <td className="py-3 font-mono text-xs text-muted-foreground whitespace-nowrap">{formatTin(m.tin)}</td>
                           <td className="py-3">
                             <Badge variant="secondary" className="text-[10px] whitespace-nowrap">
                               {sectorLabels[m.sector] ?? m.sector}
@@ -1226,7 +1227,7 @@ export function AdminMerchants() {
           </div>
 
           {/* Pagination */}
-          <div className="mt-4 flex items-center justify-between">
+          <div data-slot="table-pagination" className="mt-4 flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
               {filtered.length === 0
                 ? "No results"
@@ -1764,7 +1765,7 @@ export function AdminMerchants() {
                 </Avatar>
                 <div>
                   <DialogTitle className="text-xl">{selected?.business_name}</DialogTitle>
-                  <DialogDescription className="font-mono mt-0.5">TIN: {selected?.tin}</DialogDescription>
+                  <DialogDescription className="font-mono mt-0.5">TIN: {formatTin(selected?.tin)}</DialogDescription>
                 </div>
               </div>
               {selected && (
@@ -1951,7 +1952,7 @@ export function AdminMerchants() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Business Account from Registry</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to permanently delete <strong>{deleteTarget?.business_name}</strong> (TIN: {deleteTarget?.tin}) from the NUERS Business Account Registry? This action cannot be undone.
+              Are you sure you want to permanently delete <strong>{deleteTarget?.business_name}</strong> (TIN: {formatTin(deleteTarget?.tin)}) from the NUERS Business Account Registry? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

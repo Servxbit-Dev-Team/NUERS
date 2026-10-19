@@ -33,6 +33,8 @@ export type ExportFormat = "json" | "xml" | "pdf" | "csv";
 export type RecurringFrequency = "daily" | "weekly" | "biweekly" | "monthly" | "quarterly" | "annually";
 
 export interface LineItem {
+  benefit_eligible?: boolean;
+  benefit_details?: {eligible:boolean;original_tax_type:TaxType;rate:number;discount_centavos:number;vat_adjustment_centavos:number;base_centavos:number}|null;
   id: string;
   line_number: number;
   item_code: string;
@@ -368,14 +370,15 @@ export function computeLineItem(
   quantity: number,
   discount_pct: number,
   vat_rate: number,
-  tax_type: TaxType
+  tax_type: TaxType,
+  pricesIncludeVat = true
 ): Pick<LineItem, "discount_amount" | "taxable_amount" | "vat_amount" | "line_total"> {
   const gross = Math.round(unit_price * quantity);
   const discount_amount = Math.round(gross * discount_pct / 100);
   const net = gross - discount_amount;
-  const taxable_amount = tax_type === "vatable" ? Math.round(net / (1 + vat_rate / 100)) : 0;
-  const vat_amount = tax_type === "vatable" ? net - taxable_amount : 0;
-  return { discount_amount, taxable_amount, vat_amount, line_total: net };
+  const taxable_amount = tax_type === "vatable" ? (pricesIncludeVat ? Math.round(net / (1 + vat_rate / 100)) : net) : 0;
+  const vat_amount = tax_type === "vatable" ? (pricesIncludeVat ? net - taxable_amount : Math.round(taxable_amount * vat_rate / 100)) : 0;
+  return { discount_amount, taxable_amount, vat_amount, line_total: net + (pricesIncludeVat ? 0 : vat_amount) };
 }
 
 export function computeInvoiceTotals(items: LineItem[], withholding_pct = 0, other_charges = 0) {
@@ -386,7 +389,7 @@ export function computeInvoiceTotals(items: LineItem[], withholding_pct = 0, oth
   const zero_rated = items.filter(i => i.tax_type === "zero_rated").reduce((s, i) => s + i.line_total, 0);
   const vat_exempt = items.filter(i => i.tax_type === "vat_exempt" || i.tax_type === "non_vat").reduce((s, i) => s + i.line_total, 0);
   const withholding = Math.round((taxable + zero_rated + vat_exempt) * withholding_pct / 100);
-  const total = subtotal - discount + other_charges;
+  const total = items.reduce((sum, line) => sum + line.line_total, 0) + other_charges;
   return { subtotal, discount, taxable, vat, zero_rated, vat_exempt, withholding, other_charges, total };
 }
 

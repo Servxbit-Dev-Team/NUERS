@@ -1,0 +1,35 @@
+{
+  "change": "The business registration owner is automatically presented and counted as Merchant Admin.",
+  "scope": "All businesses via authoritative merchant_account_id ownership; no email-specific special case.",
+  "behavior": [
+    "Protected owner directory row uses Merchant Admin role ID",
+    "Merchant Admin card counts the registering owner",
+    "Merchant Admin role filter and search include the owner",
+    "Access-context role and CSV export use Merchant Admin",
+    "Custom role lists preserve a read-only protected owner role fallback"
+  ],
+  "preservation": [
+    "Existing owner capabilities remain unchanged",
+    "No duplicate staff membership or account is created",
+    "Delegated Merchant Admin roles do not receive ownership privileges",
+    "MFA, tenant isolation, authority gates, SMTP and pricing unchanged"
+  ],
+  "source": [
+    "app/Services/MerchantTeamAccess.php",
+    "app/Http/Controllers/Api/MerchantTeamController.php",
+    "src/pages/merchant/users.tsx",
+    "tests/Feature/MerchantTeamTest.php",
+    "tests/Feature/MerchantVerificationDocumentTest.php"
+  ],
+  "validation": {
+    "registration_to_directory_assertions": true,
+    "focused_tests": 23,
+    "focused_assertions": 266,
+    "full_tests": 326,
+    "assertions": 3403,
+    "build": "npm run build:all passed",
+    "browser_role_filter_verified": true,
+    "external_email_sent": false
+  },
+  "package_sha256": "3a14dc56f6914ad6b449ef60a427c0f413fa6c04133ad3a0fdfb14ba62930c0e"
+}

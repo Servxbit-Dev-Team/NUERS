@@ -218,3 +218,23 @@
     }
   }
 }
+
+/* Table controls remain a compact footer after the table, never a growing flex row.
+   Keep this outside utility layers so every dashboard follows the same layout contract. */
+[data-slot="table-pagination"] {
+  position: static;
+  inset: auto;
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  margin-block-start: 12px;
+  flex-wrap: wrap;
+  row-gap: 10px;
+}
+[data-slot="table-pagination"] > div,
+[data-slot="table-pagination"] > label {
+  max-width: 100%;
+  flex-wrap: wrap;
+}

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Profile;
 use App\Models\User;
 use App\Services\DeviceSession;
+use App\Services\PlatformNotifications;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -68,41 +70,49 @@ class GoogleAuthController extends Controller
             return $this->loginRedirect('google_error', 'not_configured');
         }
 
-        $user = User::where('google_id', $subject)->first();
+        try {
+            $result = DB::transaction(function () use ($email, $subject, $claims) {
+                // Both the registered email and the stable Google subject must agree.
+                // A previously linked subject never bypasses the registered-email gate.
+                $matches = User::whereRaw('LOWER(email) = ?', [$email])->lockForUpdate()->get();
+                if ($matches->count() !== 1) {
+                    return ['error' => 'account_not_found'];
+                }
+                $user = $matches->first();
+                $linkedOwner = User::where('google_id', $subject)->first();
+                if (($linkedOwner && $linkedOwner->id !== $user->id)
+                    || ($user->google_id !== null && $user->google_id !== $subject)) {
+                    return ['error' => 'identity_conflict'];
+                }
+                if ($user->google_id === null) {
+                    // Only Google-managed addresses can establish a new email link.
+                    $domain = substr(strrchr($email, '@'), 1);
+                    $hostedDomain = strtolower((string) ($claims['hd'] ?? ''));
+                    if ($domain !== 'gmail.com' && ($hostedDomain === '' || $domain !== $hostedDomain)) {
+                        return ['error' => 'email_link_unavailable'];
+                    }
+                }
+                $profile = Profile::find($user->id);
+                if (! $profile || ! in_array($profile->role, self::ROLES, true)) {
+                    return ['error' => 'account_unavailable'];
+                }
+                if ($user->google_id === null) {
+                    $user->forceFill(['google_id' => $subject])->save();
+                    app(PlatformNotifications::class)->user($user->id, 'security.google.connected', (string) $user->id, 'Google sign-in connected', 'Google sign-in has been connected to your existing NUERS account. If you did not authorize this, contact NUERS support immediately.', 'security');
+                }
 
-        if (! $user) {
-            // Only Google's own mail or verified Workspace domains can link by email.
-            $domain = substr(strrchr($email, '@'), 1);
-            $hostedDomain = strtolower((string) ($claims['hd'] ?? ''));
-            if ($domain !== 'gmail.com' && ($hostedDomain === '' || $domain !== $hostedDomain)) {
-                return $this->loginRedirect('google_error', 'email_link_unavailable');
-            }
-
-            $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
-            if (! $user) {
-                return $this->loginRedirect('google_error', 'account_not_found');
-            }
-            if ($user->google_id !== null && $user->google_id !== $subject) {
-                return $this->loginRedirect('google_error', 'identity_conflict');
-            }
+                return ['user' => $user];
+            }, 3);
+        } catch (UniqueConstraintViolationException) {
+            return $this->loginRedirect('google_error', 'identity_conflict');
         }
-
-        $profile = Profile::find($user->id);
-        if (! $profile || ! in_array($profile->role, self::ROLES, true)) {
-            return $this->loginRedirect('google_error', 'account_unavailable');
+        if (isset($result['error'])) {
+            return $this->loginRedirect('google_error', $result['error']);
         }
-
-        if ($user->google_id === null) {
-            // An atomic update prevents a simultaneous callback replacing a link.
-            $linked = User::whereKey($user->id)->whereNull('google_id')->update(['google_id' => $subject]);
-            if ($linked === 1) app(\App\Services\PlatformNotifications::class)->user($user->id,'security.google.connected',(string)$user->id,'Google sign-in connected','Google sign-in has been connected to your existing NUERS account. If you did not authorize this, contact NUERS support immediately.','security');
-            if ($linked !== 1 && User::find($user->id)?->google_id !== $subject) {
-                return $this->loginRedirect('google_error', 'identity_conflict');
-            }
-        }
+        $user = $result['user'];
 
         $request->session()->regenerate();
-        $request->session()->put('google_login', ['user_id' => $user->id, 'expires_at' => now()->addMinutes(5)->timestamp, 'credential_stamp'=>hash('sha256',$user->password)]);
+        $request->session()->put('google_login', ['user_id' => $user->id, 'expires_at' => now()->addMinutes(5)->timestamp, 'credential_stamp' => hash('sha256', $user->password), 'registered_email' => $email, 'google_subject' => $subject]);
 
         // The URL carries only a status flag, never Google or NUERS bearer tokens.
         return $this->loginRedirect('google', 'success');
@@ -117,7 +127,8 @@ class GoogleAuthController extends Controller
             $user = User::whereKey($pending['user_id'])->lockForUpdate()->first();
             $profile = $user ? Profile::find($user->id) : null;
             abort_unless($user && $profile && in_array($profile->role, self::ROLES, true), 401, 'This NUERS account is unavailable.');
-            abort_unless(hash_equals((string)($pending['credential_stamp']??''),hash('sha256',$user->password)),401,'Account security changed. Start a fresh Google sign-in.');
+            abort_unless(hash_equals((string) ($pending['credential_stamp'] ?? ''), hash('sha256', $user->password)), 401, 'Account security changed. Start a fresh Google sign-in.');
+            abort_unless(($pending['registered_email'] ?? null) === strtolower(trim($user->email)) && ($pending['google_subject'] ?? null) === $user->google_id, 401, 'Registered email or Google identity changed. Start a fresh Google sign-in.');
             $user = app(DeviceSession::class)->issue($user, $request);
             $userPayload = ['id' => (string) $user->id, 'email' => $user->email, 'user_metadata' => ['name' => $user->name]];
 

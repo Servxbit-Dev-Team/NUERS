@@ -188,6 +188,9 @@ class MerchantCustomerTest extends TestCase
 
     public function test_create_invoice_with_customer_uses_owned_active_profile_and_links_draft_without_counting_sales(): void
     {
+        // Synthetic funds satisfy the configurable minimum-zero wallet gate.
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit($this->merchant, 600, (string) \Illuminate\Support\Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit($this->otherMerchant, 600, (string) Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $c = $this->create();
         $body = ['invoice_number' => 'QA-CUSTOMER-DRAFT', 'document_type' => 'sales_invoice', 'buyer_name' => $c['name'], 'customer_id' => $c['id'], 'issue_date' => now()->toDateString(), 'status' => 'draft', 'line_items' => [['line_number' => 1, 'description' => 'Test item', 'quantity' => 1, 'unit_price' => 10000, 'line_total' => 10000]]];
         $r = $this->postJson('/api/business-invoices', $body)->assertCreated();
@@ -231,6 +234,8 @@ class MerchantCustomerTest extends TestCase
 
     public function test_new_invoice_buyer_is_saved_linked_and_reused_without_overwriting_contacts(): void
     {
+        // Synthetic funds satisfy the configurable minimum-zero wallet gate.
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit($this->merchant, 600, (string) \Illuminate\Support\Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $body = $this->invoiceBody();
         $first = $this->withToken($this->owner->api_token)->postJson('/api/business-invoices', $body)->assertCreated()->assertJsonPath('customer.created', true);
         $customer = $first->json('customer.id');
@@ -247,6 +252,8 @@ class MerchantCustomerTest extends TestCase
 
     public function test_walk_in_without_tin_or_contacts_is_saved_and_reused_without_creating_a_login(): void
     {
+        // Synthetic funds satisfy the configurable minimum-zero wallet gate.
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit($this->merchant, 600, (string) \Illuminate\Support\Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $users = DB::table('users')->count();
         $body = $this->invoiceBody(['buyer_name' => 'Walk-in Buyer QA', 'buyer_tin' => null, 'buyer_email' => null, 'buyer_phone' => null, 'buyer_customer_type' => 'walk_in']);
         $a = $this->withToken($this->owner->api_token)->postJson('/api/business-invoices', $body)->assertCreated()->json('customer.id');
@@ -258,6 +265,8 @@ class MerchantCustomerTest extends TestCase
 
     public function test_failed_invoice_issuance_and_invalid_totals_leave_no_customer_or_relationship(): void
     {
+        // Synthetic funds satisfy the configurable minimum-zero wallet gate.
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit($this->merchant, 600, (string) \Illuminate\Support\Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $body = $this->invoiceBody(['status' => 'issued']);
         $this->withToken($this->owner->api_token)->postJson('/api/business-invoices', $body)->assertConflict();
         $this->postJson('/api/business-invoices', $this->invoiceBody(['total_amount' => 1]))->assertUnprocessable();
@@ -269,6 +278,8 @@ class MerchantCustomerTest extends TestCase
 
     public function test_invoice_save_retry_is_idempotent_and_changed_payload_cannot_reuse_identifier(): void
     {
+        // Synthetic funds satisfy the configurable minimum-zero wallet gate.
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit($this->merchant, 600, (string) \Illuminate\Support\Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $body = $this->invoiceBody();
         $a = $this->withToken($this->owner->api_token)->postJson('/api/business-invoices', $body)->assertCreated();
         $this->postJson('/api/business-invoices', $body)->assertOk()->assertJsonPath('invoice.id', $a->json('invoice.id'))->assertJsonPath('customer.id', $a->json('customer.id'));
@@ -281,6 +292,9 @@ class MerchantCustomerTest extends TestCase
 
     public function test_customer_matching_is_tenant_scoped_even_for_identical_buyer_identity(): void
     {
+        // Synthetic funds satisfy the configurable minimum-zero wallet gate.
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit($this->merchant, 600, (string) \Illuminate\Support\Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit($this->otherMerchant, 600, (string) Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $body = $this->invoiceBody();
         $a = $this->withToken($this->owner->api_token)->postJson('/api/business-invoices', $body)->assertCreated();
         $b = $this->withToken($this->other->api_token)->postJson('/api/business-invoices', $body)->assertCreated()->assertJsonPath('customer.created', true);
@@ -291,6 +305,8 @@ class MerchantCustomerTest extends TestCase
 
     public function test_ambiguous_and_inactive_matches_require_explicit_customer_review(): void
     {
+        // Synthetic funds satisfy the configurable minimum-zero wallet gate.
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit($this->merchant, 600, (string) \Illuminate\Support\Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $one = $this->create(['name' => 'Same Buyer', 'tin' => '987654321', 'email' => 'one@example.test']);
         $this->create(['name' => 'Same Buyer', 'tin' => '987654321', 'email' => 'two@example.test']);
         $this->postJson('/api/business-invoices', $this->invoiceBody(['buyer_name' => 'Same Buyer']))->assertUnprocessable();
@@ -303,6 +319,8 @@ class MerchantCustomerTest extends TestCase
 
     public function test_changed_profile_revision_and_conflicting_tin_do_not_silently_link_or_duplicate(): void
     {
+        // Synthetic funds satisfy the configurable minimum-zero wallet gate.
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit($this->merchant, 600, (string) \Illuminate\Support\Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $c = $this->create(['name' => 'Known Buyer', 'tin' => '987654321']);
         $this->patchJson('/api/merchant/customers/'.$c['id'], $this->body(['name' => 'Known Buyer', 'tin' => '987654321', 'revision' => 1, 'address' => 'Updated registry address']))->assertOk();
         $this->postJson('/api/business-invoices', $this->invoiceBody(['buyer_name' => 'Known Buyer', 'customer_id' => $c['id'], 'customer_revision' => 1]))->assertConflict();
@@ -346,6 +364,8 @@ class MerchantCustomerTest extends TestCase
 
     public function test_customer_options_seller_preview_and_invoice_save_use_one_business_selection(): void
     {
+        // Synthetic funds satisfy the configurable minimum-zero wallet gate.
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit($this->merchant, 600, (string) \Illuminate\Support\Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $second = str_repeat('z', 36);
         DB::table('merchants')->insert(['id' => $second, 'merchant_account_id' => $this->owner->id, 'business_name' => 'Other owned business', 'tin' => '222333444', 'status' => 'active', 'updated_at' => now()->addDay()]);
         $customer = $this->create();

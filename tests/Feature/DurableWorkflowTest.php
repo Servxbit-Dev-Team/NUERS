@@ -37,7 +37,7 @@ class DurableWorkflowTest extends TestCase
             (require $f)->up();
         }
         $this->owner = $this->actor('merchant');
-        DB::table('merchants')->insert(['id' => 'm', 'business_name' => 'Synthetic seller', 'tin' => '123456789', 'status' => 'active', 'vat_registered' => true, 'merchant_account_id' => $this->owner->id]);
+        DB::table('merchants')->insert(['id' => 'm', 'business_name' => 'Synthetic seller', 'address' => 'Synthetic registered address', 'tin' => '123456789', 'status' => 'active', 'vat_registered' => true, 'merchant_account_id' => $this->owner->id]);
     }
 
     private function actor(string $role): User
@@ -73,11 +73,12 @@ class DurableWorkflowTest extends TestCase
 
     public function test_ingestion_preserves_time_has_stable_duplicate_response_and_tenant_status_scope(): void
     {
+        DB::transaction(fn()=>app(\App\Services\MerchantWallet::class)->credit('m',600,(string)Str::uuid(),'Synthetic settled test funds','test-fixture'));
         $key = $this->key();
         $this->series();
         $this->issueGate();
         $p = $this->payload();
-        $first = $this->withHeaders(['X-NUERS-API-Key' => $key])->postJson('/api/integrations/transactions', $p)->assertCreated()->assertJsonPath('bir_acceptance', 'not_verified')->json();
+        $first = $this->withHeaders(['X-NUERS-API-Key' => $key])->postJson('/api/integrations/transactions', $p)->assertCreated()->assertJsonPath('nuers_status', 'success')->assertJsonMissingPath('bir_acceptance')->json();
         $this->assertSame('SYN-00000001', $first['receipt_number']);
         $this->assertSame(Carbon::parse($p['occurred_at'])->setTimezone(config('app.timezone'))->format('Y-m-d H:i:s'), DB::table('transaction_receipts')->value('issued_at'));
         $this->postJson('/api/integrations/transactions', $p)->assertOk()->assertJsonPath('duplicate', true)->assertJsonPath('id', $first['id'])->assertJsonPath('accepted_at', $first['accepted_at']);
@@ -95,11 +96,31 @@ class DurableWorkflowTest extends TestCase
         $this->assertTrue(app(BirCompliance::class)->auditIntegrity());
     }
 
-    public function test_ingestion_rejects_sandbox_branch_scope_future_time_bad_schema_and_expiry(): void
+    public function test_offline_replay_after_key_rotation_reuses_original_and_separate_branches_cannot_poll(): void
+    {
+        DB::transaction(fn()=>app(\App\Services\MerchantWallet::class)->credit('m',600,(string)Str::uuid(),'Synthetic settled test funds','test-fixture'));
+        $raw = $this->key();
+        $this->series();
+        $this->issueGate();
+        $event = $this->payload();
+        $original = $this->withHeaders(['X-NUERS-API-Key' => $raw])->postJson('/api/integrations/transactions', $event)->assertCreated()->json();
+        DB::table('merchant_api_keys')->where('id', 'key')->update(['status' => 'revoked']);
+        $replacement = $this->key('replacement');
+        $this->withHeaders(['X-NUERS-API-Key' => $replacement])->postJson('/api/integrations/transactions', $event)->assertOk()->assertJsonPath('duplicate', true)->assertJsonPath('id', $original['id'])->assertJsonPath('receipt_id', $original['receipt_id']);
+        $this->postJson('/api/integrations/transactions', array_replace($event, ['occurred_at' => now()->toIso8601String()]))->assertConflict();
+        DB::table('merchant_api_keys')->where('id', 'replacement')->update(['branch_code' => '00001']);
+        $this->getJson('/api/integrations/transactions/'.$original['id'])->assertNotFound();
+        $this->assertDatabaseCount('integration_inbox', 1);
+        $this->assertDatabaseCount('transaction_receipts', 1);
+        $this->assertSame(1, DB::table('invoice_series')->value('last_number'));
+    }
+
+    public function test_ingestion_isolates_sandbox_and_rejects_branch_scope_future_time_bad_schema_and_expiry(): void
     {
         $key = $this->key(env: 'sandbox');
         $p = $this->payload();
-        $this->withHeaders(['X-NUERS-API-Key' => $key])->postJson('/api/integrations/transactions', $p)->assertConflict();
+        $this->withHeaders(['X-NUERS-API-Key' => $key])->postJson('/api/integrations/transactions', $p)->assertCreated()->assertJsonPath('environment','sandbox')->assertJsonPath('test_only',true);
+        $this->assertDatabaseCount('integration_sandbox_events',1);
         DB::table('merchant_api_keys')->update(['environment' => 'live', 'branch_code' => '00001']);
         $this->postJson('/api/integrations/transactions', $p)->assertForbidden();
         DB::table('merchant_api_keys')->update(['branch_code' => '00000']);
@@ -114,6 +135,7 @@ class DurableWorkflowTest extends TestCase
 
     public function test_ingestion_rolls_back_sequence_ledger_inbox_and_outbox_on_preparation_failure(): void
     {
+        DB::transaction(fn()=>app(\App\Services\MerchantWallet::class)->credit('m',600,(string)Str::uuid(),'Synthetic settled test funds','test-fixture'));
         $key = $this->key();
         $this->series();
         $this->issueGate();
@@ -320,6 +342,7 @@ class DurableWorkflowTest extends TestCase
 
     public function test_draft_publish_reserves_series_and_commits_lifecycle_and_outbox_together(): void
     {
+        DB::transaction(fn()=>app(\App\Services\MerchantWallet::class)->credit('m',600,(string)Str::uuid(),'Synthetic settled test funds','test-fixture'));
         $this->series();
         $this->issueGate();
         $id = fake()->uuid();
@@ -336,6 +359,7 @@ class DurableWorkflowTest extends TestCase
         $this->withToken($this->owner->api_token)->postJson('/api/merchant/api-keys', ['name' => 'Synthetic test', 'environment' => 'live', 'branch_code' => 'MAIN'])->assertUnprocessable();
         $data = ['name' => 'Synthetic test', 'environment' => 'live', 'branch_code' => '00000', 'scopes' => ['transactions:write', 'transactions:read']];
         $this->postJson('/api/merchant/api-keys', $data + ['ip_whitelist' => ['not-an-ip']])->assertUnprocessable();
+        DB::table('merchant_branches')->insert(['id'=>(string)Str::uuid(),'merchant_id'=>'m','code'=>'SYNTHETIC','bir_branch_code'=>'00000','name'=>'Synthetic branch','address'=>'Synthetic address','city'=>'Synthetic city','region'=>'Synthetic region','rdo_code'=>'001','branch_type'=>'main','status'=>'active','contact_encrypted'=>\Illuminate\Support\Facades\Crypt::encryptString('{}'),'request_id'=>(string)Str::uuid(),'request_hash'=>str_repeat('a',64)]);
         $key = $this->postJson('/api/merchant/api-keys', $data)->assertCreated()->json('key');
         $this->assertSame(hash('sha256', $key['plain_key']), DB::table('merchant_api_keys')->where('id', $key['id'])->value('key_hash'));
         $this->assertNotNull(DB::table('merchant_api_keys')->where('id', $key['id'])->value('expires_at'));
@@ -406,13 +430,20 @@ class DurableWorkflowTest extends TestCase
         DB::table('business_invoices')->where('id', 'invoice')->update(['issue_date' => now()->toDateString(), 'document_type' => 'vat_invoice', 'merchant_tin' => '123456789', 'merchant_address' => 'Synthetic address', 'taxable_amount' => 100, 'vat_amount' => 12, 'vat_registered' => true]);
         DB::table('business_invoice_items')->insert(['id' => 'overview-line', 'invoice_id' => 'invoice', 'merchant_id' => 'm', 'line_number' => 1, 'description' => 'Synthetic original', 'quantity' => 1, 'unit_price' => 112, 'line_total' => 112, 'taxable_amount' => 100, 'vat_amount' => 12, 'tax_type' => 'vatable', 'vat_rate' => 12]);
         DB::table('merchants')->insert(['id' => 'foreign', 'business_name' => 'SECRET OTHER TENANT', 'tin' => '987654321', 'status' => 'active']);
+        DB::table('merchant_wallets')->insert([
+            ['merchant_id' => 'm', 'available_centavos' => 8200, 'updated_at' => now()],
+            ['merchant_id' => 'foreign', 'available_centavos' => 99999999, 'updated_at' => now()],
+        ]);
+        $walletsBefore = DB::table('merchant_wallets')->orderBy('merchant_id')->get()->toJson();
         DB::table('business_invoices')->insert(['id' => 'foreign-invoice', 'merchant_id' => 'foreign', 'invoice_number' => 'SECRET-FOREIGN', 'merchant_name' => 'SECRET OTHER TENANT', 'buyer_name' => 'SECRET CUSTOMER', 'status' => 'issued', 'issue_date' => now()->toDateString(), 'total_amount' => 999999]);
         $before = DB::table('eis_audit_events')->count();
         $response = $this->withToken($this->owner->api_token)->getJson('/api/merchant/overview?days=7&merchant_id=foreign')->assertOk()
             ->assertJsonPath('account.id', 'm')->assertJsonPath('current.sales', 112)->assertJsonPath('current.invoices', 1)->assertJsonPath('current.transactions', 0)
+            ->assertJsonPath('wallet.available_centavos', 8200)->assertJsonPath('wallet.currency', 'PHP')
             ->assertJsonPath('bir.acknowledged', 0)->assertJsonPath('bir.not_verified', 1)->assertJsonPath('recent.0.bir_status', 'not_verified')->assertJsonCount(7, 'sales')->assertJsonCount(1, 'recent');
         $this->assertStringNotContainsString('SECRET', $response->getContent());
         $this->assertSame($before, DB::table('eis_audit_events')->count());
+        $this->assertSame($walletsBefore, DB::table('merchant_wallets')->orderBy('merchant_id')->get()->toJson());
         $this->assertDatabaseCount('eis_delivery_jobs', 0);
         $this->getJson('/api/merchant/overview?days=30')->assertOk()->assertJsonPath('days', 30)->assertJsonCount(30, 'sales');
         $this->getJson('/api/merchant/overview?days=10000')->assertUnprocessable();
@@ -431,7 +462,9 @@ class DurableWorkflowTest extends TestCase
             DB::table('merchant_transactions')->insert(['id' => 'late-local-sale', 'merchant_id' => 'm', 'amount' => 112, 'status' => 'completed', 'created_at' => '2026-10-15 16:15:00']);
             DB::table('merchant_transactions')->insert(['id' => 'prior-day-sale', 'merchant_id' => 'm', 'amount' => 112, 'status' => 'completed', 'created_at' => '2026-10-15 15:59:59']);
             $this->withToken($this->owner->api_token)->getJson('/api/merchant/overview')->assertOk()->assertJsonPath('today', '2026-10-16')
+                ->assertJsonPath('wallet.available_centavos', 0)->assertJsonPath('wallet.currency', 'PHP')
                 ->assertJsonPath('current.transactions', 1)->assertJsonPath('previous.transactions', 1)->assertJsonPath('current.sales', 0)->assertJsonPath('previous.sales', 0)->assertJsonPath('documents.for_review', 1);
+            $this->assertDatabaseCount('merchant_wallets', 0);
             $this->assertDatabaseHas('business_invoices', ['id' => 'invoice', 'total_amount' => 112]);
         } finally {
             Carbon::setTestNow();

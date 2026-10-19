@@ -1,0 +1,380 @@
+- complementary "admin navigation":
+  - link "NUERS dashboard":
+    - /url: /super-admin
+    - img "NUERS — National Unified Electronic Receipt System"
+  - button "Collapse navigation":
+  - navigation:
+    - heading "Overview" [level=2]
+    - link "Dashboard":
+      - /url: /super-admin
+      - generic: Dashboard
+    - link "Live Transaction Monitor":
+      - /url: /monitoring
+      - generic: Live Transaction Monitor
+    - heading "E-Invoicing Operations" [level=2]
+    - link "Electronic Invoices & Receipts":
+      - /url: /invoices
+      - generic: Electronic Invoices & Receipts
+    - button "Expand Electronic Invoices & Receipts":
+    - link "Transactions":
+      - /url: /super-admin/transactions
+      - generic: Transactions
+    - button "Expand Transactions":
+    - link "BIR Transmission Center":
+      - /url: /super-admin/eis-transmissions
+      - generic: BIR Transmission Center
+    - link "Reconciliation & Exceptions":
+      - /url: /super-admin/reconciliation
+      - generic: Reconciliation & Exceptions
+    - link "Summary List of Sales":
+      - /url: /super-admin/tax-filings
+      - generic: Summary List of Sales
+    - heading "Taxpayer Management" [level=2]
+    - link "Registered Businesses":
+      - /url: /super-admin/merchants
+      - generic: Registered Businesses
+    - button "Expand Registered Businesses":
+    - link "Taxpayer Onboarding":
+      - /url: /super-admin/taxpayer-onboarding
+      - generic: Taxpayer Onboarding
+    - button "Expand Taxpayer Onboarding":
+    - link "PTI / PTT Management":
+      - /url: /super-admin/pti-ptt
+      - generic: PTI / PTT Management
+    - button "Expand PTI / PTT Management":
+    - link "API Integrations":
+      - /url: /super-admin/api-platform
+      - generic: API Integrations
+    - heading "Compliance & Security" [level=2]
+    - link "ESP Accreditation":
+      - /url: /accreditation
+      - generic: ESP Accreditation
+    - button "Expand ESP Accreditation":
+    - link "Compliance Management":
+      - /url: /super-admin/compliance
+      - generic: Compliance Management
+    - button "Expand Compliance Management":
+    - link "Security & Incidents":
+      - /url: /super-admin/security
+      - generic: Security & Incidents
+    - button "Expand Security & Incidents":
+    - link "Immutable Audit Logs":
+      - /url: /super-admin/audit
+      - generic: Immutable Audit Logs
+    - button "Expand Immutable Audit Logs":
+    - link "Data Governance & Portability":
+      - /url: /super-admin/data-archive
+      - generic: Data Governance & Portability
+    - heading "Reports" [level=2]
+    - link "Analytics & Reports":
+      - /url: /super-admin/reports
+      - generic: Analytics & Reports
+    - button "Expand Analytics & Reports":
+    - link "BIR Reports & Exports":
+      - /url: /super-admin/tax-filings
+      - generic: BIR Reports & Exports
+    - button "Expand BIR Reports & Exports":
+    - heading "System Administration" [level=2]
+    - link "Infrastructure Health":
+      - /url: /super-admin/system-health
+      - generic: Infrastructure Health
+    - button "Expand Infrastructure Health":
+    - link "Backup & Disaster Recovery":
+      - /url: /super-admin/backups
+      - generic: Backup & Disaster Recovery
+    - link "Configurations & Changes":
+      - /url: /system
+      - generic: Configurations & Changes
+    - button "Expand Configurations & Changes":
+    - link "Users & Permissions":
+      - /url: /super-admin/users-rbac
+      - generic: Users & Permissions
+    - button "Expand Users & Permissions":
+    - link "Support Inbox":
+      - /url: /super-admin/support
+      - generic: Support Inbox
+    - link "Wallets & Transaction Pricing":
+      - /url: /super-admin/wallets
+      - generic: Wallets & Transaction Pricing
+  - generic "Software name and version": NUERS · Version 1.0.0
+  - paragraph:
+    - text: DIGITAL PHILIPPINES.
+    - text: BRIGHTER TOMORROW.
+- banner:
+  - button "Toggle navigation" [expanded]:
+  - searchbox "Search transactions"
+  - generic: LIVE
+  - link "Notifications":
+    - /url: /super-admin/notifications
+  - link "Settings":
+    - /url: /system
+  - generic "ND NUERS Documentation Admin Super Administrator":
+    - generic: ND
+    - strong: NUERS Documentation Admin
+    - generic: Super Administrator
+- main:
+  - link "Dashboard":
+    - /url: /super-admin
+  - strong: Live Transaction Monitoring
+  - generic: Monday, October 19, 2026
+  - strong: 2:03:38 AM
+  - heading "Live Transaction Monitoring" [level=1]
+  - paragraph: Real-time tracking of electronic receipts and transactions across all connected merchants.
+  - text: DIGITAL TRANSACTIONS.
+  - text: A STRONGER PHILIPPINES.
+  - region "Live monitoring totals":
+    - article:
+      - heading "Total Transactions (Today)" [level=2]
+      - strong: "8"
+      - generic: No prior-period baseline
+    - article:
+      - heading "Successful Transactions" [level=2]
+      - strong: "8"
+      - generic: 100.0% of today's transactions
+    - article:
+      - heading "Failed Transactions" [level=2]
+      - strong: "0"
+      - generic: 0.0% of today's transactions
+    - article:
+      - heading "Pending Transmission" [level=2]
+      - strong: "0"
+      - generic: 0 test queued · 0 overdue
+    - article:
+      - heading "Current TPS" [level=2]
+      - strong: "0"
+      - generic: transactions/second · last 60s
+  - region "Live financial totals · Today (PHT)":
+    - article:
+      - heading "Total Transaction Amount" [level=2]
+      - strong: ₱12,320.00
+      - paragraph: Today (PHT) · all recorded Live transactions
+    - article:
+      - heading "Total NUERS Charged" [level=2]
+      - strong: ₱24.00
+      - paragraph: Today (PHT) · 8 posted fee debits
+  - heading "Transaction Flow (Last 60 Minutes)" [level=2]
+  - generic: Successful
+  - generic: Failed
+  - generic: Pending
+  - application:
+    - generic: 01:06
+    - generic: 01:09
+    - generic: 01:12
+    - generic: 01:15
+    - generic: 01:18
+    - generic: 01:21
+    - generic: 01:24
+    - generic: 01:27
+    - generic: 01:30
+    - generic: 01:33
+    - generic: 01:36
+    - generic: 01:39
+    - generic: 01:42
+    - generic: 01:45
+    - generic: 01:48
+    - generic: 01:51
+    - generic: 01:54
+    - generic: 01:57
+    - generic: 02:00
+    - generic: 02:03
+    - generic: "0"
+    - generic: "1"
+    - generic: "2"
+    - generic: "3"
+    - generic: "4"
+  - heading "Transaction Distribution" [level=2]
+  - application
+  - strong: "8"
+  - generic: Total Today
+  - text: Successful
+  - strong: 8 (100.0%)
+  - text: Failed
+  - strong: 0 (0.0%)
+  - text: Pending
+  - strong: 0 (0.0%)
+  - heading "Top Merchants (Today)" [level=2]
+  - link "View All":
+    - /url: /super-admin/merchants
+    - text: View All
+  - list:
+    - generic: "1"
+    - link "Demo Trading Company":
+      - /url: /monitoring?search=Demo%20Trading%20Company
+    - strong: "8"
+  - heading "Live Transaction Stream" [level=2]
+  - generic: Auto-refreshing…
+  - button "Pause live refresh":
+  - generic "Columns":
+    - text: Columns
+  - generic "Export":
+    - text: Export
+  - button "Expand transaction stream":
+  - generic: Latest recorded transactions
+  - generic: Filter transaction status
+  - combobox "Filter transaction status":
+    - option "All statuses" [selected]
+    - option "Successful"
+    - option "Failed"
+    - option "Pending"
+  - table:
+    - rowgroup:
+      - row "# Date & Time Receipt No. TIN Business Name Transaction Type Amount Status BIR Status Response Time":
+        - columnheader "#"
+        - columnheader "Date & Time"
+        - columnheader "Receipt No."
+        - columnheader "TIN"
+        - columnheader "Business Name"
+        - columnheader "Transaction Type"
+        - columnheader "Amount"
+        - columnheader "Status"
+        - columnheader "BIR Status"
+        - columnheader "Response Time"
+    - rowgroup:
+      - row "1 Oct 19, 2026, 01:26:49 DEMO-INV-0008 123-456-789-000 Demo Trading Company Vat Invoice ₱2,800.00 Completed Not Submitted —":
+        - cell "1"
+        - cell "Oct 19, 2026, 01:26:49"
+        - cell "DEMO-INV-0008":
+          - button "DEMO-INV-0008"
+        - cell "123-456-789-000"
+        - cell "Demo Trading Company"
+        - cell "Vat Invoice"
+        - cell "₱2,800.00"
+        - cell "Completed":
+          - generic: Completed
+        - cell "Not Submitted":
+          - generic: Not Submitted
+        - cell "—"
+      - row "2 Oct 19, 2026, 01:21:49 DEMO-INV-0007 123-456-789-000 Demo Trading Company Vat Invoice ₱1,680.00 Completed Not Submitted —":
+        - cell "2"
+        - cell "Oct 19, 2026, 01:21:49"
+        - cell "DEMO-INV-0007":
+          - button "DEMO-INV-0007"
+        - cell "123-456-789-000"
+        - cell "Demo Trading Company"
+        - cell "Vat Invoice"
+        - cell "₱1,680.00"
+        - cell "Completed":
+          - generic: Completed
+        - cell "Not Submitted":
+          - generic: Not Submitted
+        - cell "—"
+      - row "3 Oct 19, 2026, 01:16:49 DEMO-INV-0006 123-456-789-000 Demo Trading Company Vat Invoice ₱112.00 Completed Not Submitted —":
+        - cell "3"
+        - cell "Oct 19, 2026, 01:16:49"
+        - cell "DEMO-INV-0006":
+          - button "DEMO-INV-0006"
+        - cell "123-456-789-000"
+        - cell "Demo Trading Company"
+        - cell "Vat Invoice"
+        - cell "₱112.00"
+        - cell "Completed":
+          - generic: Completed
+        - cell "Not Submitted":
+          - generic: Not Submitted
+        - cell "—"
+      - row "4 Oct 19, 2026, 01:11:49 DEMO-INV-0005 123-456-789-000 Demo Trading Company Vat Invoice ₱3,360.00 Completed Not Submitted —":
+        - cell "4"
+        - cell "Oct 19, 2026, 01:11:49"
+        - cell "DEMO-INV-0005":
+          - button "DEMO-INV-0005"
+        - cell "123-456-789-000"
+        - cell "Demo Trading Company"
+        - cell "Vat Invoice"
+        - cell "₱3,360.00"
+        - cell "Completed":
+          - generic: Completed
+        - cell "Not Submitted":
+          - generic: Not Submitted
+        - cell "—"
+      - row "5 Oct 19, 2026, 01:06:49 DEMO-INV-0004 123-456-789-000 Demo Trading Company Vat Invoice ₱448.00 Completed Not Submitted —":
+        - cell "5"
+        - cell "Oct 19, 2026, 01:06:49"
+        - cell "DEMO-INV-0004":
+          - button "DEMO-INV-0004"
+        - cell "123-456-789-000"
+        - cell "Demo Trading Company"
+        - cell "Vat Invoice"
+        - cell "₱448.00"
+        - cell "Completed":
+          - generic: Completed
+        - cell "Not Submitted":
+          - generic: Not Submitted
+        - cell "—"
+      - row "6 Oct 19, 2026, 01:01:49 DEMO-INV-0003 123-456-789-000 Demo Trading Company Vat Invoice ₱560.00 Completed Not Submitted —":
+        - cell "6"
+        - cell "Oct 19, 2026, 01:01:49"
+        - cell "DEMO-INV-0003":
+          - button "DEMO-INV-0003"
+        - cell "123-456-789-000"
+        - cell "Demo Trading Company"
+        - cell "Vat Invoice"
+        - cell "₱560.00"
+        - cell "Completed":
+          - generic: Completed
+        - cell "Not Submitted":
+          - generic: Not Submitted
+        - cell "—"
+      - row "7 Oct 19, 2026, 00:56:49 DEMO-INV-0002 123-456-789-000 Demo Trading Company Vat Invoice ₱2,240.00 Completed Not Submitted —":
+        - cell "7"
+        - cell "Oct 19, 2026, 00:56:49"
+        - cell "DEMO-INV-0002":
+          - button "DEMO-INV-0002"
+        - cell "123-456-789-000"
+        - cell "Demo Trading Company"
+        - cell "Vat Invoice"
+        - cell "₱2,240.00"
+        - cell "Completed":
+          - generic: Completed
+        - cell "Not Submitted":
+          - generic: Not Submitted
+        - cell "—"
+      - row "8 Oct 19, 2026, 00:51:49 DEMO-INV-0001 123-456-789-000 Demo Trading Company Vat Invoice ₱1,120.00 Completed Not Submitted —":
+        - cell "8"
+        - cell "Oct 19, 2026, 00:51:49"
+        - cell "DEMO-INV-0001":
+          - button "DEMO-INV-0001"
+        - cell "123-456-789-000"
+        - cell "Demo Trading Company"
+        - cell "Vat Invoice"
+        - cell "₱1,120.00"
+        - cell "Completed":
+          - generic: Completed
+        - cell "Not Submitted":
+          - generic: Not Submitted
+        - cell "—"
+  - generic: 8 records
+  - text: Rows
+  - combobox "Rows":
+    - option "10" [selected]
+    - option "25"
+    - option "50"
+  - button "Previous page" [disabled]:
+  - generic: 1 / 1
+  - button "Next page" [disabled]:
+  - complementary:
+    - heading "Recent Activities" [level=2]
+    - link "View All":
+      - /url: /super-admin/audit
+      - text: View All
+    - list:
+      - strong: Taxpayer Registered
+      - paragraph: Demo Trading Company
+      - time: Oct 19, 01:41
+      - strong: Security Mfa Verified
+      - paragraph: "2"
+      - time: Oct 19, 01:48
+      - strong: Security Mfa Verified
+      - paragraph: "1"
+      - time: Oct 19, 01:43
+    - link "Accreditation & compliance":
+      - /url: /accreditation
+      - text: Accreditation & compliance
+    - strong: Production authorization pending
+    - paragraph: Review accreditation, taxpayer permits and transmission readiness.
+- contentinfo:
+  - generic: Monitor Online
+  - generic: "BIR Gateway: Not Connected"
+  - generic: "Last Sync: 02:03:38 PHT"
+  - generic: NUERS v1.0.0
+- region "Notifications alt+T"
+- generic: "0"

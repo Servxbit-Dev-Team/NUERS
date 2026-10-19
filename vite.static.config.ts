@@ -18,6 +18,8 @@ const staticAssets = [
   "auth-assets",
   "dashboard-assets",
   "website-assets",
+  "pdf-assets",
+  "guides",
 ]
 
 const liveApiBaseUrl = (process.env.VITE_API_BASE_URL ?? "https://nuers.net/public").replace(/\/$/, "")

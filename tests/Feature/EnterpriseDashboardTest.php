@@ -17,6 +17,7 @@ class EnterpriseDashboardTest extends TestCase
         DB::purge('sqlite');
         (require database_path('migrations/0001_01_01_000000_create_users_table.php'))->up();
         (require database_path('migrations/2026_06_02_000001_create_nuers_tables.php'))->up();
+        (require database_path('migrations/2026_10_17_000010_merchant_wallets.php'))->up();
         Schema::table('profiles', fn (Blueprint $t) => $t->string('tin')->nullable());
         Schema::create('client_accounts', function (Blueprint $t) {
             $t->string('id')->primary(); $t->unsignedBigInteger('user_id')->nullable();
@@ -109,11 +110,13 @@ class EnterpriseDashboardTest extends TestCase
         $this->withToken($user->api_token)->getJson('/api/enterprise-dashboards/admin?period=invalid')->assertStatus(422);
     }
 
-    public function test_registered_taxpayers_count_the_same_tin_and_branch_only_once(): void
+    public function test_registered_merchants_counts_registry_businesses_not_citizen_or_profile_tins(): void
     {
         $user = $this->user('admin');
         DB::table('merchants')->insert(['id' => 'store', 'business_name' => 'Store', 'tin' => '123-456-789-000']);
-        DB::table('client_accounts')->insert(['id' => 'client', 'tin' => '123456789']);
-        $this->withToken($user->api_token)->getJson('/api/enterprise-dashboards/admin')->assertOk()->assertJsonPath('metrics.3.value', 1);
+        DB::table('client_accounts')->insert(['id' => 'client', 'tin' => '999888777']);
+        $this->user('client', '888777666');
+        $this->withToken($user->api_token)->getJson('/api/enterprise-dashboards/admin')->assertOk()
+            ->assertJsonPath('metrics.3.label', 'Registered Merchants')->assertJsonPath('metrics.3.value', 1);
     }
 }

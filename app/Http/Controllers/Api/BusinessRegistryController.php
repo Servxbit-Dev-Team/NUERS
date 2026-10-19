@@ -154,6 +154,7 @@ class BusinessRegistryController extends Controller
         $x = $this->present($m);
         $x['history'] = DB::table('eis_audit_events')->where('subject_id', $id)->orderByDesc('id')->limit(30)->get(['event', 'actor_id', 'occurred_at', 'details']);
         $x['documents'] = DB::table('transaction_receipts')->where('merchant_id', $id)->count();
+        $x['verification_documents'] = app(\App\Services\MerchantVerificationDocuments::class)->present($id)['uploaded'];
         $x['transactions'] = DB::table('merchant_transactions')->where('merchant_id', $id)->count();
         $account = $m->merchant_account_id ? DB::table('users')->where('id', $m->merchant_account_id)->first(['email', 'email_verified_at', 'created_at']) : null;
         $x['account'] = $account;
@@ -268,6 +269,11 @@ class BusinessRegistryController extends Controller
             }$meta['stage'] = $stage;
             $meta['evidence'] = $v['evidence'] ?? ($meta['evidence'] ?? null);
             DB::table('merchants')->where('id', $id)->update(['status' => $status, 'registry_details' => json_encode($meta), 'registry_revision' => $v['revision'] + 1, 'updated_at' => now()]);
+            if ($status === 'active') {
+                app(\App\Services\MerchantApiOnboarding::class)->prepare(
+                    DB::table('merchants')->where('id', $id)->first(), (string) $u->id, true
+                );
+            }
             if (in_array($status, ['suspended', 'inactive']) && $m->merchant_account_id) {
                 abort_unless(DB::table('profiles')->where('id', $m->merchant_account_id)->value('role') === 'merchant', 409, 'Linked account must be reviewed before changing access.');
                 DB::table('users')->where('id', $m->merchant_account_id)->update(app(\App\Services\ApiAccess::class)->revocation());
@@ -297,7 +303,7 @@ class BusinessRegistryController extends Controller
         return response()->streamDownload(function () use ($rows) {
             $f = fopen('php://output', 'w');
             fwrite($f, "\xEF\xBB\xBF");
-            $keys = array_merge(self::CSV, ['status', 'eis_status', 'registration_date', 'stage', 'application_type']);
+            $keys = array_merge(self::CSV, ['status', 'registration_date', 'stage', 'application_type']);
             fputcsv($f, $keys);
             foreach ($rows as $row) {
                 fputcsv($f, array_map(fn ($k) => $this->cell($row[$k] ?? ''), $keys));

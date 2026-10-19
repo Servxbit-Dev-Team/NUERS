@@ -1,0 +1,58 @@
+{
+  "change": "Remove per-merchant EIS status; show NUERS account status and platform ESP processing controls",
+  "local_complete": true,
+  "tests": {
+    "passed": 9,
+    "assertions": 316
+  },
+  "builds": "Laravel + static + document renderer passed",
+  "backend_scope": "Registry CSV drops eis_status; integration fields and authorization/transport logic remain unchanged",
+  "deployment": "Live, verified",
+  "package": {
+    "sha256": "8ed2dd3830a412d37417a3ec06d1490c867084c040aade43c6f16f7a2a2c5af7",
+    "files": 46
+  },
+  "upload_and_live_deployment_explicitly_approved": true,
+  "live_release": {
+    "deployed": true,
+    "merchant_eis_status_removed": true,
+    "verification": {
+      "registry_provider_model_verified": true,
+      "merchant_eis_column_filter_chart_counter_and_tab_removed": true,
+      "merchant_eis_csv_field_removed": true,
+      "nuers_status_preserved": true,
+      "provider_controls_preserved": true,
+      "accreditation_or_connection_not_auto_asserted": true,
+      "no_transport_or_authorization_changes": true,
+      "existing_wallet_ledgers_valid": true,
+      "privileged_mfa": true,
+      "mfa_challenge": "login_session",
+      "php": "8.4.26"
+    },
+    "no_schema_changes": true,
+    "existing_wallet_balances_and_ledger_preserved": true,
+    "source_and_assets_verified": true,
+    "accounts_and_mfa_credentials_preserved": true,
+    "roles_preserved": true,
+    "environment_preserved": true,
+    "security_policy_preserved": true,
+    "privileged_mfa": true,
+    "mfa_challenge": "login_session",
+    "application_records_preserved": true,
+    "smtp_preserved": true,
+    "pricing_preserved": true,
+    "synthetic_fixtures_deployed": false,
+    "php": "8.4.26",
+    "backup_directory": "/var/www/vhosts/nuers.net/nuers-registry-esp-backup-20261018-161123",
+    "package_sha256": "8ed2dd3830a412d37417a3ec06d1490c867084c040aade43c6f16f7a2a2c5af7"
+  },
+  "http_checks": {
+    "checks": {
+      "/api/health": 200,
+      "/api/business-registry": 401,
+      "/api/business-registry/export": 401
+    },
+    "frontend_asset": "/assets/index-BLUuV-fA.js",
+    "frontend_matches_release": true
+  }
+}

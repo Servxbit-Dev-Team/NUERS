@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 /** Internal normalized evidence only. This does not implement or claim an official BIR wire schema. */
 class EisDocumentReadiness
 {
-    public const INTERNAL_SCHEMA = 'NUERS-normalized-document-3';
+    public const INTERNAL_SCHEMA = 'NUERS-normalized-document-4';
 
     public function inspect(string $source, string $id): array
     {
@@ -31,6 +31,8 @@ class EisDocumentReadiness
         }
         $policy = app(EisReportingPolicy::class)->forDocument($row);
         $errors = [];
+        $originalRecord = DB::table($source === 'invoice' ? 'business_invoices' : 'transaction_receipts')->where('id', $id)->first();
+        $sourceCopy = ($originalRecord->record_mode ?? null) === 'source_capture';
         if ($branchReview && ! $reviewValid) {
             $errors[] = 'Historical branch evidence no longer matches the original source snapshot.';
         }
@@ -82,14 +84,21 @@ class EisDocumentReadiness
         $model = ['schema' => self::INTERNAL_SCHEMA, 'official_bir_schema_verified' => false,
             'source' => ['type' => $source, 'id' => $id], 'seller' => ['name' => $row->business, 'tin' => $row->tin, 'taxpayer_tin' => $identity['tin'], 'branch_code_source' => $identity['branch_source'], 'address' => $row->seller_address, 'branch_code' => $row->branch_code, 'rdo_code' => $row->rdo_code],
             'number' => $row->receipt_number, 'document_type' => $row->document_type, 'issue_date' => $row->business_date,
-            'buyer' => ['name' => $row->customer_name, 'tin' => $row->customer_tin], 'currency' => 'PHP',
-            'totals' => ['amount_centavos' => $amount, 'vat_centavos' => $vat, 'vatable_centavos' => (int) round((float) $row->vatable_sales * 100), 'exempt_centavos' => (int) round((float) $row->vat_exempt_sales * 100), 'zero_rated_centavos' => (int) round((float) $row->zero_rated_sales * 100)],
+            'record_mode' => $sourceCopy ? 'source_capture' : 'nuers_issuance',
+            'source_profile_id' => $originalRecord->source_profile_id ?? null,
+            'buyer' => ['name' => $row->customer_name, 'tin' => $row->customer_tin, 'address' => $originalRecord->buyer_address ?? null], 'currency' => 'PHP',
+            'withholding_basis_reference' => $originalRecord->withholding_basis_reference ?? null,
+            'totals' => ['sspt_centavos' => (int) round((float) ($row->sspt_sales ?? 0) * 100), 'withholding_centavos' => (int) round((float) ($originalRecord->withholding_tax ?? 0) * 100), 'amount_centavos' => $amount, 'vat_centavos' => $vat, 'vatable_centavos' => (int) round((float) $row->vatable_sales * 100), 'exempt_centavos' => (int) round((float) $row->vat_exempt_sales * 100), 'zero_rated_centavos' => (int) round((float) $row->zero_rated_sales * 100)],
             'original_invoice_id' => $row->original_invoice_id, 'line_price_basis' => $priceBasis, 'items' => $items];
         if ($reviewValid) {
             $model['historical_branch_evidence'] = ['revision' => $branchReview->revision, 'evidence_reference' => $branchReview->evidence_reference, 'source_fingerprint' => $branchReview->source_fingerprint, 'reviewed_by' => $branchReview->reviewed_by, 'reviewed_at' => $branchReview->reviewed_at];
         }
+        if (!empty($originalRecord->sales_benefit)) $model['sales_benefit'] = ['eligibility' => json_decode($originalRecord->sales_benefit, true), 'statutory_discount_centavos' => (int)round($originalRecord->statutory_discount_amount * 100), 'vat_adjustment_centavos' => (int)round($originalRecord->vat_relief_amount * 100)];
         $canonical = json_encode($model, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
         $blockers = $errors;
+        if ($sourceCopy) {
+            $blockers[] = 'External issuer source copy: BIR reporting requires separate reviewed source-system coverage and duplicate-reporting reconciliation.';
+        }
         if ($policy['submission_applicability'] !== 'required') {
             $blockers[] = 'Documented taxpayer transmission coverage is not active for this document.';
         }
@@ -110,6 +119,7 @@ class EisDocumentReadiness
             if (! is_array($item)) {
                 return [[], ['Invalid line item structure.'], 'unverified'];
             }
+            $benefitDetails = is_string($item['benefit_details'] ?? null) ? json_decode($item['benefit_details'], true) : ($item['benefit_details'] ?? null);
             $description = $item['description'] ?? $item['desc'] ?? $item['name'] ?? '';
             $quantity = $item['quantity'] ?? $item['qty'] ?? null;
             $price = $item['unit_price'] ?? $item['unitPrice'] ?? $item['price'] ?? null;
@@ -118,11 +128,11 @@ class EisDocumentReadiness
             }
             try {
                 $line = ['description' => $description, 'quantity' => $quantity, 'unit_price' => $calculator->cents($price, 'unit_price'),
-                    'discount_pct' => $item['discount_pct'] ?? 0, 'tax_type' => $item['tax_type'] ?? null, 'vat_rate' => $item['vat_rate'] ?? 12];
+                    'discount_pct' => $item['discount_pct'] ?? 0, 'benefit_eligible' => !empty($benefitDetails['eligible']), 'tax_type' => $benefitDetails['original_tax_type'] ?? $item['tax_type'] ?? null, 'vat_rate' => !empty($benefitDetails) ? (($benefitDetails['original_tax_type'] ?? null) === 'vatable' ? 12 : 0) : ($item['vat_rate'] ?? 12)];
                 if (! $line['tax_type']) {
                     return [[], ['Line tax classification is missing; do not infer a mixed allocation.'], 'unverified'];
                 }
-                foreach (['line_total', 'discount_amount', 'taxable_amount', 'vat_amount'] as $key) {
+                foreach (['line_total', 'discount_amount', 'fixed_discount_amount', 'taxable_amount', 'vat_amount'] as $key) {
                     if (isset($item[$key])) {
                         $line[$key] = $calculator->cents($item[$key], 'line.'.$key);
                     }
@@ -139,7 +149,7 @@ class EisDocumentReadiness
             $lines[] = $line;
         }
         $record = DB::table($source === 'invoice' ? 'business_invoices' : 'transaction_receipts')->where('id', $id)->first();
-        $vatRegistered = $source === 'invoice' ? (bool) $record->vat_registered : ((float) $row->vat_amount > 0 || in_array($row->document_type, ['vat_invoice', 'zero_rated_invoice', 'mixed_sales_invoice'], true) || trim((string) $record->merchant_vat_reg) === 'VAT Registered');
+        $vatRegistered = $source === 'invoice' ? (bool) $record->vat_registered : (trim((string) $record->merchant_vat_reg) !== '' ? trim((string) $record->merchant_vat_reg) === 'VAT Registered' : ((float) $row->vat_amount > 0 || in_array($row->document_type, ['vat_invoice', 'zero_rated_invoice', 'mixed_sales_invoice'], true)));
         $modes = $source === 'invoice' && isset($record->prices_include_vat) ? [(bool) $record->prices_include_vat] : [true, false];
         if ($declared) {
             if (count(array_unique($declared)) > 1) {
@@ -149,11 +159,11 @@ class EisDocumentReadiness
         }
         foreach ($modes as $inclusive) {
             try {
-                $computed = $calculator->calculate($lines, $vatRegistered, 0, 0, $inclusive);
+                $computed = $calculator->calculate($lines, $vatRegistered, 0, 0, $inclusive, json_decode($record->sales_benefit ?? 'null', true));
             } catch (ValidationException $e) {
                 continue;
             }
-            $expected = ['total_amount' => $row->amount, 'vat_amount' => $row->vat_amount, 'taxable_amount' => $row->vatable_sales, 'vat_exempt_amount' => $row->vat_exempt_sales, 'zero_rated_amount' => $row->zero_rated_sales];
+            $expected = ['total_amount' => $row->amount, 'vat_amount' => $row->vat_amount, 'taxable_amount' => $row->vatable_sales, 'vat_exempt_amount' => (float) $row->vat_exempt_sales + (float) ($row->sspt_sales ?? 0), 'zero_rated_amount' => $row->zero_rated_sales];
             $matches = true;
             foreach ($expected as $key => $amount) {
                 if ($computed[$key] !== (int) round((float) $amount * 100)) {
@@ -165,7 +175,7 @@ class EisDocumentReadiness
             }
             $normalized = [];
             foreach ($computed['items'] as $n => $line) {
-                $normalized[] = ['line' => $n + 1, 'description' => $line['description'], 'quantity' => (string) $line['quantity'], 'unit_price_centavos' => $line['unit_price'], 'discount_centavos' => $line['discount_amount'], 'taxable_centavos' => $line['taxable_amount'], 'vat_centavos' => $line['vat_amount'], 'line_total_centavos' => $line['line_total'], 'tax_type' => $line['tax_type']];
+                $normalized[] = ['line' => $n + 1, 'description' => $line['description'], 'quantity' => (string) $line['quantity'], 'unit_price_centavos' => $line['unit_price'], 'discount_centavos' => $line['discount_amount'], 'taxable_centavos' => $line['taxable_amount'], 'vat_centavos' => $line['vat_amount'], 'line_total_centavos' => $line['line_total'], 'tax_type' => $line['tax_type'], 'tax_basis_reference' => $rawItems[$n]['tax_basis_reference'] ?? null];
             }
 
             return [$normalized, [], $inclusive ? 'vat_inclusive_reconciled' : 'vat_exclusive_reconciled'];

@@ -1558,7 +1558,7 @@ function ClientPortalPage({ view }: { view: ClientPageView }) {
                     </TableBody>
                   </Table>
                 </div>
-                <div className="flex flex-col gap-3 border-t pt-4 text-xs text-muted-foreground lg:flex-row lg:items-center lg:justify-between">
+                <div data-slot="table-pagination" className="flex flex-col gap-3 border-t pt-4 text-xs text-muted-foreground lg:flex-row lg:items-center lg:justify-between">
                   <div>
                     Showing <span className="font-semibold text-foreground">{showingFrom}</span> to <span className="font-semibold text-foreground">{showingTo}</span> of <span className="font-semibold text-foreground">{filteredRows.length}</span> transactions
                   </div>

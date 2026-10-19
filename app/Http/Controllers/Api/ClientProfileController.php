@@ -31,6 +31,8 @@ class ClientProfileController extends Controller
 
         abort_unless($user, 401, 'Authenticated Client session is required.');
 
+        app(ApiAccess::class)->require($request, ['client', 'consumer']);
+
         $validated = $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
             'organization' => ['nullable', 'string', 'max:255'],

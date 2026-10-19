@@ -1,3 +1,4 @@
+import { formatTin } from "@/lib/tin";
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
@@ -316,7 +317,7 @@ export function CitizenApprovalPage({ scope }: { scope: "bir" | "super-admin" })
                           {row.tin && (
                             <span className="flex items-center gap-1">
                               <Fingerprint className="h-3 w-3" />
-                              {row.tin}
+                              {formatTin(row.tin)}
                             </span>
                           )}
                           {row.email && (

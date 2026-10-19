@@ -1,0 +1,298 @@
+- complementary "admin navigation":
+  - link "NUERS dashboard":
+    - /url: /super-admin
+    - img "NUERS — National Unified Electronic Receipt System"
+  - button "Collapse navigation":
+  - navigation:
+    - heading "Overview" [level=2]
+    - link "Dashboard":
+      - /url: /super-admin
+      - generic: Dashboard
+    - link "Live Transaction Monitor":
+      - /url: /monitoring
+      - generic: Live Transaction Monitor
+    - heading "E-Invoicing Operations" [level=2]
+    - link "Electronic Invoices & Receipts":
+      - /url: /invoices
+      - generic: Electronic Invoices & Receipts
+    - button "Expand Electronic Invoices & Receipts":
+    - link "Transactions":
+      - /url: /super-admin/transactions
+      - generic: Transactions
+    - button "Expand Transactions":
+    - link "BIR Transmission Center":
+      - /url: /super-admin/eis-transmissions
+      - generic: BIR Transmission Center
+    - link "Reconciliation & Exceptions":
+      - /url: /super-admin/reconciliation
+      - generic: Reconciliation & Exceptions
+    - link "Summary List of Sales":
+      - /url: /super-admin/tax-filings
+      - generic: Summary List of Sales
+    - heading "Taxpayer Management" [level=2]
+    - link "Registered Businesses":
+      - /url: /super-admin/merchants
+      - generic: Registered Businesses
+    - button "Expand Registered Businesses":
+    - link "Taxpayer Onboarding":
+      - /url: /super-admin/taxpayer-onboarding
+      - generic: Taxpayer Onboarding
+    - button "Expand Taxpayer Onboarding":
+    - link "PTI / PTT Management":
+      - /url: /super-admin/pti-ptt
+      - generic: PTI / PTT Management
+    - button "Expand PTI / PTT Management":
+    - link "API Integrations":
+      - /url: /super-admin/api-platform
+      - generic: API Integrations
+    - heading "Compliance & Security" [level=2]
+    - link "ESP Accreditation":
+      - /url: /accreditation
+      - generic: ESP Accreditation
+    - button "Expand ESP Accreditation":
+    - link "Compliance Management":
+      - /url: /super-admin/compliance
+      - generic: Compliance Management
+    - button "Expand Compliance Management":
+    - link "Security & Incidents":
+      - /url: /super-admin/security
+      - generic: Security & Incidents
+    - button "Expand Security & Incidents":
+    - link "Immutable Audit Logs":
+      - /url: /super-admin/audit
+      - generic: Immutable Audit Logs
+    - button "Expand Immutable Audit Logs":
+    - link "Data Governance & Portability":
+      - /url: /super-admin/data-archive
+      - generic: Data Governance & Portability
+    - heading "Reports" [level=2]
+    - link "Analytics & Reports":
+      - /url: /super-admin/reports
+      - generic: Analytics & Reports
+    - button "Expand Analytics & Reports":
+    - link "BIR Reports & Exports":
+      - /url: /super-admin/tax-filings
+      - generic: BIR Reports & Exports
+    - button "Expand BIR Reports & Exports":
+    - heading "System Administration" [level=2]
+    - link "Infrastructure Health":
+      - /url: /super-admin/system-health
+      - generic: Infrastructure Health
+    - button "Expand Infrastructure Health":
+    - link "Backup & Disaster Recovery":
+      - /url: /super-admin/backups
+      - generic: Backup & Disaster Recovery
+    - link "Configurations & Changes":
+      - /url: /system
+      - generic: Configurations & Changes
+    - button "Expand Configurations & Changes":
+    - link "Users & Permissions":
+      - /url: /super-admin/users-rbac
+      - generic: Users & Permissions
+    - button "Expand Users & Permissions":
+    - link "Support Inbox":
+      - /url: /super-admin/support
+      - generic: Support Inbox
+    - link "Wallets & Transaction Pricing":
+      - /url: /super-admin/wallets
+      - generic: Wallets & Transaction Pricing
+  - generic "Software name and version": NUERS · Version 1.0.0
+  - paragraph:
+    - text: DIGITAL PHILIPPINES.
+    - text: BRIGHTER TOMORROW.
+- banner:
+  - button "Toggle navigation" [expanded]:
+  - searchbox "Search transactions"
+  - link "Notifications":
+    - /url: /super-admin/notifications
+  - link "Settings":
+    - /url: /system
+  - generic "ND NUERS Documentation Admin Super Administrator":
+    - generic: ND
+    - strong: NUERS Documentation Admin
+    - generic: Super Administrator
+- main:
+  - link "Dashboard":
+    - /url: /super-admin
+  - generic: Taxpayer Onboarding
+  - time:
+    - text: Monday, October 19, 2026
+    - generic: 2:04:09 AM
+  - heading "Taxpayer Onboarding" [level=1]
+  - paragraph: Manage taxpayer applications, review documents, and track validation, NUERS processing setup and account approval.
+  - img "Bureau of Internal Revenue official seal"
+  - strong: BUREAU OF INTERNAL REVENUE
+  - generic: REPUBLIC OF THE PHILIPPINES
+  - generic: Working together for a fair and progressive tax system.
+  - heading "Merchant Profile Change Requests" [level=2]:
+    - text: Merchant Profile Change Requests
+  - paragraph: Review proposed identity, address and representative changes before they take effect.
+  - combobox "Profile request status":
+    - option "Awaiting review" [selected]
+    - option "All requests"
+  - button "Refresh":
+    - text: Refresh
+  - table:
+    - rowgroup:
+      - row "Business Requested changes Submitted Status Action":
+        - columnheader "Business"
+        - columnheader "Requested changes"
+        - columnheader "Submitted"
+        - columnheader "Status"
+        - columnheader "Action"
+    - rowgroup
+  - paragraph: No profile requests match this status.
+  - generic: 0 requests
+  - button "Previous requests page" [disabled]:
+  - generic: 1 of 1
+  - button "Next requests page" [disabled]:
+  - heading "Total Applications" [level=2]
+  - strong: "1"
+  - paragraph: Records for current filters
+  - heading "For Evaluation" [level=2]
+  - strong: "0"
+  - paragraph: 0.0% of filtered records
+  - heading "For BIR Validation" [level=2]
+  - strong: "0"
+  - paragraph: 0.0% of filtered records
+  - heading "Processing Setup" [level=2]
+  - strong: "0"
+  - paragraph: 0.0% of filtered records
+  - heading "Onboarded / Active" [level=2]
+  - strong: "1"
+  - paragraph: 100.0% of filtered records
+  - heading "Rejected" [level=2]
+  - strong: "0"
+  - paragraph: 0.0% of filtered records
+  - generic: Search
+  - textbox "Search businesses":
+    - /placeholder: Business name, TIN, owner, email or address…
+  - generic: Application Type
+  - combobox "Application Type":
+    - generic: All Types
+  - generic: Registration Status
+  - combobox "Registration Status":
+    - generic: All Statuses
+  - generic: Industry Classification
+  - combobox "Industry Classification":
+    - generic: All Industries
+  - generic: Date Registered From
+  - textbox "Date Registered From"
+  - generic: To
+  - textbox "To"
+  - button "Search":
+    - text: Search
+  - button "Reset"
+  - button "Advanced Filters":
+    - text: Advanced Filters
+  - button "All Applications (1)"
+  - button "For Evaluation"
+  - button "For BIR Validation"
+  - button "For NUERS Processing Setup"
+  - button "Onboarded"
+  - button "Rejected"
+  - button "Onboard New Taxpayer":
+    - text: Onboard New Taxpayer
+  - button "Bulk Upload (CSV)":
+    - text: Bulk Upload (CSV)
+  - button "Export":
+    - text: Export
+  - table:
+    - rowgroup:
+      - row "# Select visible applications Date Filed Business Name TIN Owner / Representative Industry Application Type Status Actions":
+        - columnheader "#"
+        - columnheader "Select visible applications":
+          - checkbox "Select visible applications"
+        - columnheader "Date Filed"
+        - columnheader "Business Name"
+        - columnheader "TIN"
+        - columnheader "Owner / Representative"
+        - columnheader "Industry"
+        - columnheader "Application Type"
+        - columnheader "Status"
+        - columnheader "Actions"
+    - rowgroup:
+      - row "1 Select Demo Trading Company Oct 19, 2026 DT Demo Trading Company Demo Merchant Owner 123-456-789-000 Demo Merchant Owner Retail New Registration Onboarded View Demo Trading Company Edit Demo Trading Company More actions for Demo Trading Company":
+        - cell "1"
+        - cell "Select Demo Trading Company":
+          - checkbox "Select Demo Trading Company"
+        - cell "Oct 19, 2026"
+        - cell "DT Demo Trading Company Demo Merchant Owner":
+          - generic: DT
+          - button "Demo Trading Company"
+          - generic: Demo Merchant Owner
+        - cell "123-456-789-000"
+        - cell "Demo Merchant Owner"
+        - cell "Retail"
+        - cell "New Registration"
+        - cell "Onboarded":
+          - generic: Onboarded
+        - cell "View Demo Trading Company Edit Demo Trading Company More actions for Demo Trading Company":
+          - button "View Demo Trading Company":
+          - button "Edit Demo Trading Company":
+          - button "More actions for Demo Trading Company":
+  - generic: Showing 1 to 1 of 1 entries
+  - combobox "Per Page":
+    - generic: 10 per page
+  - button "Previous page" [disabled]:
+  - button "1"
+  - generic: of 1
+  - button "Next page" [disabled]:
+  - complementary:
+    - heading "Onboarding Process" [level=2]
+    - generic: "1"
+    - text: Application Submission
+    - generic: Business registration details and supporting evidence.
+    - generic: "2"
+    - text: Document Validation
+    - generic: Review completeness, identity and representative authority.
+    - generic: "3"
+    - text: BIR Validation
+    - generic: Record verification references; official validation stays separate.
+    - generic: "4"
+    - text: NUERS Processing Setup
+    - generic: Review taxpayer authorization and document readiness for processing through NUERS.
+    - generic: "5"
+    - text: Approval & Activation
+    - generic: Approve NUERS platform access with a recorded decision.
+    - heading "Quick Actions" [level=2]
+    - button "Onboard New Taxpayer":
+      - text: Onboard New Taxpayer
+    - button "Bulk Import (BIR CSV)":
+      - text: Bulk Import (BIR CSV)
+    - button "Download Template":
+      - text: Download Template
+    - button "Check BIR TIN / Registry":
+      - text: Check BIR TIN / Registry
+    - button "View Onboarding Guide":
+      - text: View Onboarding Guide
+    - link "RDO Area Mapping":
+      - /url: /super-admin/rdo-mappings
+      - text: RDO Area Mapping
+    - heading "Need Help?" [level=2]
+    - paragraph: Contact our onboarding support team.
+    - link "Get Support →":
+      - /url: /super-admin/support
+  - heading "Requirements for Onboarding" [level=2]
+  - button "BIR Certificate of Registration (Form 2303) Required":
+    - text: BIR Certificate of Registration (Form 2303)
+    - generic: Required
+  - button "Valid government ID reviewed Required":
+    - text: Valid government ID reviewed
+    - generic: Required
+  - button "Business information checked Required":
+    - text: Business information checked
+    - generic: Required
+  - button "Representative authority reviewed Required":
+    - text: Representative authority reviewed
+    - generic: Required
+  - button "Email and mobile verification evidence Required":
+    - text: Email and mobile verification evidence
+    - generic: Required
+  - generic: Registry online
+  - generic: "Processing provider: NUERS"
+  - generic: "Last sync: 10/19/2026, 2:04:09 AM (PHT)"
+  - button "Refresh registry":
+- contentinfo:
+  - generic: © 2026 NUERS. All rights reserved.
+- region "Notifications alt+T"

@@ -79,24 +79,24 @@ class PlatformNotifications
         }
     }
 
-    public function admins(string $event, string $key, string $subject, string $body): void
+    public function admins(string $event, string $key, string $subject, string $body, ?string $action = null): void
     {
         if (! $this->ready()) {
             return;
         }
         // No regulator accounts or arbitrary contact addresses receive platform operations emails.
         foreach (DB::table('users')->join('profiles', 'profiles.id', '=', 'users.id')->whereIn('profiles.role', ['admin', 'super_admin'])->select('users.id')->cursor() as $u) {
-            $this->user($u->id, $event, $key, $subject, $body, 'operations');
+            $this->user($u->id, $event, $key, $subject, $body, 'operations', action: $action);
         }
     }
 
-    public function merchant(?string $id, string $event, string $key, string $subject, string $body, string $category = 'workflow'): void
+    public function merchant(?string $id, string $event, string $key, string $subject, string $body, string $category = 'workflow', ?string $action = null): void
     {
         if (! $id || ! $this->ready()) {
             return;
         }
         $owner = DB::table('merchants')->where('id', $id)->value('merchant_account_id');
-        $this->user($owner, $event, $key, $subject, $body, $category, $id);
+        $this->user($owner, $event, $key, $subject, $body, $category, $id, $action);
     }
 
     public function runOne(): bool
@@ -145,6 +145,16 @@ class PlatformNotifications
             }
             if ($job->merchant_id && $job->user_id && (string) DB::table('merchants')->where('id', $job->merchant_id)->value('merchant_account_id') !== $job->user_id) {
                 $this->finish($job, 'cancelled');
+
+                return true;
+            }
+            if ($job->event === 'business.profile.review_requested' && $job->category === 'operations' && ! DB::table('profiles')->where('id', $job->user_id)->whereIn('role', ['admin', 'super_admin'])->exists()) {
+                $this->finish($job, 'cancelled');
+
+                return true;
+            }
+            if ($job->event === 'business.review.manual' && ! app(BusinessReviewNotifications::class)->dispatchable($job, $p)) {
+                $this->finish($job, 'cancelled', 'review_changed');
 
                 return true;
             }

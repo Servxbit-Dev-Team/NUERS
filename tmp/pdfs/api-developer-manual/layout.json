@@ -1,0 +1,151 @@
+{
+  "file": "/Users/marksioson/Desktop/NUERS/output/pdf/NUERS-API-Developer-Documentation.pdf",
+  "pages": 36,
+  "minimum_body_y": 113.9,
+  "titles": [
+    [
+      1,
+      "Connect your system to NUERS"
+    ],
+    [
+      2,
+      "Find the part you need"
+    ],
+    [
+      3,
+      "Prepare a merchant connection"
+    ],
+    [
+      4,
+      "Where each component belongs"
+    ],
+    [
+      5,
+      "Choose capture or new issuance"
+    ],
+    [
+      6,
+      "Create, store and rotate keys"
+    ],
+    [
+      7,
+      "Supported integration endpoints"
+    ],
+    [
+      8,
+      "Required event fields"
+    ],
+    [
+      9,
+      "Optional fields and compatibility"
+    ],
+    [
+      10,
+      "Line items and numerical limits"
+    ],
+    [
+      11,
+      "Choose the correct document family"
+    ],
+    [
+      12,
+      "Seller registration comes first"
+    ],
+    [
+      13,
+      "Money, VAT, discounts and CWT"
+    ],
+    [
+      14,
+      "Capture an existing VAT invoice"
+    ],
+    [
+      15,
+      "A VAT seller with mixed line treatments"
+    ],
+    [
+      16,
+      "A Non-VAT seller with exempt lines"
+    ],
+    [
+      17,
+      "Exempt, zero-rated, discount and payment"
+    ],
+    [
+      18,
+      "When NUERS creates the new original"
+    ],
+    [
+      19,
+      "Submit one event and verify acceptance"
+    ],
+    [
+      20,
+      "Status, wallet and business scope"
+    ],
+    [
+      21,
+      "Submit up to 50 events atomically"
+    ],
+    [
+      22,
+      "One original stays one record"
+    ],
+    [
+      23,
+      "Internet loss must not lose a sale"
+    ],
+    [
+      24,
+      "An example durable outbox schema"
+    ],
+    [
+      25,
+      "A reliable delivery state machine"
+    ],
+    [
+      26,
+      "Manually send an ERP transaction"
+    ],
+    [
+      27,
+      "Read an immutable event and send it"
+    ],
+    [
+      28,
+      "Verify acceptance before acknowledging"
+    ],
+    [
+      29,
+      "A standard-library submission client"
+    ],
+    [
+      30,
+      "A cURL backend submission client"
+    ],
+    [
+      31,
+      "Send a saved JSON file safely"
+    ],
+    [
+      32,
+      "HTTP failures and recovery actions"
+    ],
+    [
+      33,
+      "Limits, funding and secret protection"
+    ],
+    [
+      34,
+      "Validate without creating a sale"
+    ],
+    [
+      35,
+      "Troubleshooting and production checklist"
+    ],
+    [
+      36,
+      "Versioning, sources and glossary"
+    ]
+  ]
+}

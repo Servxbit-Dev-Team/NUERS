@@ -63,6 +63,24 @@ class InvoiceCenterAndSubscriptionsTest extends TestCase
         $this->withToken($admin->api_token)->getJson('/api/invoice-center?merchant_id=a&from=2026-10-15&to=2026-10-15')->assertOk()->assertJsonPath('total',14);
     }
 
+    public function test_combined_filters_and_formatted_tin_search_match_export(): void
+    {
+        $admin=$this->user('admin');$this->business('a');$this->business('b');
+        foreach (['included','wrong-category','wrong-status','outside-date'] as $id) $this->receipt($id,'a');
+        $this->receipt('foreign','b');
+        DB::table('transaction_receipts')->update(['merchant_tin'=>'404758136000','sale_category'=>'senior_citizen']);
+        DB::table('transaction_receipts')->where('id','wrong-category')->update(['sale_category'=>'regular']);
+        DB::table('transaction_receipts')->where('id','wrong-status')->update(['status'=>'cancelled']);
+        DB::table('transaction_receipts')->where('id','outside-date')->update(['issued_at'=>'2026-10-14 23:59:59']);
+        $query=http_build_query(['merchant_id'=>'a','search'=>'404-758-136-000','sale_category'=>'senior_citizen','status'=>'valid','type'=>'receipts','from'=>'2026-10-15','to'=>'2026-10-15']);
+        $this->withToken($admin->api_token)->getJson('/api/invoice-center?'.$query)->assertOk()->assertJsonPath('total',1)->assertJsonPath('data.0.id','included');
+        $csv=$this->get('/api/invoice-center/export?'.$query)->assertOk()->assertHeader('X-Export-Count','1')->streamedContent();
+        $this->assertStringContainsString('OR-included',$csv);
+        foreach (['wrong-category','wrong-status','outside-date','foreign'] as $excluded) $this->assertStringNotContainsString('OR-'.$excluded,$csv);
+        DB::table('transaction_receipts')->where('id','included')->update(['merchant_tin'=>'404-758-136-000']);
+        $this->getJson('/api/invoice-center?'.str_replace('404-758-136-000','404758136000',$query))->assertOk()->assertJsonPath('total',1);
+    }
+
     public function test_export_and_business_dropdown_respect_access_scope(): void
     {
         $this->getJson('/api/invoice-center/export')->assertUnauthorized();
@@ -116,7 +134,7 @@ class InvoiceCenterAndSubscriptionsTest extends TestCase
         foreach (['/api/pricing','/api/subscription-plans'] as $url) {
             $this->getJson($url)->assertOk()->assertJsonCount(1,'plans')
                 ->assertJsonPath('pricing.billing_model','per_transaction')->assertJsonPath('pricing.subscription_required',false)
-                ->assertJsonPath('pricing.fee_centavos',300)->assertJsonPath('pricing.minimum_transaction_centavos',50000)
+                ->assertJsonPath('pricing.fee_centavos',300)->assertJsonPath('pricing.minimum_transaction_centavos',0)
                 ->assertJsonPath('pricing.storage_mb',null)->assertJsonPath('pricing.retention_years',5)
                 ->assertJsonPath('pricing.recurring_fee_centavos',0);
         }
@@ -132,7 +150,7 @@ class InvoiceCenterAndSubscriptionsTest extends TestCase
     public function test_transaction_fee_boundaries_are_exact_and_flat(): void
     {
         $policy=app(\App\Services\TransactionPricing::class);
-        foreach ([0=>0,49999=>0,50000=>300,50001=>300,500000=>300] as $amount=>$fee) $this->assertSame($fee,$policy->feeForCentavos($amount));
+        foreach ([0=>300,1=>300,49999=>300,50000=>300,50001=>300,500000=>300] as $amount=>$fee) $this->assertSame($fee,$policy->feeForCentavos($amount));
         $this->expectException(\InvalidArgumentException::class);$policy->feeForCentavos(-1);
     }
 }

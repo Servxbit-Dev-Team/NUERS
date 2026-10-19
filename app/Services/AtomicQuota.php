@@ -12,7 +12,8 @@ class AtomicQuota
         DB::transaction(function () use ($principal, $daily, $minute) {
             foreach ([['day', now()->format('Y-m-d'), $daily, now()->addDay()->startOfDay()], ['minute', now()->format('Y-m-d-H-i'), $minute, now()->addMinute()->startOfMinute()]] as [$kind,$window,$limit,$expires]) {
                 $id = hash('sha256', $principal.'|'.$kind.'|'.$window);
-                DB::table('api_quota_buckets')->insertOrIgnore(['id' => $id, 'used' => 0, 'expires_at' => $expires]);
+                // Acquire an exclusive duplicate-key lock directly. INSERT IGNORE can create shared-lock upgrades under MySQL contention.
+                DB::table('api_quota_buckets')->upsert([['id' => $id, 'used' => 0, 'expires_at' => $expires]], ['id'], ['id']);
                 $bucket = DB::table('api_quota_buckets')->where('id', $id)->lockForUpdate()->first();
                 if ($bucket->used >= $limit) {
                     $retry = max(1, (int) ceil(now()->diffInSeconds($expires)));

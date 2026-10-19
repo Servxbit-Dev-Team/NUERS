@@ -1,0 +1,245 @@
+- complementary "merchant navigation":
+  - link "NUERS dashboard":
+    - /url: /merchant
+    - img "NUERS — National Unified Electronic Receipt System"
+  - navigation:
+    - heading "Overview" [level=2]
+    - link "Dashboard":
+      - /url: /merchant
+      - generic: Dashboard
+    - heading "Sales & Invoicing" [level=2]
+    - link "Create Invoice":
+      - /url: /merchant/invoices/create
+      - generic: Create Invoice
+    - link "Invoices & Receipts":
+      - /url: /merchant/invoices
+      - generic: Invoices & Receipts
+    - button "Expand Invoices & Receipts":
+    - link "Customers":
+      - /url: /merchant/customers
+      - generic: Customers
+    - link "Wallet":
+      - /url: /merchant/wallet
+      - generic: Wallet
+    - heading "Reports" [level=2]
+    - link "Sales Reports":
+      - /url: /merchant/sales-reports
+      - generic: Sales Reports
+    - heading "Settings" [level=2]
+    - link "Business Profile":
+      - /url: /merchant/profile
+      - generic: Business Profile
+    - link "User Management":
+      - /url: /merchant/users
+      - generic: User Management
+    - link "Account Security":
+      - /url: /merchant/security
+      - generic: Account Security
+    - link "API Integration":
+      - /url: /merchant/api-keys
+      - generic: API Integration
+    - link "Invoice Settings":
+      - /url: /merchant/pos-settings
+      - generic: Invoice Settings
+    - link "Transaction Fees & Storage":
+      - /url: /merchant/billing
+      - generic: Transaction Fees & Storage
+    - heading "Support" [level=2]
+    - link "Help & Documentation":
+      - /url: /merchant?panel=help
+      - generic: Help & Documentation
+    - link "Submit a Request":
+      - /url: /merchant?panel=support
+      - generic: Submit a Request
+  - strong: Connected to NUERS
+  - generic: Application response received
+  - generic: "BIR connection: not verified"
+  - generic "Software name and version": NUERS · Version 1.0.0
+  - paragraph:
+    - text: DIGITAL PHILIPPINES.
+    - text: BRIGHTER TOMORROW.
+- banner:
+  - button "Toggle navigation" [expanded]:
+  - searchbox "Search transactions"
+  - link "Help":
+    - /url: /merchant?panel=help
+    - generic: Help
+  - link "Merchant notices":
+    - /url: /merchant?panel=alerts
+  - generic "DT Demo Trading Company Business Account":
+    - generic: DT
+    - strong: Demo Trading Company
+    - generic: Business Account
+- main:
+  - paragraph: Settings › API Integration
+  - heading "API Integration" [level=1]
+  - heading "Connect your ERP, POS, or ecommerce system and save its transactions in your NUERS account." [level=2]
+  - button "API Documentation":
+    - text: API Documentation
+  - button "Refresh Status":
+    - text: Refresh Status
+  - button "Generate New API Key":
+    - text: Generate New API Key
+  - article:
+    - heading "Active API Keys" [level=2]
+    - strong: "1"
+    - generic: 1 total · active and unexpired
+    - generic: Active
+  - article:
+    - heading "Total API Requests" [level=2]
+    - strong: "0"
+    - generic: Recorded intake attempts this month
+  - article:
+    - heading "Average Response Time" [level=2]
+    - strong: —
+    - generic: Recorded intake attempts today
+    - generic: No observations
+  - article:
+    - heading "Active Webhooks" [level=2]
+    - strong: "0"
+    - generic: Verified enabled destinations · live
+    - generic: Configured endpoints
+  - status:
+    - strong: Account active — API key creation ready.
+    - text: No additional account or source-profile approval is required. Choose a key name and environment to connect your system.
+  - text: Integration Environment
+  - combobox "Integration environment":
+    - option "Live — real records" [selected]
+    - option "Sandbox — test records"
+  - strong: Live workspace
+  - paragraph:
+    - text: Choose the environment when generating a key.
+    - link "View Live records":
+      - /url: /merchant/invoices?environment=live
+    - text: ·
+    - link "View Sandbox records":
+      - /url: /merchant/invoices?environment=sandbox
+    - text: . Sandbox never debits your Live wallet.
+  - navigation "API Integration sections":
+    - button "API Keys":
+      - text: API Keys
+    - button "Source Profiles":
+      - text: Source Profiles
+    - button "Endpoints":
+      - text: Endpoints
+    - button "Document Types":
+      - text: Document Types
+    - button "Webhooks" [active]:
+      - text: Webhooks
+    - button "IP Whitelist":
+      - text: IP Whitelist
+    - button "Testing Tools":
+      - text: Testing Tools
+    - button "Usage & Logs":
+      - text: Usage & Logs
+    - button "Manual Retry":
+      - text: Manual Retry
+    - button "Settings":
+      - text: Settings
+  - heading "Webhook Configuration" [level=2]
+  - paragraph: Receive signed Live callbacks in your own ERP, POS or ecommerce backend.
+  - button "Refresh":
+    - text: Refresh
+  - button "Add Endpoint":
+    - text: Add Endpoint
+  - generic: Environment
+  - strong: Live
+  - generic: Dispatcher
+  - generic: not observed
+  - generic: Last observed —
+  - generic: Verified active endpoints
+  - strong: 0 / 5
+  - generic: Queued / retrying
+  - strong: "0"
+  - generic: Needs attention
+  - strong: "0"
+  - paragraph: The worker has not reported in the last three minutes. New events remain queued. Use API status polling and contact support if this continues.
+  - paragraph:
+    - generic: 1. Save endpoint & secret
+    - text: Use a public HTTPS URL you control. The signing secret appears once.
+  - paragraph:
+    - generic: 2. Verify receiver ownership
+    - text: Install the signature verifier and echo the signed challenge.
+  - paragraph:
+    - generic: 3. Enable & test
+    - text: Enable the verified endpoint, then send a synthetic event.
+  - table:
+    - rowgroup:
+      - row "Endpoint Events Signing Key Status Verified (PHT) Actions":
+        - columnheader "Endpoint"
+        - columnheader "Events"
+        - columnheader "Signing Key"
+        - columnheader "Status"
+        - columnheader "Verified (PHT)"
+        - columnheader "Actions"
+    - rowgroup:
+      - row "No live endpoints yet Add your receiver when it is ready. Saving an endpoint does not send transaction data.":
+        - cell "No live endpoints yet Add your receiver when it is ready. Saving an endpoint does not send transaction data.":
+          - strong: No live endpoints yet
+          - paragraph: Add your receiver when it is ready. Saving an endpoint does not send transaction data.
+  - generic: 0 endpoints · retained audit history
+  - button "Previous" [disabled]
+  - generic: 1 / 1
+  - button "Next" [disabled]
+  - heading "Delivery Logs" [level=2]
+  - paragraph: Attempt history is preserved. Manual retry keeps the same event ID and signed body.
+  - text: Endpoint
+  - combobox "Endpoint":
+    - option "All endpoints" [selected]
+  - text: Delivery state
+  - combobox "Delivery state":
+    - option "All states" [selected]
+    - option "pending"
+    - option "sending"
+    - option "retry"
+    - option "delivered"
+    - option "dead letter"
+    - option "cancelled"
+  - generic: 0 matching deliveries
+  - table:
+    - rowgroup:
+      - row "Event / Delivery ID Endpoint Status Attempts HTTP / Error Next Attempt / Delivered Actions":
+        - columnheader "Event / Delivery ID"
+        - columnheader "Endpoint"
+        - columnheader "Status"
+        - columnheader "Attempts"
+        - columnheader "HTTP / Error"
+        - columnheader "Next Attempt / Delivered"
+        - columnheader "Actions"
+    - rowgroup:
+      - row "No deliveries match these filters.":
+        - cell "No deliveries match these filters."
+  - generic: 0 deliveries
+  - button "Previous" [disabled]
+  - generic: 1 / 1
+  - button "Next" [disabled]
+  - heading "Receiver Requirements" [level=2]
+  - paragraph:
+    - text: Use a separate endpoint and signing secret per environment. Verify
+    - code: X-NUERS-Signature
+    - text: using HMAC-SHA256 over
+    - code: timestamp + "." + event_id + "." + raw_body
+    - text: . Allow at most five minutes of timestamp drift, compare signatures in constant time, and durably deduplicate the event ID before returning 2xx. Delivery order is not guaranteed.
+  - paragraph:
+    - text: Verification events use
+    - code: webhook.endpoint_challenge
+    - text: . After verifying the signature, respond with
+    - code: "{\"nuers_challenge\":\"the data.challenge value\"}"
+    - text: . Verification leaves the endpoint paused until you explicitly enable it.
+  - paragraph: Callbacks contain NUERS record IDs and status metadata. Read the original transaction through your authenticated status endpoint. No API secret, buyer details, invoice image or BIR acceptance is sent in the callback.
+  - paragraph: Automatic retries use exponential backoff, up to 12 attempts within 24 hours. Redirects and permanent receiver errors stop retries. A delivery can be manually retried up to three times; the original ID/body stays unchanged. Pause or rotate before maintenance; already in-flight requests may still arrive.
+  - link "Open Webhook Receiver Guide":
+    - /url: /guides/NUERS-Webhook-Connection-Guide.pdf
+- contentinfo:
+  - img "NUERS"
+  - generic: © 2026 NUERS. All rights reserved.
+  - navigation "Merchant legal and support":
+    - link "Privacy Policy":
+      - /url: /privacy-notice
+    - link "Terms of Service":
+      - /url: /terms-of-service
+    - link "Support":
+      - /url: /merchant?panel=help
+- button "Chat with NUERS support":
+  - generic: Chat with us
+- region "Notifications alt+T"

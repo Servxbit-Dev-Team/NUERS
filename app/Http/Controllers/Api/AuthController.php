@@ -112,7 +112,7 @@ class AuthController extends Controller
             'access_token' => $user->api_token ?: request()->bearerToken(),
             'token_type' => 'bearer',
             'user' => $this->userPayload($user),
-            'mfa_required' => config('security.enforce_privileged_mfa') && (in_array(Profile::where('id', $user->id)->value('role'), config('security.privileged_roles'), true) || (bool) $user->mfa_secret) && (! $user->api_mfa_verified_at || now()->diffInMinutes($user->api_mfa_verified_at, true) > config('security.privileged_step_up_minutes')),
+            'mfa_required' => app(\App\Services\MfaSession::class)->required($user, Profile::where('id', $user->id)->value('role')),
         ];
     }
 

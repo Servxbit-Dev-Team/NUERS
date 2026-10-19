@@ -1,0 +1,13 @@
+{
+  "pages": 56,
+  "size_bytes": 6400471,
+  "sha256": "701076a0cc59661c85fb1c9a369159aa5f8e9b98e8b4f3d12f3b832b3ecf13bd",
+  "toc_links": 53,
+  "technical_figures": 9,
+  "word_count": 14893,
+  "page_bounds_issues": [],
+  "content_margin_issues": [],
+  "footer_errors": [],
+  "visual_review": "All 56 pages reviewed through rendered contact sheets; detailed review of diagrams and dense/changed pages.",
+  "runtime_claims": "Source inspection only; no live infrastructure assurance or service-level measurement claimed."
+}

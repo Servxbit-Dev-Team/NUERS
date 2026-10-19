@@ -37,8 +37,8 @@ class InvoiceCenterController extends Controller
 
     private function ledger(object $user)
     {
-        $invoice = DB::table('business_invoices')->selectRaw("id, merchant_id, invoice_number as number, document_type, status as record_status, merchant_name as business, merchant_tin as tin, COALESCE(issue_date, created_at) as issued_at, total_amount as amount, 'invoice' as source");
-        $receipt = DB::table('transaction_receipts')->selectRaw("id, merchant_id, receipt_number as number, COALESCE(document_type, receipt_type) as document_type, status as record_status, merchant_name as business, merchant_tin as tin, COALESCE(issued_at, created_at) as issued_at, total_due as amount, 'receipt' as source");
+        $invoice = DB::table('business_invoices')->selectRaw("id, merchant_id, invoice_number as number, document_type, status as record_status, merchant_name as business, merchant_tin as tin, COALESCE(issue_date, created_at) as issued_at, total_amount as amount, 'invoice' as source, sale_category, statutory_discount_amount, vat_relief_amount, discount_amount, CASE WHEN discount_amount>statutory_discount_amount THEN discount_amount-statutory_discount_amount ELSE 0 END as manual_discount_amount");
+        $receipt = DB::table('transaction_receipts')->selectRaw("id, merchant_id, receipt_number as number, COALESCE(document_type, receipt_type) as document_type, status as record_status, merchant_name as business, merchant_tin as tin, COALESCE(issued_at, created_at) as issued_at, total_due as amount, 'receipt' as source, sale_category, statutory_discount_amount, vat_relief_amount, discount_amount, CASE WHEN discount_amount>statutory_discount_amount THEN discount_amount-statutory_discount_amount ELSE 0 END as manual_discount_amount");
         if ($user->role === 'merchant') {
             $invoice->whereIn('merchant_id', $this->businesses($user)->select('id'));
             $receipt->whereIn('merchant_id', $this->businesses($user)->select('id'));
@@ -51,6 +51,7 @@ class InvoiceCenterController extends Controller
     private function filterValues(Request $request): array
     {
         return $request->validate([
+            'sale_category' => ['nullable', Rule::in(['all', ...\App\Services\StatutorySales::CATEGORIES])],
             'search' => 'nullable|string|max:200', 'merchant_id' => 'nullable|string|max:80',
             'from' => 'nullable|date_format:Y-m-d',
             'to' => ['nullable', 'date_format:Y-m-d', ...($request->filled('from') ? ['after_or_equal:from'] : [])],
@@ -63,13 +64,20 @@ class InvoiceCenterController extends Controller
     private function filteredLedger(object $user, array $v)
     {
         $query = $this->ledger($user);
+        if (($v['sale_category'] ?? 'all') !== 'all') $query->where('sale_category', $v['sale_category']);
         if (! empty($v['merchant_id'])) {
             abort_unless($this->businesses($user)->where('id', $v['merchant_id'])->exists(), 404, 'Business not found.');
             $query->where('merchant_id', $v['merchant_id']);
         }
         if (! empty($v['search'])) {
             $needle = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $v['search']).'%';
-            $query->where(fn ($q) => $q->where('business', 'like', $needle)->orWhere('tin', 'like', $needle)->orWhere('number', 'like', $needle));
+            $tinDigits = preg_match('/^[\d\s-]+$/', trim($v['search'])) ? preg_replace('/\D/', '', $v['search']) : '';
+            $query->where(function ($q) use ($needle, $tinDigits) {
+                $q->where('business', 'like', $needle)->orWhere('tin', 'like', $needle)->orWhere('number', 'like', $needle);
+                if (strlen($tinDigits) >= 3) {
+                    $q->orWhereRaw("REPLACE(REPLACE(COALESCE(tin, ''), '-', ''), ' ', '') LIKE ?", ['%'.$tinDigits.'%']);
+                }
+            });
         }
         if (! empty($v['from'])) {
             $query->whereDate('issued_at', '>=', $v['from']);
@@ -123,9 +131,9 @@ class InvoiceCenterController extends Controller
 
                 return preg_match('/^[\s]*[=+@\-]|^[\t\r\n]/u', $text) ? "'".$text : $text;
             };
-            fputcsv($out, ['Document No.', 'Date', 'Type', 'Business', 'TIN', 'Amount (PHP)', 'Status'], ',', '"', '');
+            fputcsv($out, ['Document No.', 'Date', 'Type', 'Business', 'TIN', 'Amount (PHP)', 'Status', 'Sale Category', 'Statutory Discount (PHP)', 'VAT Adjustment (PHP)', 'Manual Discount PHP', 'Total Discount PHP'], ',', '"', '');
             foreach ($query->orderByDesc('issued_at')->orderBy('source')->orderBy('id')->cursor() as $row) {
-                fputcsv($out, array_map($cell, [$row->number, $row->issued_at, $row->document_type, $row->business, $row->tin, $row->amount, $row->record_status]), ',', '"', '');
+                fputcsv($out, array_map($cell, [$row->number, $row->issued_at, $row->document_type, $row->business, $row->tin, $row->amount, $row->record_status, $row->sale_category, $row->statutory_discount_amount, $row->vat_relief_amount, $row->manual_discount_amount, $row->discount_amount]), ',', '"', '');
             }
             fclose($out);
         }, 'NUERS-documents-'.($v['from'] ?? 'all').'-to-'.($v['to'] ?? 'latest').'.csv', [
@@ -155,7 +163,8 @@ class InvoiceCenterController extends Controller
     {
         $user = $this->actor($request);
         abort_if($user->role === 'bir', 403);
-        $v = $request->validate(['request_id' => 'required|uuid', 'merchant_id' => 'required|string', 'document_type' => ['required', Rule::in(['sales_invoice', 'official_receipt', 'credit_memo', 'debit_memo'])], 'original_invoice_id' => 'required_if:document_type,credit_memo,debit_memo|nullable|string|max:80', 'correction_reason' => 'required_if:document_type,credit_memo,debit_memo|nullable|string|min:10|max:2000', 'buyer_name' => 'required|string|max:255', 'buyer_tin' => 'nullable|string|max:80', 'buyer_address' => 'nullable|string|max:2000', 'issue_date' => 'required|date_format:Y-m-d', 'items' => 'required|array|min:1|max:100', 'items.*.description' => 'required|string|max:1000', 'items.*.quantity' => 'required|numeric|gt:0|max:1000000', 'items.*.unit_price' => 'required|numeric|min:0|max:100000000', 'vat_inclusive' => 'required|boolean', 'tax_type' => ['nullable', Rule::in(['vatable', 'non_vat', 'vat_exempt', 'zero_rated'])]]);
+        $v = $request->validate(['sales_benefit'=>'nullable|array', 'items.*.benefit_eligible'=>'sometimes|boolean', 'request_id' => 'required|uuid', 'merchant_id' => 'required|string', 'document_type' => ['required', Rule::in(['sales_invoice', 'official_receipt', 'credit_memo', 'debit_memo'])], 'original_invoice_id' => 'required_if:document_type,credit_memo,debit_memo|nullable|string|max:80', 'correction_reason' => 'required_if:document_type,credit_memo,debit_memo|nullable|string|min:10|max:2000', 'buyer_name' => 'required|string|max:255', 'buyer_tin' => 'nullable|string|max:80', 'buyer_address' => 'nullable|string|max:2000', 'issue_date' => 'required|date_format:Y-m-d', 'items' => 'required|array|min:1|max:100', 'items.*.description' => 'required|string|max:1000', 'items.*.quantity' => 'required|numeric|gt:0|max:1000000', 'items.*.unit_price' => 'required|numeric|min:0|max:100000000', 'vat_inclusive' => 'required|boolean', 'tax_type' => ['nullable', Rule::in(['vatable', 'non_vat', 'vat_exempt', 'zero_rated'])]]);
+        $v['sales_benefit'] = app(\App\Services\StatutorySales::class)->validate($v['sales_benefit'] ?? null, $v['issue_date']);
         $merchant = $this->businesses($user)->where('id', $v['merchant_id'])->first();
         abort_unless($merchant, 404, 'Business not found.');
         if (in_array($v['document_type'], ['credit_memo', 'debit_memo'], true)) {
@@ -175,7 +184,7 @@ class InvoiceCenterController extends Controller
             $calculated = $calculator->calculate(array_map(fn ($item) => [
                 ...$item, 'unit_price' => $calculator->cents($item['unit_price'], 'items.unit_price'),
                 'tax_type' => $v['tax_type'] ?? ($merchant->vat_registered ? 'vatable' : 'non_vat'),
-            ], $v['items']), (bool) $merchant->vat_registered, 0, 0, (bool) $v['vat_inclusive']);
+            ], $v['items']), (bool) $merchant->vat_registered, 0, 0, (bool) $v['vat_inclusive'], $v['sales_benefit']);
             $total = $calculated['total_amount'];
             app(MerchantWallet::class)->check((string) $merchant->id, (int) $total, $v['document_type']);
             $vatable = $calculated['taxable_amount'];
@@ -184,12 +193,12 @@ class InvoiceCenterController extends Controller
             foreach ($calculated['items'] as $n => $item) {
                 $items[] = [
                     'id' => (string) Str::uuid(), 'invoice_id' => $v['request_id'], 'merchant_id' => $merchant->id, 'line_number' => $n + 1,
-                    'description' => $item['description'], 'quantity' => $item['quantity'], 'unit_price' => $item['unit_price'] / 100,
+                    'benefit_details'=>isset($item['benefit_details'])?json_encode($item['benefit_details']):null, 'discount_amount'=>$item['discount_amount']/100, 'description' => $item['description'], 'quantity' => $item['quantity'], 'unit_price' => $item['unit_price'] / 100,
                     'line_total' => $item['line_total'] / 100, 'taxable_amount' => $item['taxable_amount'] / 100, 'vat_amount' => $item['vat_amount'] / 100,
                     'vat_rate' => $item['vat_rate'], 'tax_type' => $item['tax_type'], 'created_at' => now(), 'updated_at' => now(),
                 ];
             }
-            DB::table('business_invoices')->insert(['id' => $v['request_id'], 'merchant_id' => $merchant->id, 'invoice_number' => 'DRAFT-'.strtoupper($v['request_id']), 'document_type' => $v['document_type'], 'status' => 'draft', 'merchant_name' => $merchant->business_name, 'merchant_tin' => $merchant->tin, 'merchant_address' => $merchant->address ?? null, 'original_invoice_id' => $v['original_invoice_id'] ?? null, 'correction_reason' => $v['correction_reason'] ?? null, 'buyer_name' => $v['buyer_name'], 'buyer_tin' => $v['buyer_tin'] ?? null, 'buyer_address' => $v['buyer_address'] ?? null, 'issue_date' => $v['issue_date'], 'subtotal_amount' => $calculated['subtotal_amount'] / 100, 'zero_rated_amount' => $calculated['zero_rated_amount'] / 100, 'vat_exempt_amount' => $calculated['vat_exempt_amount'] / 100, 'total_amount' => $total / 100, 'amount_due' => $total / 100, 'taxable_amount' => $vatable / 100, 'vat_amount' => $vat / 100, 'prices_include_vat' => (bool) $v['vat_inclusive'], 'vat_registered' => (bool) $merchant->vat_registered, 'vat_rate' => $vat > 0 ? 12 : 0, 'notes' => 'draft-request:'.hash('sha256', json_encode($v)), 'created_at' => now(), 'updated_at' => now()]);
+            DB::table('business_invoices')->insert([...app(\App\Services\StatutorySales::class)->storage($v['sales_benefit'],$calculated,true), 'discount_amount'=>$calculated['discount_amount']/100, 'id' => $v['request_id'], 'merchant_id' => $merchant->id, 'invoice_number' => 'DRAFT-'.strtoupper($v['request_id']), 'document_type' => $v['document_type'], 'status' => 'draft', 'merchant_name' => $merchant->business_name, 'merchant_tin' => $merchant->tin, 'merchant_address' => $merchant->address ?? null, 'original_invoice_id' => $v['original_invoice_id'] ?? null, 'correction_reason' => $v['correction_reason'] ?? null, 'buyer_name' => $v['buyer_name'], 'buyer_tin' => $v['buyer_tin'] ?? null, 'buyer_address' => $v['buyer_address'] ?? null, 'issue_date' => $v['issue_date'], 'subtotal_amount' => $calculated['subtotal_amount'] / 100, 'zero_rated_amount' => $calculated['zero_rated_amount'] / 100, 'vat_exempt_amount' => $calculated['vat_exempt_amount'] / 100, 'total_amount' => $total / 100, 'amount_due' => $total / 100, 'taxable_amount' => $vatable / 100, 'vat_amount' => $vat / 100, 'prices_include_vat' => (bool) $v['vat_inclusive'], 'vat_registered' => (bool) $merchant->vat_registered, 'vat_rate' => $vat > 0 ? 12 : 0, 'notes' => 'draft-request:'.hash('sha256', json_encode($v)), 'created_at' => now(), 'updated_at' => now()]);
             DB::table('business_invoice_items')->insert($items);
             app(BirCompliance::class)->audit('invoice.draft.created', $v['request_id'], (string) $user->id, ['merchant_id' => $merchant->id]);
 

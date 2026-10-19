@@ -1,0 +1,71 @@
+{
+  "reference": "NUERS Business Profile Dashboard.png",
+  "implemented_sections": [
+    "Business Information",
+    "Required Documents",
+    "Tax Information",
+    "Authorized Representative",
+    "Compliance Status"
+  ],
+  "design": {
+    "reference_sidebar_px": 262,
+    "readable_form_font_px": 14,
+    "mobile_form_font_px": 16,
+    "desktop_columns": 2,
+    "icons": "Existing Lucide icon system; existing NUERS branding reused",
+    "new_generated_images_needed": false
+  },
+  "documentation_alignment": {
+    "basis": [
+      "docs/knowledge/sources/ESP_Accreditation10132026.extracted.txt slides 9,13,17",
+      "docs/knowledge/sources/NUERS_EIS_Complete_System_Documentation.extracted.txt",
+      "docs/knowledge/esp-accreditation-development-baseline.md"
+    ],
+    "pti": "Permit to Issue; independently reviewed taxpayer authority",
+    "ptt": "Permit to Transmit; distinct from PTI",
+    "document_categories": "Five configured NUERS onboarding requirements, rather than nine universal requirements inferred from artwork",
+    "file_controls": "Encrypted private PDF/PNG/JPEG evidence up to 100 MiB via chunked upload; authenticated streaming reads; retained originals; admin preview and independent version-bound document review.",
+    "identity": "Registered identity/address/TIN/RDO/tax immutable in owner edits; correction requires reviewed workflow",
+    "activation": "Independent administrator decision; submission and uploads cannot activate an account",
+    "production": "Current scoped production authority and actual existing BirCompliance gates; no false connectivity or accreditation",
+    "pricing": "Existing per-transaction pricing preserved; no subscription or Powered By branding"
+  },
+  "verification": {
+    "build": "npm run build:all passed",
+    "php_tests": 321,
+    "assertions": 3342,
+    "new_profile_tests": 9,
+    "new_assertions": 94,
+    "browser_checks": [
+      "Profile edit and saved trade name",
+      "Private PNG upload for two missing categories",
+      "Private document preview",
+      "Protected document download",
+      "Review confirmation and idempotent submitted state",
+      "Tax authority empty state",
+      "390px mobile no document overflow"
+    ],
+    "synthetic_data_only": true,
+    "external_email_sent": false,
+    "desktop_screenshot": ".local/business-profile-20261018/profile-desktop.png",
+    "mobile_screenshot": ".local/business-profile-20261018/profile-mobile.png"
+  },
+  "source_evidence": [
+    "src/pages/merchant/profile.tsx",
+    "src/pages/merchant/business-profile.css",
+    "app/Http/Controllers/Api/MerchantBusinessProfileController.php",
+    "database/migrations/2026_10_18_000002_create_merchant_business_profiles.php",
+    "tests/Feature/MerchantBusinessProfileTest.php",
+    "routes/api.php"
+  ],
+  "deployment": {
+    "local_additive_migration_applied": true,
+    "live_deployed": true,
+    "source_and_assets_verified": true,
+    "live_authenticated_profile_verified": true,
+    "records_credentials_mfa_smtp_pricing_preserved": true,
+    "package_sha256": "5a3f70c917aa0c1eab288e235234d5bd207f0b609a2662c80aae6c28af913aa2",
+    "backup_directory": "/var/www/vhosts/nuers.net/nuers-business-profile-backup-20261018-084418",
+    "private_deployment_evidence": ".local/business-profile-20261018/live-deployment-proof.json"
+  }
+}

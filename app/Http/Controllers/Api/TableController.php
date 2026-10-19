@@ -68,6 +68,7 @@ class TableController extends Controller
             abort_unless($actor, 401, 'An authenticated session is required.');
             $role = DB::table('profiles')->where('id', $actor->id)->value('role');
             $administrator = in_array($role, ['admin', 'super_admin'], true);
+            abort_if($role === 'merchant', 403, 'Merchant identity changes require administrator review through Business Profile.');
             if (! $administrator) {
                 abort_unless(in_array($request->method(), ['PATCH', 'PUT'], true), 403, 'Only administrators may create or remove profiles.');
                 $values = $request->input('values', []);

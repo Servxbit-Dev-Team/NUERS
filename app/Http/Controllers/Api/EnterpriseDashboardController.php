@@ -65,12 +65,7 @@ class EnterpriseDashboardController extends Controller
             ['label' => 'Invalid Transactions', 'value' => $invalid, 'color' => 'red', 'icon' => 'file-x', 'note' => 'Rejected, failed or voided'],
         ];
         if ($portal === 'admin') {
-            $tins = DB::table('merchants')->whereNotNull('tin')->pluck('tin')
-                ->merge(DB::table('client_accounts')->whereNotNull('tin')->pluck('tin'))
-                ->merge(DB::table('profiles')->whereNotNull('tin')->pluck('tin'));
-            $taxpayers = $tins->map(fn ($tin) => $this->tin($tin))->filter(fn ($tin) => in_array(strlen($tin), [9, 12], true))
-                ->map(fn ($tin) => substr($tin, 0, 9))->unique()->count();
-            $metrics[] = ['label' => 'Registered Taxpayers', 'value' => $taxpayers, 'color' => 'yellow', 'icon' => 'users', 'note' => 'Distinct registered TINs'];
+            $metrics[] = ['label' => 'Registered Merchants', 'value' => DB::table('merchants')->count(), 'color' => 'yellow', 'icon' => 'users', 'note' => 'Businesses in the merchant registry'];
             $metrics[] = ['label' => 'BIR Submissions', 'value' => $birCount, 'color' => 'purple', 'icon' => 'upload', 'note' => 'Authentic production acknowledgements'];
         } elseif ($portal === 'merchant') {
             $metrics[] = ['label' => 'Total Sales', 'value' => (float) (clone $transactions)->whereIn('t.status', self::VALID)->sum('t.amount'), 'format' => 'money', 'color' => 'yellow', 'icon' => 'chart', 'note' => 'Completed transaction amounts'];
@@ -147,6 +142,7 @@ class EnterpriseDashboardController extends Controller
             ]);
         return response()->json([
             'portal' => $portal, 'metrics' => $metrics, 'volume' => array_values($buckets),
+            'financial_summary' => $portal === 'admin' ? app(\App\Services\AdminFinancialSummary::class)->overview(includeWallets: true) : null,
             'regions' => $regionRows, 'recent' => $recent, 'status' => $status,
             'account_active' => strtolower($account?->status ?? '') === 'active',
             'notification_count' => $portal === 'admin' ? DB::table('notifications')->where('is_read', false)->count() : null,

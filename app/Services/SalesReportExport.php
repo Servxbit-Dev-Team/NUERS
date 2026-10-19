@@ -32,12 +32,12 @@ class SalesReportExport
     private function rows(array $r): array
     {
         $rows = [['NUERS Sales Report — Internal'], ['Business', $r['merchant']['name'], 'TIN', $r['merchant']['tin']], ['Date From (PHT)', $r['filters']['from'], 'Date To (PHT)', $r['filters']['to']], ['Generated', $r['generated_at']], ['Snapshot SHA-256', $r['snapshot_hash']], ['Applied filters', json_encode($r['filters'], JSON_UNESCAPED_UNICODE)], [$r['notice']], [],
-            ['Date (PHT)', 'Document No.', 'Customer / Buyer', 'Buyer TIN', 'Document Type', 'Branch', 'Customer Type (current registry)', 'Gross incl. VAT (PHP)', 'VATable Base (PHP)', 'VAT (PHP)', 'Zero-Rated Base (PHP)', 'Exempt Base (PHP)', 'Non-VAT Base (PHP)', 'Net excl. VAT (PHP)', 'BIR Evidence', 'Included', 'Exclusion reason', 'Original Source Amount (PHP)', 'Source', 'Source ID', 'Original Invoice ID']];
+            ['Date (PHT)', 'Document No.', 'Customer / Buyer', 'Buyer TIN', 'Document Type', 'Branch', 'Customer Type (current registry)', 'Gross incl. VAT (PHP)', 'VATable Base (PHP)', 'VAT (PHP)', 'Zero-Rated Base (PHP)', 'Exempt Base (PHP)', 'Non-VAT Base (PHP)', 'Net excl. VAT (PHP)', 'BIR Evidence', 'Included', 'Exclusion reason', 'Original Source Amount (PHP)', 'Source', 'Source ID', 'Original Invoice ID', 'Sale Category', 'Statutory Discount (PHP)', 'VAT Adjustment (PHP)', 'Manual Discount PHP', 'Total Discount PHP']];
         foreach ([...$r['included'], ...$r['excluded']] as $v) {
-            $rows[] = [$v['date'], $v['number'], $v['customer'], $v['tin'] ?? '', $v['type'], $v['branch'] ?? 'Not recorded', $v['customer_type'], $v['gross'] / 100, $v['vatable'] / 100, $v['vat'] / 100, $v['zero'] / 100, $v['exempt'] / 100, $v['non_vat'] / 100, $v['net'] / 100, $v['bir_status'], $v['included'] ? 'Yes' : 'No', $v['exclusion_reason'] ?? '', $v['source_amount'] / 100, $v['source'], $v['document_id'], $v['original_invoice_id'] ?? ''];
+            $rows[] = [$v['date'], $v['number'], $v['customer'], $v['tin'] ?? '', $v['type'], $v['branch'] ?? 'Not recorded', $v['customer_type'], $v['gross'] / 100, $v['vatable'] / 100, $v['vat'] / 100, $v['zero'] / 100, $v['exempt'] / 100, $v['non_vat'] / 100, $v['net'] / 100, $v['bir_status'], $v['included'] ? 'Yes' : 'No', $v['exclusion_reason'] ?? '', $v['source_amount'] / 100, $v['source'], $v['document_id'], $v['original_invoice_id'] ?? '', $v['sale_category'], $v['statutory_discount'] / 100, $v['vat_adjustment'] / 100, $v['manual_discount'] / 100, $v['discount'] / 100];
         }
         $t = $r['totals'];
-        $rows[] = ['RECONCILED TOTAL', '', '', '', '', '', '', $t['gross'] / 100, $t['vatable'] / 100, $t['vat'] / 100, $t['zero'] / 100, $t['exempt'] / 100, $t['non_vat'] / 100, $t['net'] / 100];
+        $rows[] = ['RECONCILED TOTAL', '', '', '', '', '', '', $t['gross'] / 100, $t['vatable'] / 100, $t['vat'] / 100, $t['zero'] / 100, $t['exempt'] / 100, $t['non_vat'] / 100, $t['net'] / 100, '', '', '', '', '', '', '', '', $t['statutory_discount'] / 100, $t['vat_adjustment'] / 100, $t['manual_discount'] / 100, $t['discount'] / 100];
 
         return $rows;
     }
@@ -47,7 +47,7 @@ class SalesReportExport
         $dir = storage_path('app/private/report-'.Str::uuid());
         File::makeDirectory($dir, 0700, true);
         try {
-            $xml = '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="9" topLeftCell="A10" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols><col min="1" max="21" width="22" customWidth="1"/></cols><sheetData>';
+            $xml = '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="9" topLeftCell="A10" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols><col min="1" max="24" width="22" customWidth="1"/></cols><sheetData>';
             foreach ($rows as $index => $row) {
                 $xml .= '<row r="'.($index + 1).'">';
                 foreach ($row as $i => $value) {
@@ -61,7 +61,7 @@ class SalesReportExport
                 }
                 $xml .= '</row>';
             }
-            $xml .= '</sheetData><autoFilter ref="A9:U'.(count($rows) - 1).'"/></worksheet>';
+            $xml .= '</sheetData><autoFilter ref="A9:X'.(count($rows) - 1).'"/></worksheet>';
             $zip = new ZipArchive;
             abort_unless($zip->open($dir.'/report.xlsx', ZipArchive::CREATE) === true, 503, 'Excel export could not be created.');
             $zip->addFromString('[Content_Types].xml', '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>');

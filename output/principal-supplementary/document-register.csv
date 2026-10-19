@@ -1,0 +1,13 @@
+sample_id,sample_page,document_title,application_label,classification,sample_number,related_document,amount_php,vatable_base_php,vat_php,vat_exempt_php,non_vat_sales_php,zero_rated_php,software_version
+P01,7,VAT Invoice,vat_invoice,Principal invoice,SAMPLE-P01-000001,,2240,2000,240,0,,0,1.0.0
+P02,8,Non-VAT Invoice,non_vat_invoice,Principal invoice,SAMPLE-P02-000001,,1000,0,0,0,1000,0,1.0.0
+P03,9,VAT-Exempt Sales Invoice,vat_exempt_invoice,Principal invoice,SAMPLE-P03-000001,,1200,0,0,1200,,0,1.0.0
+P04,10,Zero-Rated Sales Invoice,zero_rated_invoice,Principal invoice,SAMPLE-P04-000001,,1500,0,0,0,,1500,1.0.0
+P05,11,Mixed Sales Invoice - VAT Seller,mixed_sales_invoice,Principal invoice,SAMPLE-P05-000001,,2420,1000,120,500,,800,1.0.0
+P06,12,Mixed Sales Invoice - Non-VAT Seller,mixed_sales_invoice,Principal invoice,SAMPLE-P06-000001,,1500,0,0,500,1000,0,1.0.0
+P07,13,Service Invoice - Compatibility Label,service_invoice,Principal invoice,SAMPLE-P07-000001,,1120,1000,120,0,,0,1.0.0
+S01,14,Payment Receipt,payment_receipt,Supplementary / adjustment,SAMPLE-S01-000001,SAMPLE-P01-000001,2240,,,,,,1.0.0
+S02,15,Credit Note / Credit Memo,credit_memo,Supplementary / adjustment,SAMPLE-S02-000001,SAMPLE-P01-000001,1120,1000,120,0,,0,1.0.0
+S03,16,Debit Note / Debit Memo,debit_memo,Supplementary / adjustment,SAMPLE-S03-000001,SAMPLE-P01-000001,560,500,60,0,,0,1.0.0
+S04,17,Delivery Receipt - Compatibility Label,delivery_receipt,Supplementary / adjustment,SAMPLE-S04-000001,SAMPLE-P01-000001,2240,2000,240,0,,0,1.0.0
+C01,18,Purchase Invoice - Reference Record,purchase_invoice,Purchase reference / compatibility,SAMPLE-C01-000001,SUPPLIER-DEMO-000001,1120,1000,120,0,,0,1.0.0

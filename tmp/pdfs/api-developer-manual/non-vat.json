@@ -1,0 +1,25 @@
+{
+  "schema_version": "NUERS-ingestion-1",
+  "record_mode": "source_capture",
+  "source_profile_id": "00000000-0000-4000-8000-000000000001",
+  "source_system": "SAMPLE-erp",
+  "source_event_id": "SAMPLE-non-vat",
+  "external_reference": "SAMPLE-non-vat",
+  "event_type": "invoice.finalized",
+  "occurred_at": "2026-10-18T09:00:00+08:00",
+  "branch_code": "00000",
+  "receipt_number": "SAMPLE-non-vat",
+  "document_type": "non_vat_invoice",
+  "payment_method": "cash",
+  "gross_amount": "100.00",
+  "tax_type": "non_vat",
+  "vat_inclusive": true,
+  "items": [
+    {
+      "description": "SAMPLE item",
+      "quantity": 1,
+      "unit_price": "100.00",
+      "tax_type": "non_vat"
+    }
+  ]
+}

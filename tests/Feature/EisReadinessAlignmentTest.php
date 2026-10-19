@@ -136,6 +136,8 @@ class EisReadinessAlignmentTest extends TestCase
 
     public function test_legacy_endpoint_recomputes_and_rejects_total_tampering_without_pseudo_signature(): void
     {
+        // Synthetic funds satisfy the configurable minimum-zero wallet gate.
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit('m', 600, (string) \Illuminate\Support\Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $owner = $this->user('merchant');
         DB::table('merchants')->where('id', 'm')->update(['merchant_account_id' => $owner->id]);
         $body = ['invoice_number' => 'NEW-1', 'document_type' => 'sales_invoice', 'status' => 'draft', 'buyer_name' => 'Buyer', 'issue_date' => '2026-10-16', 'line_items' => [['line_number' => 1, 'description' => 'Service', 'quantity' => 2, 'unit_price' => 11200, 'line_total' => 22400, 'tax_type' => 'vatable']], 'total_amount' => 1];
@@ -244,6 +246,8 @@ class EisReadinessAlignmentTest extends TestCase
 
     public function test_withholding_is_computed_on_the_tax_exclusive_base_and_tampering_is_rejected(): void
     {
+        // Synthetic funds satisfy the configurable minimum-zero wallet gate.
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit('m', 600, (string) \Illuminate\Support\Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $owner = $this->user('merchant');
         DB::table('merchants')->where('id', 'm')->update(['merchant_account_id' => $owner->id]);
         $body = ['invoice_number' => 'WITHHOLD-1', 'document_type' => 'sales_invoice', 'status' => 'draft', 'buyer_name' => 'Buyer', 'issue_date' => '2026-10-16', 'line_items' => [['line_number' => 1, 'description' => 'Service', 'quantity' => 2, 'unit_price' => 11200, 'line_total' => 22400, 'tax_type' => 'vatable']], 'withholding_pct' => 2, 'withholding_tax' => 448];
@@ -265,6 +269,8 @@ class EisReadinessAlignmentTest extends TestCase
 
     public function test_issuance_rolls_back_if_durable_preparation_cannot_commit(): void
     {
+        // Synthetic funds satisfy the configurable minimum-zero wallet gate.
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit('m', 600, (string) \Illuminate\Support\Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $owner = $this->user('merchant');
         DB::table('merchants')->where('id', 'm')->update(['merchant_account_id' => $owner->id]);
         $this->partialMock(BirCompliance::class, function ($mock) {
@@ -312,7 +318,7 @@ class EisReadinessAlignmentTest extends TestCase
     {
         $owner = $this->user('merchant');
         DB::table('merchants')->where('id', 'm')->update(['merchant_account_id' => $owner->id]);
-        $this->withToken($owner->api_token)->putJson('/api/business-accounts/current', ['business_name' => 'Current name', 'tin' => '999999999'])->assertConflict();
+        $this->withToken($owner->api_token)->putJson('/api/business-accounts/current', ['business_name' => 'Current name', 'tin' => '999999999'])->assertUnprocessable();
         $this->assertDatabaseHas('merchants', ['id' => 'm', 'tin' => '123456789']);
     }
 

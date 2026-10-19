@@ -1,3 +1,4 @@
+import { formatTin } from "@/lib/tin";
 import { Fragment, useEffect, useMemo, useState, type ElementType } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -378,7 +379,7 @@ export function EisTransmissionTools() {
                         </td>
                         <td className="py-3 pr-3">
                           <p className="font-medium">{tx.merchant_name ?? "Certification payload"}</p>
-                          <p className="text-xs text-muted-foreground">{tx.merchant_tin ?? "TIN from payload"}</p>
+                          <p className="text-xs text-muted-foreground">{formatTin(tx.merchant_tin) || "TIN from payload"}</p>
                         </td>
                         <td className="py-3 pr-3">{TYPE_LABELS[tx.type] ?? tx.type}</td>
                         <td className="py-3 pr-3">{tx.invoice_count}</td>

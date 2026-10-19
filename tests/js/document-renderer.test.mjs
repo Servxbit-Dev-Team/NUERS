@@ -30,3 +30,20 @@ test('an available verification QR is embedded without fetching the destination'
  assert.equal((html.match(/src="data:image\/png;base64,/g)||[]).length,3);
  assert.ok(html.includes('NUERS record lookup QR'));assert.equal(html.includes('href="https://example.test'),false);
 });
+
+test('dedicated receipt logo is embedded locally and never fetched from a remote path',async()=>{
+ const {mkdirSync,writeFileSync,unlinkSync}=await import('node:fs');
+ const path='public/uploads/invoice-logos/aaaaaaaa-eeee-cccc-dddd-bbbbbbbbbbbb.png';
+ const pixel='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX1cAAAAASUVORK5CYII=';
+ mkdirSync('public/uploads/invoice-logos',{recursive:true});writeFileSync(path,Buffer.from(pixel,'base64'));
+ const presentation={show_logo:true,logo_url:'/public/uploads/invoice-logos/aaaaaaaa-eeee-cccc-dddd-bbbbbbbbbbbb.png',font_family:'Inter',invoice_template:'standard',receipt_template:'minimal',primary_color:'#0056d6',secondary_color:'#0f2d5b'};
+ try{
+  const html=await renderDocumentHtml({...source,presentation});
+  assert.ok(html.includes('src="data:image/png;base64,'+pixel+'"'));
+  assert.ok(!html.includes('src="/public/uploads/'));
+  const unsafe=await renderDocumentHtml({...source,presentation:{...presentation,logo_url:'https://example.test/logo.png'}});
+  assert.ok(!unsafe.includes('src="https://'));
+  const hidden=await renderDocumentHtml({...source,presentation:{...presentation,show_logo:false}});
+  assert.ok(!hidden.includes(pixel));
+ }finally{unlinkSync(path);}
+});

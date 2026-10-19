@@ -1,3 +1,5 @@
+import {SALE_CATEGORIES} from '@/lib/statutory-sales';
+import { formatTin } from "@/lib/tin";
 import { useEffect, useState, type FormEvent } from "react";
 import { Download, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -6,9 +8,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { SearchableSelect } from "@/components/registration/searchable-select";
 
 type Business = { id: string; business_name: string; tin: string | null };
-type Props = { open: boolean; onClose: () => void; from: string; to: string; type: string; status: string };
+type Props = { open: boolean; onClose: () => void; from: string; to: string; type: string; status: string; saleCategory?:string;search?:string };
 
-export function ExportDocuments({ open, onClose, from, to, type, status }: Props) {
+export function ExportDocuments({ open, onClose, from, to, type, status, saleCategory="all", search="" }: Props) {
+  const [sale,setSale]=useState(saleCategory);
   const [dateFrom, setDateFrom] = useState(from);
   const [dateTo, setDateTo] = useState(to);
   const [business, setBusiness] = useState("");
@@ -23,8 +26,8 @@ export function ExportDocuments({ open, onClose, from, to, type, status }: Props
 
   useEffect(() => {
     if (!open) return;
-    setDateFrom(from); setDateTo(to); setCategory(type); setRecordStatus(status); setBusiness(""); setError("");
-  }, [open, from, to, type, status]);
+    setSale(saleCategory); setDateFrom(from); setDateTo(to); setCategory(type); setRecordStatus(status); setBusiness(""); setError("");
+  }, [open, from, to, type, status, saleCategory]);
   useEffect(() => {
     if (!open) return;
     const controller = new AbortController();
@@ -42,7 +45,7 @@ export function ExportDocuments({ open, onClose, from, to, type, status }: Props
     if (dateFrom && dateTo && dateFrom > dateTo) { setError("Date to must be on or after Date from."); return; }
     setExporting(true); setError("");
     try {
-      const query = new URLSearchParams({ type: category, status: recordStatus, ...(dateFrom ? { from: dateFrom } : {}), ...(dateTo ? { to: dateTo } : {}), ...(business ? { merchant_id: business } : {}) });
+      const query = new URLSearchParams({ sale_category:sale, search, type: category, status: recordStatus, ...(dateFrom ? { from: dateFrom } : {}), ...(dateTo ? { to: dateTo } : {}), ...(business ? { merchant_id: business } : {}) });
       const response = await apiFetch(`/api/invoice-center/export?${query}`);
       if (!response.ok) await readJsonResponse(response, "Unable to export documents.");
       if (!(response.headers.get("Content-Type") || "").includes("text/csv")) throw new Error("The export did not return a CSV file. Please try again.");
@@ -65,10 +68,10 @@ export function ExportDocuments({ open, onClose, from, to, type, status }: Props
         <label>Date from<input type="date" aria-label="Export date from" value={dateFrom} max={dateTo || undefined} onChange={e => setDateFrom(e.target.value)} /></label>
         <label>Date to<input type="date" aria-label="Export date to" value={dateTo} min={dateFrom || undefined} onChange={e => setDateTo(e.target.value)} /></label>
       </div>
-      <div className="ic-export-business"><SearchableSelect label="Business name / TIN" value={business} onChange={setBusiness} required={false} loading={loading} disabled={exporting || !!loadError} items={[{ value: "", label: "All registered businesses" }, ...businesses.map(b => ({ value: b.id, label: `${b.business_name} · TIN: ${b.tin || "Not recorded"}` }))]} placeholder="All registered businesses" searchPlaceholder="Search business name or TIN…" searchLabel="Search export businesses by name or TIN" catalogLabel={`${businesses.length} registered businesses`} />
+      <div className="ic-export-business"><SearchableSelect label="Business name / TIN" value={business} onChange={setBusiness} required={false} loading={loading} disabled={exporting || !!loadError} items={[{ value: "", label: "All registered businesses" }, ...businesses.map(b => ({ value: b.id, label: `${b.business_name} · TIN: ${formatTin(b.tin) || "Not recorded"}` }))]} placeholder="All registered businesses" searchPlaceholder="Search business name or TIN…" searchLabel="Search export businesses by name or TIN" catalogLabel={`${businesses.length} registered businesses`} />
         {loadError && <p role="alert" className="ic-form-error">{loadError} <button type="button" onClick={() => setRetry(v => v + 1)}>Retry business list</button></p>}
       </div>
-      <div className="ic-form-grid"><label>Document type<select value={category} onChange={e => setCategory(e.target.value)}><option value="all">All document types</option><option value="invoices">Sales Invoices</option><option value="receipts">Official Receipts</option><option value="notes">Credit/Debit Notes</option><option value="cancelled">Cancelled/Voided</option></select></label><label>Status<select value={recordStatus} onChange={e => setRecordStatus(e.target.value)}><option value="all">All statuses</option><option value="valid">Valid records</option><option value="pending">Pending / Draft</option><option value="cancelled">Cancelled / Voided</option></select></label></div></fieldset>
+      <label>Sale category<select value={sale} onChange={e=>setSale(e.target.value)}><option value="all">All sale categories</option>{Object.entries(SALE_CATEGORIES).map(([k,l])=><option key={k} value={k}>{l}</option>)}</select></label><div className="ic-form-grid"><label>Document type<select value={category} onChange={e => setCategory(e.target.value)}><option value="all">All document types</option><option value="invoices">Sales Invoices</option><option value="receipts">Official Receipts</option><option value="notes">Credit/Debit Notes</option><option value="cancelled">Cancelled/Voided</option></select></label><label>Status<select value={recordStatus} onChange={e => setRecordStatus(e.target.value)}><option value="all">All statuses</option><option value="valid">Valid records</option><option value="pending">Pending / Draft</option><option value="cancelled">Cancelled / Voided</option></select></label></div></fieldset>
       {error && <p role="alert" className="ic-form-error">{error}</p>}
       <div className="ic-modal-actions"><button type="button" disabled={exporting} onClick={onClose}>Cancel</button><button type="submit" className="ic-primary" disabled={exporting || loading || !!loadError}>{exporting ? <LoaderCircle className="ic-spin" /> : <Download />}{exporting ? "Exporting…" : "Download CSV"}</button></div>
     </form>

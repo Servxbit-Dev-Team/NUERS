@@ -58,6 +58,11 @@ class ApiAccess
 
     public function merchants(object $user)
     {
+        // The portal has one implicit business context. Owners must not inherit an
+        // unrelated team's context while bypassing delegation checks as an owner.
+        if (DB::table('merchants')->where('merchant_account_id', $user->id)->exists()) {
+            return DB::table('merchants')->where('merchant_account_id', $user->id);
+        }
         return DB::table('merchants')->where(function ($q) use ($user) {
             $q->where('merchant_account_id', $user->id);
             if (app(MerchantTeamAccess::class)->ready()) $q->orWhereIn('id', DB::table('merchant_team_members')->where('user_id', (string) $user->id)->where('status', 'active')->select('merchant_id'));

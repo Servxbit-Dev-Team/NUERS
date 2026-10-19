@@ -12,6 +12,8 @@ use Illuminate\Support\Str;
 /** Human delegation is distinct from merchant ownership, API credentials and BIR authority. */
 class MerchantTeamAccess
 {
+    public const OWNER_ROLE = 'Merchant Admin';
+
     public const PERMISSIONS = [
         'documents.view' => 'View invoices & receipts', 'documents.export' => 'Download document copies / CSV',
         'documents.create' => 'Create invoices (business-wide)', 'customers.view' => 'View customers (business-wide)',
@@ -106,12 +108,12 @@ class MerchantTeamAccess
                 $permission = 'reports.export';
             } elseif (Str::is(['api/merchant/wallet', 'api/merchant/wallet/statement'], $path)) {
                 $permission = 'wallet.view';
-            } elseif (Str::is(['api/merchant/api-keys', 'api/merchant/pos-devices', 'api/merchant/api-branches'], $path)) {
+            } elseif (Str::is(['api/merchant/sandbox-records','api/merchant/sandbox-records/*', 'api/merchant/api-keys', 'api/merchant/api-keys/logs', 'api/merchant/webhooks', 'api/merchant/webhooks/*', 'api/merchant/pos-devices', 'api/merchant/api-branches'], $path)) {
                 $permission = 'integrations.view';
             }
             // Identity lookup exposes only the linked business's existing profile, never a membership grant.
             elseif ($path === 'api/business-accounts/current') {
-                $this->freshMfa($u);
+                $this->sessionMfa($u);
 
                 return;
             }
@@ -126,12 +128,12 @@ class MerchantTeamAccess
         // Only document reads/exports have branch and source-terminal projections. All other modules fail closed.
         $narrow = $m->scope !== 'all' || $m->terminal_scope !== 'all';
         abort_if($narrow && (! in_array($permission, ['documents.view', 'documents.export'], true) || $path === 'api/business-invoices' || Str::is('api/business-invoices/*', $path)), 403, 'This workflow requires business-wide access. Use the scoped Invoices & Receipts workspace.');
-        $this->freshMfa($u);
+        $this->sessionMfa($u);
     }
 
-    private function freshMfa(object $u): void
+    private function sessionMfa(object $u): void
     {
-        if (config('security.enforce_privileged_mfa') && (! $u->mfa_secret || ! $u->api_mfa_verified_at || now()->diffInMinutes($u->api_mfa_verified_at, true) > config('security.privileged_step_up_minutes'))) {
+        if (config('security.enforce_privileged_mfa') && ! app(MfaSession::class)->verified($u)) {
             abort(response()->json(['message' => 'Complete multifactor verification for team access.', 'code' => 'MFA_REQUIRED', 'enrollment_required' => ! $u->mfa_secret], 403));
         }
     }

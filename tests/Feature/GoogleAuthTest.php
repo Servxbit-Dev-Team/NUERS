@@ -11,6 +11,7 @@ use GuzzleHttp\Psr7\Response;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Testing\TestResponse;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\GoogleProvider;
 use Tests\TestCase;
@@ -55,7 +56,7 @@ class GoogleAuthTest extends TestCase
         return $handler;
     }
 
-    private function oauthCallback(): \Illuminate\Testing\TestResponse
+    private function oauthCallback(): TestResponse
     {
         return $this->withSession(['state' => 'valid-state'])->get('/auth/google/callback?state=valid-state&code=test-code');
     }
@@ -150,13 +151,14 @@ class GoogleAuthTest extends TestCase
         $this->assertSame('google-subject-123', $user->fresh()->google_id);
     }
 
-    public function test_linked_subject_is_used_even_when_the_google_email_changes(): void
+    public function test_linked_subject_cannot_bypass_registered_email_requirement(): void
     {
         $user = $this->account();
         $user->forceFill(['google_id' => 'google-subject-123'])->save();
         $this->provider(['email' => 'renamed@gmail.com']);
-        $this->oauthCallback()->assertRedirectContains('http://localhost:8001/login?google=success');
-        $this->getJson('/auth/google/session')->assertOk()->assertJsonPath('user.id', (string) $user->id);
+        $this->oauthCallback()->assertRedirectContains('google_error=account_not_found');
+        $this->getJson('/auth/google/session')->assertUnauthorized();
+        $this->assertSame('existing-session', $user->fresh()->api_token);
         $this->assertSame('member@gmail.com', $user->fresh()->email);
     }
 
@@ -184,11 +186,55 @@ class GoogleAuthTest extends TestCase
             ->getJson('/auth/google/session')->assertUnauthorized();
         $this->assertSame('existing-session', $user->fresh()->api_token);
     }
+
     public function test_password_change_invalidates_an_earlier_google_handoff(): void
     {
-        $user=$this->account();$this->provider();$this->oauthCallback()->assertRedirectContains('google=success');
-        $user->password='ChangedSecurePassword2026';$user->save();
+        $user = $this->account();
+        $this->provider();
+        $this->oauthCallback()->assertRedirectContains('google=success');
+        $user->password = 'ChangedSecurePassword2026';
+        $user->save();
         $this->getJson('/auth/google/session')->assertUnauthorized();
     }
 
+    public function test_linked_subject_cannot_move_to_another_registered_email(): void
+    {
+        $original = $this->account();
+        $original->forceFill(['google_id' => 'google-subject-123'])->save();
+        $original->forceFill(['api_token' => 'original-session'])->save();
+        $other = $this->account('other@gmail.com');
+        $this->provider(['email' => 'other@gmail.com']);
+        $this->oauthCallback()->assertRedirectContains('google_error=identity_conflict');
+        $this->getJson('/auth/google/session')->assertUnauthorized();
+        $this->assertNull($other->fresh()->google_id);
+        $this->assertSame('original-session', $original->fresh()->api_token);
+    }
+
+    public function test_registered_email_matching_is_case_insensitive(): void
+    {
+        $user = $this->account('Member@gmail.com');
+        $this->provider(['email' => 'MEMBER@gmail.com']);
+        $this->oauthCallback()->assertRedirectContains('google=success');
+        $this->getJson('/auth/google/session')->assertOk()->assertJsonPath('user.id', (string) $user->id);
+    }
+
+    public function test_email_change_invalidates_a_pending_handoff(): void
+    {
+        $user = $this->account();
+        $this->provider();
+        $this->oauthCallback()->assertRedirectContains('google=success');
+        $user->forceFill(['email' => 'new@gmail.com'])->save();
+        $this->getJson('/auth/google/session')->assertUnauthorized();
+        $this->assertSame('existing-session', $user->fresh()->api_token);
+    }
+
+    public function test_google_unlink_invalidates_a_pending_handoff(): void
+    {
+        $user = $this->account();
+        $this->provider();
+        $this->oauthCallback()->assertRedirectContains('google=success');
+        $user->forceFill(['google_id' => null])->save();
+        $this->getJson('/auth/google/session')->assertUnauthorized();
+        $this->assertSame('existing-session', $user->fresh()->api_token);
+    }
 }

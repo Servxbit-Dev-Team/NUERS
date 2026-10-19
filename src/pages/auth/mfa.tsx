@@ -19,15 +19,21 @@ export function MfaPage() {
   const [error, setError] = useState("");
   const [retryAt, setRetryAt] = useState(0), [clock, setClock] = useState(Date.now());
   const retryAfter = retrySeconds(retryAt, clock);
+  function continueSession() {
+    const requested = new URLSearchParams(window.location.search).get("returnTo");
+    // Only return to this application's own paths; never replay the rejected mutation.
+    const target = requested && /^\/(?!\/)/.test(requested) && !/[\\\u0000-\u0020]/.test(requested) && !requested.startsWith("/security/mfa") ? requested : "/login";
+    window.location.replace(target);
+  }
   useEffect(() => { if (!retryAt) return; const tick = () => { const now = Date.now(); setClock(now); if (now >= retryAt) { setRetryAt(0); setError(""); } }; const timer = setInterval(tick, 1000); window.addEventListener('focus', tick); document.addEventListener('visibilitychange', tick); return () => { clearInterval(timer); window.removeEventListener('focus', tick); document.removeEventListener('visibilitychange', tick); }; }, [retryAt]);
   function failed(e: unknown, fallback: string) { setError(e instanceof Error ? e.message : fallback); if (e instanceof ApiRateLimitError && e.retryAfterSeconds > 0) { setClock(Date.now()); setRetryAt(Date.now() + e.retryAfterSeconds * 1000); } }
 
   async function loadStatus() {
     setError("");
-    try { const status = await apiJson<{ enrolled: boolean }>("/api/auth/mfa/status"); setEnrolled(status.enrolled); }
+    try { const status = await apiJson<{ enrolled: boolean; verified: boolean }>("/api/auth/mfa/status"); if (status.verified && !recovery.length) { continueSession(); return; } setEnrolled(status.enrolled); }
     catch (e) { failed(e, "Unable to load your security status."); }
   }
-  useEffect(() => { let active = true; setEnrolled(null); setRetryAt(0); setClock(Date.now()); setPassword(""); setCode(""); setCodeMode("authenticator"); setSecret(""); setQr(""); setRecovery([]); setError(""); if (user) apiJson<{ enrolled: boolean }>("/api/auth/mfa/status").then(x => { if (active) setEnrolled(x.enrolled); }).catch(e => { if (active) failed(e, "Unable to load your security status."); }); return () => { active = false; }; }, [user?.id]);
+  useEffect(() => { let active = true; setEnrolled(null); setRetryAt(0); setClock(Date.now()); setPassword(""); setCode(""); setCodeMode("authenticator"); setSecret(""); setQr(""); setRecovery([]); setError(""); if (user) apiJson<{ enrolled: boolean; verified: boolean }>("/api/auth/mfa/status").then(x => { if (active) { if (x.verified) { continueSession(); return; } setEnrolled(x.enrolled); } }).catch(e => { if (active) failed(e, "Unable to load your security status."); }); return () => { active = false; }; }, [user?.id]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -44,7 +50,7 @@ export function MfaPage() {
         setSecret(""); setQr(""); setCode(""); setRecovery(result.recovery_codes); setEnrolled(true);
       } else {
         await apiJson("/api/auth/mfa/verify", { method: "POST", body: JSON.stringify({ code }) });
-        setCode(""); window.location.assign("/login");
+        setCode(""); continueSession();
       }
     } catch (e) { failed(e, "Verification failed."); }
     finally { setBusy(false); }
@@ -55,5 +61,5 @@ export function MfaPage() {
     onPassword={setPassword} onCode={value => setCode(codeMode === "authenticator" ? value.replace(/\D/g, "").slice(0, 6) : value.trim())}
     onMode={mode => { setCodeMode(mode); setCode(""); if (!retrySeconds(retryAt)) setError(""); }} onSubmit={submit} onRetry={() => { if (!retrySeconds(retryAt)) void loadStatus(); }}
     onRestart={() => { setSecret(""); setQr(""); setCode(""); setPassword(""); setError(""); }}
-    onContinue={() => { setRecovery([]); window.location.assign("/login"); }} onSignOut={() => { setSecret(""); setQr(""); setRecovery([]); setPassword(""); setCode(""); void signOut(); }} />;
+    onContinue={() => { setRecovery([]); continueSession(); }} onSignOut={() => { setSecret(""); setQr(""); setRecovery([]); setPassword(""); setCode(""); void signOut(); }} />;
 }

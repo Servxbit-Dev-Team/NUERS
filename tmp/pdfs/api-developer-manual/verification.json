@@ -1,0 +1,39 @@
+{
+  "pdf_pages": 36,
+  "outline_entries": 36,
+  "clickable_contents_links": 9,
+  "worked_examples_passed": 10,
+  "invalid_examples_rejected": 5,
+  "client_syntax_checks": [
+    "Node.js",
+    "Python",
+    "PHP",
+    "bash/cURL"
+  ],
+  "rendered_pages": 36,
+  "sample_json_extracted_from_pdf_matches_source": true,
+  "pdf_sha256": "d9c6a7c48248376623b4a9f62256cc6bb1258f2843f05e83dca4cf35ca4ff347",
+  "bytes": 195731,
+  "word_count": 8558,
+  "source_sha256": {
+    "app/Services/IntegrationContract.php": "56b08aaa00552860ce16cfc810329befb5e9e88cd15902d32aa7ae5313c3bc35",
+    "app/Http/Controllers/Api/IntegrationTransactionController.php": "7f7318401e2446474b49d011ec231aaeace3c79508de64d0050517a46fd32aed",
+    "app/Http/Controllers/Api/MerchantApiKeyController.php": "27eef68658b75613edbb56c2a49864cc0c44d558eb0b546328c917b33b19443d",
+    "app/Services/MerchantApiContext.php": "89d0ceaf305c50f5002d75f7ad514a11473be675131641e612ccd848be54f042",
+    "app/Services/IntegrationSourceProfile.php": "5edca309426cd6358c9262f5565df8b4a3393d866b216c39095e1cb7f015a274",
+    "app/Services/InvoiceCalculator.php": "c5800c7834202d5bb4dfbdb29055e8cfa840e6f0c3d2987ac7a1314d9496843f",
+    "app/Services/AtomicQuota.php": "de9f02fb4ec5470d80b999efd2d49502b07193a5348caa36d439426084a9c94d",
+    "src/components/merchant/client-queue.tsx": "2ccd25f0aa501ff55bb4b8e9bf5b44d24b674e3b8204195879ffd4cf5dbd2ba4",
+    "config/security.php": "7ac494803565a1c4bb75a34b91b3d6bfb8cf1983b01aee6c89eb6fcca7b76927",
+    "routes/api.php": "bd003b5f5ba1e1bbb776fe453ec8ea055cac411780dd5efe8f744a4130265beb"
+  },
+  "no_production_requests_or_mutations": true,
+  "changed_pages_visually_reviewed": [
+    6,
+    28,
+    29,
+    30,
+    34
+  ],
+  "environment_and_dynamic_pricing_updated": true
+}

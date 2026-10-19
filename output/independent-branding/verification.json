@@ -1,0 +1,38 @@
+{
+  "local_verification": {
+    "backend_tests": 508,
+    "backend_assertions": 5702,
+    "javascript_tests": 27,
+    "production_builds": "passed",
+    "synthetic_ui": "Profile picture immediately updated; separate receipt logo remained on preview",
+    "production_pdf_renderer": "dedicated receipt logo visually confirmed",
+    "documentation_pdf_pages": 42,
+    "documentation_changed_page": 41
+  },
+  "release_package": {
+    "sha256": "29e622772ebca76155e7391a0d85d8a094f76341b921360787911271efd5fe74",
+    "files": 625
+  },
+  "production_verification": {
+    "main_release": {
+      "deployed": true,
+      "independent_branding_verified": true,
+      "immediate_profile_image": true,
+      "independent_receipt_logo": true,
+      "records_wallets_access_preserved": true,
+      "file_checksums": true,
+      "no_financial_mutations": true,
+      "wallet_balances_verified": true,
+      "backup": "nuers-independent-branding-backup-20261019-013414"
+    },
+    "frontend_served": true,
+    "versioned_pdf_matches": true,
+    "unversioned_pdf_edge_cache": "old copy; UI links updated to new release identifier"
+  },
+  "final_public_checks": {
+    "live_build_matches": true,
+    "versioned_guide_link": true,
+    "independent_receipt_logo_text": true,
+    "immediate_profile_image_text": true
+  }
+}

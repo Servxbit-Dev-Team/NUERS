@@ -1,0 +1,12 @@
+{
+  "pages": 39,
+  "text_outside_page": [],
+  "all_pages_rendered": true,
+  "visual_contact_sheet_review": "39 pages reviewed; results, schedule and cover also inspected at page scale",
+  "lab_script_hash_matches_execution": true,
+  "lab_restore_trials": 4,
+  "negative_controls_rejected": 4,
+  "governance_tests": 15,
+  "governance_assertions": 156,
+  "production_DR_tested": false
+}

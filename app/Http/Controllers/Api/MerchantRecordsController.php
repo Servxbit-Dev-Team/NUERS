@@ -32,17 +32,17 @@ class MerchantRecordsController extends Controller
             $canonical = app(IssuedDocumentLedger::class)->query((string) $merchant->id)->whereIn('document_source', ['invoice', 'receipt']);
             $q = DB::query()->fromSub($canonical, 'd')->selectRaw("d.id,d.document_id as record_id,d.document_id,d.document_source,d.receipt_number as number,d.business_date as source_date,d.recorded_at,d.customer_name as customer,d.customer_tin,d.document_type,d.document_family as family,
                 CASE WHEN d.status='success' THEN 'issued' ELSE d.status END as status,d.record_status as raw_status,d.amount,d.vat_amount as vat,COALESCE(d.branch_code,d.branch) as branch,d.channel,d.payment_method,d.tin as seller_tin,d.identity_count,d.original_invoice_id,
-                CASE WHEN d.document_source='invoice' THEN 'day' ELSE 'instant' END as date_precision");
+                CASE WHEN d.document_source='invoice' THEN 'day' ELSE 'instant' END as date_precision,d.sale_category,d.statutory_discount_amount,d.vat_relief_amount,d.discount_amount");
             $draft = DB::table('business_invoices as b')->where('b.merchant_id', $merchant->id)->where('b.status', 'draft')->selectRaw($this->prefix('invoice:', 'b.id')." as id,b.id as record_id,b.id as document_id,'invoice' as document_source,b.invoice_number as number,b.issue_date as source_date,b.created_at as recorded_at,b.buyer_name as customer,b.buyer_tin as customer_tin,b.document_type,
                 CASE WHEN b.document_type IN ('credit_note','credit_memo') THEN 'credit' WHEN b.document_type IN ('debit_note','debit_memo') THEN 'debit' WHEN b.document_type IN ('payment_receipt','official_receipt') THEN 'receipt' WHEN b.document_type IN ('delivery_receipt','purchase_invoice') THEN 'supplementary' ELSE 'invoice' END as family,
-                'draft' as status,b.status as raw_status,b.total_amount as amount,b.vat_amount as vat,b.seller_branch_code as branch,NULL as channel,NULL as payment_method,b.merchant_tin as seller_tin,1 as identity_count,b.original_invoice_id,'day' as date_precision");
+                'draft' as status,b.status as raw_status,b.total_amount as amount,b.vat_amount as vat,b.seller_branch_code as branch,NULL as channel,NULL as payment_method,b.merchant_tin as seller_tin,1 as identity_count,b.original_invoice_id,'day' as date_precision,b.sale_category,b.statutory_discount_amount,b.vat_relief_amount,b.discount_amount");
             $q->unionAll($draft);
         } else {
             // Exactly one tenant-owned receipt can join a payment; repeated receipt links cannot multiply its rows.
             $q = DB::table('merchant_transactions as t')->leftJoin('transaction_receipts as r', function ($j) {
                 $j->on('r.id', '=', DB::raw('COALESCE(t.receipt_id,(SELECT rr.id FROM transaction_receipts rr WHERE rr.transaction_id=t.id AND rr.merchant_id=t.merchant_id ORDER BY rr.id LIMIT 1))'))->on('r.merchant_id', '=', 't.merchant_id');
             })->where('t.merchant_id', $merchant->id)->selectRaw($this->prefix('payment:', 't.id')." as id,t.id as record_id,r.id as document_id,'payment' as document_source,t.transaction_ref as number,t.created_at as source_date,t.created_at as recorded_at,COALESCE(t.customer_name,r.buyer_name) as customer,COALESCE(t.customer_tin,r.buyer_tin) as customer_tin,t.transaction_type as document_type,'payment' as family,
-                CASE WHEN t.status IN ('completed','paid','settled','verified','success','valid') THEN 'completed' WHEN t.status IN ('cancelled','canceled','voided','void','refunded','refund') THEN 'cancelled' WHEN t.status IN ('failed','rejected','invalid') THEN 'failed' ELSE 'pending' END as status,t.status as raw_status,t.amount,t.vat_amount as vat,t.branch,t.channel,t.payment_method,r.merchant_tin as seller_tin,1 as identity_count,NULL as original_invoice_id,'instant' as date_precision");
+                CASE WHEN t.status IN ('completed','paid','settled','verified','success','valid') THEN 'completed' WHEN t.status IN ('cancelled','canceled','voided','void','refunded','refund') THEN 'cancelled' WHEN t.status IN ('failed','rejected','invalid') THEN 'failed' ELSE 'pending' END as status,t.status as raw_status,t.amount,t.vat_amount as vat,t.branch,t.channel,t.payment_method,r.merchant_tin as seller_tin,1 as identity_count,NULL as original_invoice_id,'instant' as date_precision,COALESCE(r.sale_category,'regular') as sale_category,COALESCE(r.statutory_discount_amount,0) as statutory_discount_amount,COALESCE(r.vat_relief_amount,0) as vat_relief_amount,COALESCE(r.discount_amount,0) as discount_amount");
         }
         $q = DB::query()->fromSub($q, 'records');
         $q->leftJoin('eis_document_outbox as o', function ($j) use ($merchant) {
@@ -77,7 +77,7 @@ class MerchantRecordsController extends Controller
 
     private function filters(Request $r): array
     {
-        $v = $r->validate(['mode' => ['sometimes', Rule::in(['documents', 'transactions'])], 'from' => 'nullable|date_format:Y-m-d', 'to' => 'nullable|date_format:Y-m-d', 'search' => 'nullable|string|max:200',
+        $v = $r->validate(['sale_category' => ['nullable', Rule::in(\App\Services\StatutorySales::CATEGORIES)], 'mode' => ['sometimes', Rule::in(['documents', 'transactions'])], 'from' => 'nullable|date_format:Y-m-d', 'to' => 'nullable|date_format:Y-m-d', 'search' => 'nullable|string|max:200',
             'category' => ['nullable', Rule::in(['all', 'invoices', 'receipts', 'credit', 'debit', 'drafts', 'notes'])], 'type' => 'nullable|string|max:60', 'customer' => 'nullable|string|max:255', 'branch' => 'nullable|string|max:200',
             'status' => ['nullable', Rule::in(['all', 'issued', 'draft', 'pending', 'failed', 'cancelled', 'completed', 'issues'])], 'bir' => ['nullable', Rule::in(['all', 'not_submitted', 'not_linked', 'blocked', 'queued', 'uncertain', 'acknowledged', 'needs_review', 'unverified', 'test'])],
             'min' => 'nullable|numeric|between:-999999999999.99,999999999999.99', 'max' => 'nullable|numeric|between:-999999999999.99,999999999999.99', 'channel' => 'nullable|string|max:100', 'payment' => 'nullable|string|max:60', 'page' => 'sometimes|integer|min:1', 'per_page' => 'sometimes|integer|in:10,25,50,100',
@@ -107,7 +107,7 @@ class MerchantRecordsController extends Controller
         if (! empty($v['search'])) {
             $q->where(fn ($s) => $s->where('number', 'like', '%'.$v['search'].'%')->orWhere('customer', 'like', '%'.$v['search'].'%')->orWhere('customer_tin', 'like', '%'.$v['search'].'%'));
         }
-        foreach (['type' => 'document_type', 'customer' => 'customer', 'branch' => 'branch', 'status' => 'status', 'bir' => 'bir_status', 'channel' => 'channel', 'payment' => 'payment_method'] as $key => $column) {
+        foreach (['sale_category' => 'sale_category', 'type' => 'document_type', 'customer' => 'customer', 'branch' => 'branch', 'status' => 'status', 'bir' => 'bir_status', 'channel' => 'channel', 'payment' => 'payment_method'] as $key => $column) {
             if ($key === 'status' && ($v[$key] ?? '') === 'issues') {
                 $q->whereIn('status', ['failed', 'cancelled']);
             } elseif (isset($v[$key]) && $v[$key] !== '' && $v[$key] !== 'all') {
@@ -133,6 +133,7 @@ class MerchantRecordsController extends Controller
     private function row(object $row): array
     {
         $r = (array) $row;
+        $r['manual_discount_amount'] = max(0, round((float)$row->discount_amount - (float)$row->statutory_discount_amount, 2));
         $r['amount'] = (float) $row->amount;
         $r['vat'] = (float) $row->vat;
         $r['date'] = $row->date_precision === 'day' ? substr((string) $row->source_date, 0, 10) : ($row->source_date ? CarbonImmutable::parse($row->source_date, config('app.timezone'))->setTimezone('Asia/Manila')->toIso8601String() : null);
@@ -237,11 +238,11 @@ class MerchantRecordsController extends Controller
         return response()->streamDownload(function () use ($q, $v) {
             $f = fopen('php://output', 'w');
             fwrite($f, "\xEF\xBB\xBF");
-            fputcsv($f, ['Record ID', 'Source', 'Document / Transaction No.', 'Original Date', 'Date Precision', 'Customer', 'Customer TIN', 'Type', 'Branch', 'Amount PHP', 'VAT PHP', 'Local Status', 'BIR Evidence Status', 'Delivery State', 'Identity Source Count'], escape: '');
+            fputcsv($f, ['Record ID', 'Source', 'Document / Transaction No.', 'Original Date', 'Date Precision', 'Customer', 'Customer TIN', 'Type', 'Branch', 'Amount PHP', 'VAT PHP', 'Local Status', 'BIR Evidence Status', 'Delivery State', 'Identity Source Count', 'Sale Category', 'Statutory Discount PHP', 'VAT Adjustment PHP', 'Manual Discount PHP', 'Total Discount PHP'], escape: '');
             $safe = fn ($x) => preg_match('/^\s*[=+@\-]/u', (string) $x) ? "'".$x : (string) $x;
             foreach ($this->ordered($q, $v)->cursor() as $row) {
                 $x = $this->row($row);
-                fputcsv($f, [$safe($x['id']), $x['document_source'], $safe($x['number']), $x['date'], $x['date_precision'], $safe($x['customer']), $safe($x['customer_tin']), $safe($x['document_type']), $safe($x['branch']), number_format($x['amount'], 2, '.', ''), number_format($x['vat'], 2, '.', ''), $x['status'], $x['bir_status'], $x['delivery_state'], $x['identity_count']], escape: '');
+                fputcsv($f, [$safe($x['id']), $x['document_source'], $safe($x['number']), $x['date'], $x['date_precision'], $safe($x['customer']), $safe($x['customer_tin']), $safe($x['document_type']), $safe($x['branch']), number_format($x['amount'], 2, '.', ''), number_format($x['vat'], 2, '.', ''), $x['status'], $x['bir_status'], $x['delivery_state'], $x['identity_count'], $x['sale_category'], number_format($x['statutory_discount_amount'], 2, '.', ''), number_format($x['vat_relief_amount'], 2, '.', ''), number_format($x['manual_discount_amount'], 2, '.', ''), number_format($x['discount_amount'], 2, '.', '')], escape: '');
             }fclose($f);
         }, 'NUERS-'.$mode.'-'.now()->format('Y-m-d-His').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8', 'Cache-Control' => 'private, no-store']);
     }

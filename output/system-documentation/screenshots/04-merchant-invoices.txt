@@ -1,0 +1,472 @@
+- complementary "merchant navigation":
+  - link "NUERS dashboard":
+    - /url: /merchant
+    - img "NUERS — National Unified Electronic Receipt System"
+  - navigation:
+    - heading "Overview" [level=2]
+    - link "Dashboard":
+      - /url: /merchant
+      - generic: Dashboard
+    - heading "Sales & Invoicing" [level=2]
+    - link "Create Invoice":
+      - /url: /merchant/invoices/create
+      - generic: Create Invoice
+    - link "Invoices & Receipts":
+      - /url: /merchant/invoices
+      - generic: Invoices & Receipts
+    - button "Expand Invoices & Receipts":
+    - link "Customers":
+      - /url: /merchant/customers
+      - generic: Customers
+    - link "Wallet":
+      - /url: /merchant/wallet
+      - generic: Wallet
+    - heading "Reports" [level=2]
+    - link "Sales Reports":
+      - /url: /merchant/sales-reports
+      - generic: Sales Reports
+    - heading "Settings" [level=2]
+    - link "Business Profile":
+      - /url: /merchant/profile
+      - generic: Business Profile
+    - link "User Management":
+      - /url: /merchant/users
+      - generic: User Management
+    - link "Account Security":
+      - /url: /merchant/security
+      - generic: Account Security
+    - link "API Integration":
+      - /url: /merchant/api-keys
+      - generic: API Integration
+    - link "Invoice Settings":
+      - /url: /merchant/pos-settings
+      - generic: Invoice Settings
+    - link "Transaction Fees & Storage":
+      - /url: /merchant/billing
+      - generic: Transaction Fees & Storage
+    - heading "Support" [level=2]
+    - link "Help & Documentation":
+      - /url: /merchant?panel=help
+      - generic: Help & Documentation
+    - link "Submit a Request":
+      - /url: /merchant?panel=support
+      - generic: Submit a Request
+  - strong: Connected to NUERS
+  - generic: Application response received
+  - generic: "BIR connection: not verified"
+  - generic "Software name and version": NUERS · Version 1.0.0
+  - paragraph:
+    - text: DIGITAL PHILIPPINES.
+    - text: BRIGHTER TOMORROW.
+- banner:
+  - button "Toggle navigation" [expanded]:
+  - searchbox "Search transactions"
+  - link "Help":
+    - /url: /merchant?panel=help
+    - generic: Help
+  - link "Merchant notices":
+    - /url: /merchant?panel=alerts
+  - generic "DT Demo Trading Company Business Account":
+    - generic: DT
+    - strong: Demo Trading Company
+    - generic: Business Account
+- main:
+  - navigation "Transaction environment":
+    - generic: Record Environment
+    - link "Live":
+      - /url: /merchant/invoices?environment=live
+      - text: Live
+    - link "Sandbox":
+      - /url: /merchant/invoices?environment=sandbox
+      - text: Sandbox
+    - generic: Real business records · Live wallet pricing applies
+  - navigation "Invoices and receipts views":
+    - link "Documents":
+      - /url: /merchant/invoices
+    - link "Payment Activity":
+      - /url: /merchant/invoices?view=payments
+  - navigation "Breadcrumb":
+    - link "Dashboard":
+      - /url: /merchant
+      - text: Dashboard
+    - generic: Invoices & Receipts
+  - heading "Invoices & Receipts" [level=1]
+  - paragraph: View and manage your invoice drafts, issued documents and payment receipts.
+  - paragraph:
+    - text: Digital Transactions.
+    - text: A Stronger Philippines.
+  - generic: Monday, October 19, 2026
+  - strong: 2:06:41 AM
+  - generic: NUERS responding
+  - heading "Total Invoices" [level=2]
+  - strong: "8"
+  - generic: Matching primary invoice records
+  - heading "Total Receipts" [level=2]
+  - strong: "0"
+  - generic: Payment / supplementary records
+  - heading "Invoice Sales Draft" [level=2]
+  - strong: ₱12,320.00
+  - generic: Reconciled sales and adjustments
+  - heading "BIR Acknowledgments" [level=2]
+  - strong: "0"
+  - generic: Verified production evidence only
+  - heading "Pending / Failed" [level=2]
+  - strong: "0"
+  - generic: Local status; separate from BIR
+  - heading "Filters" [level=2]
+  - button "Hide Filters" [expanded]:
+    - text: Hide Filters
+  - generic: Date From
+  - textbox "Date From"
+  - generic: Date To
+  - textbox "Date To"
+  - generic: Document Type
+  - combobox "Document Type":
+    - option "All Types" [selected]
+    - option "VAT Invoice"
+  - generic: Sale Category
+  - combobox "Sale Category":
+    - option "All Sale Categories" [selected]
+    - option "Regular sale"
+    - option "Senior citizen"
+    - option "PWD"
+    - option "National athlete / coach"
+    - option "Solo parent"
+  - generic: Status
+  - combobox "Status":
+    - option "All Statuses" [selected]
+    - option "Draft"
+    - option "Issued"
+    - option "Pending"
+    - option "Failed"
+    - option "Cancelled / Voided"
+  - generic: Branch / Terminal
+  - combobox "Branch / Terminal":
+    - option "All Recorded Branches" [selected]
+    - option "00000"
+  - generic: Customer
+  - combobox "Customer":
+    - generic: All Recorded Customers
+  - generic: BIR Evidence Status
+  - combobox "BIR Evidence Status":
+    - option "All BIR Statuses" [selected]
+    - option "Not submitted"
+    - option "Receipt not linked"
+    - option "Blocked · evidence pending"
+    - option "Queued locally"
+    - option "Uncertain · inquiry needed"
+    - option "Acknowledged"
+    - option "Needs review"
+    - option "Unverified response"
+    - option "Test record only"
+  - generic: Minimum Amount (₱)
+  - spinbutton "Minimum Amount"
+  - generic: Maximum Amount (₱)
+  - spinbutton "Maximum Amount"
+  - generic: Search
+  - searchbox "Search records"
+  - generic: Original dates · Philippine time
+  - button "More Filters":
+    - text: More Filters
+  - button "Apply Filters"
+  - button "Clear"
+  - heading "Invoices & Receipts (8)" [level=2]:
+    - text: Invoices & Receipts
+    - generic: (8)
+  - button "Export":
+    - text: Export
+  - button "Refresh records":
+    - text: Refresh
+  - link "Create Invoice":
+    - /url: /merchant/invoices/create
+    - text: Create Invoice
+  - navigation "Document categories":
+    - button "All Documents (8)" [pressed]:
+      - text: All Documents
+      - generic: (8)
+    - button "Invoices (8)":
+      - text: Invoices
+      - generic: (8)
+    - button "Receipts (0)":
+      - text: Receipts
+      - generic: (0)
+    - button "Credit Notes (0)":
+      - text: Credit Notes
+      - generic: (0)
+    - button "Debit Notes (0)":
+      - text: Debit Notes
+      - generic: (0)
+    - button "Drafts (0)":
+      - text: Drafts
+      - generic: (0)
+  - paragraph: Scroll horizontally to view all columns. Actions stay available on the right.
+  - table:
+    - rowgroup:
+      - 'row "Select all records on this page # Environment Document No. Original Date Customer Type Amount Status BIR Status Actions"':
+        - columnheader "Select all records on this page":
+          - checkbox "Select all records on this page"
+        - columnheader "#"
+        - columnheader "Environment"
+        - columnheader "Document No."
+        - columnheader "Original Date":
+          - text: Original Date
+        - columnheader "Customer"
+        - columnheader "Type"
+        - columnheader "Amount"
+        - columnheader "Status"
+        - columnheader "BIR Status"
+        - columnheader "Actions"
+    - rowgroup:
+      - row "Select DEMO-INV-0008 1 Live DEMO-INV-0008 Oct 19, 2026, 1:26 AM Demo Customer 8 VAT Invoice Regular sale ₱2,800.00 Issued Not submitted Download PDF DEMO-INV-0008 Send copy to client DEMO-INV-0008 View DEMO-INV-0008 Actions for DEMO-INV-0008":
+        - cell "Select DEMO-INV-0008":
+          - checkbox "Select DEMO-INV-0008"
+        - cell "1"
+        - cell "Live":
+          - generic: Live
+        - cell "DEMO-INV-0008":
+          - button "DEMO-INV-0008"
+        - cell "Oct 19, 2026, 1:26 AM"
+        - cell "Demo Customer 8"
+        - cell "VAT Invoice Regular sale":
+          - text: VAT Invoice
+          - generic: Regular sale
+        - cell "₱2,800.00"
+        - cell "Issued":
+          - text: Issued
+        - cell "Not submitted":
+          - generic: Not submitted
+        - cell "Download PDF DEMO-INV-0008 Send copy to client DEMO-INV-0008 View DEMO-INV-0008 Actions for DEMO-INV-0008":
+          - button "Download PDF DEMO-INV-0008":
+          - button "Send copy to client DEMO-INV-0008":
+          - button "View DEMO-INV-0008":
+          - button "Actions for DEMO-INV-0008":
+      - row "Select DEMO-INV-0007 2 Live DEMO-INV-0007 Oct 19, 2026, 1:21 AM Demo Customer 7 VAT Invoice Regular sale ₱1,680.00 Issued Not submitted Download PDF DEMO-INV-0007 Send copy to client DEMO-INV-0007 View DEMO-INV-0007 Actions for DEMO-INV-0007":
+        - cell "Select DEMO-INV-0007":
+          - checkbox "Select DEMO-INV-0007"
+        - cell "2"
+        - cell "Live":
+          - generic: Live
+        - cell "DEMO-INV-0007":
+          - button "DEMO-INV-0007"
+        - cell "Oct 19, 2026, 1:21 AM"
+        - cell "Demo Customer 7"
+        - cell "VAT Invoice Regular sale":
+          - text: VAT Invoice
+          - generic: Regular sale
+        - cell "₱1,680.00"
+        - cell "Issued":
+          - text: Issued
+        - cell "Not submitted":
+          - generic: Not submitted
+        - cell "Download PDF DEMO-INV-0007 Send copy to client DEMO-INV-0007 View DEMO-INV-0007 Actions for DEMO-INV-0007":
+          - button "Download PDF DEMO-INV-0007":
+          - button "Send copy to client DEMO-INV-0007":
+          - button "View DEMO-INV-0007":
+          - button "Actions for DEMO-INV-0007":
+      - row "Select DEMO-INV-0006 3 Live DEMO-INV-0006 Oct 19, 2026, 1:16 AM Demo Customer 6 VAT Invoice Regular sale ₱112.00 Issued Not submitted Download PDF DEMO-INV-0006 Send copy to client DEMO-INV-0006 View DEMO-INV-0006 Actions for DEMO-INV-0006":
+        - cell "Select DEMO-INV-0006":
+          - checkbox "Select DEMO-INV-0006"
+        - cell "3"
+        - cell "Live":
+          - generic: Live
+        - cell "DEMO-INV-0006":
+          - button "DEMO-INV-0006"
+        - cell "Oct 19, 2026, 1:16 AM"
+        - cell "Demo Customer 6"
+        - cell "VAT Invoice Regular sale":
+          - text: VAT Invoice
+          - generic: Regular sale
+        - cell "₱112.00"
+        - cell "Issued":
+          - text: Issued
+        - cell "Not submitted":
+          - generic: Not submitted
+        - cell "Download PDF DEMO-INV-0006 Send copy to client DEMO-INV-0006 View DEMO-INV-0006 Actions for DEMO-INV-0006":
+          - button "Download PDF DEMO-INV-0006":
+          - button "Send copy to client DEMO-INV-0006":
+          - button "View DEMO-INV-0006":
+          - button "Actions for DEMO-INV-0006":
+      - row "Select DEMO-INV-0005 4 Live DEMO-INV-0005 Oct 19, 2026, 1:11 AM Demo Customer 5 VAT Invoice Regular sale ₱3,360.00 Issued Not submitted Download PDF DEMO-INV-0005 Send copy to client DEMO-INV-0005 View DEMO-INV-0005 Actions for DEMO-INV-0005":
+        - cell "Select DEMO-INV-0005":
+          - checkbox "Select DEMO-INV-0005"
+        - cell "4"
+        - cell "Live":
+          - generic: Live
+        - cell "DEMO-INV-0005":
+          - button "DEMO-INV-0005"
+        - cell "Oct 19, 2026, 1:11 AM"
+        - cell "Demo Customer 5"
+        - cell "VAT Invoice Regular sale":
+          - text: VAT Invoice
+          - generic: Regular sale
+        - cell "₱3,360.00"
+        - cell "Issued":
+          - text: Issued
+        - cell "Not submitted":
+          - generic: Not submitted
+        - cell "Download PDF DEMO-INV-0005 Send copy to client DEMO-INV-0005 View DEMO-INV-0005 Actions for DEMO-INV-0005":
+          - button "Download PDF DEMO-INV-0005":
+          - button "Send copy to client DEMO-INV-0005":
+          - button "View DEMO-INV-0005":
+          - button "Actions for DEMO-INV-0005":
+      - row "Select DEMO-INV-0004 5 Live DEMO-INV-0004 Oct 19, 2026, 1:06 AM Demo Customer 4 VAT Invoice Regular sale ₱448.00 Issued Not submitted Download PDF DEMO-INV-0004 Send copy to client DEMO-INV-0004 View DEMO-INV-0004 Actions for DEMO-INV-0004":
+        - cell "Select DEMO-INV-0004":
+          - checkbox "Select DEMO-INV-0004"
+        - cell "5"
+        - cell "Live":
+          - generic: Live
+        - cell "DEMO-INV-0004":
+          - button "DEMO-INV-0004"
+        - cell "Oct 19, 2026, 1:06 AM"
+        - cell "Demo Customer 4"
+        - cell "VAT Invoice Regular sale":
+          - text: VAT Invoice
+          - generic: Regular sale
+        - cell "₱448.00"
+        - cell "Issued":
+          - text: Issued
+        - cell "Not submitted":
+          - generic: Not submitted
+        - cell "Download PDF DEMO-INV-0004 Send copy to client DEMO-INV-0004 View DEMO-INV-0004 Actions for DEMO-INV-0004":
+          - button "Download PDF DEMO-INV-0004":
+          - button "Send copy to client DEMO-INV-0004":
+          - button "View DEMO-INV-0004":
+          - button "Actions for DEMO-INV-0004":
+      - row "Select DEMO-INV-0003 6 Live DEMO-INV-0003 Oct 19, 2026, 1:01 AM Demo Customer 3 VAT Invoice Regular sale ₱560.00 Issued Not submitted Download PDF DEMO-INV-0003 Send copy to client DEMO-INV-0003 View DEMO-INV-0003 Actions for DEMO-INV-0003":
+        - cell "Select DEMO-INV-0003":
+          - checkbox "Select DEMO-INV-0003"
+        - cell "6"
+        - cell "Live":
+          - generic: Live
+        - cell "DEMO-INV-0003":
+          - button "DEMO-INV-0003"
+        - cell "Oct 19, 2026, 1:01 AM"
+        - cell "Demo Customer 3"
+        - cell "VAT Invoice Regular sale":
+          - text: VAT Invoice
+          - generic: Regular sale
+        - cell "₱560.00"
+        - cell "Issued":
+          - text: Issued
+        - cell "Not submitted":
+          - generic: Not submitted
+        - cell "Download PDF DEMO-INV-0003 Send copy to client DEMO-INV-0003 View DEMO-INV-0003 Actions for DEMO-INV-0003":
+          - button "Download PDF DEMO-INV-0003":
+          - button "Send copy to client DEMO-INV-0003":
+          - button "View DEMO-INV-0003":
+          - button "Actions for DEMO-INV-0003":
+      - row "Select DEMO-INV-0002 7 Live DEMO-INV-0002 Oct 19, 2026, 12:56 AM Demo Customer 2 VAT Invoice Regular sale ₱2,240.00 Issued Not submitted Download PDF DEMO-INV-0002 Send copy to client DEMO-INV-0002 View DEMO-INV-0002 Actions for DEMO-INV-0002":
+        - cell "Select DEMO-INV-0002":
+          - checkbox "Select DEMO-INV-0002"
+        - cell "7"
+        - cell "Live":
+          - generic: Live
+        - cell "DEMO-INV-0002":
+          - button "DEMO-INV-0002"
+        - cell "Oct 19, 2026, 12:56 AM"
+        - cell "Demo Customer 2"
+        - cell "VAT Invoice Regular sale":
+          - text: VAT Invoice
+          - generic: Regular sale
+        - cell "₱2,240.00"
+        - cell "Issued":
+          - text: Issued
+        - cell "Not submitted":
+          - generic: Not submitted
+        - cell "Download PDF DEMO-INV-0002 Send copy to client DEMO-INV-0002 View DEMO-INV-0002 Actions for DEMO-INV-0002":
+          - button "Download PDF DEMO-INV-0002":
+          - button "Send copy to client DEMO-INV-0002":
+          - button "View DEMO-INV-0002":
+          - button "Actions for DEMO-INV-0002":
+      - row "Select DEMO-INV-0001 8 Live DEMO-INV-0001 Oct 19, 2026, 12:51 AM Demo Customer 1 VAT Invoice Regular sale ₱1,120.00 Issued Not submitted Download PDF DEMO-INV-0001 Send copy to client DEMO-INV-0001 View DEMO-INV-0001 Actions for DEMO-INV-0001":
+        - cell "Select DEMO-INV-0001":
+          - checkbox "Select DEMO-INV-0001"
+        - cell "8"
+        - cell "Live":
+          - generic: Live
+        - cell "DEMO-INV-0001":
+          - button "DEMO-INV-0001"
+        - cell "Oct 19, 2026, 12:51 AM"
+        - cell "Demo Customer 1"
+        - cell "VAT Invoice Regular sale":
+          - text: VAT Invoice
+          - generic: Regular sale
+        - cell "₱1,120.00"
+        - cell "Issued":
+          - text: Issued
+        - cell "Not submitted":
+          - generic: Not submitted
+        - cell "Download PDF DEMO-INV-0001 Send copy to client DEMO-INV-0001 View DEMO-INV-0001 Actions for DEMO-INV-0001":
+          - button "Download PDF DEMO-INV-0001":
+          - button "Send copy to client DEMO-INV-0001":
+          - button "View DEMO-INV-0001":
+          - button "Actions for DEMO-INV-0001":
+  - generic: Showing 1 to 8 of 8
+  - button "Previous page" [disabled]:
+  - strong: "1"
+  - generic: of 1
+  - button "Next page" [disabled]:
+  - text: Rows per page
+  - combobox "Rows per page":
+    - option "10" [selected]
+    - option "25"
+    - option "50"
+    - option "100"
+  - complementary:
+    - heading "Quick Actions" [level=2]
+    - link "Create Invoice":
+      - /url: /merchant/invoices/create
+      - text: Create Invoice
+    - link "Create Payment Receipt":
+      - /url: /merchant/invoices/create?type=payment_receipt
+      - text: Create Payment Receipt
+    - link "Create Credit Note":
+      - /url: /merchant/invoices/create?type=credit_memo
+      - text: Create Credit Note
+    - button "Find Documents":
+      - text: Find Documents
+    - button "Connect POS / ERP":
+      - text: Connect POS / ERP
+    - link "Sales Reports":
+      - /url: /merchant/sales-reports
+      - text: Sales Reports
+    - heading "Document Status Legend" [level=2]
+    - list:
+      - strong: Issued
+      - generic: Saved source document; BIR evidence is separate.
+      - strong: Draft
+      - generic: Not issued; excluded from invoice sales.
+      - strong: Queued locally
+      - generic: Delivery intent; no BIR acceptance claim.
+      - strong: Acknowledged
+      - generic: Authentic production response evidence.
+      - strong: Needs review
+      - generic: Investigate source or delivery evidence.
+    - heading "Important Reminders" [level=2]:
+      - text: Important Reminders
+    - list:
+      - listitem: Transmission applicability depends on documented taxpayer coverage and document type.
+      - listitem: Verify seller TIN, exact branch and original financial amounts.
+      - listitem: Preserve issued originals. Corrections require linked documents and review.
+      - listitem: Payment receipts do not create additional primary invoice sales.
+      - listitem: Retain source records and response evidence under the recorded retention and legal-hold policies.
+    - button "View readiness guidance":
+      - text: View readiness guidance
+  - generic: Source-reconciled invoice sales draft; payment/delivery receipts and drafts are excluded from sales. BIR acknowledgment requires verified production evidence.
+  - generic: NUERS response received
+  - generic: "BIR gateway: Not verified"
+  - time: "Last refresh: 2:06:41 AM PHT"
+  - generic: Refreshes every 30 seconds
+- contentinfo:
+  - img "NUERS"
+  - generic: © 2026 NUERS. All rights reserved.
+  - navigation "Merchant legal and support":
+    - link "Privacy Policy":
+      - /url: /privacy-notice
+    - link "Terms of Service":
+      - /url: /terms-of-service
+    - link "Support":
+      - /url: /merchant?panel=help
+- button "Chat with NUERS support":
+  - generic: Chat with us
+- region "Notifications alt+T"

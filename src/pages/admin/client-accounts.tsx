@@ -1,3 +1,4 @@
+import { formatTin } from "@/lib/tin";
 import { useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2,
@@ -306,7 +307,7 @@ export function AdminClientAccounts() {
                           </div>
                         </td>
                         <td className="py-3 pr-4">
-                          <p className="font-mono text-xs text-foreground">{account.tin || "No TIN bound"}</p>
+                          <p className="font-mono text-xs text-foreground">{formatTin(account.tin) || "No TIN bound"}</p>
                           <p className="text-xs text-muted-foreground">{account.mobile || "No mobile"}</p>
                         </td>
                         <td className="py-3 pr-4 text-xs font-semibold text-foreground">{money(account.wallet_balance)}</td>

@@ -55,6 +55,40 @@ class RegistrationAddress
         $offices=$this->offices();$office=collect($offices)->firstWhere('rdo_code',$code);
         return ['rdo'=>$office,'automatic'=>(bool)$office,'message'=>$office?'RDO selected from your business address. Confirm it matches your BIR registration.':($barangayCode?'Confirm your RDO from your BIR registration. This address needs a jurisdiction check.':'Select your barangay to check the RDO jurisdiction.')];
     }
+    public function merchantFormValue(object $merchant): array
+    {
+        $current = (json_decode($merchant->registry_details ?? '{}', true) ?: [])['address'] ?? [];
+        $saved = Schema::hasTable('business_registrations') ? DB::table('business_registrations')->where('merchant_id', $merchant->id)->orderByDesc('created_at')->value('address_details') : null;
+        foreach ([$current, json_decode($saved ?? '{}', true) ?: []] as $candidate) {
+            if (!$candidate) continue;
+            $parts = [$candidate['street_address'] ?? '', $candidate['barangay']['name'] ?? '', $candidate['city']['name'] ?? ''];
+            if (!($candidate['province']['is_group'] ?? false)) $parts[] = $candidate['province']['name'] ?? '';
+            $parts = [...$parts, $candidate['region']['name'] ?? '', $candidate['zip_code'] ?? '', 'Philippines'];
+            $snapshotAddress = implode(', ', array_filter($parts, fn ($x) => $x !== ''));
+            // Historical registration codes must not overwrite a changed business address.
+            if (trim($snapshotAddress) === trim((string) ($merchant->address ?? ''))) return $this->formValue($candidate, (array) $merchant);
+        }
+        $fallback = (array) $merchant;
+        $city = $this->geo['cities'][$fallback['city_code'] ?? ''] ?? null;
+        if (!$city || strcasecmp(trim($city['name']), trim((string) ($fallback['city'] ?? ''))) !== 0) unset($fallback['city_code'], $fallback['barangay_code']);
+        return $this->formValue([], $fallback);
+    }
+
+    /** Build an editable form from saved location identities; never infer a barangay or ZIP. */
+    public function formValue(array $details = [], array $fallback = []): array
+    {
+        $cityCode = (string) ($details['city']['code'] ?? $fallback['city_code'] ?? '');
+        $city = $this->geo['cities'][$cityCode] ?? null;
+        $provinceCode = (string) ($details['province']['code'] ?? $city['parent'] ?? '');
+        $province = $this->geo['provinces'][$provinceCode] ?? null;
+        return ['region_code' => (string) ($details['region']['code'] ?? $province['parent'] ?? ''),
+            'province_code' => $provinceCode, 'city_code' => $cityCode,
+            'barangay_code' => (string) ($details['barangay']['code'] ?? $fallback['barangay_code'] ?? ''),
+            'street_address' => (string) ($details['street_address'] ?? $fallback['address'] ?? ''),
+            'zip_code' => (string) ($details['zip_code'] ?? $fallback['zip_code'] ?? ''),
+            'address' => (string) ($fallback['address'] ?? ''), 'rdo_code' => (string) ($fallback['rdo_code'] ?? '')];
+    }
+
     public function validate(array $v): array
     {
         $region=$this->geo['regions'][$v['region_code']]??null;

@@ -1,0 +1,182 @@
+[
+    {
+        "id": "R01",
+        "title": "Consolidated Sales and Tax Breakdown",
+        "totals": {
+            "gross": 354000,
+            "vatable": 200000,
+            "vat": 24000,
+            "zero": 80000,
+            "exempt": 50000,
+            "non_vat": 0,
+            "net": 330000,
+            "statutory_discount": 0,
+            "vat_adjustment": 0,
+            "manual_discount": 0,
+            "discount": 0
+        },
+        "rows": 2,
+        "excluded": 0,
+        "snapshot_hash": "382f90603b88f189ad56728cd9b3eb4406b7d5c9b6f8f72b1878772484b68720"
+    },
+    {
+        "id": "R02",
+        "title": "Senior Citizen Sales",
+        "totals": {
+            "gross": 120000,
+            "vatable": 0,
+            "vat": 0,
+            "zero": 0,
+            "exempt": 120000,
+            "non_vat": 0,
+            "net": 120000,
+            "statutory_discount": 30000,
+            "vat_adjustment": 18000,
+            "manual_discount": 0,
+            "discount": 30000
+        },
+        "rows": 2,
+        "excluded": 0,
+        "snapshot_hash": "57dcae07b38a6227be3fbe97ee1625912a2234f8c3e47a6f33580522468a3860"
+    },
+    {
+        "id": "R03",
+        "title": "PWD Sales",
+        "totals": {
+            "gross": 120000,
+            "vatable": 0,
+            "vat": 0,
+            "zero": 0,
+            "exempt": 120000,
+            "non_vat": 0,
+            "net": 120000,
+            "statutory_discount": 30000,
+            "vat_adjustment": 18000,
+            "manual_discount": 0,
+            "discount": 30000
+        },
+        "rows": 2,
+        "excluded": 0,
+        "snapshot_hash": "d5b7f3ccca569e3770691bc6c6e5f885a93ac41b574384f0a47725b01f4c153c"
+    },
+    {
+        "id": "R04",
+        "title": "National Athletes and Coaches Sales",
+        "totals": {
+            "gross": 134400,
+            "vatable": 120000,
+            "vat": 14400,
+            "zero": 0,
+            "exempt": 0,
+            "non_vat": 0,
+            "net": 120000,
+            "statutory_discount": 30000,
+            "vat_adjustment": 3600,
+            "manual_discount": 0,
+            "discount": 30000
+        },
+        "rows": 2,
+        "excluded": 0,
+        "snapshot_hash": "e2275e204461a3fb75a72049772e6a620ecc0d86b4eb31cf5a8d082cff5ca44c"
+    },
+    {
+        "id": "R05",
+        "title": "Solo Parent Sales",
+        "totals": {
+            "gross": 135000,
+            "vatable": 0,
+            "vat": 0,
+            "zero": 0,
+            "exempt": 135000,
+            "non_vat": 0,
+            "net": 135000,
+            "statutory_discount": 15000,
+            "vat_adjustment": 18000,
+            "manual_discount": 0,
+            "discount": 15000
+        },
+        "rows": 2,
+        "excluded": 0,
+        "snapshot_hash": "28016858b644c4d90974f6152dc229e54fa2d0f13546da25987d109e4528f100"
+    },
+    {
+        "id": "R06",
+        "title": "Manual Discount Sales Detail",
+        "totals": {
+            "gross": 154000,
+            "vatable": 137500,
+            "vat": 16500,
+            "zero": 0,
+            "exempt": 0,
+            "non_vat": 0,
+            "net": 137500,
+            "statutory_discount": 0,
+            "vat_adjustment": 0,
+            "manual_discount": 14000,
+            "discount": 14000
+        },
+        "rows": 2,
+        "excluded": 0,
+        "snapshot_hash": "2ba52aac13ea2d889731979f1b84a157669b08b5d2e4aaacd52e77d1d0100ff6"
+    },
+    {
+        "id": "R07",
+        "title": "Credit and Debit Adjustments",
+        "totals": {
+            "gross": -56000,
+            "vatable": -50000,
+            "vat": -6000,
+            "zero": 0,
+            "exempt": 0,
+            "non_vat": 0,
+            "net": -50000,
+            "statutory_discount": 0,
+            "vat_adjustment": 0,
+            "manual_discount": 0,
+            "discount": 0
+        },
+        "rows": 2,
+        "excluded": 0,
+        "snapshot_hash": "ebbf103498d88b4db9c0691ebe8c33edbd411994273bf8fa44a65d22c093ae2b"
+    },
+    {
+        "id": "R08",
+        "title": "Excluded and Review Records",
+        "totals": {
+            "gross": 112000,
+            "vatable": 100000,
+            "vat": 12000,
+            "zero": 0,
+            "exempt": 0,
+            "non_vat": 0,
+            "net": 100000,
+            "statutory_discount": 0,
+            "vat_adjustment": 0,
+            "manual_discount": 0,
+            "discount": 0
+        },
+        "rows": 1,
+        "excluded": 2,
+        "snapshot_hash": "0f2cf29ad76ed6f29fa9d412abbcd5c5fd076d163606c7398760f2caafc1b56b"
+    },
+    {
+        "id": "R09",
+        "title": "Non-VAT and Exempt Sales",
+        "totals": {
+            "gross": 150000,
+            "vatable": 0,
+            "vat": 0,
+            "zero": 0,
+            "exempt": 50000,
+            "non_vat": 100000,
+            "net": 150000,
+            "statutory_discount": 0,
+            "vat_adjustment": 0,
+            "manual_discount": 0,
+            "discount": 0
+        },
+        "rows": 2,
+        "excluded": 0,
+        "snapshot_hash": "84c2281f00101c4c111d43e1d0f6e470920bf5e5c0709832923dc0b18c53eea7"
+    }
+]

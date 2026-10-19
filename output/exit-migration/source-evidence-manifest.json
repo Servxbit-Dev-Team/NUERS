@@ -1,0 +1,20 @@
+{
+  "document_id": "NUERS-EMP-1.0.0-20261019",
+  "software_version": "1.0.0",
+  "evidence_scope": "Local source review and isolated existing feature tests; no production export or destination migration",
+  "files": {
+    "app/Services/TenantPortability.php": "08b4bad62c37be65e49d90731bdb85d2f24e606e21b23e812b6fb08ad5356db1",
+    "app/Http/Controllers/Api/TenantPortabilityController.php": "8acae0053ade08e8c084235a8e2f3bb9c7e5f4a2c87f9064581b587ccb276f6d",
+    "app/Services/ApiAccess.php": "d2f9df15a9e05a0cc55c17a30c0e44208673e1275df4d97be51db3703937a8c9",
+    "app/Http/Middleware/ApiBoundary.php": "577ac14512ca59ba1de717620b7f0ec1734a4d6b7115ae4b05deabd100a318a1",
+    "app/Http/Controllers/Api/DocumentGovernanceController.php": "4b47c9a2dce290ea808fc07996350826eb20ba646bd517310b617d0dccf6b600",
+    "routes/api.php": "f9c495e079c89672e3a24bffecf158c3adfb5d020ccc97d69d3da0462bcc8ee4",
+    "tests/Feature/MerchantWalletTest.php": "d1913b1a3f4a17907ff971c82518bffd1851907d70bbc54fe4b6267019607a36",
+    "tests/Feature/MerchantCustomerTest.php": "9390e146d0049b7361c6ecf4c242ebe0c775c38ab43c5ca1dfb43b63c5d56649",
+    "tests/Feature/DurableWorkflowTest.php": "4c9e799994184c6e5d23d3e00277c0fe5cdc622cfe91e9589cc5f75a2d1d1324",
+    "public/auth-assets/nuers-digital-logo.png": "8928e9954645e802532d53b0382afb9d148b210a2ea3fe60a533bb9fd649f247",
+    "public/auth-assets/nuers-digital-white.png": "dee81d4688b0297e68aae10e8a29a89a98779df37968256255ee91f8ebd7c220"
+  },
+  "pdf_sha256": "0470653918c11d915927a47ec1b8b3315afb2b241dadb325617a249ceb52d035",
+  "pdf_bytes": 2945083
+}

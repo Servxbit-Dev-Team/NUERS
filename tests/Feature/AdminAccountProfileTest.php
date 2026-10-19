@@ -106,7 +106,7 @@ class AdminAccountProfileTest extends TestCase
         $this->assertSame(1, DB::table('users')->count());
     }
 
-    public function test_non_admins_and_expired_or_missing_mfa_are_denied(): void
+    public function test_non_admins_and_missing_or_prior_login_mfa_are_denied(): void
     {
         foreach (['merchant', 'client', 'bir'] as $role) {
             $u = $this->actor($role);
@@ -115,8 +115,10 @@ class AdminAccountProfileTest extends TestCase
         $this->withToken($this->admin->api_token);
         config(['security.enforce_privileged_mfa' => true]);
         $this->getJson('/api/admin/account-profile')->assertForbidden()->assertJsonPath('code', 'MFA_REQUIRED');
-        DB::table('users')->where('id', $this->admin->id)->update(['mfa_secret' => Crypt::encryptString('SYNTHETICQA'), 'api_mfa_verified_at' => now()->subMinutes(16)]);
-        $this->putJson('/api/admin/account-profile', $this->payload())->assertForbidden();
+        DB::table('users')->where('id', $this->admin->id)->update(['mfa_secret' => Crypt::encryptString('SYNTHETICQA'), 'api_authenticated_at' => now()->subHour(), 'api_mfa_verified_at' => now()->subMinutes(16)]);
+        $this->putJson('/api/admin/account-profile', $this->payload())->assertOk();
+        DB::table('users')->where('id', $this->admin->id)->update(['api_authenticated_at' => now()->subMinute()]);
+        $this->putJson('/api/admin/account-profile', $this->payload())->assertForbidden()->assertJsonPath('code', 'MFA_REQUIRED');
     }
 
     public function test_notification_preferences_are_audited_self_scoped_and_cannot_disable_security(): void
