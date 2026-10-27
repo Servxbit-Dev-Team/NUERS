@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
+use App\Support\SchemaMap;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -60,7 +60,7 @@ class EisDocumentReadiness
         if (in_array($family, ['receipt', 'supplementary'], true)) {
             $errors[] = 'Supplementary payment/delivery documents cannot be submitted as primary invoice sales.';
         }
-        $identityMatches = DB::query()->fromSub(app(IssuedDocumentLedger::class)->normalizedCandidates(), 'identity_documents')->when(! $row->seller_tin_key, fn ($q) => $q->where('merchant_id', $row->merchant_id))->where('seller_tin_key', $row->seller_tin_key)->where('seller_branch_key', $row->seller_branch_key)->where('document_number_key', $row->document_number_key)->where('document_family', $row->document_family)->count();
+        $identityMatches = DB::query()->fromSub(app(IssuedDocumentLedger::class)->normalizedCandidates((string) $row->document_number_key), 'identity_documents')->when(! $row->seller_tin_key, fn ($q) => $q->where('merchant_id', $row->merchant_id))->where('seller_tin_key', $row->seller_tin_key)->where('seller_branch_key', $row->seller_branch_key)->where('document_number_key', $row->document_number_key)->where('document_family', $row->document_family)->count();
         if ($identityMatches > 1) {
             $errors[] = 'Multiple source documents share this seller/branch/document identity; reconcile them first.';
         }
@@ -184,11 +184,19 @@ class EisDocumentReadiness
         return [[], ['Stored line arithmetic, tax allocation or document total does not reconcile; source review is required.'], 'unverified'];
     }
 
-    public function prepare(string $source, string $id): array
+    /**
+     * @param  array|null  $deferredAudit  Pass a variable to receive the audit entry (BirCompliance::audit arguments) instead of writing
+     *                                     it here. A caller already inside a long transaction can then write it as its last statement:
+     *                                     audit() takes a global lock that is held until commit, so writing it early blocks every
+     *                                     other acceptance for the rest of the transaction. The caller must write it, in that transaction.
+     */
+    public function prepare(string $source, string $id, ?array &$deferredAudit = null): array
     {
         abort_unless(in_array($source, ['invoice', 'receipt'], true), 422);
+        $defer = func_num_args() > 2;
+        $deferredAudit = null;
 
-        return DB::transaction(function () use ($source, $id) {
+        return DB::transaction(function () use ($source, $id, $defer, &$deferredAudit) {
             // Serialize preparation per source document and commit the outbox with issuance when called from an issuance transaction.
             DB::table($source === 'invoice' ? 'business_invoices' : 'transaction_receipts')->where('id', $id)->lockForUpdate()->first();
             $result = $this->inspect($source, $id);
@@ -203,10 +211,15 @@ class EisDocumentReadiness
             DB::table('eis_document_outbox')->insert(['id' => $outboxId, 'merchant_id' => $result['model']['source']['type'] === 'invoice' ? DB::table('business_invoices')->where('id', $id)->value('merchant_id') : DB::table('transaction_receipts')->where('id', $id)->value('merchant_id'),
                 'document_source' => $source, 'document_id' => $id, 'source_review_revision' => $result['source_review_revision'], 'internal_schema' => $result['model']['schema'], 'encrypted_document' => Crypt::encryptString($result['canonical']),
                 'document_hash' => $result['document_hash'], 'status' => $result['local_validation_passed'] ? 'blocked_pending_api' : 'needs_source_review', 'blockers' => json_encode($result['blockers']), 'prepared_at' => now(), 'created_at' => now(), 'updated_at' => now()]);
-            if (Schema::hasTable('eis_delivery_jobs')) {
+            if (SchemaMap::hasTable('eis_delivery_jobs')) {
                 app(EisDelivery::class)->enqueue($outboxId);
             }
-            app(BirCompliance::class)->audit('eis.document.prepared', $outboxId, 'system', ['source' => $source, 'document_id' => $id, 'document_hash' => $result['document_hash'], 'can_transmit' => false]);
+            $audit = ['eis.document.prepared', $outboxId, 'system', ['source' => $source, 'document_id' => $id, 'document_hash' => $result['document_hash'], 'can_transmit' => false]];
+            if ($defer) {
+                $deferredAudit = $audit;
+            } else {
+                app(BirCompliance::class)->audit(...$audit);
+            }
 
             return ['id' => $outboxId, 'duplicate' => false, ...array_diff_key($result, ['canonical' => true, 'model' => true])];
         });

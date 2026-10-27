@@ -122,7 +122,7 @@ class IntegrationTransactionController extends Controller
                 'items' => json_encode(array_map(fn ($i) => $i + ['vat_inclusive' => (bool) ($v['vat_inclusive'] ?? true)], $tax['items'])),
                 'status' => 'issued', 'issued_at' => $at, 'created_at' => now(), 'updated_at' => now(),
             ]);
-            $prep = app(EisDocumentReadiness::class)->prepare('receipt', $receipt);
+            $prep = app(EisDocumentReadiness::class)->prepare('receipt', $receipt, $preparedAudit);
             $body = ['environment' => 'live', 'id' => $id, 'transaction_id' => $transaction, 'receipt_id' => $receipt, 'receipt_number' => $series['number'], 'external_reference' => $v['external_reference'],
                 'record_mode' => $profile ? 'source_capture' : 'nuers_issuance', 'source_profile_id' => $profile?->id, 'calculation' => $tax, 'source_event_id' => $v['source_event_id'], 'occurred_at' => $v['occurred_at'], 'accepted_at' => now()->toIso8601String(), 'status' => 'durably_recorded',
                 'wallet' => $wallet, 'outbox_id' => $prep['id'], 'status_url' => url('/api/integrations/transactions/'.$id)];
@@ -132,9 +132,15 @@ class IntegrationTransactionController extends Controller
                 'source_system' => $v['source_system'], 'source_event_id' => $v['source_event_id'], 'external_reference' => $v['external_reference'], 'branch_code' => $v['branch_code'],
                 'schema_version' => $v['schema_version'], 'event_type' => $v['event_type'], 'occurred_at' => $at, 'received_at' => now(), 'transaction_id' => $transaction, 'receipt_id' => $receipt,
                 'response' => json_encode($body), 'created_at' => now(), 'updated_at' => now()]);
-            app(BirCompliance::class)->audit('integration.event.accepted', $id, 'api-key:'.$key->id, ['merchant_id' => $merchant->id, 'source_hash' => $hash, 'series_id' => $series['series_id']]);
             app(MerchantWebhooks::class)->accepted((string) $merchant->id, 'live', $id, $body, $profile ? 'source.received' : ($family === 'payment' ? 'payment.recorded' : 'invoice.issued'));
             app(SignedWebhook::class)->enqueue((string) $merchant->id, $profile ? 'source.received' : ($family === 'payment' ? 'payment.recorded' : 'invoice.issued'), $receipt, ['status_url' => $body['status_url']]);
+            // Both audit entries are written last, in their original order, under one acquisition of the global audit-head lock.
+            // That lock is held until this transaction commits, so taking it earlier makes every other acceptance wait for everything
+            // after it. Still the same transaction: the entries commit or roll back together with the acceptance, as before.
+            app(BirCompliance::class)->auditMany([
+                ...($preparedAudit ? [$preparedAudit] : []),
+                ['integration.event.accepted', $id, 'api-key:'.$key->id, ['merchant_id' => $merchant->id, 'source_hash' => $hash, 'series_id' => $series['series_id']]],
+            ]);
 
             return ['duplicate' => false, ...$body];
         }, 3);
@@ -142,7 +148,7 @@ class IntegrationTransactionController extends Controller
 
     private function assertNumberAvailable(string $merchant, string $branch, string $family, string $number): void
     {
-        $exists = DB::query()->fromSub(app(IssuedDocumentLedger::class)->normalizedCandidates(), 'source_identity')->where('merchant_id', $merchant)
+        $exists = DB::query()->fromSub(app(IssuedDocumentLedger::class)->normalizedCandidates(strtoupper(trim($number))), 'source_identity')->where('merchant_id', $merchant)
             ->where('seller_branch_key', $branch)->where('document_family', $family === 'payment' ? 'receipt' : 'invoice')
             ->where('document_number_key', strtoupper(trim($number)))->exists();
         abort_if($exists, 409, 'This seller, branch and document number already exists. Reconcile the original instead of recording a second copy.');
@@ -259,7 +265,10 @@ return $rows;
             $result = $key->environment === 'sandbox' ? app(SandboxTransactions::class)->accept($v, $key, $merchant) : $this->accept($v, $key, $merchant);
             $status = $result['duplicate'] ? 200 : 201;
 
-            return response()->json($result, $status)->header('Location', $result['status_url']);
+            // PHP's web SAPIs (CGI, FPM, Apache) rewrite any status other than 201 or 3xx to 302 when a Location header is present, which
+            // would turn the documented 200 replay into a redirect that clients may follow without their credentials. Only a newly created
+            // record carries Location; a replay points at the same status URL through Content-Location, which PHP leaves alone.
+            return response()->json($result, $status)->header($result['duplicate'] ? 'Content-Location' : 'Location', $result['status_url']);
         } catch (\Throwable $e) {
             $status = $e instanceof ValidationException ? 422 : (method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500);
             throw $e;

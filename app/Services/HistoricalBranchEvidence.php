@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
+use App\Support\SchemaMap;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /** Supplemental original-document evidence; never changes an issued invoice or its amounts. */
@@ -24,7 +24,7 @@ class HistoricalBranchEvidence
 
     public function latest(string $source, string $id): ?object
     {
-        return Schema::hasTable('eis_document_branch_reviews') ? DB::table('eis_document_branch_reviews')->where('document_source', $source)->where('document_id', $id)->orderByDesc('revision')->first() : null;
+        return SchemaMap::hasTable('eis_document_branch_reviews') ? DB::table('eis_document_branch_reviews')->where('document_source', $source)->where('document_id', $id)->orderByDesc('revision')->first() : null;
     }
 
     public function record(string $source, string $id, string $branch, string $reference, int $revision, string $actor): array

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\SchemaMap;
 use Illuminate\Support\Facades\{DB,Crypt,Schema};
 use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -38,7 +39,7 @@ class MerchantWebhooks
     /** Called within the source transaction. No HTTP occurs before its financial commit. */
     public function accepted(string $merchant,string $environment,string $id,array $response,string $specific): void
     {
-        if(!Schema::hasTable('merchant_webhook_endpoints'))return;
+        if(!SchemaMap::hasTable('merchant_webhook_endpoints'))return;
         $hooks=DB::table('merchant_webhook_endpoints')->where('merchant_id',$merchant)->where('environment',$environment)
             ->where('status','active')->whereNotNull('verified_at')->get();
         // Intentionally omit amounts, customer data, external payloads, credentials and document images.

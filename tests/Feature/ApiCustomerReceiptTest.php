@@ -166,7 +166,8 @@ class ApiCustomerReceiptTest extends TestCase
     public function test_boundary_rate_limit_has_a_reason_and_documentation_matches_contract(): void
     {
         $this->getJson('/api/integrations/transactions/wallet')->assertOk()->assertJsonMissingPath('bir_connection');
-        $bucket = 'api-ip:'.hash('sha256', '127.0.0.1');
+        // Merchant intake spends the network budget only on failed credential attempts.
+        $bucket = 'api-ip-auth:'.hash('sha256', '127.0.0.1');
         for ($i = 0; $i < 301; $i++) {
             RateLimiter::hit($bucket, 60);
         }

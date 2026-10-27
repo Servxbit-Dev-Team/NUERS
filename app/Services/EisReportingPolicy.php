@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
+use App\Support\SchemaMap;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class EisReportingPolicy
 {
@@ -13,7 +13,7 @@ class EisReportingPolicy
         $day = $document->business_date ? CarbonImmutable::parse($document->business_date, 'Asia/Manila') : null;
         $identity = app(SellerIdentity::class)->parse($document->tin, $document->branch_code);
         $coverage = null;
-        if (Schema::hasTable('eis_reporting_obligations')) {
+        if (SchemaMap::hasTable('eis_reporting_obligations')) {
             $coverage = DB::table('eis_reporting_obligations')->where('merchant_id', $document->merchant_id)
                 ->whereIn('branch_code', array_values(array_unique(['', $identity['branch_code'] ?? ''])))
                 ->orderByRaw("CASE WHEN branch_code='' THEN 1 ELSE 0 END")->first();

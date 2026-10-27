@@ -2,16 +2,16 @@
 
 namespace App\Services;
 
+use App\Support\SchemaMap;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 /** Canonical document population. Payment rows are linked evidence, never separate invoice sales. */
 class IssuedDocumentLedger
 {
     private function col(string $table, string $alias, string $column, string $fallback = 'NULL'): string
     {
-        return Schema::hasColumn($table, $column) ? $alias.'.'.$column : $fallback;
+        return SchemaMap::hasColumn($table, $column) ? $alias.'.'.$column : $fallback;
     }
 
     private function prefix(string $prefix, string $column): string
@@ -19,11 +19,23 @@ class IssuedDocumentLedger
         return DB::getDriverName() === 'sqlite' ? "'$prefix' || $column" : "CONCAT('$prefix',$column)";
     }
 
-    public function candidates(): Builder
+    /** True once the indexed document_number_key columns exist (memoised by SchemaMap, so cheap per request). */
+    private function indexedNumbers(): bool
+    {
+        return SchemaMap::hasColumn('transaction_receipts', 'document_number_key') && SchemaMap::hasColumn('business_invoices', 'document_number_key');
+    }
+
+    /**
+     * @param  string|null  $numberKey  Upper-cased, trimmed document number. When given, every source is first narrowed
+     *                                  through its indexed key, so identity checks read the few rows that share the number
+     *                                  instead of rebuilding the whole ledger. The exact identity rules in
+     *                                  normalizedCandidates() still run on those rows, so the result is the same.
+     */
+    public function candidates(?string $numberKey = null): Builder
     {
         $rbranch = $this->col('transaction_receipts', 'r', 'seller_branch_code');
         $bbranch = $this->col('business_invoices', 'b', 'seller_branch_code');
-        if (Schema::hasTable('eis_document_branch_reviews')) {
+        if (SchemaMap::hasTable('eis_document_branch_reviews')) {
             $rbranch = "COALESCE($rbranch,(SELECT br.branch_code FROM eis_document_branch_reviews br WHERE br.document_source='receipt' AND br.document_id=r.id ORDER BY br.revision DESC LIMIT 1))";
             $bbranch = "COALESCE($bbranch,(SELECT br.branch_code FROM eis_document_branch_reviews br WHERE br.document_source='invoice' AND br.document_id=b.id ORDER BY br.revision DESC LIMIT 1))";
         }
@@ -61,12 +73,19 @@ class IssuedDocumentLedger
             NULL as business_date,t.created_at,t.created_at as recorded_at,t.payment_method,t.region,t.branch,t.channel,t.customer_name,t.customer_tin,NULL as original_invoice_id,
             1 as payment_count,t.amount as payment_amount");
 
+        if ($numberKey !== null && $this->indexedNumbers()) {
+            // Blank-numbered rows (key NULL) fall back to their own id in the identity key and so can never share a real number.
+            $receipts->where('r.document_number_key', $numberKey);
+            $invoices->where('b.document_number_key', $numberKey);
+            $orphans->whereIn('t.id', array_values(array_unique([$numberKey, strtolower($numberKey)])));
+        }
+
         return DB::query()->fromSub($receipts->unionAll($invoices)->unionAll($orphans), 'documents');
     }
 
-    public function normalizedCandidates(): Builder
+    public function normalizedCandidates(?string $numberKey = null): Builder
     {
-        $typed = $this->candidates()->selectRaw("documents.*, CASE WHEN discount_amount>statutory_discount_amount THEN discount_amount-statutory_discount_amount ELSE 0 END as manual_discount_amount, REPLACE(REPLACE(REPLACE(COALESCE(tin,''),'-',''),' ',''),'.','') as tin_digits,
+        $typed = $this->candidates($numberKey)->selectRaw("documents.*, CASE WHEN discount_amount>statutory_discount_amount THEN discount_amount-statutory_discount_amount ELSE 0 END as manual_discount_amount, REPLACE(REPLACE(REPLACE(COALESCE(tin,''),'-',''),' ',''),'.','') as tin_digits,
             CASE WHEN record_status IN ('cancelled','canceled','voided','void','refunded','refund') THEN 'cancelled' WHEN record_status IN ('issued','sent','paid','partially_paid','validated','completed','settled','verified','valid','overdue') THEN 'success' WHEN record_status IN ('failed','rejected') THEN 'failed' ELSE 'pending' END as status,
             CASE WHEN document_type IN ('credit_note','credit_memo') THEN 'credit' WHEN document_type IN ('debit_note','debit_memo') THEN 'debit' WHEN document_type IN ('official_receipt','payment_receipt') THEN 'receipt' WHEN document_type IN ('purchase_invoice','delivery_receipt') THEN 'supplementary' ELSE 'invoice' END as document_family");
         $embedded = $this->prefix('00', 'SUBSTR(tin_digits,10,3)');

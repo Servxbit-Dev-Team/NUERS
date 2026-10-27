@@ -3,10 +3,10 @@
 namespace App\Services;
 
 use App\Http\Controllers\Api\TaxpayerAuthorizationController;
+use App\Support\SchemaMap;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class BirCompliance
 {
@@ -23,7 +23,7 @@ class BirCompliance
     public function accreditation(?string $id = null): array
     {
         $record = null;
-        if (Schema::hasTable('esp_accreditations')) {
+        if (SchemaMap::hasTable('esp_accreditations')) {
             $q = DB::table('esp_accreditations');
             $record = ($id ? $q->where('id', $id) : $q->where('solution_name', config('bir_compliance.solution_name'))->where('solution_version', config('bir_compliance.solution_version')))->when(DB::transactionLevel() > 0, fn ($q) => $q->lockForUpdate())->orderByDesc('created_at')->first();
         }
@@ -78,7 +78,7 @@ class BirCompliance
 
     public function integration(?string $merchantId = null, ?string $branch = null, ?string $environment = null): ?object
     {
-        if (! Schema::hasTable('eis_integrations')) {
+        if (! SchemaMap::hasTable('eis_integrations')) {
             return null;
         }
         $query = DB::table('eis_integrations');
@@ -118,7 +118,7 @@ class BirCompliance
             }
         }
         // Maintained permit records constrain legacy integration references; recording one never enables transport.
-        if ($integration && Schema::hasTable('taxpayer_authorizations')) {
+        if ($integration && SchemaMap::hasTable('taxpayer_authorizations')) {
             foreach (['PTI' => $integration->permit_to_issue_number, 'PTT' => $transmission ? $integration->permit_to_transmit_number : null] as $kind => $reference) {
                 if (! $reference) {
                     continue;
@@ -135,10 +135,10 @@ class BirCompliance
         if ($integration?->merchant_id && DB::table('merchants')->where('id', $integration->merchant_id)->value('status') !== 'active') {
             $blockers[] = 'Taxpayer business is not active.';
         }
-        if ($integration && ! Schema::hasTable('taxpayer_authorizations')) {
+        if ($integration && ! SchemaMap::hasTable('taxpayer_authorizations')) {
             $blockers[] = 'Maintained taxpayer authority records are required.';
         }
-        if ($integration && Schema::hasTable('merchant_branches') && DB::table('merchant_branches')->where('merchant_id',$integration->merchant_id)->where('bir_branch_code',$integration->branch_code)->where('status','inactive')->exists()) {
+        if ($integration && SchemaMap::hasTable('merchant_branches') && DB::table('merchant_branches')->where('merchant_id',$integration->merchant_id)->where('bir_branch_code',$integration->branch_code)->where('status','inactive')->exists()) {
             $blockers[] = 'The registered branch is operationally inactive.';
         }
         $authorizationReady = ! $blockers;
@@ -177,23 +177,47 @@ class BirCompliance
 
     public function audit(string $event, ?string $subjectId, string $actor, array $details = []): void
     {
-        if (! Schema::hasTable('eis_audit_head')) {
+        $this->auditMany([[$event, $subjectId, $actor, $details]]);
+    }
+
+    /**
+     * Appends several entries to the hash chain under one acquisition of the audit-head lock, in the order given.
+     * The chain is identical to calling audit() once per entry: each entry links to the one before it, and the head
+     * ends at the last entry. Use it when one transaction writes more than one entry, so the lock (held until that
+     * transaction commits) is taken and the head row updated once.
+     *
+     * @param  list<array{0: string, 1: ?string, 2: string, 3?: array}>  $entries  [event, subject id, actor, details]
+     */
+    public function auditMany(array $entries): void
+    {
+        if (! $entries || ! SchemaMap::hasTable('eis_audit_head')) {
             return;
         }
-        DB::transaction(function () use ($event, $subjectId, $actor, $details) {
+        DB::transaction(function () use ($entries) {
             $head = DB::table('eis_audit_head')->where('id', 1)->lockForUpdate()->first();
-            $at = CarbonImmutable::now('UTC')->format('Y-m-d H:i:s.u');
-            $json = json_encode($details, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
-            $hash = hash('sha256', json_encode([$head->last_hash, $event, $subjectId, $actor, $json, $at], JSON_THROW_ON_ERROR));
-            DB::table('eis_audit_events')->insert(['event' => $event, 'subject_id' => $subjectId, 'actor_id' => $actor, 'details' => $json, 'occurred_at' => $at, 'previous_hash' => $head->last_hash, 'entry_hash' => $hash]);
-            DB::table('eis_audit_head')->where('id', 1)->update(['last_hash' => $hash]);
-            app(NotificationEvents::class)->recorded($event, $subjectId, $actor, $details, $hash);
+            $previous = $head->last_hash;
+            $written = [];
+            foreach ($entries as $entry) {
+                [$event, $subjectId, $actor] = $entry;
+                $details = $entry[3] ?? [];
+                $at = CarbonImmutable::now('UTC')->format('Y-m-d H:i:s.u');
+                $json = json_encode($details, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+                $hash = hash('sha256', json_encode([$previous, $event, $subjectId, $actor, $json, $at], JSON_THROW_ON_ERROR));
+                DB::table('eis_audit_events')->insert(['event' => $event, 'subject_id' => $subjectId, 'actor_id' => $actor, 'details' => $json, 'occurred_at' => $at, 'previous_hash' => $previous, 'entry_hash' => $hash]);
+                $previous = $hash;
+                $written[] = [$event, $subjectId, $actor, $details, $hash];
+            }
+            DB::table('eis_audit_head')->where('id', 1)->update(['last_hash' => $previous]);
+            // Notifications run only once the head is current, so anything they record chains after these entries.
+            foreach ($written as [$event, $subjectId, $actor, $details, $hash]) {
+                app(NotificationEvents::class)->recorded($event, $subjectId, $actor, $details, $hash);
+            }
         }, 3);
     }
 
     public function auditIntegrity(): bool
     {
-        if (! Schema::hasTable('eis_audit_head')) {
+        if (! SchemaMap::hasTable('eis_audit_head')) {
             return false;
         }
         $previous = str_repeat('0', 64);

@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Exceptions\InsufficientWalletBalance;
+use App\Support\SchemaMap;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class MerchantWallet
@@ -15,7 +15,7 @@ class MerchantWallet
 
     public function available(): bool
     {
-        return Schema::hasTable('merchant_wallets');
+        return SchemaMap::hasTable('merchant_wallets');
     }
 
     public function state(string $merchant): object
