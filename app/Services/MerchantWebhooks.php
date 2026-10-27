@@ -54,18 +54,42 @@ class MerchantWebhooks
         DB::table('merchant_webhook_runtime')->upsert([['id'=>'dispatcher','last_seen_at'=>now(),'state'=>$state]],['id'],['last_seen_at','state']);
     }
 
-    public function runOne(): ?string
+    /**
+     * Leases the next due delivery to this worker, or returns null when nothing is due. Several workers may call this at once:
+     * rows another worker is claiming are skipped (MySQL 8 SKIP LOCKED) instead of waited for, so each delivery is leased to exactly
+     * one worker and workers do not queue behind each other. A lease that expires (worker killed) makes the row claimable again.
+     */
+    public function claim():?object
     {
-        $this->heartbeat($this->enabled()?'running':'paused');
-        if(!$this->enabled())return 'disabled';
-        $d=DB::transaction(function(){
-            $d=DB::table('merchant_webhook_deliveries')->whereIn('state',['pending','retry','sending'])->where('available_at','<=',now())
-                ->where(fn($q)=>$q->whereNull('lease_until')->orWhere('lease_until','<',now()))->orderBy('available_at')->orderBy('id')->lockForUpdate()->first();
-            if(!$d)return null;
+        // Under the default REPEATABLE READ, concurrent claims take gap locks in the state index and deadlock when one moves a row from
+        // pending to sending (an insert into a gap another worker holds). READ COMMITTED takes record locks only. The setting applies to the
+        // next transaction only, and can only be changed when none is open.
+        if(DB::getDriverName()==='mysql' && DB::transactionLevel()===0)DB::statement('set transaction isolation level read committed');
+        return DB::transaction(function(){
+            // One probe per state, each ordered by the (state, available_at) index so it reads and locks only the row it returns.
+            // A single query over all three states cannot use that order: MySQL sorts, and a sort reads and locks every due row, which
+            // made each claim cost as much as the whole backlog and made concurrent workers wait on, or skip, everything.
+            // The oldest of the (at most three) candidates is leased; the others are released when this short transaction commits.
+            $candidates=[];
+            foreach(['pending','retry','sending'] as $state){
+                $row=DB::table('merchant_webhook_deliveries')->where('state',$state)->where('available_at','<=',now())
+                    ->where(fn($q)=>$q->whereNull('lease_until')->orWhere('lease_until','<',now()))->orderBy('available_at')->orderBy('id')->lock('for update skip locked')->first();
+                if($row)$candidates[]=$row;
+            }
+            if(!$candidates)return null;
+            usort($candidates,fn($a,$b)=>[(string)$a->available_at,$a->id]<=>[(string)$b->available_at,$b->id]);
+            $d=$candidates[0];
             $d->lease_token=(string)Str::uuid();
             DB::table('merchant_webhook_deliveries')->where('id',$d->id)->update(['lease_token'=>$d->lease_token,'lease_until'=>now()->addMinutes(3),'state'=>'sending','updated_at'=>now()]);
             return $d;
         },3);
+    }
+
+    public function runOne(): ?string
+    {
+        $this->heartbeat($this->enabled()?'running':'paused');
+        if(!$this->enabled())return 'disabled';
+        $d=$this->claim();
         if(!$d)return null;
         $p=DB::table('merchant_webhook_endpoints')->where('id',$d->endpoint_id)->where('merchant_id',$d->merchant_id)->where('environment',$d->environment)->first();
         $active=DB::table('merchants')->where('id',$d->merchant_id)->value('status')==='active';

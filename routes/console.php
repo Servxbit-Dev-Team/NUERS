@@ -3,7 +3,6 @@
 use App\Services\BirCompliance;
 use App\Services\EisDelivery;
 use App\Services\EisDocumentReadiness;
-use App\Services\IssuedDocumentLedger;
 use App\Services\SignedWebhook;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -18,18 +17,31 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Repair only missing internal outbox records. No network delivery, signing or synthetic acceptance.
-Artisan::command('eis:prepare-pending {--limit=100}', function () {
+// Acceptance and invoice issuance prepare the outbox record in their own transaction, so a document only lacks one after a failure or for
+// historical rows. The every-minute run therefore looks at recent documents only (a bounded index range scan); a daily --all sweep covers the rest.
+// Eligible documents are the same as before: every receipt, and every non-draft invoice.
+Artisan::command('eis:prepare-pending {--limit=100} {--since-hours=72} {--all}', function () {
     $limit = max(1, min(1000, (int) $this->option('limit')));
+    $since = $this->option('all') ? null : now()->subHours(max(1, (int) $this->option('since-hours')));
     $count = 0;
     $conflicts = 0;
-    $rows = app(IssuedDocumentLedger::class)->candidates()->whereIn('document_source', ['invoice', 'receipt'])
-        ->whereNotExists(function ($q) {
-            $q->selectRaw('1')->from('eis_document_outbox as o')->where('o.internal_schema', EisDocumentReadiness::INTERNAL_SCHEMA)->whereColumn('o.document_source', 'documents.document_source')->whereColumn('o.document_id', 'documents.document_id');
-        })
-        ->orderBy('id')->limit($limit)->get();
-    foreach ($rows as $row) {
+    $missing = function (string $table, string $source) use ($since, $limit) {
+        $q = DB::table($table.' as d')->whereNotExists(function ($q) use ($source) {
+            $q->selectRaw('1')->from('eis_document_outbox as o')->where('o.internal_schema', EisDocumentReadiness::INTERNAL_SCHEMA)->where('o.document_source', $source)->whereColumn('o.document_id', 'd.id');
+        });
+        if ($table === 'business_invoices') {
+            $q->where('d.status', '!=', 'draft');
+        }
+        if ($since) {
+            $q->where('d.created_at', '>=', $since);
+        }
+
+        return $q->orderBy('d.created_at')->limit($limit)->pluck('d.id')->map(fn ($id) => [$source, (string) $id]);
+    };
+    $rows = $missing('transaction_receipts', 'receipt')->concat($missing('business_invoices', 'invoice'))->take($limit);
+    foreach ($rows as [$source, $id]) {
         try {
-            app(EisDocumentReadiness::class)->prepare($row->document_source, $row->document_id);
+            app(EisDocumentReadiness::class)->prepare($source, $id);
             $count++;
         } catch (Throwable $e) {
             $conflicts++;
@@ -41,6 +53,7 @@ Artisan::command('eis:prepare-pending {--limit=100}', function () {
     return $conflicts ? 1 : 0;
 })->purpose('Preserve pending issued documents in the blocked internal EIS outbox');
 Schedule::command('eis:prepare-pending --limit=100')->everyMinute()->withoutOverlapping();
+Schedule::command('eis:prepare-pending --all --limit=500')->dailyAt('03:30')->withoutOverlapping();
 
 Artisan::command('eis:work {--limit=100}', function () {
     $limit = max(1, min(1000, (int) $this->option('limit')));

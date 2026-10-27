@@ -294,3 +294,14 @@ Detail in `docs/refactor-plan.md` under "Step 7 status". Committed locally on it
 - Not done: untracking `vendor/`, `dist/`, `public/build` (the live host may deploy by pulling the repo; needs a decision on how it gets dependencies), and CI (cannot be validated here; 20 tests need Chrome/images/assets).
 - To confirm on the live host: the example env uses `CACHE_STORE=file`, `SESSION_DRIVER=file`, `QUEUE_CONNECTION=sync`; if the live `.env` matches, queued work runs inside requests.
 - Full suite: 526 tests, the same 20 environment-limited failures as the unmodified code, nothing new.
+
+## Step 5 background workers (branch `scale-workers`, 2026-10-27)
+
+Detail in `docs/refactor-plan.md` under "Step 5 findings and changes". Committed locally on its own branch, not pushed, not deployed.
+
+- **The app uses no Laravel queue.** No jobs, no `dispatch()`. Its "queues" are database outbox tables processed by scheduled commands, so Redis/SQS as `QUEUE_CONNECTION` would change nothing, and the `queue:work` workers in the supervisor reference config are idle. My earlier plan (Redis/SQS queues) was based on a wrong assumption.
+- **Redis is not the intake bottleneck:** an accepted transaction touches the cache table once (0.64 ms of 26.6 ms DB time). The costly cache writes are the portal routes' per-IP limiter. Optional, not required for 1M/hour intake.
+- **`eis:prepare-pending` was a time bomb:** it rebuilt the whole document ledger every minute (4.3 s at 37,000 documents, growing with every document ever issued). Now a bounded recent-window anti-join (about 0.65 s, which is mostly artisan boot) plus a daily full sweep; new `created_at` indexes (additive migration).
+- **The merchant webhook claim could not run in parallel:** with 8 or 16 workers, 7 of 8 and 15 of 16 crashed on MySQL deadlocks, and each claim cost as much as the whole backlog. New claim: 110 claims/s with 1 worker, 538 with 8, 733 with 16, all correctness checks passing. Added `merchant-webhooks:work --watch` and a supervisor program (4 workers, off until egress is approved). Never showed in production because only one worker ever ran.
+- Not done: the same claim pattern in `SignedWebhook`, `EisDelivery` and `PlatformNotifications` (not scheduled or blocked today); the per-request request-log transaction and `AtomicQuota` (about 5 ms each, both under or near the merchant lock) are carried into step 3.
+- To confirm on the live host: its `.env` may use `QUEUE_CONNECTION=sync` and file sessions/cache (from the example file); with the scheduler as the only worker, that does not affect these outboxes, but check.

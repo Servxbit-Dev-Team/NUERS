@@ -82,7 +82,7 @@ Start from `deployment/security/nginx-reference.conf` (rate-limit zones, 4 MB bo
 
 ### supervisor and cron
 
-Use `deployment/security/supervisor-reference.conf` as the base: two `queue:work database --sleep=1 --tries=3 --timeout=90 --max-time=3600` workers and `schedule:work`. Set `user=www-data`, correct paths, `autorestart=true`. If `schedule:work` is under supervisor you do not also need the cron line; use one or the other, not both (running both duplicates scheduled jobs, though the scheduler uses locks for some). Recommended: cron only.
+Use `deployment/security/supervisor-reference.conf` as the base: `schedule:work` and the `nuers-merchant-webhooks` program (several `merchant-webhooks:work --watch` workers; start at 4, `autostart=false` until egress is approved). The reference file's two `queue:work` workers have nothing to process, because the application dispatches no Laravel queue jobs (its outboxes are database tables); they can be dropped. Set `user=www-data`, correct paths, `autorestart=true`. If `schedule:work` is under supervisor you do not also need the cron line; use one or the other, not both (running both duplicates scheduled jobs, though the scheduler uses locks for some). Recommended: cron only.
 
 ```
 * * * * * www-data cd /var/www/nuers && php artisan schedule:run >> /dev/null 2>&1

@@ -115,6 +115,10 @@ if ($GLOBALS['lockStart'] !== null) {
 ", $window, $window, $inWindowDb, $window - $inWindowDb);
     }
 }
+// Queries against the cache and session tables: what Redis would take off the database for this request.
+$cacheQueries = array_filter($last, fn ($q) => preg_match('/`(cache|cache_locks|sessions)`/', $q['sql']));
+printf("Cache/session table queries in the last request: %d (%.2f ms of %.1f ms database time)\n", count($cacheQueries), array_sum(array_column($cacheQueries, 'ms')), array_sum(array_column($last, 'ms')));
+foreach ($cacheQueries as $q) { echo '  ', preg_replace('/\s+/', ' ', substr($q['sql'], 0, 110)), "\n"; }
 $callers = [];
 foreach ($last as $q) { if ($q['caller']) { $callers[$q['caller']] = ($callers[$q['caller']] ?? ['n' => 0, 'ms' => 0]); $callers[$q['caller']]['n']++; $callers[$q['caller']]['ms'] += $q['ms']; } }
 uasort($callers, fn ($a, $b) => $b['n'] <=> $a['n']);

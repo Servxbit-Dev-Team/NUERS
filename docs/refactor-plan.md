@@ -21,7 +21,7 @@ Written 2026-10-27. Source: the architecture review in `server.md`. This is a pl
 | 2 | Audit write-path redesign | Still the binding ceiling: every sampled lock wait was on `eis_audit_head`; floor with the current design is about 8 ms per acceptance | **Compliance review** |
 | 3 | Per-merchant and per-key lock review | Next ceiling after the audit lock | No |
 | 4 | Uploads to S3 | Blocks more than one web node | No |
-| 5 | Redis for cache, sessions, locks; SQS or Redis for queues | The database is the default for all four today | No |
+| 5 | Background workers (Redis is optional) | **Done 2026-10-27 (see step 5)**: the app uses no Laravel queue; fixed the every-minute full-ledger scan (4.3 s to 0.65 s) and made the webhook claim parallel-safe (84 to 733 claims/s, original crashed with 8+ workers) | No |
 | 6 | Read replica for reporting | Heavy dashboard queries compete with intake | No |
 | 7 | Deploy hygiene | Cheap and mostly independent; can run in parallel | No |
 | 8 | Hardening reviews (`TableController`, schema drift) | Security and maintainability | Security review |
@@ -254,12 +254,40 @@ After the fix, two full runs passed every check, the application logged no error
 - Migration of existing files: a one-off copy script, run after a backup, with a checksum comparison before cutover.
 - Object backup cadence of at most 5 minutes (15-minute RPO) is handled by S3 versioning and cross-region replication to Hong Kong, once availability of those features in `ap-east-1` is confirmed.
 
-## 5. Redis and queues
+## 5. Background workers (and, much less urgently, Redis)
 
-- Set `CACHE_STORE`, `SESSION_DRIVER` and `QUEUE_CONNECTION` to Redis (or SQS for queues). Mostly configuration, plus load-testing the lock semantics.
-- Scheduler commands that act as workers (`notifications:work`, `merchant-webhooks:work --limit=100 --max-seconds=45`, `eis:prepare-pending`) run once a minute. At 100 webhooks a minute that is about 6,000 deliveries an hour, far below 1M. They need to become supervised long-running workers, scaled by queue depth.
-- Rate limiting (`ScopedThrottleRequests`) should use Redis so limits are shared across web nodes.
-- Run the scheduler on exactly one node (`onOneServer` with a Redis lock).
+**Original plan, as first written (kept for the record):** set `CACHE_STORE`, `SESSION_DRIVER` and `QUEUE_CONNECTION` to Redis or SQS; make the scheduled workers long-running; share the rate limiter across nodes; run the scheduler on one node.
+
+### Step 5 findings and changes (branch `scale-workers`, 2026-10-27)
+
+**Corrections to the original plan.**
+- **The application uses no Laravel queue.** There are no jobs, no `dispatch()` and no `ShouldQueue`. Its "queues" are database outbox tables (`merchant_webhook_deliveries`, `webhook_deliveries`, `eis_delivery_jobs`, notifications) handled by scheduled artisan commands. So `QUEUE_CONNECTION=redis` or SQS would change nothing, and the two `queue:work` workers in `deployment/security/supervisor-reference.conf` have nothing to process. The real work is making those outbox workers scale.
+- **Redis is not the intake bottleneck.** An accepted transaction touches the cache table once (a 0.64 ms read of the failure counter, out of 26.6 ms of database time), so Redis would save under 2% there. The cache writes I measured earlier (`insert ignore`, `delete ... expiration`, about 4 queries per call) belong to the portal routes' per-IP limiter, not to merchant intake. Redis remains a sensible choice for portal traffic and for taking those writes off the primary database, but it is not needed for the 1M/hour intake goal, and nothing here depends on it. `.env.example` documents the settings. For a Redis client in production, install the `php-redis` extension; the repo does not require `predis`.
+
+**1. `eis:prepare-pending` no longer scans the whole ledger every minute.** It rebuilt the full document union and anti-joined the outbox on every run: 4.3 s per run (3.2 s of scanning, 1.1 s artisan boot) at 37,000 documents, growing linearly with every document ever issued, so after a few days at launch volume it would run continuously on the primary. Acceptance and invoice issuance already prepare the outbox record in their own transaction, so a document only lacks one after a failure or for historical rows. Now:
+- the every-minute run is a direct anti-join over documents created in the last 72 hours (`--since-hours`), using the outbox's existing unique index and a new `created_at` index on `transaction_receipts` and `business_invoices` (migration `2026_10_27_000002_index_document_created_at.php`, 0.9 s on 37,000 rows including boot);
+- a daily `--all` sweep at 03:30 covers everything older;
+- eligible documents are unchanged (every receipt; every non-draft invoice), and a test proves the full sweep selects exactly the documents the old ledger-based scan selected.
+- Measured: about 0.65 s per run, which is the artisan boot, so the scan itself is now negligible and no longer grows with the table.
+
+**2. The merchant webhook claim could not run in parallel, and cost grew with the backlog.** `MerchantWebhooks::runOne` claimed work with one query over three states ordered by time. MySQL cannot satisfy that order from the `(state, available_at)` index, so it sorts, and a sort reads and locks every due row before choosing one. Consequences, measured with `loadtest/claimrace.php` on MySQL 8.4 (2,000 deliveries; each worker completes a delivery after claiming it):
+
+| | 1 worker | 8 workers | 16 workers |
+|---|---|---|---|
+| Original claim | 84 claims/s | 95/s, **7 of 8 workers crashed** | 94/s, **15 of 16 crashed** |
+| New claim | 110 claims/s | **538/s**, no crashes | **733/s**, no crashes |
+
+The crashes were `Deadlock found when trying to get lock` on the claim's own `UPDATE` (gap locks in the state index under REPEATABLE READ). It never showed in production because the scheduler runs one worker at a time (`withoutOverlapping`). Changes: the claim is its own method (`MerchantWebhooks::claim()`); it probes each state separately in index order (so it reads and locks only the row it returns) and leases the oldest of the at most three candidates; it uses `FOR UPDATE SKIP LOCKED` and READ COMMITTED for the claim transaction. A new long-running mode, `merchant-webhooks:work --watch --max-runtime=3600 --idle-sleep=1`, lets a process manager run several workers; `deployment/security/supervisor-reference.conf` has a `nuers-merchant-webhooks` program (4 workers, `autostart=false` until egress is approved). The per-minute scheduled run stays as a fallback and does not conflict. Every correctness check passed for every size: each delivery leased exactly once, each with its own token, none lost, nothing left due.
+
+Throughput note: these are claim-rate figures against a local database. Actual delivery rate is bounded by receiver latency (about 1 per receiver round trip per worker), so size the worker count from the backlog: at 278 deliveries/s and 300 ms per delivery, about 85 concurrent workers would be needed if every sale triggered a callback.
+
+**Tests.** `MerchantWebhookClaimTest` (3: oldest-first across states, expired leases reclaimed and live leases left alone, nothing due returns null, watch mode stops at `--max-runtime`), `ScheduledJobsTest` (5: window, `--all`, `--since-hours`, `--limit`, equivalence with the old selection, no-op). The existing webhook tests, which run real deliveries through the new claim, pass. Concurrency is verified by `loadtest/claimrace.php`, which needs MySQL.
+
+**Not done.**
+- `SignedWebhook`, `EisDelivery` and `PlatformNotifications` claim with the same single sorted query and carry the same cost-with-backlog behaviour. `webhooks:work` and `eis:work` are not scheduled, and EIS delivery is blocked by design, so they matter only when enabled; the notification worker is one process. Apply the same pattern before running them in parallel.
+- `merchant_api_request_logs` and the key's `last_used_at` are written in a third transaction after every accepted request that locks the merchant row again (about 5 ms under the merchant lock). Folded into step 3 (the per-merchant ceiling).
+- `AtomicQuota` costs two row-locked upserts and a commit per request before the main transaction (about 4 to 5 ms). Also step 3.
+- Running the scheduler on exactly one node (`onOneServer`) needs a shared cache lock: with the database cache that works already; note it when adding a second app node.
 
 ## 6. Read replica
 
