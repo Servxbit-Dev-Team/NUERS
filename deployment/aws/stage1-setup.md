@@ -145,7 +145,7 @@ composer install --no-dev --optimize-autoloader
 php artisan migrate --force     # NEVER run db:seed (it creates accounts with password 123456)
 php artisan config:cache && php artisan route:cache && php artisan view:cache
 ```
-Caveat: `routes/api.php` contains closure routes (for example `/health`), so `route:cache` will fail. Skip `route:cache` or convert those closures to controllers first. Run it once in staging to confirm.
+Note: `routes/api.php` and `routes/web.php` used to contain closure routes (for example `/health`). `route:cache` was tested on those and succeeds (this Laravel version serializes closures), so they were never a blocker; they have since been converted to controllers anyway. Still run `route:cache` once in staging to confirm on the real build.
 
 ```bash
 sudo systemctl reload php8.3-fpm
@@ -177,7 +177,7 @@ Restore test (do this before launch, then every quarter, and write down the date
 
 1. Delete `public/nuers-db-check.php` from the repo and any server (hardcoded key, DB probe).
 2. Do not run `db:seed` on production. Check no default accounts exist (`admin@nuers.com`, `bir@nuers.com`, etc.).
-3. Close or rotate the credentials of the old database at `194.233.94.62` (user `nuers`); the host is committed in `deployment/nuers-net-mysql.env.example`.
+3. Close or rotate the credentials of the old database at `194.233.94.62` (user `nuers`); the host and user were committed in `deployment/nuers-net-mysql.env.example` and `deployment/NUERS_LIVE_SERVER_ERROR_FIX.md`. The current files use placeholders, but the old values remain in git history, so treat them as exposed.
 4. Enable MFA for all privileged roles (required by the production gate).
 5. `php artisan security:deployment-check` passes.
 6. Cloudflare: proxy on, SSL Full (strict), WAF managed rules on, rate-limit rules on login and signup, origin locked as in section 2.

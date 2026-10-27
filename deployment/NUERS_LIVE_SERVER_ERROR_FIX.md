@@ -16,10 +16,10 @@ For the MySQL deployment on `nuers.net`, update the server `.env`:
 - Set `APP_DEBUG=false`
 - Set `APP_URL=https://nuers.net`
 - Set `DB_CONNECTION=mysql`
-- Set `DB_HOST=194.233.94.62`
+- Set `DB_HOST` to the production database host (kept out of the repository)
 - Set `DB_PORT=3306`
-- Set `DB_DATABASE=NUERS`
-- Set `DB_USERNAME=nuers`
+- Set `DB_DATABASE` to the production database name
+- Set `DB_USERNAME` to the production database user
 - Set `DB_PASSWORD` to the production database password
 - Remove any old SQLite-only `DB_DATABASE=/Applications/XAMPP/...` line
 

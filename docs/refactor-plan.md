@@ -273,10 +273,27 @@ After the fix, two full runs passed every check, the application logged no error
 - Remove the real DB host and user from `deployment/nuers-net-mysql.env.example`; rotate the credentials if that host was ever live.
 - Add a real `.env.example`.
 - Stop committing `dist/` (68 MB) and `public/build` (5.6 MB). Build in CI. Drop the static `dist/` path or document it as unsupported.
-- Replace the 5 closure routes with controllers so `php artisan route:cache` works; then run `config:cache`, `route:cache`, `view:cache` and `event:cache` on deploy.
+- Closure routes (6 of them: `/legal/policies`, `/health`, `/verify-receipt/{n}`, the two `/developer/*` file routes and the business-logo alias) were converted to controllers (`PublicInfoController`, `BusinessLogoController`). Correction: they did **not** block `route:cache` as earlier notes claimed; it was tested on the original code and succeeds. The conversion is tidying only. Run `config:cache`, `route:cache`, `view:cache` and `event:cache` on deploy.
 - Guard the seeder: `DatabaseSeeder` creates accounts with password `123456`. It must refuse to run when `APP_ENV=production`.
 - CI: separate jobs for `php artisan test`, `tsc` and `node --test tests/js/`, plus `security:deployment-check` against the production configuration.
 - Investigate the 34,827 tracked files: break the count down by folder and remove whatever is generated.
+
+### Step 7 status (branch `deploy-hygiene`, 2026-10-27)
+
+**Done**
+- Deleted `public/nuers-db-check.php` and `deployment/nuers-db-check.php` (hardcoded key plus a database probe). Removing it from the repo does not remove it from a running server: **delete it from every live host by hand**, and treat the old key (`nuers-db-20260603`) as exposed because it remains in git history.
+- `DatabaseSeeder` now throws when `APP_ENV=production`, before touching the database. It creates demo admin, BIR and merchant accounts with password `123456` and deletes dashboard rows. Local and test use is unchanged.
+- Added `.env.example`: every setting the app reads, placeholders only, production-safe defaults (`APP_ENV=production`, `APP_DEBUG=false`, notifications off, `SESSION_SECURE_COOKIE=true`), notes on the keys that must never be regenerated, and the Redis and S3 settings to fill in at launch.
+- Added a test-only `APP_KEY` to `phpunit.xml`, so the suite runs without a `.env` (an `APP_KEY` already in the environment still wins). Before this, the suite failed with 181 errors on a fresh checkout.
+- Scrubbed the live database host, name and user from `deployment/nuers-net-mysql.env.example` and `deployment/NUERS_LIVE_SERVER_ERROR_FIX.md`. They remain in git history: **rotate the database credentials and restrict the database host's firewall** (`194.233.94.62`, user `nuers`).
+- Converted the six closure routes to `PublicInfoController` and `BusinessLogoController` (tidying only, see the correction above). `route:cache` succeeds on both the old and the new routes.
+- Tests: `tests/Feature/DeployHygieneTest.php` (5 tests: seeder refuses in production; probe script absent; `.env.example` has blank secrets and safe defaults; no application route is a closure; unknown receipt verification is a clean 404). The converted routes were already covered by existing tests. Full suite: 526 tests, the same 20 environment-limited failures as the unmodified code, nothing new.
+
+**Not done, and why**
+- **Untracking `vendor/`, `dist/` and `public/build`.** `.gitignore` already lists `vendor/`, `node_modules/` and the build output, yet they are tracked, so the intent is clear. But the current host appears to deploy by pulling the repository (the notes in `deployment/` and `CLAUDE.md` describe `dist/` as committed "for hosting"), so removing them could break the live deploy. Needs a decision on how the live host gets its dependencies (a CI build artifact, or `composer install` and `npm run build` on the server) before the files are removed. Note the tracked `vendor/` is already incomplete and fails on PHP 8.5 (missing `bootstrap85.php`), so it cannot be relied on as is.
+- **CI.** A workflow for `php artisan test`, `tsc`, `node --test tests/js/` and `security:deployment-check` was not added: it could not be run here, and the suite has 20 failures that need headless Chrome, image libraries and the public asset folders, so a first CI run would fail until those are provided.
+- **Live-host checks.** `deployment/nuers-net-mysql.env.example` sets `CACHE_STORE=file`, `SESSION_DRIVER=file` and `QUEUE_CONNECTION=sync`. If the live `.env` follows it, queued work (webhook delivery, notifications) runs inside the request. Confirm the live values.
+- **Tracked-file breakdown (34,827 files).** Not done; mostly `vendor/`, `node_modules`-adjacent and `dist/`. Falls out of the decision above.
 
 ## 8. Hardening reviews
 

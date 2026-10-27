@@ -105,7 +105,7 @@ Running notes on hosting the NUERS project. Updated after every hosting discussi
 
 - Provider chosen: AWS, region `ap-southeast-1`, after the user judged Philippine hosting unreliable. Philippines-only is dropped; the Philippine questionnaire is parked.
 - Stage 1 runbook written: `deployment/aws/stage1-setup.md` (EC2 + RDS MySQL 8 Multi-AZ + EBS for uploads + S3 backups in two regions + Cloudflare in front). Untested plan; sizes and cost are estimates.
-- Findings while writing it: `routes/api.php` has closure routes, so `route:cache` will likely fail; uploads are local-disk only (S3 needs a code change, Stage 2); `config/cors.php` needs the new domain if it isn't `nuers.net`; snap Chromium on Ubuntu 24.04 may not work under `www-data`, so use the Chrome .deb or set `NUERS_PDF_CHROME`.
+- Findings while writing it: `routes/api.php` has closure routes (later tested: `route:cache` still succeeds, so this was not a problem; see step 7 below); uploads are local-disk only (S3 needs a code change, Stage 2); `config/cors.php` needs the new domain if it isn't `nuers.net`; snap Chromium on Ubuntu 24.04 may not work under `www-data`, so use the Chrome .deb or set `NUERS_PDF_CHROME`.
 - Compliance: disclose AWS Singapore and backup region in the accreditation file; a later move needs BIR approval; have an adviser confirm cross-border hosting before real taxpayer data goes in.
 - Still open: domain (keep nuers.net?), current Plesk/DB ownership, whether Cloudflare is already in front, monthly budget limit, uptime target, AWS account owner.
 
@@ -166,7 +166,7 @@ Scope: structural read-through plus measurements below. No load test, no securit
 
 **Measured**
 - `DashboardController.php` 2,458 lines; next largest controllers 816, 746, 710, 703 lines. Frontend: `client/dashboard.tsx` 2,408 lines, `admin/merchants.tsx` 1,992, `dashboard-layout.tsx` 1,552.
-- `DB::` calls: 1,010 in controllers vs 321 in services. Only 7 Eloquent models. 280 `Route::` lines in `routes/api.php`, 5 closure routes (blocks `route:cache`).
+- `DB::` calls: 1,010 in controllers vs 321 in services. Only 7 Eloquent models. 280 `Route::` lines in `routes/api.php`, 5 closure routes (originally written here as blocking `route:cache`; tested later: it does not).
 - 166 `Schema::hasTable/hasColumn` calls in `app/`. 46 PHP feature tests, 7 JS tests.
 - `dist/` is 68 MB and committed; `public/build` 5.6 MB committed.
 
@@ -282,3 +282,15 @@ The product owner does not know whether the BIR test uses one merchant account o
 - Not yet covered by the race suite: API key revoked/edited mid-flight, merchant suspended mid-flight, portal invoice creation racing an API event with the same number.
 - Full suite after the `Location` fix: 521 tests; the same 20 environment-limited failures as the unmodified code, nothing new. The throwaway MySQL on 3390 and the test servers are stopped (verified); the Laragon MySQL on 3306 was never touched.
 - Still open: ask the BIR/accreditation contact how many taxpayer accounts the load test uses, and sustained vs burst.
+
+## Step 7 deploy hygiene (branch `deploy-hygiene`, 2026-10-27)
+
+Detail in `docs/refactor-plan.md` under "Step 7 status". Committed locally on its own branch, not pushed, not deployed.
+
+- Removed `public/nuers-db-check.php` (+ copy in `deployment/`). It must also be deleted from the live host by hand, and its hardcoded key treated as exposed.
+- Seeder refuses to run when `APP_ENV=production` (it creates demo admin/BIR accounts with password `123456`). `.env.example` added. `phpunit.xml` now carries a test-only `APP_KEY`, so the suite runs on a fresh checkout.
+- Scrubbed the live DB host/name/user from two deployment files. They stay in git history: rotate the DB credentials and firewall the database host.
+- Correction to earlier notes: closure routes did **not** block `route:cache` (tested on the original code; it succeeds). The six closures were converted to controllers anyway.
+- Not done: untracking `vendor/`, `dist/`, `public/build` (the live host may deploy by pulling the repo; needs a decision on how it gets dependencies), and CI (cannot be validated here; 20 tests need Chrome/images/assets).
+- To confirm on the live host: the example env uses `CACHE_STORE=file`, `SESSION_DRIVER=file`, `QUEUE_CONNECTION=sync`; if the live `.env` matches, queued work runs inside requests.
+- Full suite: 526 tests, the same 20 environment-limited failures as the unmodified code, nothing new.

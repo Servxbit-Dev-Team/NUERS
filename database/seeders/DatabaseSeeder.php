@@ -17,6 +17,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // This seeder creates demo accounts with the known password "123456" (including an admin and a BIR officer) and deletes
+        // dashboard rows. It is for local and test databases only; never allow it against production.
+        if (app()->isProduction()) {
+            throw new \RuntimeException('DatabaseSeeder creates demo accounts with a known password and must not run when APP_ENV=production.');
+        }
+
         $now = Carbon::now();
 
         DB::table('users')->updateOrInsert(

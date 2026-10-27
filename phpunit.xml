@@ -19,6 +19,8 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <!-- Test-only key so the suite runs without a .env. Not used anywhere else; an APP_KEY already set in the environment wins. -->
+        <env name="APP_KEY" value="base64:Iv3/M8lUSZDqgBtrnkS6YBCUn+l2dlwYphGytumglCM="/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>

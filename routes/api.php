@@ -17,17 +17,16 @@ use App\Http\Controllers\Api\MerchantExpenseController;
 use App\Http\Controllers\Api\MerchantReceiptController;
 use App\Http\Controllers\Api\MerchantTaxCenterController;
 use App\Http\Controllers\Api\MerchantTransactionController;
+use App\Http\Controllers\Api\PublicInfoController;
 use App\Http\Controllers\Api\RdoController;
 use App\Http\Controllers\Api\TableController;
 use App\Http\Controllers\Api\TaxIntelligenceController;
 use App\Http\Controllers\Api\TransactionController;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
 
-Route::get('/legal/policies', fn()=>response()->json(json_decode(file_get_contents(resource_path('data/legal-policies.json')),true)));
+Route::get('/legal/policies', [PublicInfoController::class, 'legalPolicies']);
 
-Route::get('/health', fn () => ['ok' => true, 'app' => 'NUERS Laravel API', 'solution' => ['name' => config('bir_compliance.solution_name'), 'version' => config('bir_compliance.solution_version')]]);
+Route::get('/health', [PublicInfoController::class, 'health']);
 
 Route::get('/registration/options', [\App\Http\Controllers\Api\BusinessRegistrationController::class, 'options']);
 Route::get('/registration/locations', [\App\Http\Controllers\Api\BusinessRegistrationController::class, 'locations']);
@@ -160,40 +159,7 @@ Route::get('/locations/cities', [LocationController::class, 'cities']);
 Route::get('/locations/barangays', [LocationController::class, 'barangays']);
 Route::get('/locations/rdo', [LocationController::class, 'rdo']);
 
-Route::get('/verify-receipt/{receiptNumber}', function (string $receiptNumber) {
-    $receipt = DB::table('transaction_receipts')
-        ->where('receipt_number', $receiptNumber)
-        ->first();
-
-    abort_unless($receipt, 404, 'Receipt not found in the NUERS registry.');
-
-    DB::table('receipt_verifications')->insert([
-        'id' => (string) Str::uuid(),
-        'receipt_id' => $receipt->id,
-        'receipt_number' => $receipt->receipt_number,
-        'verification_method' => 'receipt_number',
-        'verifier_ip' => request()->ip(),
-        'status' => 'registry_match',
-        'signature_valid' => false,
-        'verified_at' => now(),
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
-
-    return [
-        'receipt' => [
-            'receipt_number' => $receipt->receipt_number,
-            'merchant_name' => $receipt->merchant_name,
-            'merchant_tin' => $receipt->merchant_tin,
-            'gross_amount' => $receipt->gross_amount,
-            'total_due' => $receipt->total_due,
-            'status' => $receipt->status,
-            'issued_at' => $receipt->issued_at,
-            'signature_valid' => null,
-            'authenticity' => 'NUERS registry match — cryptographic signature and BIR acceptance not verified',
-        ],
-    ];
-});
+Route::get('/verify-receipt/{receiptNumber}', [PublicInfoController::class, 'verifyReceipt']);
 
 Route::match(['get', 'post', 'put', 'patch', 'delete'], '/tables/{table}', [TableController::class, 'handle']);
 
@@ -222,8 +188,8 @@ Route::post('/integration-workspace/webhooks', [\App\Http\Controllers\Api\Integr
 Route::put('/integration-workspace/webhooks/{id}', [\App\Http\Controllers\Api\IntegrationWorkspaceController::class,'webhook'])->whereUuid('id');
 
 Route::post('/developer/sandbox', [\App\Http\Controllers\Api\DeveloperSandboxController::class,'run'])->middleware('throttle:20,1');
-Route::get('/developer/openapi', fn()=>response()->file(resource_path('data/developer-openapi.json'),['Content-Type'=>'application/json','Content-Disposition'=>'attachment; filename="nuers-openapi.json"','Cache-Control'=>'public, max-age=300']));
-Route::get('/developer/catalog', fn()=>response()->file(resource_path('data/developer-catalog.json'),['Content-Type'=>'application/json','Cache-Control'=>'public, max-age=300']));
+Route::get('/developer/openapi', [PublicInfoController::class, 'openapi']);
+Route::get('/developer/catalog', [PublicInfoController::class, 'catalog']);
 
 Route::get('/auth/mfa/status', [\App\Http\Controllers\Api\MfaController::class,'status']);
 Route::post('/auth/mfa/enroll', [\App\Http\Controllers\Api\MfaController::class,'enroll'])->middleware('throttle:5,1');
