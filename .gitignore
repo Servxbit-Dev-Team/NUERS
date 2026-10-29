@@ -21,3 +21,26 @@ storage/framework/views/*
 .local/
 /public/uploads/
 .phpunit.result.cache
+
+# Local performance databases and runtime state; keep lab scripts and results.
+/output/**/lab/mysql/
+/output/**/lab/cache/
+/output/**/*.sqlite
+/output/**/*.sqlite-*
+/output/**/*.db
+/output/**/*.db-*
+/output/**/*.log
+/output/**/*.pid
+/output/**/*.sock
+
+# Local deployment packages and pre-change source archives.
+# Published NUERS documents and evidence bundles remain trackable.
+/output/**/nuers-*.zip
+/output/**/before-source.zip
+!/output/pdf/*.zip
+!/output/principal-supplementary/*.zip
+!/output/system-documentation/*.zip
+!/output/backup-dr/*.zip
+
+# Rendered document previews and other temporary PDF work files.
+/tmp/pdfs/
