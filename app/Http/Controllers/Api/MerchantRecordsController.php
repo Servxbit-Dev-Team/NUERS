@@ -26,25 +26,41 @@ class MerchantRecordsController extends Controller
         return DB::getDriverName() === 'sqlite' ? "'$prefix' || $column" : "CONCAT('$prefix',$column)";
     }
 
-    private function base(object $merchant, string $mode): Builder
+    private function base(object $merchant, string $mode, bool $decorate = true, ?string $optionIndex = null): Builder
     {
         if ($mode === 'documents') {
-            $canonical = app(IssuedDocumentLedger::class)->query((string) $merchant->id)->whereIn('document_source', ['invoice', 'receipt']);
+            $indexed = app(\App\Services\LedgerProjection::class)->ready();
+            $canonical = ($indexed
+                ? app(\App\Services\LedgerProjection::class)->query((string) $merchant->id, true, true)
+                : app(IssuedDocumentLedger::class)->query((string) $merchant->id))->whereIn('document_source', ['invoice', 'receipt']);
+            if ($indexed && $optionIndex && DB::getDriverName() === 'mysql') $canonical->forceIndex($optionIndex);
             $q = DB::query()->fromSub($canonical, 'd')->selectRaw("d.id,d.document_id as record_id,d.document_id,d.document_source,d.receipt_number as number,d.business_date as source_date,d.recorded_at,d.customer_name as customer,d.customer_tin,d.document_type,d.document_family as family,
-                CASE WHEN d.status='success' THEN 'issued' ELSE d.status END as status,d.record_status as raw_status,d.amount,d.vat_amount as vat,COALESCE(d.branch_code,d.branch) as branch,d.channel,d.payment_method,d.tin as seller_tin,d.identity_count,d.original_invoice_id,
+                CASE WHEN d.record_status='draft' THEN 'draft' WHEN d.status='success' THEN 'issued' ELSE d.status END as status,d.record_status as raw_status,d.amount,d.vat_amount as vat,COALESCE(d.branch_code,d.branch) as branch,d.channel,d.payment_method,d.tin as seller_tin,d.identity_count,d.original_invoice_id,
                 CASE WHEN d.document_source='invoice' THEN 'day' ELSE 'instant' END as date_precision,d.sale_category,d.statutory_discount_amount,d.vat_relief_amount,d.discount_amount");
+            if ($indexed && $decorate) $q->leftJoin('ledger_documents as original', fn ($j) => $j->on('original.projection_id', '=', DB::raw($this->prefix('invoice:', 'd.original_invoice_id')))->on('original.merchant_id', '=', 'd.merchant_id')->whereIn('d.document_family', ['credit','debit']));
+            $q->selectRaw($indexed && $decorate ? "CASE WHEN d.status='success' AND d.identity_count=1 AND d.financial_valid=1 AND d.document_family IN ('invoice','credit','debit')
+                AND (d.document_family='invoice' OR (original.document_family='invoice' AND original.status='success' AND original.financial_valid=1 AND original.tenant_identity_count=1))
+                THEN ROUND(d.amount*100)*(CASE WHEN d.document_family='credit' THEN -1 ELSE 1 END) ELSE 0 END as sales_centavos" : '0 as sales_centavos');
             $draft = DB::table('business_invoices as b')->where('b.merchant_id', $merchant->id)->where('b.status', 'draft')->selectRaw($this->prefix('invoice:', 'b.id')." as id,b.id as record_id,b.id as document_id,'invoice' as document_source,b.invoice_number as number,b.issue_date as source_date,b.created_at as recorded_at,b.buyer_name as customer,b.buyer_tin as customer_tin,b.document_type,
                 CASE WHEN b.document_type IN ('credit_note','credit_memo') THEN 'credit' WHEN b.document_type IN ('debit_note','debit_memo') THEN 'debit' WHEN b.document_type IN ('payment_receipt','official_receipt') THEN 'receipt' WHEN b.document_type IN ('delivery_receipt','purchase_invoice') THEN 'supplementary' ELSE 'invoice' END as family,
                 'draft' as status,b.status as raw_status,b.total_amount as amount,b.vat_amount as vat,b.seller_branch_code as branch,NULL as channel,NULL as payment_method,b.merchant_tin as seller_tin,1 as identity_count,b.original_invoice_id,'day' as date_precision,b.sale_category,b.statutory_discount_amount,b.vat_relief_amount,b.discount_amount");
-            $q->unionAll($draft);
+            $draft->selectRaw('0 as sales_centavos');
+            if (!$indexed) $q->unionAll($draft);
         } else {
             // Exactly one tenant-owned receipt can join a payment; repeated receipt links cannot multiply its rows.
             $q = DB::table('merchant_transactions as t')->leftJoin('transaction_receipts as r', function ($j) {
                 $j->on('r.id', '=', DB::raw('COALESCE(t.receipt_id,(SELECT rr.id FROM transaction_receipts rr WHERE rr.transaction_id=t.id AND rr.merchant_id=t.merchant_id ORDER BY rr.id LIMIT 1))'))->on('r.merchant_id', '=', 't.merchant_id');
             })->where('t.merchant_id', $merchant->id)->selectRaw($this->prefix('payment:', 't.id')." as id,t.id as record_id,r.id as document_id,'payment' as document_source,t.transaction_ref as number,t.created_at as source_date,t.created_at as recorded_at,COALESCE(t.customer_name,r.buyer_name) as customer,COALESCE(t.customer_tin,r.buyer_tin) as customer_tin,t.transaction_type as document_type,'payment' as family,
                 CASE WHEN t.status IN ('completed','paid','settled','verified','success','valid') THEN 'completed' WHEN t.status IN ('cancelled','canceled','voided','void','refunded','refund') THEN 'cancelled' WHEN t.status IN ('failed','rejected','invalid') THEN 'failed' ELSE 'pending' END as status,t.status as raw_status,t.amount,t.vat_amount as vat,t.branch,t.channel,t.payment_method,r.merchant_tin as seller_tin,1 as identity_count,NULL as original_invoice_id,'instant' as date_precision,COALESCE(r.sale_category,'regular') as sale_category,COALESCE(r.statutory_discount_amount,0) as statutory_discount_amount,COALESCE(r.vat_relief_amount,0) as vat_relief_amount,COALESCE(r.discount_amount,0) as discount_amount");
+            $q->selectRaw("CASE WHEN t.status IN ('completed','paid','settled','verified','success','valid') THEN ROUND(t.amount*100) ELSE 0 END as sales_centavos");
         }
         $q = DB::query()->fromSub($q, 'records');
+        if (!$decorate) return app(\App\Services\MerchantTeamAccess::class)->scopeRecords(DB::query()->fromSub($q, 'r'));
+        if (!DB::table('eis_delivery_jobs')->where('merchant_id', $merchant->id)->exists()
+            && !DB::table('eis_transmissions')->where('merchant_id', $merchant->id)->exists()) {
+            $q->selectRaw("records.*,NULL as delivery_state,NULL as delivery_updated_at,CASE WHEN records.document_source='payment' AND records.document_id IS NULL THEN 'not_linked' ELSE 'not_submitted' END as bir_status");
+            return app(\App\Services\MerchantTeamAccess::class)->scopeRecords(DB::query()->fromSub($q, 'r'));
+        }
         $q->leftJoin('eis_document_outbox as o', function ($j) use ($merchant) {
             $j->on('o.id', '=', DB::raw("(SELECT ox.id FROM eis_document_outbox ox WHERE ox.merchant_id=? AND ox.document_id=records.document_id AND ox.document_source=CASE WHEN records.document_source='payment' THEN 'receipt' ELSE records.document_source END ORDER BY ox.source_review_revision DESC,ox.prepared_at DESC,ox.id DESC LIMIT 1)"));
             $j->addBinding($merchant->id, 'join');
@@ -133,6 +149,7 @@ class MerchantRecordsController extends Controller
     private function row(object $row): array
     {
         $r = (array) $row;
+        unset($r['sales_centavos']);
         $r['manual_discount_amount'] = max(0, round((float)$row->discount_amount - (float)$row->statutory_discount_amount, 2));
         $r['amount'] = (float) $row->amount;
         $r['vat'] = (float) $row->vat;
@@ -147,7 +164,58 @@ class MerchantRecordsController extends Controller
     {
         $sort = $v['sort'] ?? 'newest';
 
-        return $q->orderBy(str_starts_with($sort, 'amount') ? 'amount' : 'source_date', in_array($sort, ['oldest', 'amount_asc']) ? 'asc' : 'desc')->orderByDesc('recorded_at')->orderBy('id');
+        $direction = in_array($sort, ['oldest', 'amount_asc']) ? 'asc' : 'desc';
+        if (($v['mode'] ?? 'documents') === 'transactions') return $q->orderBy(str_starts_with($sort, 'amount') ? 'amount' : 'source_date', $direction)->orderBy('record_id', $direction);
+        return $q->orderBy(str_starts_with($sort, 'amount') ? 'amount' : 'source_date', $direction)->orderBy('recorded_at', $direction)->orderBy('id', $direction);
+    }
+
+    private function optionValues(object $merchant, string $mode, string $label, string $column, string $index, bool $indexed)
+    {
+        $team = app(\App\Services\MerchantTeamAccess::class)->context(request());
+        $fullScope = !$team || ($team->scope === 'all' && $team->terminal_scope === 'all');
+        if ($indexed && $fullScope && $mode === 'documents') {
+            $source = ['customers'=>'customer_name','branches'=>"COALESCE(branch_code,branch)",'types'=>'document_type','channels'=>'channel','payments'=>'payment_method'][$label];
+            $q = DB::table('ledger_documents')->where('merchant_id',$merchant->id)->where('tenant_identity_rank',1)->whereIn('document_source',['invoice','receipt']);
+            if (DB::getDriverName() === 'mysql') $q->forceIndex($index);
+            return $q->whereRaw("$source IS NOT NULL AND $source<>''")->selectRaw("$source as option_value")->distinct()->orderBy('option_value')->limit(200)->pluck('option_value');
+        }
+        if ($fullScope && $mode === 'transactions' && $label !== 'customers') {
+            $source = $label === 'types' ? 'transaction_type' : $column;
+            return DB::table('merchant_transactions')->where('merchant_id',$merchant->id)->whereNotNull($source)->where($source,'!=','')->distinct()->orderBy($source)->limit(200)->pluck($source);
+        }
+        return $this->base($merchant,$mode,false,$mode === 'documents' && $indexed ? $index : null)
+            ->whereNotNull($column)->where($column,'!=','')->select($column)->distinct()->orderBy($column)->limit(200)->pluck($column);
+    }
+
+    /** Default counters do not need customer, receipt or delivery joins across every row. */
+    private function summaryBase(object $merchant, string $mode, array $filters, bool $indexed): ?Builder
+    {
+        if (!$indexed) return null;
+        $team = app(\App\Services\MerchantTeamAccess::class)->context(request());
+        if ($team && ($team->scope !== 'all' || $team->terminal_scope !== 'all')) return null;
+        foreach (['from','to','search','type','customer','branch','bir','channel','payment','sale_category'] as $key) {
+            if (!empty($filters[$key]) && $filters[$key] !== 'all') return null;
+        }
+        if (DB::table('eis_delivery_jobs')->where('merchant_id', $merchant->id)->exists()
+            || DB::table('eis_transmissions')->where('merchant_id', $merchant->id)->exists()) return null;
+        if ($mode === 'transactions') {
+            $q = DB::table('merchant_transactions')->where('merchant_id', $merchant->id);
+            if (DB::getDriverName() === 'mysql') $q->forceIndex('mt_registry_summary');
+            $q->selectRaw("amount,'payment' as family,'not_submitted' as bir_status,
+                CASE WHEN status IN ('completed','paid','settled','verified','success','valid') THEN 'completed' WHEN status IN ('cancelled','canceled','voided','void','refunded','refund') THEN 'cancelled' WHEN status IN ('failed','rejected','invalid') THEN 'failed' ELSE 'pending' END as status,
+                CASE WHEN status IN ('completed','paid','settled','verified','success','valid') THEN ROUND(amount*100) ELSE 0 END as sales_centavos");
+        } else {
+            $source = DB::table('ledger_documents')->where('merchant_id', $merchant->id)->where('tenant_identity_rank', 1)->whereIn('document_source', ['invoice','receipt'])
+                ->select(['merchant_id','document_family','status','is_draft','amount','tenant_identity_count','financial_valid','original_invoice_id']);
+            if (DB::getDriverName() === 'mysql') $source->forceIndex('ledger_merchant_overview');
+            $q = DB::query()->fromSub($source, 'd')->leftJoin('ledger_documents as original', fn ($j) => $j->on('original.projection_id', '=', DB::raw($this->prefix('invoice:', 'd.original_invoice_id')))->on('original.merchant_id', '=', 'd.merchant_id')->whereIn('d.document_family', ['credit','debit']))
+                ->selectRaw("d.amount,d.document_family as family,'not_submitted' as bir_status,
+                    CASE WHEN d.is_draft=1 THEN 'draft' WHEN d.status='success' THEN 'issued' ELSE d.status END as status,
+                    CASE WHEN d.status='success' AND d.tenant_identity_count=1 AND d.financial_valid=1 AND d.document_family IN ('invoice','credit','debit')
+                    AND (d.document_family='invoice' OR (original.document_family='invoice' AND original.status='success' AND original.financial_valid=1 AND original.tenant_identity_count=1))
+                    THEN ROUND(d.amount*100)*(CASE WHEN d.document_family='credit' THEN -1 ELSE 1 END) ELSE 0 END as sales_centavos");
+        }
+        return DB::query()->fromSub($q, 'r');
     }
 
     public function index(Request $r)
@@ -155,15 +223,20 @@ class MerchantRecordsController extends Controller
         $merchant = app(ApiAccess::class)->merchant($r);
         $v = $this->filters($r);
         $mode = $v['mode'] ?? 'documents';
+        $indexed = app(\App\Services\LedgerProjection::class)->ready();
+        if ($indexed) app(\App\Services\LedgerProjection::class)->catchUp();
         $base = $this->base($merchant, $mode);
-        $filtered = $this->apply(clone $base, $v, false);
+        $summaryBase = $this->summaryBase($merchant, $mode, $v, $indexed) ?? $base;
+        $filtered = $this->apply(clone $summaryBase, $v, false);
         $q = $this->apply(clone $base, $v);
-        $s = (clone $q)->selectRaw("COUNT(*) as total,COALESCE(SUM(CASE WHEN status IN ('issued','completed') THEN 1 ELSE 0 END),0) as successful,COALESCE(SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END),0) as pending,COALESCE(SUM(CASE WHEN status IN ('failed','cancelled') THEN 1 ELSE 0 END),0) as failed,COALESCE(SUM(CASE WHEN bir_status='acknowledged' THEN 1 ELSE 0 END),0) as acknowledged,COALESCE(SUM(CASE WHEN bir_status='queued' THEN 1 ELSE 0 END),0) as queued,COALESCE(SUM(CASE WHEN bir_status IN ('blocked','uncertain','needs_review') THEN 1 ELSE 0 END),0) as attention,COALESCE(SUM(CASE WHEN family='invoice' THEN 1 ELSE 0 END),0) as invoices,COALESCE(SUM(CASE WHEN family IN ('receipt','supplementary') THEN 1 ELSE 0 END),0) as receipts")->first();
+        $summaryQuery = $this->apply(clone $summaryBase, $v);
+        $summaryFilters = array_diff_key($v, array_flip(['page','per_page','sort']));
+        $summaryFilters['scope'] = json_encode(app(\App\Services\MerchantTeamAccess::class)->context($r));
+        $calculateSummary = fn () => (clone $summaryQuery)->selectRaw("COUNT(*) as total,COALESCE(SUM(CASE WHEN status IN ('issued','completed') THEN 1 ELSE 0 END),0) as successful,COALESCE(SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END),0) as pending,COALESCE(SUM(CASE WHEN status IN ('failed','cancelled') THEN 1 ELSE 0 END),0) as failed,COALESCE(SUM(CASE WHEN bir_status='acknowledged' THEN 1 ELSE 0 END),0) as acknowledged,COALESCE(SUM(CASE WHEN bir_status='queued' THEN 1 ELSE 0 END),0) as queued,COALESCE(SUM(CASE WHEN bir_status IN ('blocked','uncertain','needs_review') THEN 1 ELSE 0 END),0) as attention,COALESCE(SUM(CASE WHEN family='invoice' THEN 1 ELSE 0 END),0) as invoices,COALESCE(SUM(CASE WHEN family IN ('receipt','supplementary') THEN 1 ELSE 0 END),0) as receipts,COALESCE(SUM(CASE WHEN family='credit' THEN 1 ELSE 0 END),0) as credit,COALESCE(SUM(CASE WHEN family='debit' THEN 1 ELSE 0 END),0) as debit,COALESCE(SUM(CASE WHEN status='draft' THEN 1 ELSE 0 END),0) as drafts,COALESCE(SUM(sales_centavos),0) as total_sales_centavos")->first();
+        $s = $indexed ? app(\App\Services\ReportingSnapshotCache::class)->remember('record-summary', (string)$merchant->id, $summaryFilters, $calculateSummary) : $calculateSummary();
         $sales = 0;
-        if ($mode === 'transactions') {
-            foreach ((clone $q)->where('status', 'completed')->select('amount')->cursor() as $payment) {
-                $sales += (int) round($payment->amount * 100);
-            }
+        if ($mode === 'transactions' || app(\App\Services\LedgerProjection::class)->ready()) {
+            $sales = (int) $s->total_sales_centavos;
         } else {
             foreach ((clone $q)->where('status', 'issued')->where('identity_count', 1)->whereIn('family', ['invoice', 'credit', 'debit'])->cursor() as $doc) {
                 if (in_array($doc->family, ['credit', 'debit'], true) && (! $doc->original_invoice_id || ! DB::table('business_invoices')->where('id', $doc->original_invoice_id)->where('merchant_id', $merchant->id)->whereNotIn('status', ['draft', 'cancelled', 'voided'])->whereNotIn('document_type', ['credit_memo', 'debit_memo', 'credit_note', 'debit_note', 'official_receipt', 'payment_receipt', 'purchase_invoice', 'delivery_receipt'])->exists())) {
@@ -175,15 +248,21 @@ class MerchantRecordsController extends Controller
             }
         }
         $s->total_amount = $sales / 100;
-        $tabs = (array) (clone $filtered)->selectRaw("COUNT(*) as 'all',COALESCE(SUM(CASE WHEN family='invoice' THEN 1 ELSE 0 END),0) as invoices,COALESCE(SUM(CASE WHEN family IN ('receipt','supplementary') THEN 1 ELSE 0 END),0) as receipts,COALESCE(SUM(CASE WHEN family='credit' THEN 1 ELSE 0 END),0) as credit,COALESCE(SUM(CASE WHEN family='debit' THEN 1 ELSE 0 END),0) as debit,COALESCE(SUM(CASE WHEN status='draft' THEN 1 ELSE 0 END),0) as drafts")->first();
-        $page = $this->ordered(clone $q, $v)->paginate($v['per_page'] ?? 10);
+        $tabs = ($v['category'] ?? 'all') === 'all' ? ['all'=>(int)$s->total,'invoices'=>(int)$s->invoices,'receipts'=>(int)$s->receipts,'credit'=>(int)$s->credit,'debit'=>(int)$s->debit,'drafts'=>(int)$s->drafts] : (array) (clone $filtered)->selectRaw("COUNT(*) as 'all',COALESCE(SUM(CASE WHEN family='invoice' THEN 1 ELSE 0 END),0) as invoices,COALESCE(SUM(CASE WHEN family IN ('receipt','supplementary') THEN 1 ELSE 0 END),0) as receipts,COALESCE(SUM(CASE WHEN family='credit' THEN 1 ELSE 0 END),0) as credit,COALESCE(SUM(CASE WHEN family='debit' THEN 1 ELSE 0 END),0) as debit,COALESCE(SUM(CASE WHEN status='draft' THEN 1 ELSE 0 END),0) as drafts")->first();
+        $sort=$v['sort']??'newest';
+        $key=$mode==='transactions'?'record_id':'id';
+        $selection=app(\App\Services\ReportPagination::class)->page($q,(int)$s->total,(int)($v['page']??1),(int)($v['per_page']??10),str_starts_with($sort,'amount')?'amount':'source_date',in_array($sort,['oldest','amount_asc'])?'asc':'desc',$key,$mode==='documents'?['recorded_at']:[]);
+        $selected=$selection['ids']->isEmpty()?collect():(clone $q)->whereIn($key,$selection['ids'])->get()->keyBy($key);
+        $items=$selection['ids']->filter(fn ($id)=>$selected->has($id))->map(fn ($id)=>$this->row($selected->get($id)))->values();
         $options = [];
+        $optionIndexes = ['customers'=>'ledger_customer_options','branches'=>'ledger_record_branch_options','types'=>'ledger_type_options','channels'=>'ledger_channel_options','payments'=>'ledger_payment_options'];
         foreach (['customers' => 'customer', 'branches' => 'branch', 'types' => 'document_type', 'channels' => 'channel', 'payments' => 'payment_method'] as $label => $column) {
-            $options[$label] = (clone $base)->whereNotNull($column)->where($column, '!=', '')->select($column)->distinct()->orderBy($column)->pluck($column);
+            $calculateOptions = fn () => $this->optionValues($merchant, $mode, $label, $column, $optionIndexes[$label], $indexed);
+            $options[$label] = $indexed ? app(\App\Services\ReportingSnapshotCache::class)->remember('record-options-'.$mode.'-'.$label, (string)$merchant->id, ['scope'=>$summaryFilters['scope']], $calculateOptions) : $calculateOptions();
         }
 
-        return response()->json(['mode' => $mode, 'merchant' => ['id' => $merchant->id, 'name' => $merchant->business_name, 'status' => $merchant->status], 'data' => array_map(fn ($row) => $this->row($row), $page->items()), 'summary' => $s, 'tabs' => $tabs, 'options' => $options, 'pagination' => ['page' => $page->currentPage(), 'per_page' => $page->perPage(), 'total' => $page->total(), 'last_page' => $page->lastPage()],
-            'recent' => $this->ordered(clone $q, ['sort' => 'newest'])->limit(5)->get()->map(fn ($row) => $this->row($row)), 'generated_at' => now()->toIso8601String(), 'notice' => $mode === 'documents' ? 'Source-reconciled invoice sales draft; payment/delivery receipts and drafts are excluded from sales. BIR acknowledgment requires verified production evidence.' : 'Payment/ledger activity only, including portal and API records. Completed amounts are not additional invoice sales. Unlinked entries carry no BIR acknowledgment proof.'])->header('Cache-Control', 'private, no-store');
+        return response()->json(['mode' => $mode, 'merchant' => ['id' => $merchant->id, 'name' => $merchant->business_name, 'status' => $merchant->status], 'data' => $items, 'summary' => $s, 'tabs' => $tabs, 'options' => $options, 'pagination' => ['page' => $selection['page'], 'per_page' => (int)($v['per_page']??10), 'total' => $selection['total'], 'last_page' => $selection['last_page']],
+            'recent' => $this->ordered(clone $q, ['sort' => 'newest','mode'=>$mode])->limit(5)->get()->map(fn ($row) => $this->row($row)), 'generated_at' => now()->toIso8601String(), 'notice' => $mode === 'documents' ? 'Source-reconciled invoice sales draft; payment/delivery receipts and drafts are excluded from sales. BIR acknowledgment requires verified production evidence.' : 'Payment/ledger activity only, including portal and API records. Completed amounts are not additional invoice sales. Unlinked entries carry no BIR acknowledgment proof.'])->header('Cache-Control', 'private, no-store');
     }
 
     public function show(Request $r, string $record)
@@ -233,6 +312,7 @@ class MerchantRecordsController extends Controller
             abort_unless((clone $q)->whereIn('id', $ids)->count() === count($ids), 404, 'One or more selected records do not match this authorized export.');
             $q->whereIn('id', $ids);
         }
+        if ($r->has('report_limit')) \App\Services\ReportCsv::limit($r,(clone $q)->count());
         app(BirCompliance::class)->audit('merchant.records.export', (string) $merchant->id, (string) $r->attributes->get('api_actor')->id, ['merchant_id' => $merchant->id, 'actor_role' => $r->attributes->get('api_role'), 'correlation_id' => (string) Str::uuid(), 'outcome' => 'authorized_for_stream', 'format' => 'NUERS-merchant-records-csv-1', 'mode' => $mode, 'filters' => $v]);
 
         return response()->streamDownload(function () use ($q, $v) {

@@ -1,0 +1,58 @@
+{
+    "engine": "8.4.11",
+    "records": 1000100,
+    "results": [
+        {
+            "case": "merchant_payments",
+            "run": 1,
+            "http": 200,
+            "ms": 7920.08,
+            "peak_mb": 26,
+            "bytes": 12830,
+            "queries": 40,
+            "db_ms": 7892.83,
+            "reported_count": 1000000,
+            "gross_centavos": null,
+            "error": null
+        },
+        {
+            "case": "merchant_payments",
+            "run": 2,
+            "http": 200,
+            "ms": 6.1,
+            "peak_mb": 28,
+            "bytes": 12830,
+            "queries": 28,
+            "db_ms": 3.06,
+            "reported_count": 1000000,
+            "gross_centavos": null,
+            "error": null
+        },
+        {
+            "case": "merchant_payments_deep",
+            "run": 1,
+            "http": 200,
+            "ms": 9.76,
+            "peak_mb": 28,
+            "bytes": 12835,
+            "queries": 28,
+            "db_ms": 5.28,
+            "reported_count": 1000000,
+            "gross_centavos": null,
+            "error": null
+        },
+        {
+            "case": "merchant_payments_deep",
+            "run": 2,
+            "http": 200,
+            "ms": 4.33,
+            "peak_mb": 28,
+            "bytes": 12835,
+            "queries": 28,
+            "db_ms": 2.26,
+            "reported_count": 1000000,
+            "gross_centavos": null,
+            "error": null
+        }
+    ]
+}

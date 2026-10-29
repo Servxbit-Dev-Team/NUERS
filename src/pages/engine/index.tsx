@@ -521,7 +521,7 @@ export function ElectronicInvoicingEngine() {
                   { label: "Bulk Upload (CSV/JSON)", sub: "Import up to 50,000 invoices per batch with validation", icon: Upload, action: "Run Bulk", href: "/merchant/invoices/bulk" },
                   { label: "Recurring Billing",      sub: "Auto-generate invoices on daily/weekly/monthly/annual schedule", icon: Repeat, action: "Configure", href: "/merchant/invoices/recurring" },
                   { label: "Scheduled Generation",   sub: "Cron-based future-dated invoice creation and delivery", icon: Calendar, action: "Schedule", href: "/merchant/invoices/create" },
-                  { label: "Bulk Export",            sub: "Export any date range in JSON, XML, PDF, or CSV", icon: Download, action: "Export", href: "/merchant/invoices" },
+                  { label: "Bulk Export",            sub: "Export filtered records as PDF or CSV", icon: Download, action: "Export", href: "/merchant/invoices" },
                 ].map(({ label, sub, icon: Icon, action, href }) => (
                   <div key={label} className="flex items-center gap-3 p-3 rounded-lg border border-border/60 hover:border-primary/40 transition-colors">
                     <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">

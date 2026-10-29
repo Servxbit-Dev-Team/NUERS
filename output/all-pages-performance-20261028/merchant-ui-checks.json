@@ -1,0 +1,112 @@
+[
+  {
+    "page": "/merchant",
+    "verified": true
+  },
+  {
+    "page": "/merchant/invoices",
+    "verified": true,
+    "rows": 30
+  },
+  {
+    "page": "/merchant/invoices?view=payments",
+    "headings": [
+      "\t\t\t\t88 heading Filters, Value: 2",
+      "\t\t\t\t169 heading Payment Activity (0), Value: 2",
+      "\t\t\t\t215 heading Payment Summary, Value: 2",
+      "\t\t\t\t\t232 heading Recent Activities, Value: 2",
+      "\t\t\t\t236 heading Quick Reports, Value: 2"
+    ],
+    "loading": false
+  },
+  {
+    "page": "/merchant/sales-reports",
+    "headings": [
+      "\t\t\t\t158 heading Sales Detail Report (20 records), Value: 2",
+      "\t\t\t\t557 heading Quick Actions, Value: 2",
+      "\t\t\t\t\t568 heading Report Summary, Value: 2",
+      "\t\t\t\t\t585 heading Submission Evidence, Value: 2",
+      "\t\t\t\t599 heading Reporting Reminder, Value: 2"
+    ],
+    "loading": false
+  },
+  {
+    "page": "/merchant/wallet",
+    "headings": [
+      "\t\t\t\t139 heading Quick Actions, Value: 2",
+      "\t\t\t\t\t148 heading Wallet Usage and Balance Trend, Value: 2",
+      "\t\t\t\t\t165 heading Recent Top-Ups / Funding Requests, Value: 2",
+      "\t\t\t\t\t182 heading Wallet Transaction History, Value: 2",
+      "\t\t\t\t237 heading Billing Summary & Important Reminders, Value: 2"
+    ],
+    "loading": false
+  },
+  {
+    "page": "/merchant/customers",
+    "headings": [
+      "\t\t\t\t162 heading Build your customer directory, Value: 3",
+      "\t\t\t\t181 heading Quick Actions, Value: 2",
+      "\t\t\t\t188 heading Customer Segments / Distribution, Value: 2",
+      "\t\t\t\t199 heading Customer Profile Summary, Value: 2",
+      "\t\t\t\t210 heading Compliance Reminder, Value: 2"
+    ],
+    "loading": false
+  },
+  {
+    "page": "/merchant/profile",
+    "headings": [
+      "\t\t\t\t226 heading Compliance Status, Value: 2",
+      "\t\t\t\t229 heading Active, Value: 3",
+      "\t\t\t\t\t248 heading Business Profile Changes, Value: 2"
+    ],
+    "loading": false
+  },
+  {
+    "page": "/merchant/users",
+    "headings": [
+      "\t\t\t\t\t247 heading Branch / Terminal Access Scope, Value: 2",
+      "\t\t\t\t\t269 heading Security & Access Controls, Value: 2",
+      "\t\t\t\t\t284 heading Recent Access Activity, Value: 2"
+    ],
+    "loading": false
+  },
+  {
+    "page": "/merchant/security",
+    "headings": [
+      "\t\t\t\t32 heading SUPPORT, Value: 2",
+      "\t\t\t\t55 heading Account Security, Value: 1",
+      "\t\t\t\t57 heading Manage your password, account protection, sessions, and notification preferences., Value: 2"
+    ],
+    "loading": false
+  },
+  {
+    "page": "/merchant/api-keys",
+    "headings": [
+      "\t\t\t\t136 heading Quick Integration, Value: 2",
+      "\t\t\t\t178 heading API Endpoints, Value: 2",
+      "\t\t\t\t232 heading Webhook Configuration, Value: 2"
+    ],
+    "loading": false
+  },
+  {
+    "page": "/merchant/pos-settings",
+    "headings": [
+      "\t\t\t\t\t140 heading Invoice Footer & Notes, Value: 2",
+      "\t\t\t\t\t152 heading Logo and Branding, Value: 2",
+      "\t\t\t\t\t176 heading Invoice Templates, Value: 2"
+    ],
+    "loading": false
+  },
+  {
+    "page": "/merchant/billing",
+    "verified": true,
+    "heading": "Transaction fees & storage",
+    "loading": false
+  },
+  {
+    "page": "/merchant/invoices/create",
+    "verified": true,
+    "heading": "New VAT Invoice",
+    "loading": false
+  }
+]

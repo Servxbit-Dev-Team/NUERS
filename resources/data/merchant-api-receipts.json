@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-19.receipts-status",
+  "version": "2026-10-29.invoice-documents",
   "title": "NUERS transaction status and customer e-receipts",
   "customer_email": "Optional customer_email: one valid checkout email address, maximum 254 characters. Omit or send null when absent. Map the checkout email explicitly; NUERS does not scan arbitrary payload fields. Invalid addresses return 422 before acceptance. Never use a customer address as an API credential.",
   "dashboard_requirement": "Every ERP, POS or e-commerce sales row must show NUERS Status, failure reason, environment, NUERS reference and last attempt. Show Success only after a valid 201 or 200 duplicate acknowledgement with matching source_event_id, external_reference and environment, non-empty id/transaction_id/receipt_id, status=durably_recorded and nuers_status=success. Persist these identifiers atomically with the local outbox acknowledgement.",
@@ -9,16 +9,47 @@
   "delivery_status": "Poll GET status_url with the same environment and transactions:read scope for customer_receipt.status and reason. States: not_requested, suppressed_sandbox, queued, preparing, sending, smtp_accepted, failed, uncertain, expired, cancelled. smtp_accepted means the SMTP server accepted the message, not confirmed inbox delivery. Email failures never change a successfully recorded sale to Error. Do not retry the sale to resend mail; use the merchant document Send Copy action after investigating an uncertain delivery.",
   "bir_fields": "Merchant transaction, batch and wallet responses do not expose bir_acceptance, bir_connection, bir_status or internal preparation blockers. Display NUERS status in the connector. NUERS Success confirms platform recording; it does not assert government acceptance.",
   "success_example": {
-    "environment": "live", "duplicate": false, "nuers_status": "success", "status": "durably_recorded",
-    "message": "Transaction successfully recorded by NUERS.", "error": null,
-    "id": "EXAMPLE-INBOX-ID", "transaction_id": "EXAMPLE-TRANSACTION-ID", "receipt_id": "EXAMPLE-RECEIPT-ID",
-    "source_event_id": "erpA:invoice:0001", "external_reference": "erpA:INV-0001",
+    "environment": "live",
+    "duplicate": false,
+    "nuers_status": "success",
+    "status": "durably_recorded",
+    "message": "Transaction successfully recorded by NUERS.",
+    "error": null,
+    "id": "EXAMPLE-INBOX-ID",
+    "transaction_id": "EXAMPLE-TRANSACTION-ID",
+    "receipt_id": "EXAMPLE-RECEIPT-ID",
+    "source_event_id": "erpA:invoice:0001",
+    "external_reference": "erpA:INV-0001",
     "status_url": "https://nuers.net/api/integrations/transactions/EXAMPLE-INBOX-ID",
-    "customer_receipt": {"delivery_id": "EXAMPLE-DELIVERY-ID", "status": "queued", "reason": "Customer receipt is queued for email processing."}
+    "customer_receipt": {
+      "delivery_id": "EXAMPLE-DELIVERY-ID",
+      "status": "queued",
+      "reason": "Customer receipt is queued for email processing."
+    }
   },
   "error_example": {
-    "nuers_status": "error", "code": "VALIDATION_FAILED", "message": "The customer email field must be a valid email address.",
-    "error": {"code": "VALIDATION_FAILED", "reason": "The customer email field must be a valid email address.", "retryable": false, "outcome": "rejected"},
-    "errors": {"customer_email": ["The customer email field must be a valid email address."]}
-  }
+    "nuers_status": "error",
+    "code": "VALIDATION_FAILED",
+    "message": "The customer email field must be a valid email address.",
+    "error": {
+      "code": "VALIDATION_FAILED",
+      "reason": "The customer email field must be a valid email address.",
+      "retryable": false,
+      "outcome": "rejected"
+    },
+    "errors": {
+      "customer_email": [
+        "The customer email field must be a valid email address."
+      ]
+    }
+  },
+  "withholding_details": "For buyer-confirmed CWT, send withholding_tax in PHP and withholding_basis_reference. Send withholding_details with withholding_agent=true, classification, atc (two uppercase letters and three digits), rate (percentage), base, amount and evidence_reference. Decimal money fields have at most two decimals. amount must equal withholding_tax and rounded base × rate / 100. CWT reduces net_payable; gross_amount, sales, VAT and the wallet fee basis stay unchanged. Existing amount-and-basis integrations remain supported; use the structured buyer confirmation for new mappings.",
+  "withholding_corrections": "For CWT supplied or corrected after issuance, open Merchant → Compliance Operations → CWT adjustment memos. Select the issued original and record buyer/payor confirmation. Issuing a registered credit memo requires current authority and a credit-memo series. The original stays unchanged; sales and VAT adjustments are zero. Subsequent corrections reference the current CWT amount, with stale drafts rejected.",
+  "manual_recovery": "Record an outage and its authorized manual invoices under Merchant → Compliance Operations, then record verified restoration. On a replacement Live invoice, send manual_recovery_id from that register and the original manual number in manual_invoice_number. The replacement must match merchant, branch, buyer and gross amount, explicitly reference the manual invoice and be dated after restoration. One manual invoice links to one replacement. A mismatch rolls back the new event and fee. Sandbox cannot link Live recovery records. The register tracks the three-calendar-day recovery deadline; it does not issue manual authority or claim BIR transmission.",
+  "corrections": "For an increase, issue an additional electronic invoice referencing the original; for a decrease, use a credit memo. The native merchant form does not create debit memos for new adjustments. Original records remain immutable. The intake API does not accept credit-memo document types; use the controlled merchant workflow for a NUERS-issued adjustment.",
+  "source_intake_policy": "Live storage intake remains available while ESP accreditation enforcement is prepared but disabled. This is an operational setting, not a statement of BIR authorization. Official NUERS issuance and BIR transmission retain separate authority checks.",
+  "invoice_numbering": "Original seller invoice/document number: 1–50 characters; no control characters or surrounding whitespace. Preserve prefixes and leading zeros. This is EIS CompInvoiceId, not the separate 24-character EisUniqueId. Source capture preserves the source number; NUERS issuance uses the next registered series number. Never renumber accepted originals.",
+  "document_registration": "Optional recorded source registration evidence. system_type: CAS, POS or ELECTRONIC. Supply authentic applicable PTI, PTU/AC, authority issue date, series range and POS MIN/machine/software identifiers. This snapshot is printed on copies; supplying it does not establish BIR approval. Missing historical evidence is shown as not recorded. Native NUERS issuance requires an evidence-backed series.",
+  "buyer_identity": "business, retail or walk_in. business requires the buyer registered name, registered address and supported nonzero TIN. B2C address/TIN are optional. Declare the actual buyer type.",
+  "invoice_reference": "Original invoice number for a related payment or additional invoice, maximum 50 characters. Existing originals remain immutable. This reference is printed on the receipt; it does not cancel or replace the original."
 }

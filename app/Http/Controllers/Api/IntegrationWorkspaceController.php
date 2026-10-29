@@ -251,6 +251,7 @@ return $q;
     {
         $u = $this->actor($r);
         $r->validate(['search' => 'nullable|string|max:255', 'from' => 'nullable|date_format:Y-m-d', 'to' => 'nullable|date_format:Y-m-d|after_or_equal:from']);
+        if ($r->has('report_limit')) \App\Services\ReportCsv::limit($r,$this->logQuery($r)->count());
         $rows = $this->logQuery($r)->orderByDesc('l.created_at')->get()->map(fn ($x) => $this->redact($x));
         app(BirCompliance::class)->audit('integration.logs_exported', null, $u->id, ['count' => $rows->count()]);
 

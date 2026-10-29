@@ -1,3 +1,4 @@
+import { useRealtimeRefresh } from "@/lib/use-realtime-refresh";
 import {useCallback, useEffect, useState, type FormEvent} from 'react';
 import QRCode from 'qrcode';
 import {Plus, Smartphone, ShieldCheck, Trash2, Loader2, RefreshCw} from 'lucide-react';
@@ -17,8 +18,9 @@ export function MfaDevices({onRecoveryCount}:{onRecoveryCount?:(n:number)=>void}
  const [name,setName]=useState(''),[password,setPassword]=useState(''),[currentCode,setCurrentCode]=useState(''),[newCode,setNewCode]=useState(''),[busy,setBusy]=useState(false),[dialogError,setDialogError]=useState('');
  const [retryAt,setRetryAt]=useState(0),[clock,setClock]=useState(Date.now());
  const retryAfter=retrySeconds(retryAt,clock);
- const load=useCallback(async(signal?:AbortSignal)=>{setLoading(true);setError('');try{const result=await apiJson<Devices>(endpoint,{signal});if(!signal?.aborted)setData(result)}catch(e){if(!signal?.aborted)setError((e as Error).message)}finally{if(!signal?.aborted)setLoading(false)}},[]);
+ const load=useCallback(async(signal?:AbortSignal,quiet=false)=>{if(!quiet)setLoading(true);setError('');try{const result=await apiJson<Devices>(endpoint,{signal});if(!signal?.aborted)setData(result)}catch(e){if(!signal?.aborted)setError((e as Error).message)}finally{if(!signal?.aborted)setLoading(false)}},[]);
  useEffect(()=>{const c=new AbortController();void load(c.signal);return()=>c.abort()},[load]);
+ useRealtimeRefresh(()=>load(undefined,true),!mode&&!busy);
  useEffect(()=>{if(!retryAt&&!setup)return;const tick=()=>setClock(Date.now());const timer=setInterval(tick,1000);window.addEventListener('focus',tick);return()=>{clearInterval(timer);window.removeEventListener('focus',tick)}},[retryAt,setup]);
  useEffect(()=>{if(setup&&clock>=new Date(setup.expires_at).getTime()){setSetup(null);setQr('');setNewCode('');setDialogError('Setup expired. Enter your password and a current verification code to start again.')}},[clock,setup]);
  useEffect(()=>{if(!setup){setQr('');return}let active=true;QRCode.toDataURL(setup.otpauth_url,{width:220,margin:3,errorCorrectionLevel:'M'}).then(value=>{if(active)setQr(value)}).catch(()=>{if(active)setDialogError('QR code unavailable. Use the manual setup key below.');});return()=>{active=false}},[setup]);

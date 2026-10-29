@@ -1,3 +1,4 @@
+import { subscribeRealtimeRefresh } from "@/lib/use-realtime-refresh";
 import {useMerchantWorkAccess,workPermission} from "@/lib/merchant-access";
 import { useEffect, useRef, useState } from "react";
 import { Download, Loader2, Send } from "lucide-react";
@@ -20,8 +21,8 @@ export function DocumentCopyActions({ source, id, number, compact = false }: { s
   }, [open, path]);
   useEffect(()=>{
     if(!open||!info?.history.some(x=>["queued","preparing","sending"].includes(x.state)))return;
-    let active=true;const timer=setInterval(()=>{apiJson<CopyInfo>(path).then(x=>{if(active)setInfo(x)}).catch(()=>{})},5000);
-    return()=>{active=false;clearInterval(timer)};
+    let active=true;const stop=subscribeRealtimeRefresh(()=>apiJson<CopyInfo>(path).then(x=>{if(active)setInfo(x)}).catch(()=>{}));
+    return()=>{active=false;stop()};
   },[open,info?.history,path]);
   async function download() {
     setDownloading(true);

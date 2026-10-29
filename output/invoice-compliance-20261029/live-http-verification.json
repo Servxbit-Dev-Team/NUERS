@@ -1,0 +1,45 @@
+{
+  "/api/health": {
+    "status": 200,
+    "bytes": 83,
+    "response": {
+      "ok": true,
+      "app": "NUERS Laravel API",
+      "solution": {
+        "name": "NUERS",
+        "version": "1.0.0"
+      }
+    }
+  },
+  "/api/developer/openapi": {
+    "status": 200,
+    "bytes": 105481,
+    "version": "2026-10-29.invoice-documents",
+    "receipt_number_max": 50,
+    "registration_snapshot": true,
+    "business_buyer_type": true,
+    "original_invoice_reference": true,
+    "batch_parity": true
+  },
+  "/guides/NUERS-API-Connection-Guide.pdf": {
+    "status": 200,
+    "bytes": 811377,
+    "sha256": "91de0833506d8ccc499c38a5a040001959d5e92336620414b06c0dccf1decfb9",
+    "matches_local": true
+  },
+  "/guides/NUERS-API-Developer-Documentation.pdf": {
+    "status": 200,
+    "bytes": 811377,
+    "sha256": "91de0833506d8ccc499c38a5a040001959d5e92336620414b06c0dccf1decfb9",
+    "matches_local": true
+  },
+  "/": {
+    "status": 200,
+    "bytes": 2868,
+    "entry_assets": [
+      "/assets/index-DXvmxcrc.js",
+      "/assets/index-gt4b_H79.css"
+    ],
+    "entry_matches_local": true
+  }
+}

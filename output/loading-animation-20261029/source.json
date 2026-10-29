@@ -1,0 +1,15 @@
+{
+  "version": "loading-20261029",
+  "files": [
+    "src/App.tsx",
+    "src/components/page-boundary.tsx",
+    "src/pages/merchant/dashboard.tsx",
+    "index.html",
+    "resources/views/app.blade.php",
+    "src/components/loading-screen.tsx"
+  ],
+  "assets": [
+    "public/brand/nuers-loading.css",
+    "public/brand/nuers-loading-ring.gif"
+  ]
+}

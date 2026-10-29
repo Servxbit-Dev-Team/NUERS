@@ -1,0 +1,49 @@
+[
+    {
+        "ms": 2.86,
+        "sql": "select * from `wallet_pricing_history` order by `created_at` desc limit 10",
+        "bindings": []
+    },
+    {
+        "ms": 1.34,
+        "sql": "select * from `website_subscription_plans` where `slug` = ? and `published` = ? limit 1",
+        "bindings": [
+            "transaction-pricing",
+            true
+        ]
+    },
+    {
+        "ms": 0.85,
+        "sql": "select column_name as `name`, data_type as `type_name`, column_type as `type`, collation_name as `collation`, is_nullable as `nullable`, column_default as `default`, column_comment as `comment`, generation_expression as `expression`, extra as `extra` from information_schema.columns where table_schema = schema() and table_name = 'users' order by ordinal_position asc",
+        "bindings": []
+    },
+    {
+        "ms": 0.57,
+        "sql": "select column_name as `name`, data_type as `type_name`, column_type as `type`, collation_name as `collation`, is_nullable as `nullable`, column_default as `default`, column_comment as `comment`, generation_expression as `expression`, extra as `extra` from information_schema.columns where table_schema = schema() and table_name = 'users' order by ordinal_position asc",
+        "bindings": []
+    },
+    {
+        "ms": 0.47,
+        "sql": "select column_name as `name`, data_type as `type_name`, column_type as `type`, collation_name as `collation`, is_nullable as `nullable`, column_default as `default`, column_comment as `comment`, generation_expression as `expression`, extra as `extra` from information_schema.columns where table_schema = schema() and table_name = 'users' order by ordinal_position asc",
+        "bindings": []
+    },
+    {
+        "ms": 0.39,
+        "sql": "select `m`.`id`, `m`.`business_name`, `m`.`tin`, `m`.`status`, `w`.`available_centavos`, `w`.`reserved_centavos`, `w`.`updated_at` from `merchants` as `m` left join `merchant_wallets` as `w` on `w`.`merchant_id` = `m`.`id` order by `m`.`business_name` asc limit 20 offset 0",
+        "bindings": []
+    },
+    {
+        "ms": 0.18,
+        "sql": "select * from `users` where `api_token_hash` = ? limit 1",
+        "bindings": [
+            "f882329efa289a5f9bd1b7c2860e839e415665fcff7a9da4bddf14134480c825"
+        ]
+    },
+    {
+        "ms": 0.16,
+        "sql": "select * from `users` where `api_token_hash` = ? limit 1",
+        "bindings": [
+            "f882329efa289a5f9bd1b7c2860e839e415665fcff7a9da4bddf14134480c825"
+        ]
+    }
+]

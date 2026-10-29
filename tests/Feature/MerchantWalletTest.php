@@ -60,7 +60,7 @@ class MerchantWalletTest extends TestCase
 
     private function series(): void
     {
-        DB::table('invoice_series')->insert(['id' => (string) Str::uuid(), 'merchant_id' => $this->m, 'branch_code' => '00000', 'document_family' => 'invoice', 'prefix' => 'QA-', 'range_start' => 1, 'range_end' => 100, 'status' => 'active', 'authority_reference' => 'SYNTHETIC ONLY', 'verified_by' => 'QA', 'valid_from' => now()->subDay(), 'valid_until' => now()->addDay(), 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('invoice_series')->insert(['document_registration'=>json_encode(['system_type'=>'CAS','ac_number'=>'SYNTHETIC-AC-ONLY','authority_issued_at'=>'2020-01-01']),'id' => (string) Str::uuid(), 'merchant_id' => $this->m, 'branch_code' => '00000', 'document_family' => 'invoice', 'prefix' => 'QA-', 'range_start' => 1, 'range_end' => 100, 'status' => 'active', 'authority_reference' => 'SYNTHETIC ONLY', 'verified_by' => 'QA', 'valid_from' => now()->subDay(), 'valid_until' => now()->addDay(), 'created_at' => now(), 'updated_at' => now()]);
         $this->partialMock(BirCompliance::class, fn ($mock) => $mock->shouldReceive('assertCanIssue')->andReturn(['permit_to_issue_number' => 'SYNTHETIC ONLY', 'esp_accreditation_number' => 'SYNTHETIC ONLY']));
     }
 

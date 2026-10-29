@@ -276,7 +276,7 @@ class EisReadinessAlignmentTest extends TestCase
         $this->partialMock(BirCompliance::class, function ($mock) {
             $mock->shouldReceive('assertCanIssue')->once()->andReturn(['permit_to_issue_number' => 'SYNTHETIC-PTI', 'esp_accreditation_number' => 'SYNTHETIC-ESP']);
         });
-        $this->mock(\App\Services\InvoiceSequence::class,function($m){$m->shouldReceive('reserve')->once()->andReturn(['number'=>'ATOMIC-1']);});
+        $this->mock(\App\Services\InvoiceSequence::class,function($m){$m->shouldReceive('reserve')->once()->andReturn(['number'=>'ATOMIC-1','document_registration'=>['system_type'=>'CAS','ac_number'=>'SYNTHETIC-AC','authority_issued_at'=>'2020-01-01']]);});
         $this->mock(EisDocumentReadiness::class, function ($mock) {
             $mock->shouldReceive('prepare')->once()->andThrow(new \RuntimeException('Synthetic outbox failure'));
         });

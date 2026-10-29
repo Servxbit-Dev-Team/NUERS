@@ -112,7 +112,7 @@ export function LoginPage() {
       <div className="nuers-login__stage">
         <section className="nuers-login__hero" aria-label="About NUERS">
           <Link to="/" className="nuers-login__brand" aria-label="NUERS home">
-            <img src="/auth-assets/nuers-digital-white.png" alt="NUERS — National Unified Electronic Receipt System. Digital transactions. A stronger Philippines." />
+            <img src="/brand/nuers-official-logo.png" alt="NUERS — National Unified Electronic Receipt System. Digital transactions. A stronger Philippines." />
           </Link>
           <h2>A Unified Philippines<br />Through Digital Receipts</h2>
           <p className="nuers-login__intro">Secure. Compliant. Real-Time.<br />For a Better Tomorrow.</p>

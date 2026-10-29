@@ -1,0 +1,24 @@
+{
+  "release": "2026-10-21.system-exports.1",
+  "typescript": "passed",
+  "production_builds": [
+    "Laravel Vite passed",
+    "static Vite passed"
+  ],
+  "backend_tests": 191,
+  "backend_assertions": 2165,
+  "csv_parser_contract_tests": 11,
+  "sample_pdf_pages": 6,
+  "stress_pdf_rows": 500,
+  "stress_pdf_pages": 85,
+  "long_narrative_words_preserved": true,
+  "browser_pdf_download": "passed, 2 rows and PHP 1,619.00 verified",
+  "browser_csv_download": "passed, 2 rows",
+  "browser_pdf_limit": "501-row source rejected without truncation",
+  "schema_changes": false,
+  "deployment": "Verified live at 2026-10-21T00:58:34+00:00",
+  "live_pdf_download": "3-page registry PDF downloaded; 2 merchant records and NUERS branding verified",
+  "live_csv_check": "CSV dialog completed without application error; second Chrome file delivery not independently confirmed",
+  "existing_records_preserved": true,
+  "scheduler_preserved": true
+}

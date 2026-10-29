@@ -1,0 +1,75 @@
+[
+  {
+    "page": "Transactions",
+    "checks": [
+      "4339 records visible",
+      "25 rows on page",
+      "no loading error"
+    ],
+    "verified": true
+  },
+  {
+    "page": "Reconciliation & Exceptions",
+    "checks": [
+      "4339 records visible",
+      "10 rows on page",
+      "no loading error"
+    ],
+    "verified": true
+  },
+  {
+    "page": "Summary List of Sales",
+    "checks": [
+      "4339 records visible",
+      "totals and rows loaded"
+    ],
+    "verified": true
+  },
+  {
+    "page": "BIR Transmission Center",
+    "verified": true,
+    "records": 4339,
+    "checks": [
+      "rows loaded",
+      "no transmission initiated"
+    ]
+  },
+  {
+    "page": "/super-admin",
+    "verified": true,
+    "checks": [
+      "financial widgets and merchant connections loaded"
+    ],
+    "loading": false
+  },
+  {
+    "page": "/super-admin/merchants",
+    "verified": true,
+    "records": 2,
+    "loading": false
+  },
+  {
+    "page": "/super-admin/wallets",
+    "verified": true,
+    "loading": false
+  },
+  {
+    "page": "/super-admin/audit",
+    "verified": true,
+    "records": 8909,
+    "backgroundCheckAt": "2026-10-28 21:46:54 PHT",
+    "loading": false
+  },
+  {
+    "page": "Transactions filter",
+    "verified": true,
+    "checks": [
+      "nonmatching search produces empty result"
+    ]
+  },
+  {
+    "page": "Transactions reset",
+    "verified": true,
+    "loading": false
+  }
+]

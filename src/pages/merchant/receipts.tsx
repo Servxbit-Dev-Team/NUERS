@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {exportReport as openReportExport} from "@/components/reports/export-report";
+import { useRealtimeRefresh } from "@/lib/use-realtime-refresh";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   QrCode, Search, Download, CheckCircle2, XCircle,
   Eye, Copy, Receipt, ChevronLeft, ChevronRight,
@@ -151,47 +153,7 @@ function toCentavos(value: number) {
   return Math.round(Number(value || 0) * 100);
 }
 
-function exportCsv(receipts: ApiReceipt[], merchant: ReceiptsPayload["merchant"]) {
-  if (receipts.length === 0) {
-    toast.info("No API receipts to export for this Business Account.");
-    return;
-  }
-
-  const rows = [
-    ["Business Account", merchant?.business_name ?? ""],
-    ["TIN", merchant?.tin ?? ""],
-    [],
-    ["Document", "Template", "Reference #", "Transaction Ref", "Series", "Date", "Time", "Source", "Channel", "Branch", "Customer", "Buyer TIN", "Amount", "VAT", "Status", "RDO"],
-    ...receipts.map((receipt) => [
-      receipt.document_label,
-      receipt.bir_template_code,
-      receipt.id,
-      receipt.transaction_ref ?? "",
-      receipt.series_no,
-      receipt.date,
-      receipt.time,
-      receipt.source_system,
-      receipt.type,
-      receipt.branch,
-      receipt.customer,
-      receipt.tin_buyer ?? "",
-      receipt.amount.toFixed(2),
-      receipt.vat.toFixed(2),
-      receipt.status,
-      receipt.rdo_branch ?? "",
-    ]),
-  ];
-
-  const csv = rows.map((row) => row.map((cell) => `"${String(cell ?? "").replaceAll('"', '""')}"`).join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `nuers-api-receipts-${merchant?.tin || "business-account"}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
-  toast.success("Exported API receipt records.");
-}
+function exportCsv(receipts:ApiReceipt[],merchant:ReceiptsPayload['merchant']){void openReportExport({title:'API Receipt Records',scope:(merchant?.business_name||'Merchant')+' · '+receipts.length+' records loaded in this legacy receipt view. Use Invoices & Receipts for the complete filtered register.',table:{headers:['Document','Template','Reference','Transaction Reference','Series','Date','Time','Source','Channel','Branch','Customer','Buyer TIN','Amount PHP','VAT PHP','Status','RDO'],rows:receipts.map(r=>[r.document_label,r.bir_template_code,r.id,r.transaction_ref||'',r.series_no,r.date,r.time,r.source_system,r.type,r.branch,r.customer,r.tin_buyer||'',r.amount.toFixed(2),r.vat.toFixed(2),r.status,r.rdo_branch||''].map(String))}});}
 
 function OfficialReceiptPrint({ r }: { r: ApiReceipt }) {
   return (
@@ -251,10 +213,12 @@ export function MerchantReceipts() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
+  const sequence = useRef(0);
+  useRealtimeRefresh(() => loadReceipts(true), !selected);
+
   const loadReceipts = useCallback(async (quiet = false) => {
-    if (quiet) {
-      setRefreshing(true);
-    } else {
+    const ticket = ++sequence.current;
+    if (!quiet) {
       setLoading(true);
     }
     setError("");
@@ -271,13 +235,13 @@ export function MerchantReceipts() {
       });
       const payload = await readJsonResponse<ReceiptsPayload>(response, "Unable to load API-generated receipts.");
 
-      setData(payload);
+      if (ticket === sequence.current) setData(payload);
     } catch (err) {
-      setData(emptyPayload);
+      if (ticket !== sequence.current) return;
+      if (!quiet) setData(emptyPayload);
       setError(err instanceof Error ? err.message : "Unable to load API-generated receipts.");
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (ticket === sequence.current) { setLoading(false); setRefreshing(false); }
     }
   }, [search, statusFilter, typeFilter]);
 
@@ -286,7 +250,7 @@ export function MerchantReceipts() {
       loadReceipts();
     }, 250);
 
-    return () => window.clearTimeout(timer);
+    return () => { window.clearTimeout(timer); ++sequence.current; };
   }, [loadReceipts]);
 
   useEffect(() => {

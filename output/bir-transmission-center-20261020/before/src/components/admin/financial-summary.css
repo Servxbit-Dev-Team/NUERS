@@ -1,0 +1,11 @@
+.af-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; position: relative; }
+.af-summary-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.af-card { display: flex; align-items: center; gap: 13px; padding: 16px; min-height: 112px; border: 1px solid #dfe9f7; border-radius: 11px; background: #fff; color: #0d2d59; }
+.af-card > div { min-width: 0; }
+.af-icon { flex: 0 0 52px; height: 55px; display: grid; place-items: center; border-radius: 10px; }
+.af-blue { color: #0065ff; background: #eaf3ff; }.af-purple { color: #8639ed; background: #f3edff; }.af-green { color: #009c67; background: #e4f8f0; }
+.af-card h2 { font-size: var(--nuers-font-body, 14px); line-height: 20px; font-weight: 600; margin: 0 0 3px; }
+.af-card strong { display: block; font-size: clamp(22px, 1.7vw, 28px); line-height: 1.3; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.af-card p { font-size: var(--nuers-font-caption, 12px); line-height: 18px; color: #597091; margin: 3px 0 0; }
+@media (max-width: 1200px) { .af-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .af-summary { grid-template-columns: minmax(0, 1fr); gap: 8px; }.af-card { min-height: 100px; padding: 12px; }.af-card strong { font-size: 25px; } }

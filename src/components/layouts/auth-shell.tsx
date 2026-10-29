@@ -33,7 +33,7 @@ export function AuthShell({
       <div className="grid min-h-screen lg:grid-cols-[minmax(0,1.04fr)_minmax(480px,0.96fr)]">
         <section className="relative hidden overflow-hidden bg-[#082844] text-white lg:flex">
           <img
-            src="/nuers_wBG.jpg"
+            src="/auth-assets/nuers-login-background.png"
             alt=""
             className="absolute inset-0 h-full w-full object-cover opacity-15"
           />
@@ -42,7 +42,7 @@ export function AuthShell({
 
           <div className="relative z-10 flex min-h-screen w-full flex-col justify-between px-14 py-10 xl:px-20 xl:py-12 2xl:px-24">
             <div className="flex items-center justify-between">
-              <img src="/NUERSLOGOWHITE.png" alt="NUERS" className="h-12 w-auto" />
+              <img src="/brand/nuers-official-logo.png" alt="NUERS" className="h-12 w-auto" />
               <Badge className="rounded-md border-white/20 bg-white/10 text-white hover:bg-white/10">
                 Secure Access
               </Badge>
@@ -85,7 +85,7 @@ export function AuthShell({
 
         <section className="flex min-h-screen flex-col bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_62%,#eff6ff_100%)] px-5 py-6 sm:px-8 lg:px-12">
           <div className="flex items-center justify-between lg:hidden">
-            <img src="/NUERSLOGO.png" alt="NUERS" className="h-9 w-auto" />
+            <img src="/brand/nuers-official-logo.png" alt="NUERS" className="h-9 w-auto" />
             <Link to="/verify" className="text-xs font-medium text-primary hover:underline">
               Verify receipt
             </Link>

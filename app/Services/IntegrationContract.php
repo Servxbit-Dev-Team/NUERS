@@ -21,6 +21,9 @@ class IntegrationContract
     public function rules(bool $ingestion = false): array
     {
         $rules = [
+            ...app(InvoiceDocumentRules::class)->registrationRules(),
+            'customer_type' => ['nullable', Rule::in(['business','retail','walk_in'])],
+            'invoice_reference' => ['nullable','string','max:50','not_regex:/[\x00-\x1F\x7F]/u'],
             'manual_discount' => ['nullable', 'array:type,value,reason'],
             'sales_benefit' => ['nullable', 'array'],
             'items.*.benefit_eligible' => ['sometimes', 'boolean'],
@@ -41,6 +44,9 @@ class IntegrationContract
             'customer_name' => ['nullable', 'string', 'max:255'],
             'customer_tin' => ['nullable', 'string', 'max:80'],
             'customer_address' => ['nullable', 'string', 'max:2000'],
+            'withholding_details' => ['nullable', 'array:withholding_agent,classification,atc,rate,base,amount,evidence_reference'],
+            'manual_recovery_id' => ['nullable', 'uuid'],
+            'manual_invoice_number' => ['required_with:manual_recovery_id', 'nullable', 'string', 'max:114'],
             'withholding_tax' => ['nullable', 'numeric', 'min:0', 'max:10000000000'],
             'withholding_basis_reference' => ['required_with:withholding_tax', 'nullable', 'string', 'min:3', 'max:2000'],
             'tax_basis_reference' => ['nullable', 'string', 'max:2000'],
@@ -48,13 +54,14 @@ class IntegrationContract
             'branch_name' => ['nullable', 'string', 'max:255'],
             'branch_code' => ['nullable', 'string', 'max:80'],
             'branch_type' => ['nullable', Rule::in(['main', 'branch'])],
-            'receipt_number' => ['nullable', 'string', 'max:120'],
+            'receipt_number' => ['nullable', 'string', 'max:50', 'not_regex:/[\x00-\x1F\x7F]/u'],
             'items' => ['nullable', 'array', 'max:100'],
-            'items.*' => ['array:description,quantity,qty,unit_price,price,tax_type,vat_rate,discount_pct,manual_discount,line_total,amount,tax_basis_reference,benefit_eligible'],
+            'items.*' => ['array:description,unit,quantity,qty,unit_price,price,tax_type,vat_rate,discount_pct,manual_discount,line_total,amount,tax_basis_reference,benefit_eligible'],
             'items.*.manual_discount' => ['nullable', 'array:type,value,reason'],
             'items.*.qty' => ['sometimes', 'numeric', 'gt:0', 'max:1000000'],
             'items.*.price' => ['sometimes', 'numeric', 'min:0', 'max:100000000'],
             'items.*.tax_basis_reference' => ['nullable', 'string', 'max:2000'],
+            'items.*.unit' => ['nullable','string','max:40'],
             'items.*.description' => ['required', 'string', 'max:1000'],
             'items.*.quantity' => ['required_without:items.*.qty', 'numeric', 'gt:0', 'max:1000000'],
             'items.*.unit_price' => ['required_without:items.*.price', 'numeric', 'min:0', 'max:100000000'],
@@ -73,7 +80,7 @@ class IntegrationContract
                 'event_type' => ['required', Rule::in(['invoice.finalized', 'payment.recorded'])],
                 'occurred_at' => ['required', 'date', 'before_or_equal:'.now()->addMinutes(5)->toIso8601String(), 'regex:/T.*(?:Z|[+-][0-9]{2}:[0-9]{2})$/'],
                 'branch_code' => ['required', 'regex:/^[0-9]{5}$/'],
-                'receipt_number' => ['required', 'string', 'max:120'],
+                'receipt_number' => ['required', 'string', 'max:50', 'not_regex:/[\x00-\x1F\x7F]/u'],
                 'items' => ['required', 'array', 'min:1', 'max:100'],
                 'payment_method' => ['required', Rule::in(['cash', 'card', 'bank_transfer', 'e_wallet', 'credit', 'other'])],
                 'document_type' => ['required', Rule::in(self::DOCUMENT_TYPES)],
@@ -92,7 +99,10 @@ class IntegrationContract
             throw ValidationException::withMessages(['payload' => 'Unsupported fields: '.implode(', ', $unknown).'. Use documented fields; no supplied fields are silently discarded.']);
         }
 
-        return Validator::make($payload, $rules)->validate();
+        $validated = Validator::make($payload, $rules)->validate();
+        app(InvoiceDocumentRules::class)->assertNumber($validated['receipt_number']);
+        app(InvoiceDocumentRules::class)->assertBuyer($validated['customer_type'] ?? null, $validated['customer_name'] ?? null, $validated['customer_tin'] ?? null, $validated['customer_address'] ?? null);
+        return $validated;
     }
 
     public function canonicalHash(array $value): string
@@ -134,7 +144,7 @@ class IntegrationContract
             }
 
             return [
-                'benefit_eligible' => (bool) ($item['benefit_eligible'] ?? false), 'description' => $item['description'], 'quantity' => $item['quantity'] ?? $item['qty'] ?? 0,
+                'benefit_eligible' => (bool) ($item['benefit_eligible'] ?? false), 'description' => $item['description'], 'unit' => $item['unit'] ?? null, 'quantity' => $item['quantity'] ?? $item['qty'] ?? 0,
                 'unit_price' => $calculator->cents($item['unit_price'] ?? $item['price'] ?? -1, 'items.unit_price'),
                 'tax_basis_reference' => $item['tax_basis_reference'] ?? $payload['tax_basis_reference'] ?? null,
                 'discount_pct' => $item['discount_pct'] ?? 0, 'tax_type' => $item['tax_type'] ?? $payload['tax_type'],
@@ -146,6 +156,10 @@ class IntegrationContract
         $inclusive = (bool) ($payload['vat_inclusive'] ?? true);
         $withholding = $calculator->cents($payload['withholding_tax'] ?? 0, 'withholding_tax');
         $computed = $calculator->calculate($lines, $vatRegistered, $withholding, 0, $inclusive, $benefit);
+        if (!empty($payload['withholding_details'])) {
+            $evidence = app(WithholdingEvidence::class)->validate($payload['withholding_details'], $computed['total_amount']);
+            abort_unless($evidence['amount_centavos'] === $withholding, 422, 'withholding_tax must equal the buyer-supplied CWT amount.');
+        }
         $expected = isset($payload['gross_amount']) ? $computed['total_amount'] : ($inclusive ? $computed['total_amount'] : $computed['subtotal_amount'] - $computed['discount_amount']);
         if (isset($payload['gross_amount'], $payload['amount']) && $calculator->cents($payload['amount'], 'amount') !== ($inclusive ? $computed['total_amount'] : $computed['subtotal_amount'] - $computed['discount_amount'])) {
             throw ValidationException::withMessages(['amount' => 'The amount alias conflicts with the calculated price basis.']);

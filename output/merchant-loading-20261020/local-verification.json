@@ -1,0 +1,25 @@
+{
+  "root_cause": "Per-document full readiness queries in overview and sales reports exceed the upstream timeout for 341 receipts.",
+  "fix": [
+    "Batch tenant-scoped financial validation using the existing calculator",
+    "Scope canonical ranking to the authenticated merchant before aggregation",
+    "Bound dashboard/report reads at 30 seconds with a retry message and stale-request protection"
+  ],
+  "checks": {
+    "phpunit": {
+      "tests": 70,
+      "assertions": 705,
+      "passed": true
+    },
+    "timeout_cancellation_session_retry": true,
+    "typescript_and_production_builds": true,
+    "database_schema_changes": false,
+    "intentional_business_data_changes": false
+  },
+  "live_verified": true,
+  "live_browser_checks": [
+    "Dashboard loaded with 341 source documents",
+    "Sales Reports loaded 341 records and PHP 811746.25",
+    "Next page returned rows 11-20 of 341"
+  ]
+}

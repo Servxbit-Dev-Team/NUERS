@@ -1,0 +1,7 @@
+{
+  "tool": "built-in image_gen",
+  "input": "public/website-assets/nuers-philippines-hero.png",
+  "logo_reference": "/Users/marksioson/Downloads/Glossy NUERS Philippine Digital Logo.png",
+  "output": "public/website-assets/nuers-philippines-hero.png",
+  "prompt": "Replace only the two old NUERS logos on the laptop and phone screens with the supplied official NUERS logo. Preserve the wide scene, framing, dark left region, devices, Philippine skyline, flag, monument, lighting and all other content. Match scale and perspective. No redesign of the supplied logo."
+}

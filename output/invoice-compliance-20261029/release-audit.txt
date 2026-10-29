@@ -1,0 +1,47 @@
+NUERS invoice numbering and receipt fields — release audit
+
+Scope: Align invoice identity and printed document details with the reviewed BIR requirements while preserving the existing receipt design. Existing source intake remains available. No BIR credentials, outbound transmission or authority approvals were invented or enabled.
+
+Implemented
+- Original seller document number preserved, including prefix/leading zeros; EIS CompInvoiceId limited to 50 characters and kept separate from EisUniqueId.
+- Server-allocated native invoice series, transaction locks, range and overlap checks, and reuse protection; issued original numbers remain unchanged.
+- Registration evidence snapshot and applicable PTI/PTU/AC/date/series/machine details. Missing source evidence is displayed as Not recorded.
+- Registered seller TIN plus branch, registered buyer identity, original invoice references, item units/tax treatment, VAT classifications, withholding details/net payable and supplementary-document warnings.
+- Same shared receipt renderer and existing design for preview/PDF; print-only spacing adjusted to avoid an orphan footer. Existing receipt stylesheet unchanged.
+- Maintained OpenAPI, batch schema, API catalogue, written reference and 48-page merchant guide aligned.
+
+Validation
+- Final principal suite: 185 tests, 1,747 assertions passed.
+- Final wire/edge suite: 32 tests, 261 assertions passed, including 7 overlapping tests/38 assertions.
+- Distinct total: 210 tests, 1,970 assertions passed.
+- Production build succeeded.
+- Synthetic VAT, payment receipt and statutory-benefit PDFs rendered and visually inspected; no production transactions created for these tests.
+- Revised PDF guide pages visually checked, including contents, input identity contract and pages 47–48.
+- Live authenticated invoice list and expanded receipt preview inspected after deployment; existing seller invoice number, TIN/branch, tax details and missing-authority labels displayed correctly. Screenshot: live-receipt-preview.png.
+- Live receipt Download PDF button completed without a browser error; downloaded file contents were not independently inspected in this browser session.
+
+Deployment
+- Release: 2026-10-29.invoice-documents.1
+- Completed (UTC): 2026-10-29T01:10:40+00:00
+- Installed file checksums verified: 546
+- Existing database record hashes preserved: True
+- Environment and security policies preserved: True
+- Private file/database recovery backup: nuers-invoice-documents-backup-20261029-011026
+- Package SHA256: e7f1fb16f7b7fb4fff6e8e19b00f705508b0085f050f7ef5157c725c9388cc2f
+- New nullable registration snapshot fields and serial width field migrated; historical records not rewritten.
+- Existing hashed assets retained for open browser sessions.
+- Public health endpoint returned 200; OpenAPI version 2026-10-29.invoice-documents verified.
+- Both public PDF guide URLs returned 200 and matched the local guide SHA256. Public homepage entry assets matched the built release.
+- One Python urllib probe received HTTP 403; curl and the authenticated browser succeeded without changing network/security policy.
+
+Remaining real-world dependencies
+Taxpayer authority evidence and correct source data must be supplied for each merchant/system/series. These software controls do not establish BIR approval, accreditation or verified BIR transmission. BIR outbound/callback gates remain disabled. Existing historical documents without authority snapshots remain labeled accordingly.
+
+Official references reviewed
+https://bir-cdn.bir.gov.ph/BIR/pdf/RR%20No.%207-%202024.pdf
+https://bir-cdn.bir.gov.ph/BIR/pdf/RMC%20No.%2098-2026%20redacted.pdf
+https://bir-cdn.bir.gov.ph/BIR/pdf/RMC%20No.%20112-2026_redacted.pdf
+https://eis-cert.bir.gov.ph/#/apiGuide
+
+Evidence
+final-tests.log; wire-tests.log; final-build.log; deployment-result.json; live-http-verification.json; audit-release-manifest.json; sample-vat.pdf; sample-payment.pdf; sample-benefit.pdf; live-receipt-preview.png.

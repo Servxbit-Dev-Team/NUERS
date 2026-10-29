@@ -1,0 +1,2395 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "NUERS Developer API",
+    "version": "2026-10-29.compliance-operations",
+    "description": "Implemented NUERS application routes. This is not an official BIR EIS API specification. Live BIR transport remains unavailable. Additive hardening 2026-10-18: explicit original source capture, reviewed seller profiles, buyer/CWT preservation, environment isolation and unknown-field rejection. Download /guides/NUERS-API-Connection-Guide.pdf. Automatic owned-system connection generation requires no separate admin source approval for active verified accounts. Optional signed merchant callbacks are configured under Merchant API Integration > Webhooks, with separate Live/Sandbox receiver ownership checks. See /guides/NUERS-Webhook-Connection-Guide.pdf. These human-session management routes do not accept API keys."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Current NUERS deployment origin; use its actual HTTPS origin outside localhost."
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "User-session token for workspace/admin routes; merchant API key may be used as Bearer only on merchant integration ingestion."
+      },
+      "MerchantKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-NUERS-API-Key"
+      }
+    },
+    "schemas": {
+      "IngestionEvent": {
+        "type": "object",
+        "properties": {
+          "external_reference": {
+            "type": "string",
+            "description": "Stable source reference, up to 120 characters. Duplicate lookup is scoped to the API key\u2019s merchant.",
+            "maxLength": 120
+          },
+          "amount": {
+            "type": "number",
+            "description": "PHP units, >= 0. Required when gross_amount is absent.",
+            "minimum": 0
+          },
+          "gross_amount": {
+            "type": "number",
+            "description": "PHP units, >= 0. Required when amount is absent; takes precedence if both are sent.",
+            "minimum": 0
+          },
+          "tax_type": {
+            "type": "string",
+            "description": "vatable | vat_exempt | zero_rated | non_vat.",
+            "enum": [
+              "vatable",
+              "vat_exempt",
+              "zero_rated",
+              "non_vat"
+            ]
+          },
+          "vat_rate": {
+            "type": "number",
+            "description": "Supported tax rate, 0 or 12 according to tax treatment; server rejects inconsistent taxes.",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "vat_inclusive": {
+            "type": "boolean",
+            "description": "Defaults to true. For VAT-exclusive input, VAT is added to the supplied amount."
+          },
+          "source_system": {
+            "type": "string",
+            "description": "Source label, maximum 120 characters.",
+            "maxLength": 120,
+            "pattern": "^[A-Za-z0-9_.-]+$"
+          },
+          "channel": {
+            "type": "string",
+            "description": "Maximum 80 characters; defaults to api.",
+            "maxLength": 80
+          },
+          "transaction_type": {
+            "type": "string",
+            "description": "Maximum 80 characters; defaults to sale.",
+            "maxLength": 80
+          },
+          "payment_method": {
+            "type": "string",
+            "description": "Maximum 80 characters; defaults to cash. Payment metadata is separate from BIR acceptance.",
+            "maxLength": 80
+          },
+          "document_type": {
+            "type": "string",
+            "description": "vat_invoice | non_vat_invoice | vat_exempt_invoice | zero_rated_invoice | mixed_sales_invoice | payment_receipt | sales_invoice | official_receipt. These are NUERS identifiers, not a legal classification ruling.",
+            "enum": [
+              "vat_invoice",
+              "non_vat_invoice",
+              "vat_exempt_invoice",
+              "zero_rated_invoice",
+              "mixed_sales_invoice",
+              "payment_receipt",
+              "sales_invoice",
+              "official_receipt"
+            ]
+          },
+          "customer_name": {
+            "type": "string",
+            "description": "Up to 255 characters; omit in synthetic examples. Real data requires authorized handling.",
+            "maxLength": 255
+          },
+          "customer_tin": {
+            "type": "string",
+            "description": "Optional supported 9/12/14-digit TIN form; field validation is not BIR verification.",
+            "maxLength": 80
+          },
+          "branch": {
+            "type": "string",
+            "description": "Branch label, up to 255 characters.",
+            "maxLength": 255
+          },
+          "branch_name": {
+            "type": "string",
+            "description": "Branch name, up to 255 characters.",
+            "maxLength": 255
+          },
+          "branch_code": {
+            "type": "string",
+            "description": "Exact five-digit BIR branch code authorized by the key.",
+            "maxLength": 5,
+            "pattern": "^[0-9]{5}$",
+            "minLength": 5
+          },
+          "branch_type": {
+            "type": "string",
+            "description": "main | branch.",
+            "enum": [
+              "main",
+              "branch"
+            ]
+          },
+          "receipt_number": {
+            "type": "string",
+            "description": "Original finalized source number; must match the next configured authorized series.",
+            "maxLength": 120
+          },
+          "items": {
+            "type": "array",
+            "description": "1\u2013100 complete item lines. description, positive quantity, unit_price in PHP/pesos and supported tax treatment; server reconciles lines and gross total.",
+            "items": {
+              "type": "object",
+              "required": [
+                "description",
+                "quantity",
+                "unit_price"
+              ],
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "unit_price": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                },
+                "tax_type": {
+                  "enum": [
+                    "vatable",
+                    "non_vat",
+                    "zero_rated",
+                    "vat_exempt"
+                  ]
+                },
+                "tax_basis_reference": {
+                  "type": "string",
+                  "maxLength": 2000
+                },
+                "qty": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "price": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "amount": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "benefit_eligible": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "Apply the verified sales_benefit only to this line; no discount_pct stacking."
+                },
+                "manual_discount": {
+                  "$ref": "#/components/schemas/ManualDiscount"
+                },
+                "discount_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "multipleOf": 0.01,
+                  "description": "Legacy per-line percentage. Do not combine with manual_discount or statutory benefits on the same line."
+                }
+              },
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 100
+          },
+          "schema_version": {
+            "type": "string",
+            "description": "NUERS-ingestion-1",
+            "maxLength": 80,
+            "const": "NUERS-ingestion-1"
+          },
+          "source_event_id": {
+            "type": "string",
+            "description": "Stable source event ID, up to 120 characters.",
+            "maxLength": 120
+          },
+          "event_type": {
+            "type": "string",
+            "description": "invoice.finalized | payment.recorded. Payment evidence is not another sale.",
+            "maxLength": 80,
+            "enum": [
+              "invoice.finalized",
+              "payment.recorded"
+            ]
+          },
+          "occurred_at": {
+            "type": "string",
+            "description": "Original event timestamp with explicit timezone; preserve on every retry.",
+            "maxLength": 80,
+            "format": "date-time",
+            "pattern": "T.*(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+          },
+          "record_mode": {
+            "type": "string",
+            "enum": [
+              "source_capture",
+              "nuers_issuance"
+            ],
+            "default": "nuers_issuance",
+            "description": "Use source_capture for an existing ERP/POS original; nuers_issuance allocates a new authorized NUERS original."
+          },
+          "source_profile_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Required for source_capture: reviewed original issuer, exact system and branch, effective seller registration and original issue period."
+          },
+          "customer_address": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "withholding_tax": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Applicable CWT in PHP. Does not reduce gross_amount, VAT base or wallet eligibility. Reduces net_payable."
+          },
+          "withholding_basis_reference": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 2000,
+            "description": "Required when withholding_tax is supplied."
+          },
+          "tax_basis_reference": {
+            "type": "string",
+            "maxLength": 2000,
+            "description": "Applicable effective exemption/zero-rating or tax classification reference."
+          },
+          "sales_benefit": {
+            "$ref": "#/components/schemas/SalesBenefit"
+          },
+          "manual_discount": {
+            "$ref": "#/components/schemas/ManualDiscount"
+          },
+          "customer_email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email",
+            "maxLength": 254,
+            "description": "Optional customer_email: one valid checkout email address, maximum 254 characters. Omit or send null when absent. Map the checkout email explicitly; NUERS does not scan arbitrary payload fields. Invalid addresses return 422 before acceptance. Never use a customer address as an API credential."
+          },
+          "withholding_details": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "withholding_agent",
+              "classification",
+              "atc",
+              "rate",
+              "base",
+              "amount",
+              "evidence_reference"
+            ],
+            "properties": {
+              "withholding_agent": {
+                "type": "boolean",
+                "enum": [
+                  true
+                ]
+              },
+              "classification": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 200
+              },
+              "atc": {
+                "type": "string",
+                "pattern": "^[A-Z]{2}[0-9]{3}$"
+              },
+              "rate": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "base": {
+                "type": "number",
+                "minimum": 0
+              },
+              "amount": {
+                "type": "number",
+                "minimum": 0
+              },
+              "evidence_reference": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 2000
+              }
+            },
+            "description": "For buyer-confirmed CWT, send withholding_tax in PHP and withholding_basis_reference. Send withholding_details with withholding_agent=true, classification, atc (two uppercase letters and three digits), rate (percentage), base, amount and evidence_reference. Decimal money fields have at most two decimals. amount must equal withholding_tax and rounded base \u00d7 rate / 100. CWT reduces net_payable; gross_amount, sales, VAT and the wallet fee basis stay unchanged. Existing amount-and-basis integrations remain supported; use the structured buyer confirmation for new mappings."
+          },
+          "manual_recovery_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Record an outage and its authorized manual invoices under Merchant \u2192 Compliance Operations, then record verified restoration. On a replacement Live invoice, send manual_recovery_id from that register and the original manual number in manual_invoice_number. The replacement must match merchant, branch, buyer and gross amount, explicitly reference the manual invoice and be dated after restoration. One manual invoice links to one replacement. A mismatch rolls back the new event and fee. Sandbox cannot link Live recovery records. The register tracks the three-calendar-day recovery deadline; it does not issue manual authority or claim BIR transmission."
+          },
+          "manual_invoice_number": {
+            "type": "string",
+            "maxLength": 114,
+            "description": "Required with manual_recovery_id. Exact original authorized manual invoice number."
+          }
+        },
+        "required": [
+          "external_reference",
+          "tax_type",
+          "source_system",
+          "payment_method",
+          "document_type",
+          "branch_code",
+          "receipt_number",
+          "items",
+          "schema_version",
+          "source_event_id",
+          "event_type",
+          "occurred_at"
+        ],
+        "anyOf": [
+          {
+            "required": [
+              "amount"
+            ]
+          },
+          {
+            "required": [
+              "gross_amount"
+            ]
+          }
+        ],
+        "additionalProperties": false
+      },
+      "SalesBenefit": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "category",
+          "scope",
+          "beneficiary_name",
+          "id_number",
+          "evidence_reference",
+          "eligibility_confirmed"
+        ],
+        "description": "Covered personal statutory sale; mark qualifying lines with benefit_eligible. Original prices and tax types enter calculation before relief. Solo parent additionally requires valid SPIC expiry, child birth date, income confirmation and booklet. No stacking. See detailed PDF for coverage.",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "senior_citizen",
+              "pwd",
+              "national_athlete_coach",
+              "solo_parent"
+            ]
+          },
+          "scope": {
+            "type": "string",
+            "description": "Covered goods/service scope from the PDF; e.g. restaurant, medicine, diapers (solo parent)."
+          },
+          "beneficiary_name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 200
+          },
+          "id_number": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "evidence_reference": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 500
+          },
+          "eligibility_confirmed": {
+            "type": "boolean",
+            "const": true
+          },
+          "child_birth_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "id_valid_until": {
+            "type": "string",
+            "format": "date"
+          },
+          "income_below_250000": {
+            "type": "boolean"
+          },
+          "booklet_reference": {
+            "type": "string",
+            "maxLength": 200
+          }
+        }
+      },
+      "ManualDiscount": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "value",
+          "reason"
+        ],
+        "description": "At-sale ordinary discount. Use document OR line discounts; no stacking with a statutory eligible line. Money follows vat_inclusive.",
+        "properties": {
+          "type": {
+            "enum": [
+              "amount",
+              "percentage"
+            ]
+          },
+          "value": {
+            "oneOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 10000000000,
+                "multipleOf": 0.01
+              },
+              {
+                "type": "string",
+                "pattern": "^[0-9]+(?:\\.[0-9]{1,2})?$"
+              }
+            ],
+            "description": "PHP for amount, 0\u2013100 for percentage; at most two decimals. Must not exceed original price."
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "pattern": "\\S"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "percentage"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "value": {
+                  "oneOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100,
+                      "multipleOf": 0.01
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^(?:100(?:\\.0{1,2})?|[0-9]{1,2}(?:\\.[0-9]{1,2})?)$"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "health",
+        "summary": "API health",
+        "description": "Basic application response. This is not database, queue or BIR gateway health.\n\n",
+        "tags": [
+          "Public utilities"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          }
+        }
+      }
+    },
+    "/api/integrations/transactions": {
+      "post": {
+        "operationId": "ingest",
+        "summary": "Accept a finalized source event",
+        "description": "Environment-bound intake: Live uses atomic financial writes and current prepaid fees; Sandbox saves isolated test records only. Active account/key, exact location/IP, scopes and quotas apply to both. Live taxpayer issuance gates remain enforced.\n\nExample fee is illustrative; read GET /api/integrations/transactions/wallet for the current platform fee. API money input is PHP/pesos; wallet amounts are integer centavos.\nThe merchant comes from the key. Sandbox keys save test-only records separately, with environment=sandbox, test_only=true, no real wallet debit, legal series or BIR queue. Sandbox uses current merchant VAT registration and does not certify source-profile or issuance authority.\nExact identity/content replay returns 200 and the original response without another fee. Conflicting content under an existing identity returns 409. Preserve original event ID, timestamp and number.\n402 returns code=INSUFFICIENT_WALLET_BALANCE, available_centavos, required_centavos, shortage_centavos and transaction_saved=false. No financial record, debit or numbering advance commits. Retain the source on the client and retry the same identity after funding.\nThe fee applies once per finalized primary Live sale meeting the current Admin-configured minimum. Default: PHP3 fee and PHP0 minimum, so every amount is chargeable. A positive minimum exempts amounts strictly below it. Payment copies and accepted retries do not add another sale fee. Read /wallet for the effective minimum, fee and revision. Funding does not bypass branch, tax, series, authority or BIR delivery gates.\n\nMerchant transaction, batch and wallet responses do not expose bir_acceptance, bir_connection, bir_status or internal preparation blockers. Display NUERS status in the connector. NUERS Success confirms platform recording; it does not assert government acceptance.\n\nEvery ERP, POS or e-commerce sales row must show NUERS Status, failure reason, environment, NUERS reference and last attempt. Show Success only after a valid 201 or 200 duplicate acknowledgement with matching source_event_id, external_reference and environment, non-empty id/transaction_id/receipt_id, status=durably_recorded and nuers_status=success. Persist these identifiers atomically with the local outbox acknowledgement.\n\nA newly accepted Live event containing customer_email queues one customer PDF email in the same database transaction. Exact retries return the same record and do not queue another email or fee. Failed/rolled-back events queue no email. Sandbox always returns suppressed_sandbox and never emails customers. Existing transactions are not emailed retroactively.\n\nPoll GET status_url with the same environment and transactions:read scope for customer_receipt.status and reason. States: not_requested, suppressed_sandbox, queued, preparing, sending, smtp_accepted, failed, uncertain, expired, cancelled. smtp_accepted means the SMTP server accepted the message, not confirmed inbox delivery. Email failures never change a successfully recorded sale to Error. Do not retry the sale to resend mail; use the merchant document Send Copy action after investigating an uncertain delivery.",
+        "tags": [
+          "Merchant integration"
+        ],
+        "security": [
+          {
+            "MerchantKeyHeader": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "NUERS acceptance; customer email state is independent.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "environment": "live",
+                  "duplicate": false,
+                  "nuers_status": "success",
+                  "status": "durably_recorded",
+                  "message": "Transaction successfully recorded by NUERS.",
+                  "error": null,
+                  "id": "EXAMPLE-INBOX-ID",
+                  "transaction_id": "EXAMPLE-TRANSACTION-ID",
+                  "receipt_id": "EXAMPLE-RECEIPT-ID",
+                  "source_event_id": "erpA:invoice:0001",
+                  "external_reference": "erpA:INV-0001",
+                  "status_url": "https://nuers.net/api/integrations/transactions/EXAMPLE-INBOX-ID",
+                  "customer_receipt": {
+                    "delivery_id": "EXAMPLE-DELIVERY-ID",
+                    "status": "queued",
+                    "reason": "Customer receipt is queued for email processing."
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": false,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Insufficient merchant prepaid wallet funds; financial intake not saved",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": false,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden scope/role/IP",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": false,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": false,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "State or authority conflict",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": false,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "code": "VALIDATION_FAILED",
+                  "message": "The customer email field must be a valid email address.",
+                  "error": {
+                    "code": "VALIDATION_FAILED",
+                    "reason": "The customer email field must be a valid email address.",
+                    "retryable": false,
+                    "outcome": "rejected"
+                  },
+                  "errors": {
+                    "customer_email": [
+                      "The customer email field must be a valid email address."
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Quota exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": true,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": true,
+                    "outcome": "unknown"
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "NUERS acceptance; customer email state is independent.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "environment": "live",
+                  "duplicate": false,
+                  "nuers_status": "success",
+                  "status": "durably_recorded",
+                  "message": "Transaction successfully recorded by NUERS.",
+                  "error": null,
+                  "id": "EXAMPLE-INBOX-ID",
+                  "transaction_id": "EXAMPLE-TRANSACTION-ID",
+                  "receipt_id": "EXAMPLE-RECEIPT-ID",
+                  "source_event_id": "erpA:invoice:0001",
+                  "external_reference": "erpA:INV-0001",
+                  "status_url": "https://nuers.net/api/integrations/transactions/EXAMPLE-INBOX-ID",
+                  "customer_receipt": {
+                    "delivery_id": "EXAMPLE-DELIVERY-ID",
+                    "status": "queued",
+                    "reason": "Customer receipt is queued for email processing."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "external_reference": {
+                    "type": "string",
+                    "description": "Stable source reference, up to 120 characters. Duplicate lookup is scoped to the API key\u2019s merchant.",
+                    "maxLength": 120
+                  },
+                  "amount": {
+                    "type": "number",
+                    "description": "PHP units, >= 0. Required when gross_amount is absent.",
+                    "minimum": 0
+                  },
+                  "gross_amount": {
+                    "type": "number",
+                    "description": "PHP units, >= 0. Required when amount is absent; takes precedence if both are sent.",
+                    "minimum": 0
+                  },
+                  "tax_type": {
+                    "type": "string",
+                    "description": "vatable | vat_exempt | zero_rated | non_vat.",
+                    "enum": [
+                      "vatable",
+                      "vat_exempt",
+                      "zero_rated",
+                      "non_vat"
+                    ]
+                  },
+                  "vat_rate": {
+                    "type": "number",
+                    "description": "Supported tax rate, 0 or 12 according to tax treatment; server rejects inconsistent taxes.",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "vat_inclusive": {
+                    "type": "boolean",
+                    "description": "Defaults to true. For VAT-exclusive input, VAT is added to the supplied amount."
+                  },
+                  "source_system": {
+                    "type": "string",
+                    "description": "Source label, maximum 120 characters.",
+                    "maxLength": 120,
+                    "pattern": "^[A-Za-z0-9_.-]+$"
+                  },
+                  "channel": {
+                    "type": "string",
+                    "description": "Maximum 80 characters; defaults to api.",
+                    "maxLength": 80
+                  },
+                  "transaction_type": {
+                    "type": "string",
+                    "description": "Maximum 80 characters; defaults to sale.",
+                    "maxLength": 80
+                  },
+                  "payment_method": {
+                    "type": "string",
+                    "description": "Maximum 80 characters; defaults to cash. Payment metadata is separate from BIR acceptance.",
+                    "maxLength": 80
+                  },
+                  "document_type": {
+                    "type": "string",
+                    "description": "vat_invoice | non_vat_invoice | vat_exempt_invoice | zero_rated_invoice | mixed_sales_invoice | payment_receipt | sales_invoice | official_receipt. These are NUERS identifiers, not a legal classification ruling.",
+                    "enum": [
+                      "vat_invoice",
+                      "non_vat_invoice",
+                      "vat_exempt_invoice",
+                      "zero_rated_invoice",
+                      "mixed_sales_invoice",
+                      "payment_receipt",
+                      "sales_invoice",
+                      "official_receipt"
+                    ]
+                  },
+                  "customer_name": {
+                    "type": "string",
+                    "description": "Up to 255 characters; omit in synthetic examples. Real data requires authorized handling.",
+                    "maxLength": 255
+                  },
+                  "customer_tin": {
+                    "type": "string",
+                    "description": "Optional supported 9/12/14-digit TIN form; field validation is not BIR verification.",
+                    "maxLength": 80
+                  },
+                  "branch": {
+                    "type": "string",
+                    "description": "Branch label, up to 255 characters.",
+                    "maxLength": 255
+                  },
+                  "branch_name": {
+                    "type": "string",
+                    "description": "Branch name, up to 255 characters.",
+                    "maxLength": 255
+                  },
+                  "branch_code": {
+                    "type": "string",
+                    "description": "Exact five-digit BIR branch code authorized by the key.",
+                    "maxLength": 5,
+                    "pattern": "^[0-9]{5}$",
+                    "minLength": 5
+                  },
+                  "branch_type": {
+                    "type": "string",
+                    "description": "main | branch.",
+                    "enum": [
+                      "main",
+                      "branch"
+                    ]
+                  },
+                  "receipt_number": {
+                    "type": "string",
+                    "description": "Original finalized source number; must match the next configured authorized series.",
+                    "maxLength": 120
+                  },
+                  "items": {
+                    "type": "array",
+                    "description": "1\u2013100 complete item lines. description, positive quantity, unit_price in PHP/pesos and supported tax treatment; server reconciles lines and gross total.",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "description",
+                        "quantity",
+                        "unit_price"
+                      ],
+                      "properties": {
+                        "description": {
+                          "type": "string"
+                        },
+                        "quantity": {
+                          "type": "number",
+                          "exclusiveMinimum": 0
+                        },
+                        "unit_price": {
+                          "type": [
+                            "number",
+                            "string"
+                          ]
+                        },
+                        "tax_type": {
+                          "enum": [
+                            "vatable",
+                            "non_vat",
+                            "zero_rated",
+                            "vat_exempt"
+                          ]
+                        },
+                        "tax_basis_reference": {
+                          "type": "string",
+                          "maxLength": 2000
+                        },
+                        "qty": {
+                          "type": "number",
+                          "exclusiveMinimum": 0
+                        },
+                        "price": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "amount": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "benefit_eligible": {
+                          "type": "boolean",
+                          "default": false,
+                          "description": "Apply the verified sales_benefit only to this line; no discount_pct stacking."
+                        },
+                        "manual_discount": {
+                          "$ref": "#/components/schemas/ManualDiscount"
+                        },
+                        "discount_pct": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100,
+                          "multipleOf": 0.01,
+                          "description": "Legacy per-line percentage. Do not combine with manual_discount or statutory benefits on the same line."
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "minItems": 1,
+                    "maxItems": 100
+                  },
+                  "schema_version": {
+                    "type": "string",
+                    "description": "NUERS-ingestion-1",
+                    "maxLength": 80,
+                    "const": "NUERS-ingestion-1"
+                  },
+                  "source_event_id": {
+                    "type": "string",
+                    "description": "Stable source event ID, up to 120 characters.",
+                    "maxLength": 120
+                  },
+                  "event_type": {
+                    "type": "string",
+                    "description": "invoice.finalized | payment.recorded. Payment evidence is not another sale.",
+                    "maxLength": 80,
+                    "enum": [
+                      "invoice.finalized",
+                      "payment.recorded"
+                    ]
+                  },
+                  "occurred_at": {
+                    "type": "string",
+                    "description": "Original event timestamp with explicit timezone; preserve on every retry.",
+                    "maxLength": 80,
+                    "format": "date-time",
+                    "pattern": "T.*(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+                  },
+                  "record_mode": {
+                    "type": "string",
+                    "enum": [
+                      "source_capture",
+                      "nuers_issuance"
+                    ],
+                    "default": "nuers_issuance",
+                    "description": "Use source_capture for an existing ERP/POS original; nuers_issuance allocates a new authorized NUERS original."
+                  },
+                  "source_profile_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Required for source_capture: reviewed original issuer, exact system and branch, effective seller registration and original issue period."
+                  },
+                  "customer_address": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "withholding_tax": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Applicable CWT in PHP. Does not reduce gross_amount, VAT base or wallet eligibility. Reduces net_payable."
+                  },
+                  "withholding_basis_reference": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 2000,
+                    "description": "Required when withholding_tax is supplied."
+                  },
+                  "tax_basis_reference": {
+                    "type": "string",
+                    "maxLength": 2000,
+                    "description": "Applicable effective exemption/zero-rating or tax classification reference."
+                  },
+                  "sales_benefit": {
+                    "$ref": "#/components/schemas/SalesBenefit"
+                  },
+                  "manual_discount": {
+                    "$ref": "#/components/schemas/ManualDiscount"
+                  },
+                  "customer_email": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "email",
+                    "maxLength": 254,
+                    "description": "Optional customer_email: one valid checkout email address, maximum 254 characters. Omit or send null when absent. Map the checkout email explicitly; NUERS does not scan arbitrary payload fields. Invalid addresses return 422 before acceptance. Never use a customer address as an API credential."
+                  },
+                  "withholding_details": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "withholding_agent",
+                      "classification",
+                      "atc",
+                      "rate",
+                      "base",
+                      "amount",
+                      "evidence_reference"
+                    ],
+                    "properties": {
+                      "withholding_agent": {
+                        "type": "boolean",
+                        "enum": [
+                          true
+                        ]
+                      },
+                      "classification": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 200
+                      },
+                      "atc": {
+                        "type": "string",
+                        "pattern": "^[A-Z]{2}[0-9]{3}$"
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "base": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "amount": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "evidence_reference": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 2000
+                      }
+                    },
+                    "description": "For buyer-confirmed CWT, send withholding_tax in PHP and withholding_basis_reference. Send withholding_details with withholding_agent=true, classification, atc (two uppercase letters and three digits), rate (percentage), base, amount and evidence_reference. Decimal money fields have at most two decimals. amount must equal withholding_tax and rounded base \u00d7 rate / 100. CWT reduces net_payable; gross_amount, sales, VAT and the wallet fee basis stay unchanged. Existing amount-and-basis integrations remain supported; use the structured buyer confirmation for new mappings."
+                  },
+                  "manual_recovery_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Record an outage and its authorized manual invoices under Merchant \u2192 Compliance Operations, then record verified restoration. On a replacement Live invoice, send manual_recovery_id from that register and the original manual number in manual_invoice_number. The replacement must match merchant, branch, buyer and gross amount, explicitly reference the manual invoice and be dated after restoration. One manual invoice links to one replacement. A mismatch rolls back the new event and fee. Sandbox cannot link Live recovery records. The register tracks the three-calendar-day recovery deadline; it does not issue manual authority or claim BIR transmission."
+                  },
+                  "manual_invoice_number": {
+                    "type": "string",
+                    "maxLength": 114,
+                    "description": "Required with manual_recovery_id. Exact original authorized manual invoice number."
+                  }
+                },
+                "required": [
+                  "external_reference",
+                  "tax_type",
+                  "source_system",
+                  "payment_method",
+                  "document_type",
+                  "branch_code",
+                  "receipt_number",
+                  "items",
+                  "schema_version",
+                  "source_event_id",
+                  "event_type",
+                  "occurred_at"
+                ],
+                "anyOf": [
+                  {
+                    "required": [
+                      "amount"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "gross_amount"
+                    ]
+                  }
+                ],
+                "additionalProperties": false
+              },
+              "example": {
+                "external_reference": "TEST-POS-000001",
+                "source_system": "demo_pos",
+                "channel": "pos",
+                "amount": 1120,
+                "tax_type": "vatable",
+                "vat_rate": 12,
+                "vat_inclusive": true,
+                "document_type": "sales_invoice",
+                "payment_method": "cash",
+                "branch_code": "00000",
+                "items": [
+                  {
+                    "description": "Synthetic example item",
+                    "quantity": 1,
+                    "unit_price": 1120
+                  }
+                ],
+                "schema_version": "NUERS-ingestion-1",
+                "source_event_id": "TEST-EVENT-000001",
+                "event_type": "invoice.finalized",
+                "occurred_at": "2026-10-17T10:00:00+08:00",
+                "receipt_number": "TEST-00000001",
+                "customer_email": "customer@example.test"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/business-accounts/current": {
+      "get": {
+        "operationId": "account",
+        "summary": "Current business account",
+        "description": "Retrieve the business linked to the authenticated user. Use the user session token, not a merchant integration key.\n\n",
+        "tags": [
+          "Merchant workspace"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/api/merchant/transactions": {
+      "get": {
+        "operationId": "transactions",
+        "summary": "List merchant transactions",
+        "description": "Tenant-scoped transaction list and recorded summaries.\n\n",
+        "tags": [
+          "Merchant workspace"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Default 1.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "description": "5\u2013100; default 15.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "Search the supported transaction fields.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "Filter by stored transaction status.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "description": "Filter by source channel.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "branch",
+            "in": "query",
+            "required": false,
+            "description": "Filter by branch label.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "payment",
+            "in": "query",
+            "required": false,
+            "description": "Filter by payment method.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/merchant/api-keys": {
+      "get": {
+        "operationId": "keys",
+        "summary": "List merchant API keys",
+        "description": "List masked key metadata for the authenticated merchant. Stored plaintext keys are not returned.\n\n",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "post": {
+        "operationId": "create-key",
+        "summary": "Create merchant API key",
+        "description": "Create a tenant-bound machine credential. The response contains plain_key once; store it in approved secret storage.\n\nUser-session authorization and an existing merchant association are required. This operation creates access; the public sandbox does not execute it.\nKey management is available through the merchant API-key dashboard. Never paste a real key into the public sandbox.\nThe merchant form requires a name and Live/Sandbox selection. Environment is immutable. Both supported transaction scopes and 90-day expiry are defaults; daily budget is 50,000 Live or 5,000 Sandbox. Registered location is assigned from the business TIN; no merchant Branches / Terminals setup is required. Missing identity or inactive locations require administrator review. Existing keys and legal issuance/reporting gates are preserved.",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          },
+          "201": {
+            "description": "Created record when the required gates pass."
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Maximum 255 characters."
+                  },
+                  "environment": {
+                    "type": "string",
+                    "description": "live | sandbox. Immutable credential environment controls isolated storage; transaction JSON cannot override it.",
+                    "default": "live"
+                  },
+                  "scopes": {
+                    "type": "array",
+                    "description": "Explicit scope strings; transactions:write is required for transaction ingestion.",
+                    "items": {}
+                  },
+                  "ip_whitelist": {
+                    "type": "array",
+                    "description": "Exact source IP strings. CIDR matching is not implemented in ingestion.",
+                    "items": {}
+                  },
+                  "rate_limit_per_day": {
+                    "type": "integer",
+                    "description": "100\u20131,000,000. Defaults are 50,000 live / 5,000 sandbox."
+                  },
+                  "branch_type": {
+                    "type": "string",
+                    "description": "main | branch."
+                  },
+                  "branch_code": {
+                    "type": "string",
+                    "pattern": "^[0-9]{5}$",
+                    "description": "Optional legacy override, restricted to an existing active owned registry location. Omit for automatic registered business assignment."
+                  },
+                  "branch_name": {
+                    "type": "string",
+                    "description": "Maximum 255 characters."
+                  },
+                  "branch_location": {
+                    "type": "string",
+                    "description": "Maximum 255 characters."
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              },
+              "example": {
+                "name": "My ERP Integration"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/merchant/api-keys/{id}": {
+      "patch": {
+        "operationId": "key-update",
+        "summary": "Update merchant API key policy",
+        "description": "Update permitted metadata and access policy for an owned key. No rotate flag is implemented.\n\nFor replacement: create a new key, update authorized consumers, verify readiness and then revoke the old key. There is no atomic rotate endpoint.",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Updated key name."
+                  },
+                  "active": {
+                    "type": "boolean",
+                    "description": "true enables; false makes the owned key inactive."
+                  },
+                  "scopes": {
+                    "type": "array",
+                    "description": "Replacement scope strings.",
+                    "items": {}
+                  },
+                  "ip_whitelist": {
+                    "type": "array",
+                    "description": "Replacement exact-IP allowlist.",
+                    "items": {}
+                  },
+                  "rate_limit_per_day": {
+                    "type": "integer",
+                    "description": "100\u20131,000,000."
+                  },
+                  "branch_type": {
+                    "type": "string",
+                    "description": "main | branch."
+                  },
+                  "branch_code": {
+                    "type": "string",
+                    "description": "Maximum 80 characters."
+                  },
+                  "branch_name": {
+                    "type": "string",
+                    "description": "Maximum 255 characters."
+                  },
+                  "branch_location": {
+                    "type": "string",
+                    "description": "Maximum 255 characters."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "key-revoke",
+        "summary": "Revoke a merchant API key",
+        "description": "Deactivate an owned API key through the controlled key-management route.\n\nThis changes access. The documentation and public sandbox never execute it automatically.",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/bir-eis/readiness": {
+      "get": {
+        "operationId": "readiness",
+        "summary": "EIS readiness",
+        "description": "Inspect recorded accreditation/taxpayer gates, checks and queue metadata. Authorized roles: admin, super_admin, bir.\n\nLocal readiness and registered credentials do not constitute BIR approval.",
+        "tags": [
+          "Administrative EIS"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden scope/role/IP"
+          }
+        }
+      }
+    },
+    "/api/bir-eis/validate": {
+      "post": {
+        "operationId": "eis-validate",
+        "summary": "Validate internal EIS payload",
+        "description": "Validate the current NUERS structural payload requirements and return its canonical hash and deadline. This is not official BIR schema conformance.\n\nDefault timezone/display rules and the actual returned due_at govern this internal check. The example is dated and illustrative.\nValidation does not create a document, transmit it or establish tax correctness.",
+        "tags": [
+          "Administrative EIS"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden scope/role/IP"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "payload": {
+                    "type": [
+                      "object",
+                      "string"
+                    ],
+                    "description": "Object or JSON string. Current checker requires a document identifier, parseable issue/transaction date, Philippine-format seller TIN and a positive total."
+                  }
+                },
+                "required": [
+                  "payload"
+                ]
+              },
+              "example": {
+                "payload": {
+                  "is_test": true,
+                  "invoice_number": "TEST-INV-000001",
+                  "issue_date": "2026-10-15",
+                  "seller_tin": "999999999000",
+                  "total_due": 1120,
+                  "document_type": "sales_invoice"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bir-eis/transmissions": {
+      "post": {
+        "operationId": "eis-queue",
+        "summary": "Queue certification payload",
+        "description": "Record an eligible internal transmission intent. Certification requires payload.is_test=true; production is blocked until the separate authority and transport gates pass.\n\nThis endpoint writes queue and audit records. The public sandbox does not call it.\nDocument identity includes seller, branch, document type and number within an environment. Same identity/hash returns the original; changed content is rejected with 409.\nA queued or simulated certification acknowledgment is not BIR acceptance.",
+        "tags": [
+          "Administrative EIS"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden scope/role/IP"
+          },
+          "409": {
+            "description": "State or authority conflict"
+          },
+          "422": {
+            "description": "Validation failed"
+          },
+          "201": {
+            "description": "Created record when the required gates pass."
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "environment": {
+                    "type": "string",
+                    "description": "certification | production; default certification."
+                  },
+                  "payload": {
+                    "type": [
+                      "object",
+                      "string"
+                    ],
+                    "description": "Internal EIS payload. Use explicit synthetic test data only in certification."
+                  }
+                },
+                "required": [
+                  "payload"
+                ]
+              },
+              "example": {
+                "environment": "certification",
+                "payload": {
+                  "is_test": true,
+                  "invoice_number": "TEST-INV-000001",
+                  "issue_date": "2026-10-15",
+                  "seller_tin": "999999999000",
+                  "total_due": 1120,
+                  "document_type": "sales_invoice"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "eis-list",
+        "summary": "List recorded transmissions",
+        "description": "Search recorded queue states and attempts.\n\n",
+        "tags": [
+          "Administrative EIS"
+        ],
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden scope/role/IP"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Positive page number.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "description": "1\u2013100.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "environment",
+            "in": "query",
+            "required": false,
+            "description": "all | production | certification | sandbox.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "Transaction/document/taxpayer search.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "Stored transmission status.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/developer/sandbox": {
+      "post": {
+        "operationId": "sandbox",
+        "summary": "Run an isolated contract preview",
+        "description": "Validate synthetic transaction fields using the same shared NUERS field rules/calculation service. No financial database writes or BIR network requests.\n\nActual HTTP 200 carries simulated_http_status for a scenario. It does not emit a real API 401/429 or authorize retry against a production system.\n20 requests/minute per limiter identity; 64 KB maximum request size; preview amount maximum PHP 1 billion.\nNo Authorization or X-NUERS-API-Key header is accepted. Synthetic customer TIN, if used, must be 999999999000.",
+        "tags": [
+          "Developer tools"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "413": {
+            "description": "Payload too large"
+          },
+          "422": {
+            "description": "Validation failed"
+          },
+          "429": {
+            "description": "Quota exceeded"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "is_test": {
+                    "type": "boolean",
+                    "description": "Must be true.",
+                    "const": true
+                  },
+                  "action": {
+                    "type": "string",
+                    "description": "ingestion validates complete NUERS-ingestion-1 fields, event/document family and line reconciliation without writing records. Synthetic data only.",
+                    "enum": [
+                      "validate",
+                      "preview",
+                      "scenario",
+                      "ingestion"
+                    ]
+                  },
+                  "payload": {
+                    "type": "object",
+                    "description": "Required for validate/preview. external_reference must start TEST-, DEMO- or SAMPLE-. No credentials or private keys."
+                  },
+                  "scenario": {
+                    "type": "string",
+                    "description": "For scenario: duplicate | conflict | unauthorized | forbidden | rate_limit | timeout | production_gate."
+                  }
+                },
+                "required": [
+                  "is_test",
+                  "action"
+                ],
+                "allOf": [
+                  {
+                    "if": {
+                      "properties": {
+                        "action": {
+                          "enum": [
+                            "validate",
+                            "preview"
+                          ]
+                        }
+                      }
+                    },
+                    "then": {
+                      "required": [
+                        "payload"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "example": {
+                "is_test": true,
+                "action": "preview",
+                "payload": {
+                  "external_reference": "TEST-POS-000001",
+                  "source_system": "demo_pos",
+                  "channel": "pos",
+                  "amount": 1120,
+                  "tax_type": "vatable",
+                  "vat_rate": 12,
+                  "vat_inclusive": true,
+                  "document_type": "sales_invoice",
+                  "payment_method": "cash",
+                  "branch_code": "00000",
+                  "items": [
+                    {
+                      "description": "Synthetic example item",
+                      "quantity": 1,
+                      "unit_price": 1120
+                    }
+                  ],
+                  "schema_version": "NUERS-ingestion-1",
+                  "source_event_id": "TEST-EVENT-000001",
+                  "event_type": "invoice.finalized",
+                  "occurred_at": "2026-10-17T10:00:00+08:00",
+                  "receipt_number": "TEST-00000001"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/transactions/wallet": {
+      "get": {
+        "operationId": "ingest-wallet",
+        "summary": "Read prepaid funds and current fee",
+        "description": "transactions:read scope. Shared merchant balance, current pricing revision and client intake preference. No wallet funding or BIR connection is performed.\n\n\n\nMerchant transaction, batch and wallet responses do not expose bir_acceptance, bir_connection, bir_status or internal preparation blockers. Display NUERS status in the connector. NUERS Success confirms platform recording; it does not assert government acceptance.",
+        "tags": [
+          "Merchant integration"
+        ],
+        "security": [
+          {
+            "MerchantKeyHeader": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response; review endpoint-specific status and example."
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": false,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden scope/role/IP",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": false,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": false,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Quota exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": true,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service configuration unavailable",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": true,
+                    "outcome": "unknown"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/transactions/batch": {
+      "post": {
+        "operationId": "ingest-batch",
+        "summary": "Accept a finalized source batch atomically",
+        "description": "transactions:write, active live key. One branch, 1\u201350 original source events using the finalized event contract. New financial events, numbering and all fees commit together or none commit.\n\nA failed batch returns 402 if the total fee for new eligible events exceeds available funds. Existing exact duplicates require no new fee. Any validation, authority, sequence or source conflict rejects the entire batch. Retain every unaccepted original on the client.\nBatches are limited to 10 requests/minute plus key admission budgets. These are protective limits, not measured throughput.\nClient preference can be realtime or batch. External POS/ERP connectors must implement the preference, durable source retention and bounded identical retries.\n\nMerchant transaction, batch and wallet responses do not expose bir_acceptance, bir_connection, bir_status or internal preparation blockers. Display NUERS status in the connector. NUERS Success confirms platform recording; it does not assert government acceptance.\n\nEvery ERP, POS or e-commerce sales row must show NUERS Status, failure reason, environment, NUERS reference and last attempt. Show Success only after a valid 201 or 200 duplicate acknowledgement with matching source_event_id, external_reference and environment, non-empty id/transaction_id/receipt_id, status=durably_recorded and nuers_status=success. Persist these identifiers atomically with the local outbox acknowledgement.\n\nA newly accepted Live event containing customer_email queues one customer PDF email in the same database transaction. Exact retries return the same record and do not queue another email or fee. Failed/rolled-back events queue no email. Sandbox always returns suppressed_sandbox and never emails customers. Existing transactions are not emailed retroactively.\n\nPoll GET status_url with the same environment and transactions:read scope for customer_receipt.status and reason. States: not_requested, suppressed_sandbox, queued, preparing, sending, smtp_accepted, failed, uncertain, expired, cancelled. smtp_accepted means the SMTP server accepted the message, not confirmed inbox delivery. Email failures never change a successfully recorded sale to Error. Do not retry the sale to resend mail; use the merchant document Send Copy action after investigating an uncertain delivery.",
+        "tags": [
+          "Merchant integration"
+        ],
+        "security": [
+          {
+            "MerchantKeyHeader": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "NUERS acceptance; customer email state is independent.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "success",
+                  "atomic": true,
+                  "accepted": 1,
+                  "results": [
+                    {
+                      "environment": "live",
+                      "duplicate": false,
+                      "nuers_status": "success",
+                      "status": "durably_recorded",
+                      "message": "Transaction successfully recorded by NUERS.",
+                      "error": null,
+                      "id": "EXAMPLE-INBOX-ID",
+                      "transaction_id": "EXAMPLE-TRANSACTION-ID",
+                      "receipt_id": "EXAMPLE-RECEIPT-ID",
+                      "source_event_id": "erpA:invoice:0001",
+                      "external_reference": "erpA:INV-0001",
+                      "status_url": "https://nuers.net/api/integrations/transactions/EXAMPLE-INBOX-ID",
+                      "customer_receipt": {
+                        "delivery_id": "EXAMPLE-DELIVERY-ID",
+                        "status": "queued",
+                        "reason": "Customer receipt is queued for email processing."
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": false,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Insufficient merchant prepaid wallet funds; financial intake not saved",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": false,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden scope/role/IP",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": false,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": false,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "State or authority conflict",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": false,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "code": "VALIDATION_FAILED",
+                  "message": "The customer email field must be a valid email address.",
+                  "error": {
+                    "code": "VALIDATION_FAILED",
+                    "reason": "The customer email field must be a valid email address.",
+                    "retryable": false,
+                    "outcome": "rejected"
+                  },
+                  "errors": {
+                    "customer_email": [
+                      "The customer email field must be a valid email address."
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Quota exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": true,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": true,
+                    "outcome": "unknown"
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "NUERS acceptance; customer email state is independent.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "success",
+                  "atomic": true,
+                  "accepted": 1,
+                  "results": [
+                    {
+                      "environment": "live",
+                      "duplicate": false,
+                      "nuers_status": "success",
+                      "status": "durably_recorded",
+                      "message": "Transaction successfully recorded by NUERS.",
+                      "error": null,
+                      "id": "EXAMPLE-INBOX-ID",
+                      "transaction_id": "EXAMPLE-TRANSACTION-ID",
+                      "receipt_id": "EXAMPLE-RECEIPT-ID",
+                      "source_event_id": "erpA:invoice:0001",
+                      "external_reference": "erpA:INV-0001",
+                      "status_url": "https://nuers.net/api/integrations/transactions/EXAMPLE-INBOX-ID",
+                      "customer_receipt": {
+                        "delivery_id": "EXAMPLE-DELIVERY-ID",
+                        "status": "queued",
+                        "reason": "Customer receipt is queued for email processing."
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "events": {
+                    "type": "array",
+                    "description": "1\u201350 complete NUERS-ingestion-1 events; use original legal source order.",
+                    "items": {
+                      "$ref": "#/components/schemas/IngestionEvent"
+                    },
+                    "minItems": 1,
+                    "maxItems": 50
+                  }
+                },
+                "required": [
+                  "events"
+                ]
+              },
+              "example": {
+                "events": [
+                  {
+                    "external_reference": "TEST-POS-000001",
+                    "source_system": "demo_pos",
+                    "channel": "pos",
+                    "amount": 1120,
+                    "tax_type": "vatable",
+                    "vat_rate": 12,
+                    "vat_inclusive": true,
+                    "document_type": "sales_invoice",
+                    "payment_method": "cash",
+                    "branch_code": "00000",
+                    "items": [
+                      {
+                        "description": "Synthetic example item",
+                        "quantity": 1,
+                        "unit_price": 1120
+                      }
+                    ],
+                    "schema_version": "NUERS-ingestion-1",
+                    "source_event_id": "TEST-EVENT-000001",
+                    "event_type": "invoice.finalized",
+                    "occurred_at": "2026-10-17T10:00:00+08:00",
+                    "receipt_number": "TEST-00000001"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/transactions/{id}": {
+      "get": {
+        "summary": "Retrieve durable production intake result for the key\u2019s exact business and branch",
+        "security": [
+          {
+            "MerchantKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "NUERS acceptance; customer email state is independent.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "environment": "live",
+                  "duplicate": false,
+                  "nuers_status": "success",
+                  "status": "durably_recorded",
+                  "message": "Transaction successfully recorded by NUERS.",
+                  "error": null,
+                  "id": "EXAMPLE-INBOX-ID",
+                  "transaction_id": "EXAMPLE-TRANSACTION-ID",
+                  "receipt_id": "EXAMPLE-RECEIPT-ID",
+                  "source_event_id": "erpA:invoice:0001",
+                  "external_reference": "erpA:INV-0001",
+                  "status_url": "https://nuers.net/api/integrations/transactions/EXAMPLE-INBOX-ID",
+                  "customer_receipt": {
+                    "delivery_id": "EXAMPLE-DELIVERY-ID",
+                    "status": "queued",
+                    "reason": "Customer receipt is queued for email processing."
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Scope / IP / key policy denied",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": false,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No authorized resource in this tenant/branch",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": false,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Sandbox returns a virtual wallet and only Sandbox status IDs. Live and Sandbox status IDs are mutually invisible; neither Sandbox nor the virtual wallet can read production",
+            "content": {
+              "application/json": {
+                "example": {
+                  "nuers_status": "error",
+                  "error": {
+                    "code": "SEE_STATUS_CODE",
+                    "reason": "Safe actionable reason",
+                    "retryable": false,
+                    "outcome": "rejected"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "\n\nMerchant transaction, batch and wallet responses do not expose bir_acceptance, bir_connection, bir_status or internal preparation blockers. Display NUERS status in the connector. NUERS Success confirms platform recording; it does not assert government acceptance.\n\nEvery ERP, POS or e-commerce sales row must show NUERS Status, failure reason, environment, NUERS reference and last attempt. Show Success only after a valid 201 or 200 duplicate acknowledgement with matching source_event_id, external_reference and environment, non-empty id/transaction_id/receipt_id, status=durably_recorded and nuers_status=success. Persist these identifiers atomically with the local outbox acknowledgement.\n\nA newly accepted Live event containing customer_email queues one customer PDF email in the same database transaction. Exact retries return the same record and do not queue another email or fee. Failed/rolled-back events queue no email. Sandbox always returns suppressed_sandbox and never emails customers. Existing transactions are not emailed retroactively.\n\nPoll GET status_url with the same environment and transactions:read scope for customer_receipt.status and reason. States: not_requested, suppressed_sandbox, queued, preparing, sending, smtp_accepted, failed, uncertain, expired, cancelled. smtp_accepted means the SMTP server accepted the message, not confirmed inbox delivery. Email failures never change a successfully recorded sale to Error. Do not retry the sale to resend mail; use the merchant document Send Copy action after investigating an uncertain delivery."
+      }
+    }
+  },
+  "webhooks": {
+    "merchantCallback": {
+      "post": {
+        "summary": "Signed merchant callback to a configured, verified, explicitly enabled HTTPS receiver",
+        "description": "Exact raw-body HMAC-SHA256: timestamp.event_id.raw_body; X-NUERS-Signature v1=hex. Validate time drift <=300 seconds, body identity/environment, current secret/version; durable unique(environment,event_id) inbox before 2xx. Delivery is at least once in practice and order is not guaranteed. See receiver guide.",
+        "parameters": [
+          {
+            "name": "X-NUERS-Event",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-NUERS-Timestamp",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-NUERS-Signature",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-NUERS-Environment",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-NUERS-Key-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "type",
+                  "environment",
+                  "merchant_id",
+                  "subject_id",
+                  "occurred_at",
+                  "data"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "transaction.accepted",
+                      "source.received",
+                      "invoice.issued",
+                      "payment.recorded",
+                      "webhook.endpoint_challenge",
+                      "webhook.test"
+                    ]
+                  },
+                  "environment": {
+                    "type": "string",
+                    "enum": [
+                      "live",
+                      "sandbox"
+                    ]
+                  },
+                  "merchant_id": {
+                    "type": "string"
+                  },
+                  "subject_id": {
+                    "type": "string"
+                  },
+                  "occurred_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "data": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Receiver durably accepted or already received the identical event. A challenge additionally requires JSON nuers_challenge echo."
+          },
+          "503": {
+            "description": "Receiver cannot durably save; retry subject to limits."
+          }
+        }
+      }
+    }
+  }
+}

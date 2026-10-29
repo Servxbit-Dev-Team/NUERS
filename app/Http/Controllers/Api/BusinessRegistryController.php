@@ -90,14 +90,14 @@ class BusinessRegistryController extends Controller
         return [$q, $v];
     }
 
-    private function present($m): array
+    private function present($m, bool $loadIntegration = true): array
     {
         $x = (array) $m;
         $meta = json_decode($x['registry_details'] ?? '{}', true) ?: [];
-        $e = DB::table('eis_integrations')->where('merchant_id', $m->id)->orderByDesc('updated_at')->first();
+        $e = $loadIntegration ? DB::table('eis_integrations')->where('merchant_id', $m->id)->orderByDesc('updated_at')->orderByDesc('id')->first() : null;
         $eis = ! $e ? 'not_connected' : ($e->environment !== 'production' ? 'certification' : (in_array($e->status, ['error', 'failed', 'rejected']) ? 'error' : 'pending'));
         $x['details'] = $meta;
-        $x['eis_status'] = $eis;
+        $x['eis_status'] = $x['registry_eis_status'] ?? $eis;
         $x['eis_environment'] = $e?->environment;
         $x['integration'] = $e ? ['id' => $e->id, 'environment' => $e->environment, 'status' => $e->status, 'certification_status' => $e->certification_status, 'ptt_status' => $e->ptt_status, 'permit_to_transmit_number' => $e->permit_to_transmit_number, 'eis_certificate_number' => $e->eis_certificate_number] : null;
         $x['stage'] = $meta['stage'] ?? ($m->status === 'active' ? 'onboarded' : 'evaluation');
@@ -105,9 +105,9 @@ class BusinessRegistryController extends Controller
         $x['vat_registered'] = (bool) $m->vat_registered;
         $x['account_linked'] = (bool) $m->merchant_account_id;
         $x['registry_revision'] = (int) $m->registry_revision;
-        unset($x['registry_details']);
+        unset($x['registry_details'], $x['registry_eis_status']);
         foreach (['created_at', 'updated_at'] as $k) {
-            if ($x[$k]) {
+            if ($x[$k] ?? null) {
                 $x[$k] = Carbon::parse($x[$k], config('app.timezone'))->toIso8601String();
             }
         }
@@ -115,40 +115,70 @@ class BusinessRegistryController extends Controller
         return $x;
     }
 
-    private function filtered(Request $r): array
+    private function metadata(string $field): string
     {
-        [$q,$v] = $this->query($r);
-        $rows = $q->orderBy('m.business_name')->get()->map(fn ($x) => $this->present($x));
-        if (($v['eis'] ?? 'all') !== 'all') {
-            $rows = $rows->where('eis_status', $v['eis']);
-        }if (($v['stage'] ?? 'all') !== 'all') {
-            $rows = $rows->where('stage', $v['stage']);
-        }if (($v['application_type'] ?? 'all') !== 'all') {
-            $rows = $rows->where('application_type', $v['application_type']);
-        }
+        $json = "CASE WHEN JSON_VALID(m.registry_details) THEN m.registry_details ELSE '{}' END";
+        $value = DB::getDriverName() === 'mysql' ? "NULLIF(JSON_UNQUOTE(JSON_EXTRACT($json, '$.$field')), 'null')" : "JSON_EXTRACT($json, '$.$field')";
+        $fallback = $field === 'stage' ? "CASE WHEN m.status='active' THEN 'onboarded' ELSE 'evaluation' END" : "'new'";
+        return "COALESCE($value, $fallback)";
+    }
 
-        return [$rows->values(), $v];
+    private function filteredQuery(Request $r): array
+    {
+        [$q, $v] = $this->query($r);
+        foreach (['stage', 'application_type'] as $field) {
+            if (($v[$field] ?? 'all') !== 'all') $q->whereRaw($this->metadata($field).' = ?', [$v[$field]]);
+        }
+        $eis = "COALESCE((SELECT CASE WHEN ei.environment<>'production' THEN 'certification' WHEN ei.status IN ('error','failed','rejected') THEN 'error' ELSE 'pending' END FROM eis_integrations ei WHERE ei.merchant_id=m.id ORDER BY ei.updated_at DESC,ei.id DESC LIMIT 1),'not_connected')";
+        if (($v['eis'] ?? 'all') !== 'all') $q->whereRaw("$eis = ?", [$v['eis']]);
+        return [$q, $v, $eis];
+    }
+
+    private function ordered($q, array $v)
+    {
+        return match ($v['sort'] ?? 'newest') {
+            'name' => $q->orderBy('m.business_name')->orderBy('m.id'),
+            'oldest' => $q->orderBy('m.created_at')->orderBy('m.id'),
+            default => $q->orderByDesc('m.created_at')->orderBy('m.id'),
+        };
     }
 
     public function index(Request $r)
     {
         $u = $this->actor($r);
-        [$rows,$v] = $this->filtered($r);
-        $counts = fn ($key) => $rows->groupBy($key)->map(fn ($g, $k) => ['name' => $k, 'value' => $g->count()])->values();
-        $summary = ['total' => $rows->count(), 'active' => $rows->where('status', 'active')->count(), 'pending' => $rows->where('status', 'pending')->count(), 'suspended' => $rows->whereIn('status', ['suspended', 'inactive'])->count(), 'connected' => 0];
+        [$q, $v, $eis] = $this->filteredQuery($r);
+        $statuses = (clone $q)->select('m.status')->selectRaw('COUNT(*) as total')->groupBy('m.status')->pluck('total', 'status');
+        $stageExpression = $this->metadata('stage');
+        // A derived column keeps MariaDB's ONLY_FULL_GROUP_BY validation independent
+        // of the JSON expression and its status fallback.
+        $stages = DB::query()->fromSub((clone $q)->selectRaw("$stageExpression as registry_stage"), 'registry_stages')
+            ->select('registry_stage')->selectRaw('COUNT(*) as total')->groupBy('registry_stage')->pluck('total', 'registry_stage');
+        $summary = ['total' => (int) $statuses->sum(), 'active' => (int) ($statuses['active'] ?? 0), 'pending' => (int) ($statuses['pending'] ?? 0),
+            'suspended' => (int) ($statuses['suspended'] ?? 0) + (int) ($statuses['inactive'] ?? 0), 'connected' => 0];
         foreach (['evaluation', 'bir_validation', 'eis_setup', 'onboarded', 'rejected'] as $stage) {
-            $summary[$stage] = $rows->where('stage', $stage)->count();
-        }$sort = $v['sort'] ?? 'newest';
-        $rows = $sort === 'name' ? $rows->sortBy('business_name', SORT_NATURAL | SORT_FLAG_CASE) : ($sort === 'oldest' ? $rows->sortBy('created_at') : $rows->sortByDesc('created_at'));
+            $summary[$stage] = (int) ($stages[$stage] ?? 0);
+        }
         $size = (int) ($v['per_page'] ?? 10);
-        $page = (int) ($v['page'] ?? 1);
-
-        return response()->json(['data' => $rows->values()->slice(($page - 1) * $size, $size)->values(), 'summary' => $summary, 'total' => $rows->count(), 'last_page' => max(1, (int) ceil($rows->count() / $size)), 'charts' => ['registration' => $counts('status'), 'eis' => $counts('eis_status')], 'options' => ['types' => BusinessRegistrationController::BUSINESS_TYPES, 'industries' => app(RegistrationIndustry::class)->options(), 'rdos' => app(RegistrationAddress::class)->offices(), 'regions' => DB::table('merchants')->distinct()->pluck('region'), 'cities' => DB::table('merchants')->whereNotNull('city')->distinct()->pluck('city')], 'can_write' => in_array(DB::table('profiles')->where('id', $u->id)->value('role'), ['admin', 'super_admin']), 'generated_at' => now()->toIso8601String(), 'gateway' => 'not_verified']);
+        $lastPage = max(1, (int) ceil($summary['total'] / $size));
+        $page = min($lastPage, (int) ($v['page'] ?? 1));
+        $rows = $this->ordered((clone $q)->select('m.*')->selectRaw("$eis as registry_eis_status"), $v)
+            ->forPage($page, $size)->get()->map(fn ($m) => $this->present($m, false));
+        $canWrite = in_array(DB::table('profiles')->where('id', $u->id)->value('role'), ['admin', 'super_admin']);
+        $overview = app(\App\Services\RegistryMerchantOverview::class);
+        $finances = $canWrite ? $overview->rows($rows->pluck('id')->all()) : [];
+        $rows = $rows->map(fn ($row) => $row + ['overview' => $finances[$row['id']] ?? null]);
+        return response()->json(['data' => $rows, 'summary' => $summary, 'financial_summary' => $canWrite ? $overview->summary($q) : null,
+            'total' => $summary['total'], 'page' => $page, 'last_page' => $lastPage,
+            'charts' => ['registration' => $statuses->map(fn ($n, $name) => ['name' => $name, 'value' => (int) $n])->values(), 'eis' => []],
+            'options' => ['types' => BusinessRegistrationController::BUSINESS_TYPES, 'industries' => app(RegistrationIndustry::class)->options(), 'rdos' => app(RegistrationAddress::class)->offices(),
+                'regions' => DB::table('merchants')->distinct()->pluck('region'), 'cities' => DB::table('merchants')->whereNotNull('city')->distinct()->pluck('city')],
+            'can_write' => $canWrite, 'can_view_financial' => $canWrite && $overview->available(), 'generated_at' => now()->toIso8601String(), 'gateway' => 'not_verified'])
+            ->header('Cache-Control', 'private, no-store');
     }
 
     public function show(Request $r, string $id)
     {
-        $this->actor($r);
+        $u = $this->actor($r);
         $m = DB::table('merchants')->where('id', $id)->first();
         abort_unless($m, 404);
         $x = $this->present($m);
@@ -158,6 +188,9 @@ class BusinessRegistryController extends Controller
         $x['transactions'] = DB::table('merchant_transactions')->where('merchant_id', $id)->count();
         $account = $m->merchant_account_id ? DB::table('users')->where('id', $m->merchant_account_id)->first(['email', 'email_verified_at', 'created_at']) : null;
         $x['account'] = $account;
+        if (in_array(DB::table('profiles')->where('id', $u->id)->value('role'), ['admin', 'super_admin'])) {
+            $x['overview'] = app(\App\Services\RegistryMerchantOverview::class)->rows([$id])[$id] ?? null;
+        }
 
         return response()->json(['business' => $x]);
     }
@@ -297,17 +330,36 @@ class BusinessRegistryController extends Controller
     public function export(Request $r)
     {
         $u = $this->actor($r);
-        [$rows] = $this->filtered($r);
-        $this->audit('exported', 'registry', $u, ['filters' => $r->query(), 'records' => $rows->count()]);
+        [$q, $v] = $this->filteredQuery($r);
+        $total = (clone $q)->count();
+        if ($r->has('report_limit')) \App\Services\ReportCsv::limit($r,$total);
+        abort_if($total > 10000, 422, 'Narrow the registry filters to at most 10,000 merchants per export.');
+        $canFinancial = in_array(DB::table('profiles')->where('id', $u->id)->value('role'), ['admin', 'super_admin'])
+            && app(\App\Services\RegistryMerchantOverview::class)->available();
+        $this->audit('exported', 'registry', $u, ['filters' => $r->query(), 'records' => $total]);
 
-        return response()->streamDownload(function () use ($rows) {
+        return response()->streamDownload(function () use ($q, $v, $canFinancial) {
             $f = fopen('php://output', 'w');
             fwrite($f, "\xEF\xBB\xBF");
             $keys = array_merge(self::CSV, ['status', 'registration_date', 'stage', 'application_type']);
-            fputcsv($f, $keys);
-            foreach ($rows as $row) {
-                fputcsv($f, array_map(fn ($k) => $this->cell($row[$k] ?? ''), $keys));
-            }fclose($f);
+            $financialKeys = ['available_centavos', 'reserved_centavos', 'transactions', 'transaction_amount_centavos',
+                'successful_transactions', 'failed_transactions', 'pending_transactions', 'charged_centavos', 'charged_transactions',
+                'deposits_centavos', 'withdrawals_centavos', 'pending_topups', 'pending_topups_centavos',
+                'live_keys', 'sandbox_keys', 'sandbox_events', 'last_transaction_at'];
+            fputcsv($f, array_merge($keys, $canFinancial ? array_map(fn ($k) => str_replace('_centavos', '_PHP', $k), $financialKeys) : []));
+            $this->ordered((clone $q)->select('m.*'), $v)->chunk(200, function ($merchants) use ($f, $keys, $financialKeys, $canFinancial) {
+                $financial = $canFinancial ? app(\App\Services\RegistryMerchantOverview::class)->rows($merchants->pluck('id')->all()) : [];
+                foreach ($merchants as $merchant) {
+                    $row = $this->present($merchant, false);
+                    $cells = array_map(fn ($k) => $this->cell($row[$k] ?? ''), $keys);
+                    if ($canFinancial) foreach ($financialKeys as $key) {
+                        $value = $financial[$merchant->id][$key] ?? '';
+                        $cells[] = str_ends_with($key, '_centavos') ? number_format((int) $value / 100, 2, '.', '') : $value;
+                    }
+                    fputcsv($f, $cells);
+                }
+            });
+            fclose($f);
         }, 'NUERS-business-registry-'.now()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8', 'Cache-Control' => 'private, no-store']);
     }
 

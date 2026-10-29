@@ -1,0 +1,69 @@
+[
+  {
+    "path": "/",
+    "status": 200,
+    "official_icon": true
+  },
+  {
+    "path": "/login",
+    "status": 200,
+    "official_icon": true
+  },
+  {
+    "path": "/merchant",
+    "status": 200,
+    "official_icon": true
+  },
+  {
+    "path": "/super-admin",
+    "status": 200,
+    "official_icon": true
+  },
+  {
+    "path": "/monitoring",
+    "status": 200,
+    "official_icon": true
+  },
+  {
+    "path": "/nuers-favicon.png",
+    "status": 200,
+    "content_type": "image/png",
+    "sha256": "eadc2019e3c5dad2964f9ef75eaf46f9a9b6c63631fd9ce4620495f879aeb834"
+  },
+  {
+    "path": "/favicon.ico",
+    "status": 200,
+    "content_type": "image/vnd.microsoft.icon",
+    "sha256": "6dcde69cc2f1640f7acfa71a10e2df632fd8b802bdf736fc7f346696f2d3079c"
+  },
+  {
+    "path": "/apple-touch-icon.png",
+    "status": 200,
+    "content_type": "image/png",
+    "sha256": "473e946544ea7e62c94cda7cac0b3a86f3c8192200fe05e982835e4120ce9eaf"
+  },
+  {
+    "path": "/app-icon-192.png",
+    "status": 200,
+    "content_type": "image/png",
+    "sha256": "119678c80390c8ec1d99218b43f2c27cb9bd8283323553aa7638f0b8e6a337e3"
+  },
+  {
+    "path": "/app-icon-512.png",
+    "status": 200,
+    "content_type": "image/png",
+    "sha256": "915a41f8593c4b6b0dc02149f4fa2e2a1f49640e108580b172b85b02d94bf650"
+  },
+  {
+    "path": "/site.webmanifest.json",
+    "status": 200,
+    "content_type": "application/json",
+    "sha256": "8c7e01d29262a3af50b377426cf456224a6509b3facbb2d62e4a49edfd69a2fd"
+  },
+  {
+    "path": "/icon.png",
+    "status": 200,
+    "content_type": "image/png",
+    "sha256": "b50631c79afbad1d155a9d2580b369991f28060bdf56f0b19bcf2f4cd64c239d"
+  }
+]

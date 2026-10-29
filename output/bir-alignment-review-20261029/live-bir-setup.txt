@@ -1,0 +1,163 @@
+Browser tab: 16, Title: "NUERS | Electronic Invoicing & Digital Receipts", URL: "https://nuers.net/super-admin/api-platform?view=bir".
+1 AXWebArea NUERS | Electronic Invoicing & Digital Receipts, URL: nuers.net/super-admin/api-platform?view=bir
+	2 container root
+		6 container admin navigation
+			7 link Description: NUERS dashboard, Value: nuers.net/super-admin
+			8 button Collapse navigation
+			9 container
+				10 heading OVERVIEW, Value: 2
+					11 text OVERVIEW
+				12 link Description: Dashboard, Value: nuers.net/super-admin
+				13 link Description: Live Transaction Monitor, Value: nuers.net/monitoring
+				14 heading E-INVOICING OPERATIONS, Value: 2
+					15 text E-INVOICING OPERATIONS
+				16 container
+					17 link Description: Electronic Invoices & Receipts, Value: nuers.net/invoices
+					18 button (collapsed) Description: Expand Electronic Invoices & Receipts, Secondary Actions: Expand
+				19 container
+					20 link Description: Transactions, Value: nuers.net/super-admin/transactions
+					21 button (collapsed) Description: Expand Transactions, Secondary Actions: Expand
+				22 link Description: BIR Transmission Center, Value: nuers.net/super-admin/eis-transmissions
+				23 link Description: Reconciliation & Exceptions, Value: nuers.net/super-admin/reconciliation
+				24 link Description: Summary List of Sales, Value: nuers.net/super-admin/tax-filings
+				25 heading TAXPAYER MANAGEMENT, Value: 2
+					26 text TAXPAYER MANAGEMENT
+				27 container
+					28 link Description: Registered Businesses, Value: nuers.net/super-admin/merchants
+					29 button (collapsed) Description: Expand Registered Businesses, Secondary Actions: Expand
+				30 container
+					31 link Description: Taxpayer Onboarding, Value: nuers.net/super-admin/taxpayer-onboarding
+					32 button (collapsed) Description: Expand Taxpayer Onboarding, Secondary Actions: Expand
+				33 container
+					34 link Description: PTI / PTT Management, Value: nuers.net/super-admin/pti-ptt
+					35 button (collapsed) Description: Expand PTI / PTT Management, Secondary Actions: Expand
+				36 link Description: API Integrations, Value: nuers.net/super-admin/api-platform
+				37 heading COMPLIANCE & SECURITY, Value: 2
+					38 text COMPLIANCE & SECURITY
+				39 container
+					40 link Description: ESP Accreditation, Value: nuers.net/accreditation
+					41 button (collapsed) Description: Expand ESP Accreditation, Secondary Actions: Expand
+				42 container
+					43 link Description: Compliance Management, Value: nuers.net/super-admin/compliance
+					44 button (collapsed) Description: Expand Compliance Management, Secondary Actions: Expand
+				45 container
+					46 link Description: Security & Incidents, Value: nuers.net/super-admin/security
+					47 button (collapsed) Description: Expand Security & Incidents, Secondary Actions: Expand
+				48 container
+					49 link Description: Immutable Audit Logs, Value: nuers.net/super-admin/audit
+					50 button (collapsed) Description: Expand Immutable Audit Logs, Secondary Actions: Expand
+				51 link Description: Data Governance & Portability, Value: nuers.net/super-admin/data-archive
+				52 heading REPORTS, Value: 2
+					53 text REPORTS
+				54 container
+					55 link Description: Analytics & Reports, Value: nuers.net/super-admin/reports
+					56 button (collapsed) Description: Expand Analytics & Reports, Secondary Actions: Expand
+				57 container
+					58 link Description: BIR Reports & Exports, Value: nuers.net/super-admin/tax-filings
+					59 button (collapsed) Description: Expand BIR Reports & Exports, Secondary Actions: Expand
+				60 heading SYSTEM ADMINISTRATION, Value: 2
+					61 text SYSTEM ADMINISTRATION
+				62 link Description: Server Management, Value: nuers.net/super-admin/server-management
+				63 container
+					64 link Description: Infrastructure Health, Value: nuers.net/super-admin/system-health
+					65 button (collapsed) Description: Expand Infrastructure Health, Secondary Actions: Expand
+				66 link Description: Backup & Disaster Recovery, Value: nuers.net/super-admin/backups
+				67 container
+					68 link Description: Configurations & Changes, Value: nuers.net/system
+					69 button (collapsed) Description: Expand Configurations & Changes, Secondary Actions: Expand
+				70 container
+					71 link Description: Users & Permissions, Value: nuers.net/super-admin/users-rbac
+					72 button (collapsed) Description: Expand Users & Permissions, Secondary Actions: Expand
+				73 link Description: Support Inbox, Value: nuers.net/super-admin/support
+				74 link Description: Compliance Operations, Value: nuers.net/super-admin/compliance-operations
+				75 link Description: Wallets & Transaction Pricing, Value: nuers.net/super-admin/wallets
+			76 container Description: Software name and version, Help: National Unified Electronic Receipt System
+				77 text NUERS · Version 1.0.0
+			78 container
+				79 text DIGITAL PHILIPPINES.
+				80 text BRIGHTER TOMORROW.
+		81 container
+			82 button (expanded) Description: Toggle navigation, Secondary Actions: Collapse
+			83 search text field (settable) Search transactions
+			84 link Description: Notifications, Value: nuers.net/super-admin/notifications
+			85 link Description: Settings, Value: nuers.net/system
+			86 button (collapsed) NUERS Official Administrator Super Administrator, Secondary Actions: Expand
+				87 text NUERS Official Administrator
+				88 text Super Administrator
+		89 container
+			90 link Description: Dashboard, Value: nuers.net/super-admin
+			91 text API Integrations
+			92 text Thursday, October 29, 2026
+			93 heading API Integrations, Value: 1
+				94 text API Integrations
+			95 text Monitor merchant API connections and source profiles, and manage platform integration settings.
+			96 container
+				97 button Merchant Source Profiles
+				98 button BIR EIS Setup
+				99 button API Credentials
+				100 button Endpoints
+				101 button Request Logs
+				102 button Webhooks
+				103 button Third-Party Integrations
+				104 button Settings
+				105 text BIR EIS · INTEGRATION WORKSPACE
+				106 heading Prepare once. Transmit with evidence., Value: 2
+					107 text Prepare once. Transmit with evidence.
+				108 text Company connections, encrypted credentials and traceable invoice batches.
+				109 button Add company connection
+				110 heading Protocol implementation, Value: 3
+					111 text Protocol implementation
+				112 text API guide 2.3
+				113 text RS256 · RSA · AES-256 · HMAC
+				114 heading Credential bundles, Value: 3
+					115 text Credential bundles
+				116 text 0
+				117 text Encrypted on the server
+				118 heading Outbound access, Value: 3
+					119 text Outbound access
+				120 text Deployment disabled
+				121 text Each company has a separate release gate
+				122 heading BIR acceptance, Value: 3
+					123 text BIR acceptance
+				124 text Evidence required
+				125 text Final inquiry result per invoice
+				126 text Company / environment connection
+				127 pop up button (collapsed, settable) Description: BIR company connection, Value: Select connection, Secondary Actions: Expand
+					128 menu
+						129 (selected) Select connection
+				130 button Refresh
+				131 link Description: Official BIR guide ↗, Value: eis-cert.bir.gov.ph/#/apiGuide
+				132 heading Ready for BIR credential setup, Value: 3
+					133 text Ready for BIR credential setup
+				134 text Create separate Certification and Production connections for each merchant and registered branch. Add the issued credential bundle when BIR provides it.
+				135 text 1. Company & source registration 2. BIR credentials & authentication 3. Certification results & authority 4. Reviewed production batches
+				136 link Description: Open PTI application preparation, Value: nuers.net/super-admin/pti-ptt
+				137 container
+					138 heading BIR submission batches, Value: 3
+						139 text BIR submission batches
+					140 text 0  batches · Receipt acknowledgment and final invoice acceptance are tracked separately.
+				141 table
+					142 row
+						143 cell
+							144 text Submit ID / created
+						145 cell
+							146 text Environment
+						147 cell
+							148 text Invoices
+						149 cell
+							150 text Status
+						151 cell
+							152 text BIR acknowledgment
+						153 cell
+							154 text Action
+					155 row
+						156 cell
+							157 text No BIR wire batches yet. Preparation does not transmit any invoice.
+				158 container
+					159 button (disabled) Previous
+					160 text Page  1  of  1
+					161 button (disabled) Next
+			162 text NUERS records available BIR Gateway: Not verified Last Sync:  Oct 29, 2026, 8:47 AM  (PHT) ©  2026  NUERS. All rights reserved.
+		5 container Notifications alt+T
+
+The focused UI element is 1 AXWebArea NUERS | Electronic Invoicing & Digital Receipts, URL: nuers.net/super-admin/api-platform?view=bir

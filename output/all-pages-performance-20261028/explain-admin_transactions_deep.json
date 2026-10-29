@@ -1,0 +1,16 @@
+[
+    {
+        "id": 1,
+        "select_type": "SIMPLE",
+        "table": "ledger",
+        "partitions": null,
+        "type": "ref",
+        "possible_keys": "ledger_transaction_summary",
+        "key": "ledger_transaction_summary",
+        "key_len": "5",
+        "ref": "const,const",
+        "rows": 480509,
+        "filtered": 100,
+        "Extra": "Using index"
+    }
+]

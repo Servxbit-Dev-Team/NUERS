@@ -1,3 +1,4 @@
+import { subscribeRealtimeRefresh } from "@/lib/use-realtime-refresh";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch, readJsonResponse } from "@/lib/api-url";
 
@@ -122,7 +123,7 @@ export function useDashboardData(portal: "super-admin" | "bir" | "merchant" | "c
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(cachedDashboard.current?.cachedAt ?? null);
   const hasLoaded = useRef(Boolean(cachedDashboard.current));
   const activePortal = useRef(portal);
-  const refreshIntervalMs = options.refreshIntervalMs ?? 0;
+  const refreshIntervalMs = options.refreshIntervalMs ?? 1000;
 
   const reload = useCallback(() => {
     setRefreshKey((value) => value + 1);
@@ -130,7 +131,7 @@ export function useDashboardData(portal: "super-admin" | "bir" | "merchant" | "c
 
   useEffect(() => {
     let cancelled = false;
-    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let stop: (()=>void) | undefined;
 
     if (activePortal.current !== portal) {
       activePortal.current = portal;
@@ -140,11 +141,11 @@ export function useDashboardData(portal: "super-admin" | "bir" | "merchant" | "c
       setLastUpdatedAt(cachedDashboard.current?.cachedAt ?? null);
     }
 
-    async function loadDashboard() {
+    async function loadDashboard(quiet=false) {
       const blockingLoad = !hasLoaded.current;
       if (blockingLoad) {
         setLoading(true);
-      } else {
+      } else if(!quiet) {
         setRefreshing(true);
       }
       setError(null);
@@ -179,12 +180,12 @@ export function useDashboardData(portal: "super-admin" | "bir" | "merchant" | "c
     loadDashboard();
 
     if (refreshIntervalMs > 0) {
-      intervalId = setInterval(loadDashboard, refreshIntervalMs);
+      stop = subscribeRealtimeRefresh(()=>loadDashboard(true));
     }
 
     return () => {
       cancelled = true;
-      if (intervalId) clearInterval(intervalId);
+      stop?.();
     };
   }, [portal, refreshKey, refreshIntervalMs]);
 

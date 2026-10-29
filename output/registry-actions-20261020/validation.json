@@ -1,0 +1,20 @@
+{
+  "build": "passed",
+  "registry_regression_tests": {
+    "tests": 15,
+    "assertions": 398,
+    "passed": true
+  },
+  "local_ui": [
+    "single labelled View details control per row",
+    "all five menu workflows open intended merchant",
+    "wallet visibility follows can_view_financial",
+    "write actions follow can_write",
+    "keyboard Enter and Escape",
+    "mobile 390px viewport: 44px action targets; no document overflow; contained menu",
+    "onboarding uses shared row actions"
+  ],
+  "no_schema_migration": true,
+  "release_files": 20,
+  "initial_deployment": "automatically rolled back after concurrent merchant traffic changed preservation hashes; retry waits for in-flight requests"
+}

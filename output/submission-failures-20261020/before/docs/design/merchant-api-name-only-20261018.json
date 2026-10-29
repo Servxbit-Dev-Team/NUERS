@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-18",
+  "merchant_navigation": "Branches / Terminals removed; old merchant URL redirects to API Integration",
+  "key_creation": "name only",
+  "defaults": {
+    "environment": "live",
+    "scopes": [
+      "transactions:write",
+      "transactions:read"
+    ],
+    "daily_limit": 50000,
+    "expires_days": 90
+  },
+  "identity": "derive exact registered code from 12/14 digit merchant TIN; nine-digit base requires exactly one existing main context; never guess or reactivate inactive records",
+  "retained": "legacy explicit active owned branch requests; admin registry/reviews; existing keys, transactions, terminals and branch evidence",
+  "safety": "owner/current-login MFA, active merchant, mandatory audit transaction, hashed keys, immutable key identity, separate original-source and legal issuance/reporting controls",
+  "data_migration": "none; internal registration-derived context is inserted only inside successful key creation, independent evidence review remains draft"
+}

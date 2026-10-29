@@ -1,0 +1,33 @@
+{
+  "release": "2026-10-20.admin-security-audit",
+  "deployed_at": "2026-10-20T00:25:57+00:00",
+  "local_php": {
+    "tests": 541,
+    "assertions": 5950,
+    "failures": 0
+  },
+  "browser_checks": 10,
+  "merchant_admin_denial_methods": 123,
+  "known_runtime_dependency_advisories": 0,
+  "live": {
+    "verified": true,
+    "records_preserved": true,
+    "assets_match": true,
+    "anonymous_protected_api_codes": [
+      401,
+      401,
+      401,
+      401,
+      401
+    ],
+    "private_path_probe_disclosures": 0,
+    "authenticated_browser_qa": "isolated synthetic localhost, not a live logged-in session"
+  },
+  "not_certified": [
+    "Independent penetration test",
+    "Production restore/failover RTO/RPO",
+    "Provider HA/WAF/capacity evidence",
+    "Real ERP callback receipt",
+    "Official BIR transport acknowledgment"
+  ]
+}

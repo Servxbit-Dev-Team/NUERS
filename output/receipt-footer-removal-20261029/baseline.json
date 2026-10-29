@@ -1,0 +1,5 @@
+{
+  "src/components/invoices/official-receipt.tsx": "c28ee7807900ab4e898b8b7e6326feccd9a2f1d1443bd4594f85299d9758f3b9",
+  "scripts/document-renderer.tsx": "8284ad6f1bb0ce1f188766eb1460e47f267ea05e978624b6338938fa6bbc827e",
+  "tests/js/document-renderer.test.mjs": "c8bd67642853d5818443a06872cb5029b567aaa950106dbc50f504e72c9214d4"
+}

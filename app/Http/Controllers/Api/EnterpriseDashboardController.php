@@ -58,11 +58,13 @@ class EnterpriseDashboardController extends Controller
         $count = (clone $transactions)->count();
         $validReceipts = (clone $receipts)->whereIn('r.status', self::RECEIPTS)->count();
         $invalid = (clone $transactions)->whereIn('t.status', self::INVALID)->count();
+        $rejectedAttempts = $portal === 'admin' ? app(\App\Services\SubmissionAttempts::class)->failures('live')->count() : 0;
         $birCount=app(\App\Services\SubmissionEvidence::class)->count(clone $transmissions);
         $metrics = [
             ['label' => 'Total Transactions', 'value' => $count, 'color' => 'blue', 'icon' => 'receipt', 'note' => 'All recorded transactions'],
             ['label' => 'Valid Receipts', 'value' => $validReceipts, 'color' => 'green', 'icon' => 'file-check', 'note' => 'Issued and verified receipts'],
-            ['label' => 'Invalid Transactions', 'value' => $invalid, 'color' => 'red', 'icon' => 'file-x', 'note' => 'Rejected, failed or voided'],
+            ['label' => 'Invalid Transactions', 'value' => $invalid + $rejectedAttempts, 'color' => 'red', 'icon' => 'file-x',
+                'note' => $portal === 'admin' ? number_format($rejectedAttempts).' failed API attempts · '.number_format($invalid).' failed / voided records · Live' : 'Rejected, failed or voided'],
         ];
         if ($portal === 'admin') {
             $metrics[] = ['label' => 'Registered Merchants', 'value' => DB::table('merchants')->count(), 'color' => 'yellow', 'icon' => 'users', 'note' => 'Businesses in the merchant registry'];
@@ -98,16 +100,15 @@ class EnterpriseDashboardController extends Controller
         }
         // NUERS timestamps follow the application's configured database timezone.
         $databaseZone = config('app.timezone', 'UTC');
-        (clone $transactions)->where('t.created_at', '>=', $start->setTimezone($databaseZone)->format('Y-m-d H:i:s'))
+        $bucket = \App\Services\ReportingTime::bucket('t.created_at', $format);
+        $groups = (clone $transactions)->where('t.created_at', '>=', $start->setTimezone($databaseZone)->format('Y-m-d H:i:s'))
             ->where('t.created_at', '<', $end->setTimezone($databaseZone)->format('Y-m-d H:i:s'))
-            ->select('t.created_at', 't.status')->orderBy('t.id')->chunk(1000, function ($rows) use (&$buckets, $format, $databaseZone) {
-                foreach ($rows as $row) {
-                    $key = CarbonImmutable::parse($row->created_at, $databaseZone)->setTimezone('Asia/Manila')->format($format);
-                    if (! isset($buckets[$key])) continue;
-                    $state = in_array($row->status, self::INVALID, true) ? 'invalid' : (in_array($row->status, self::VALID, true) ? 'valid' : 'pending');
-                    $buckets[$key][$state]++;
-                }
-            });
+            ->selectRaw("$bucket as bucket,t.status,COUNT(*) as total")->groupByRaw("$bucket,t.status")->get();
+        foreach ($groups as $row) {
+            if (!isset($buckets[$row->bucket])) continue;
+            $state = in_array($row->status, self::INVALID, true) ? 'invalid' : (in_array($row->status, self::VALID, true) ? 'valid' : 'pending');
+            $buckets[$row->bucket][$state] += (int) $row->total;
+        }
 
         $regions = (clone $transactions)->select('t.region')->selectRaw('COUNT(*) as total')->groupBy('t.region')->orderByDesc('total')->get();
         $regionRows = $regions->take(8)->map(fn ($r) => ['name' => $r->region ?: 'Unspecified', 'count' => (int) $r->total, 'percentage' => $count ? round($r->total / $count * 100, 1) : 0])->values();
@@ -116,11 +117,27 @@ class EnterpriseDashboardController extends Controller
             $regionRows->push(['name' => 'Others', 'count' => $other, 'percentage' => round($other / $count * 100, 1)]);
         }
         $recent = (clone $transactions)->leftJoin('merchants as m', 'm.id', '=', 't.merchant_id')
-            ->orderByDesc('t.created_at')->limit(5)->get(['t.id', 't.transaction_ref', 't.created_at', 't.amount', 't.status', 'm.tin', 'm.business_name'])
+            ->orderByDesc('t.created_at')->orderByDesc('t.id')->limit(5)->get(['t.id', 't.merchant_id', 't.receipt_id', 't.transaction_ref', 't.created_at', 't.amount', 't.status', 'm.tin', 'm.business_name'])
             ->map(function ($row) use ($databaseZone) {
                 $row->created_at = CarbonImmutable::parse($row->created_at, $databaseZone)->toIso8601String();
                 return $row;
             });
+        if ($portal === 'admin' && $recent->isNotEmpty()) {
+            // Only resolve receipts for these five rows. Never infer a link from a number or TIN.
+            $linked = DB::table('transaction_receipts')->whereIn('merchant_id', $recent->pluck('merchant_id'))
+                ->where(fn ($q) => $q->whereIn('id', $recent->pluck('receipt_id')->filter())->orWhereIn('transaction_id', $recent->pluck('id')))
+                ->get(['id', 'transaction_id', 'merchant_id', 'receipt_number']);
+            foreach ($recent as $row) {
+                $owned = $linked->where('merchant_id', $row->merchant_id);
+                $receipt = $row->receipt_id ? $owned->firstWhere('id', $row->receipt_id) : null;
+                if (!$receipt) {
+                    $matches = $owned->where('transaction_id', $row->id);
+                    $receipt = $matches->count() === 1 ? $matches->first() : null;
+                }
+                $row->receipt = $receipt ? ['source' => 'receipt', 'id' => $receipt->id, 'number' => $receipt->receipt_number] : null;
+            }
+        }
+        foreach ($recent as $row) unset($row->merchant_id, $row->receipt_id);
         // Migration seed rows are not health evidence. Report only direct observations or an explicit unknown.
         $status = $portal === 'admin'
             ? collect([

@@ -37,7 +37,7 @@ export function ReceiptVerificationPortal() {
   const { user, profile, loading: authLoading } = useAuth();
   const [receiptNumber, setReceiptNumber] = useState(() => new URLSearchParams(window.location.search).get("receipt") || "");
   const [result, setResult] = useState<VerificationResult | null>(null);
-  const [message, setMessage] = useState("Enter a receipt number or scan a QR code to validate authenticity.");
+  const [message, setMessage] = useState("Sign in to look up receipts within your authorized account.");
   const [loading, setLoading] = useState(false);
   const dashboardPath = dashboardPathForRole(profile?.role, Boolean(user));
 
@@ -45,7 +45,7 @@ export function ReceiptVerificationPortal() {
     if (!receiptNumber.trim()) return;
 
     setLoading(true);
-    setMessage("Checking the NUERS national receipt registry...");
+    setMessage("Checking your authorized NUERS records...");
 
     try {
       const response = await apiFetch(`/api/verify-receipt/${encodeURIComponent(receiptNumber.trim())}`);
@@ -66,11 +66,11 @@ export function ReceiptVerificationPortal() {
       <header className="border-b bg-card">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex items-center gap-3">
-            <img src="/NUERSLOGO.png" alt="NUERS" className="h-9 w-auto dark:hidden" />
-            <img src="/NUERSLOGOWHITE.png" alt="" aria-hidden="true" className="hidden h-9 w-auto dark:block" />
+            <img src="/brand/nuers-official-logo.png" alt="NUERS" className="h-9 w-auto dark:hidden" />
+            <img src="/brand/nuers-official-logo.png" alt="" aria-hidden="true" className="hidden h-9 w-auto dark:block" />
             <div className="hidden sm:block">
               <p className="text-sm font-semibold text-foreground">National Unified Electronic Receipt System</p>
-              <p className="text-xs text-muted-foreground">Public receipt verification portal</p>
+              <p className="text-xs text-muted-foreground">Account receipt lookup</p>
             </div>
           </Link>
           {authLoading ? (
@@ -91,23 +91,24 @@ export function ReceiptVerificationPortal() {
         <section className="space-y-6">
           <div>
             <Badge variant="secondary" className="gap-1.5 text-xs">
-              <ShieldCheck className="h-3 w-3" /> Official NUERS verification
+              <ShieldCheck className="h-3 w-3" /> NUERS receipt registry
             </Badge>
             <h1 className="mt-4 max-w-3xl text-3xl font-bold tracking-tight text-foreground">
-              Verify electronic official receipts anytime.
+              Look up your recorded receipts.
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
-              Citizens, businesses, auditors, and government personnel can validate receipt number,
-              QR code, digital signature, issuer identity, amount, status, and archive presence.
+              Sign in as the issuing business, verified buyer or authorized administrator. A registry match
+              confirms that NUERS holds the record; it does not establish signature validity or BIR acceptance.
             </p>
           </div>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Receipt Number Validation</CardTitle>
+              <CardTitle className="text-sm">Receipt Lookup</CardTitle>
               <p className="text-xs text-muted-foreground">Enter the document number printed on your receipt.</p>
             </CardHeader>
             <CardContent className="space-y-4">
+              {!user && !authLoading && <Button asChild variant="outline"><Link to="/login">Sign in to access your receipts</Link></Button>}
               <div className="flex flex-col gap-2 sm:flex-row">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -118,7 +119,7 @@ export function ReceiptVerificationPortal() {
                     className="pl-9 font-mono"
                   />
                 </div>
-                <Button onClick={verifyReceipt} disabled={loading} className="gap-2">
+                <Button onClick={verifyReceipt} disabled={loading || authLoading || !user} className="gap-2">
                   <ShieldCheck className="h-4 w-4" /> {loading ? "Verifying" : "Verify Receipt"}
                 </Button>
               </div>
@@ -131,7 +132,7 @@ export function ReceiptVerificationPortal() {
                     <QrCode className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
                   )}
                   <div>
-                    <p className="text-sm font-medium text-foreground">{result ? "Verification successful" : "Ready to verify"}</p>
+                    <p className="text-sm font-medium text-foreground">{result ? "Authorized registry match" : user ? "Ready to look up" : "Sign in required"}</p>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">{message}</p>
                   </div>
                 </div>
@@ -141,8 +142,8 @@ export function ReceiptVerificationPortal() {
 
           <div className="grid gap-4 md:grid-cols-3">
             {[
-              { label: "QR Code Verification", detail: "Validate the receipt QR payload against the registry.", icon: QrCode },
-              { label: "Digital Signature", detail: "Confirm signature integrity and issuer certificate status.", icon: Signature },
+              { label: "Account access", detail: "Receipt lookup is restricted to your authorized account.", icon: ShieldCheck },
+              { label: "Signature verification", detail: "Not enabled. A registry match does not verify a digital signature.", icon: Signature },
               { label: "Audit Evidence", detail: "Record verification method, timestamp, and outcome.", icon: FileText },
             ].map((item) => (
               <Card key={item.label}>
@@ -162,7 +163,7 @@ export function ReceiptVerificationPortal() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Verification Result</CardTitle>
-              <p className="text-xs text-muted-foreground">Authenticity details appear after validation.</p>
+              <p className="text-xs text-muted-foreground">Available record details appear after an authorized lookup.</p>
             </CardHeader>
             <CardContent>
               {result ? (
@@ -194,9 +195,9 @@ export function ReceiptVerificationPortal() {
               ) : (
                 <div className="flex flex-col items-center rounded-lg border border-dashed p-8 text-center">
                   <XCircle className="h-10 w-10 text-muted-foreground" />
-                  <p className="mt-3 text-sm font-medium text-foreground">No verified receipt yet</p>
+                  <p className="mt-3 text-sm font-medium text-foreground">No receipt selected</p>
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    Verification protects citizens and agencies from fraudulent or unauthorized receipts.
+                    Only receipts within your authorized account are shown.
                   </p>
                 </div>
               )}
@@ -205,10 +206,10 @@ export function ReceiptVerificationPortal() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Receipt Template Controls</CardTitle>
+              <CardTitle className="text-sm">Lookup scope</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {["Unique receipt number", "Issuer TIN and accreditation", "QR code payload", "Digital signature", "Tax and VAT breakdown", "Archive status"].map((item) => (
+              {["Authorized account access", "Recorded receipt number", "Recorded issuer and amount", "Recorded document status"].map((item) => (
                 <div key={item} className="flex items-center justify-between rounded-lg border p-3">
                   <span className="flex items-center gap-2 text-xs font-medium text-foreground">
                     <Receipt className="h-3.5 w-3.5 text-muted-foreground" /> {item}
@@ -218,7 +219,7 @@ export function ReceiptVerificationPortal() {
               ))}
               <Separator />
               <p className="text-[10px] leading-4 text-muted-foreground">
-                This portal is public by design and records verification attempts for audit transparency.
+                Receipt numbers and TINs do not grant access to another account. Authorized lookups are recorded; public QR and signature verification are not enabled.
               </p>
             </CardContent>
           </Card>

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\{DB,Crypt};
 use Illuminate\Support\Str;
 class SandboxTransactions {
     public function accept(array $v, object $key, object $merchant): array {
+        abort_if(!empty($v['manual_recovery_id']),422,'Live manual recovery records cannot be linked in Sandbox.');
         return DB::transaction(function()use($v,$key,$merchant){
             $m=DB::table('merchants')->where('id',$merchant->id)->lockForUpdate()->first();
             $k=DB::table('merchant_api_keys')->where('id',$key->id)->lockForUpdate()->first();

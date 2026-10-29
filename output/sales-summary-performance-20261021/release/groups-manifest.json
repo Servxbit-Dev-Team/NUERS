@@ -1,0 +1,12 @@
+{
+  "release": "2026-10-21.sales-performance.2",
+  "purpose": "MariaDB strict-mode grouped sales report compatibility",
+  "files": {
+    "app/Services/OperationsSalesQuery.php": "68eb40fe66d67edd34cba21d041258c9cb1aaa4334d9e15d04bcd0c6b5746886"
+  },
+  "baseline": {
+    "app/Services/OperationsSalesQuery.php": "84895d2f057766e99e8291cc02b3c47014bb6132e634c8b31195115439067ab3"
+  },
+  "new_files": [],
+  "schema_migration": false
+}

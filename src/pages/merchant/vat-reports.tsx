@@ -1,3 +1,5 @@
+import {exportReport as openReportExport} from "@/components/reports/export-report";
+import { subscribeRealtimeRefresh } from "@/lib/use-realtime-refresh";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2, TrendingUp, Zap, ArrowUpRight,
@@ -20,7 +22,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   AreaChart, Area, LineChart, Line,
 } from "recharts";
-import { toast } from "sonner";
+
 import { apiFetch, readJsonResponse } from "@/lib/api-url";
 import { cn } from "@/lib/utils";
 
@@ -168,51 +170,7 @@ function formatDateTime(value: string | null) {
   };
 }
 
-function exportCsv(data: TaxCenterPayload) {
-  const rows = [
-    ["Month", "Sales Documents", "Input VAT Documents", "Gross Sales", "Vatable Sales", "VAT Output", "Input VAT Credit", "Net VAT Payable", "VAT Receivable", "Effective Rate"],
-    ...data.monthly.map((row) => [
-      `${row.month} ${data.year}`,
-      row.sales_document_count,
-      row.expense_document_count,
-      row.gross,
-      row.vatable_sales,
-      row.vat_output,
-      row.vat_input,
-      row.vat_payable,
-      row.vat_receivable,
-      `${row.effective_rate}%`,
-    ]),
-    [],
-    ["Tax Ledger"],
-    ["Record ID", "Source", "Document Ref", "Date", "Time", "Channel", "Counterparty", "Gross", "VAT Output", "Input Credit", "Net VAT", "Tax Type", "Status"],
-    ...data.ledger.map((row) => [
-      row.id,
-      row.source,
-      row.tx_ref,
-      row.date,
-      row.time,
-      row.channel,
-      row.customer,
-      row.gross,
-      row.vat_output,
-      row.input_credit,
-      row.net_vat,
-      row.tax_type,
-      row.status,
-    ]),
-  ];
-
-  const csv = rows.map((row) => row.map((cell) => `"${String(cell ?? "").replaceAll('"', '""')}"`).join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `nuers-tax-center-${data.merchant?.tin || "business"}-${data.year}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
-  toast.success("Database-backed tax report exported.");
-}
+function exportCsv(data:TaxCenterPayload){void openReportExport({title:'Tax Center Report',scope:(data.merchant?.tin||'Authorized merchant')+' · '+data.year+' annual summary and the ledger records loaded in this view',data:{year:data.year,monthly:data.monthly,ledger:data.ledger},filters:{year:data.year},note:'Internal recorded tax analysis. The ledger covers the records returned by this view; use Sales Reports for a complete filtered document export. This is not an official tax return.'});}
 
 const vatChartConfig: ChartConfig = {
   vat_output: { label: "VAT Output", color: "var(--chart-1)" },
@@ -250,8 +208,8 @@ export function MerchantVatReports() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (quiet=false) => {
+    if(!quiet)setLoading(true);
     setError(null);
 
     try {
@@ -263,7 +221,7 @@ export function MerchantVatReports() {
 
       setData(payload);
     } catch (err) {
-      setData({ ...emptyPayload, year: Number(year) || new Date().getFullYear() });
+      if(!quiet)setData({ ...emptyPayload, year: Number(year) || new Date().getFullYear() });
       setError(err instanceof Error ? err.message : "Unable to load database tax center records.");
     } finally {
       setLoading(false);
@@ -275,8 +233,8 @@ export function MerchantVatReports() {
   }, [load]);
 
   useEffect(() => {
-    const timer = window.setInterval(load, 30000);
-    return () => window.clearInterval(timer);
+    const stop = subscribeRealtimeRefresh(()=>load(true));
+    return () => stop();
   }, [load]);
 
   useEffect(() => {
@@ -321,7 +279,7 @@ export function MerchantVatReports() {
           <Button variant="outline" size="sm" className="gap-2 h-9" onClick={() => exportCsv(data)} disabled={loading || !hasRecords}>
             <Download className="h-3.5 w-3.5" /> Export
           </Button>
-          <Button variant="outline" size="sm" className="gap-2 h-9" onClick={load} disabled={loading}>
+          <Button variant="outline" size="sm" className="gap-2 h-9" onClick={() => void load()} disabled={loading}>
             <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} /> Refresh
           </Button>
         </div>
@@ -424,9 +382,9 @@ export function MerchantVatReports() {
                 <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} tickFormatter={(v) => `₱${(Number(v) / 1000).toFixed(0)}K`} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <ChartLegend content={<ChartLegendContent />} />
-                <Bar dataKey="vat_output" fill="var(--color-vat_output)" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="vat_input" fill="var(--color-vat_input)" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="vat_payable" fill="var(--color-vat_payable)" radius={[3, 3, 0, 0]} />
+                <Bar isAnimationActive={false} dataKey="vat_output" fill="var(--color-vat_output)" radius={[3, 3, 0, 0]} />
+                <Bar isAnimationActive={false} dataKey="vat_input" fill="var(--color-vat_input)" radius={[3, 3, 0, 0]} />
+                <Bar isAnimationActive={false} dataKey="vat_payable" fill="var(--color-vat_payable)" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ChartContainer>
           </CardContent>
@@ -450,7 +408,7 @@ export function MerchantVatReports() {
                 <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
                 <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} tickFormatter={(v) => `₱${(Number(v) / 1_000_000).toFixed(1)}M`} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Area type="monotone" dataKey="gross" stroke="var(--chart-1)" strokeWidth={2} fill="url(#grossGrad)" />
+                <Area isAnimationActive={false} type="monotone" dataKey="gross" stroke="var(--chart-1)" strokeWidth={2} fill="url(#grossGrad)" />
               </AreaChart>
             </ChartContainer>
           </CardContent>
@@ -470,7 +428,7 @@ export function MerchantVatReports() {
                 <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
                 <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} domain={[0, "auto"]} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Line type="monotone" dataKey="effective_rate" stroke="var(--color-effective_rate)" strokeWidth={2.5} dot={{ r: 4, fill: "var(--chart-4)" }} />
+                <Line isAnimationActive={false} type="monotone" dataKey="effective_rate" stroke="var(--color-effective_rate)" strokeWidth={2.5} dot={{ r: 4, fill: "var(--chart-4)" }} />
               </LineChart>
             </ChartContainer>
           </CardContent>
@@ -488,7 +446,7 @@ export function MerchantVatReports() {
                 <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
                 <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="tx_count" fill="var(--color-tx_count)" radius={[3, 3, 0, 0]} />
+                <Bar isAnimationActive={false} dataKey="tx_count" fill="var(--color-tx_count)" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ChartContainer>
           </CardContent>

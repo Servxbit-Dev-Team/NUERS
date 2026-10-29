@@ -1,0 +1,150 @@
+[
+  {
+    "path": "/public/up",
+    "status": 200,
+    "content_type": "text/html; charset=utf-8",
+    "cache_control": "no-cache, private",
+    "bytes_read": 2300,
+    "headers": {
+      "x-content-type-options": "nosniff",
+      "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'",
+      "strict-transport-security": "max-age=31536000; includeSubDomains"
+    }
+  },
+  {
+    "path": "/public/api/health",
+    "status": 200,
+    "content_type": "application/json",
+    "cache_control": "no-store, private",
+    "bytes_read": 83,
+    "health": {},
+    "headers": {
+      "x-content-type-options": "nosniff",
+      "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'",
+      "strict-transport-security": "max-age=31536000; includeSubDomains"
+    }
+  },
+  {
+    "path": "/public/api/verify-receipt/AUDIT-NONEXISTENT",
+    "status": 401,
+    "content_type": "application/json",
+    "cache_control": "no-store, private",
+    "bytes_read": 57,
+    "headers": {
+      "x-content-type-options": "nosniff",
+      "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'",
+      "strict-transport-security": "max-age=31536000; includeSubDomains"
+    }
+  },
+  {
+    "path": "/public/api/business-accounts/lookup?tin=000000000",
+    "status": 401,
+    "content_type": "application/json",
+    "cache_control": "no-store, private",
+    "bytes_read": 57,
+    "headers": {
+      "x-content-type-options": "nosniff",
+      "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'",
+      "strict-transport-security": "max-age=31536000; includeSubDomains"
+    }
+  },
+  {
+    "path": "/public/api/admin/infrastructure/servers",
+    "status": 401,
+    "content_type": "application/json",
+    "cache_control": "no-store, private",
+    "bytes_read": 57,
+    "headers": {
+      "x-content-type-options": "nosniff",
+      "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'",
+      "strict-transport-security": "max-age=31536000; includeSubDomains"
+    }
+  },
+  {
+    "path": "/public/api/tables/profiles",
+    "status": 401,
+    "content_type": "application/json",
+    "cache_control": "no-store, private",
+    "bytes_read": 57,
+    "headers": {
+      "x-content-type-options": "nosniff",
+      "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'",
+      "strict-transport-security": "max-age=31536000; includeSubDomains"
+    }
+  },
+  {
+    "path": "/public/api/merchant/api-keys",
+    "status": 401,
+    "content_type": "application/json",
+    "cache_control": "no-store, private",
+    "bytes_read": 57,
+    "headers": {
+      "x-content-type-options": "nosniff",
+      "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'",
+      "strict-transport-security": "max-age=31536000; includeSubDomains"
+    }
+  },
+  {
+    "path": "/.env",
+    "status": 403,
+    "content_type": "text/html",
+    "cache_control": null,
+    "bytes_read": 1268,
+    "private_content_exposed": false,
+    "headers": {}
+  },
+  {
+    "path": "/storage/logs/laravel.log",
+    "status": 403,
+    "content_type": "text/html",
+    "cache_control": null,
+    "bytes_read": 1268,
+    "private_content_exposed": false,
+    "headers": {}
+  },
+  {
+    "path": "/composer.json",
+    "status": 403,
+    "content_type": "text/html",
+    "cache_control": null,
+    "bytes_read": 1268,
+    "private_content_exposed": false,
+    "headers": {}
+  },
+  {
+    "path": "/docs/knowledge/admin-dashboard-security-reaudit-2026-10-20.md",
+    "status": 403,
+    "content_type": "text/html",
+    "cache_control": null,
+    "bytes_read": 1268,
+    "private_content_exposed": false,
+    "headers": {}
+  },
+  {
+    "path": "/nuers-admin-security-audit-install.php",
+    "status": 200,
+    "content_type": "text/html",
+    "cache_control": null,
+    "bytes_read": 1754,
+    "private_content_exposed": false,
+    "headers": {}
+  },
+  {
+    "path": "/assets/index-DNsUdVBy.js",
+    "status": 200,
+    "content_type": "application/javascript",
+    "cache_control": "max-age=14400",
+    "bytes_read": 2302445,
+    "matches_release": true,
+    "headers": {}
+  },
+  {
+    "path": "/assets/index-ffbGGxw2.css",
+    "status": 200,
+    "content_type": "text/css",
+    "cache_control": "max-age=14400",
+    "bytes_read": 684105,
+    "matches_release": true,
+    "headers": {}
+  }
+]

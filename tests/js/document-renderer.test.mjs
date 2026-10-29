@@ -25,10 +25,12 @@ test('source text is escaped and cannot add HTML, scripts, external images or re
  assert.ok(html.includes('DRAFT — NOT AN ISSUED DOCUMENT'));
 });
 
-test('an available verification QR is embedded without fetching the destination',async()=>{
- const html=await renderDocumentHtml({...source,verification_url:'https://example.test/controlled-lookup'});
- assert.equal((html.match(/src="data:image\/png;base64,/g)||[]).length,3);
- assert.ok(html.includes('NUERS record lookup QR'));assert.equal(html.includes('href="https://example.test'),false);
+test('customer receipt omits the removed evidence and footer section in every template',async()=>{
+ for(const template of ['standard','minimal','detailed']){
+  const html=await renderDocumentHtml({...source,record_status:'issued',verification_url:'https://example.test/controlled-lookup',permit_number:'PTI-HIDDEN',accreditation_number:'ESP-HIDDEN',footer_note:'Hidden footer text',notes:'Hidden additional notes',terms_and_conditions:'Hidden payment terms',presentation:{show_logo:false,font_family:'Arial',invoice_template:template,receipt_template:template,primary_color:'#0056d6',secondary_color:'#0f2d5b',footer_text:'Default footer text',payment_methods:['cash'],payment_instructions:'Hidden payment instructions'}});
+  for(const removed of ['RECORD EVIDENCE','Verification link not available','NUERS record lookup','Retain the original document','Recorded permit references alone','PTI-HIDDEN','ESP-HIDDEN','Hidden footer text','Hidden additional notes','Hidden payment terms','Default footer text','Accepted payment methods:','Hidden payment instructions'])assert.ok(!html.includes(removed),removed);
+  for(const retained of ['Original seller','Original customer','SOURCE-1','Recorded service','1,000.00','Recorded tax breakdown'])assert.ok(html.includes(retained),retained);
+ }
 });
 
 test('dedicated receipt logo is embedded locally and never fetched from a remote path',async()=>{

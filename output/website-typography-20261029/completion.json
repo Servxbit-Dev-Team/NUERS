@@ -1,0 +1,32 @@
+{
+  "completed": true,
+  "scope": "Public website typography and responsive navigation",
+  "live_url": "https://nuers.net/",
+  "deployment": {
+    "deployed": true,
+    "release": "2026-10-29.website-typography.1",
+    "files_verified": 515,
+    "entry": "/assets/index-yEOUB0oS.js",
+    "database_untouched": true,
+    "old_assets_retained": true,
+    "backup": "nuers-website-typography-backup-20261029-002752",
+    "deployed_at": "2026-10-29T00:27:52+00:00"
+  },
+  "validation": {
+    "build_all": "passed",
+    "source_only_typography": "verified",
+    "responsive_viewports": [
+      320,
+      601,
+      1280,
+      1440
+    ],
+    "live_viewport": 2474,
+    "desktop_navigation": "16\u201317px",
+    "dropdown_and_buttons": "16px",
+    "hero_description": "17\u201318px",
+    "http_checks": 8
+  },
+  "screenshot": "/Users/marksioson/Desktop/NUERS/output/website-typography-20261029/live-readable-navigation.png",
+  "preview_server_stopped": true
+}

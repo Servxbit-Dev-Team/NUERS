@@ -1,0 +1,15 @@
+:root{--nuers-font-body:14px;--nuers-font-control:13px;--nuers-font-caption:12px;--nuers-font-section:20px;--nuers-font-title:30px}
+body{font-size:var(--nuers-font-body);line-height:1.5}
+/* Keep page zoom and rem spacing unchanged. Printed invoice typography has its own physical-size layout. */
+:is(.nuers-enterprise,.rg-page,.nw-page,.support-widget,.legal-page) :is(button,input,select,textarea):not([class^="or-"]){font-size:var(--nuers-font-control)}
+:is(.nuers-enterprise,.rg-page,.nw-page,.support-widget,.legal-page) :is(.text-\[8px\],.text-\[9px\],.text-\[10px\],.text-\[11px\]){font-size:var(--nuers-font-caption)}
+@media(max-width:600px){:is(.rg-page,.ow-page,.support-widget) :is(input,select,textarea):not([type=checkbox]):not([type=radio]){font-size:16px}}
+/* Legacy utility labels use the same readable minimum on every portal. */
+:is(.text-\[8px\],.text-\[9px\],.text-\[10px\],.text-\[11px\]){font-size:var(--nuers-font-caption)}
+:is(.rg-page,.ow-page,.ic-page) :is(input,select,textarea,.rg-industry-trigger){font-size:var(--nuers-font-control)!important}
+.rg-industry-search>input{font-size:var(--nuers-font-control)!important}
+@media(max-width:600px){:is(.rg-page,.ow-page) :is(input,select,textarea):not([type=checkbox]):not([type=radio]),.rg-industry-search>input{font-size:16px!important}}
+/* Shared typography for legacy sidebar components. Enterprise geometry lives in enterprise.css. */
+:root{--nuers-sidebar-font:14px;--nuers-sidebar-label:12px}
+[data-sidebar=menu-button],[data-sidebar=menu-sub-button]{font-size:var(--nuers-sidebar-font)!important;font-weight:500;line-height:20px}
+[data-sidebar=group-label]{font-size:var(--nuers-sidebar-label)!important;line-height:16px}

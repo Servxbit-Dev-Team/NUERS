@@ -1,3 +1,4 @@
+import { subscribeRealtimeRefresh } from "@/lib/use-realtime-refresh";
 import { formatTin } from "@/lib/tin";
 import { Fragment, useEffect, useMemo, useState, type ElementType } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -169,8 +170,8 @@ export function EisTransmissionTools() {
 
   useEffect(() => {
     load(true);
-    const interval = window.setInterval(() => load(false), 12000);
-    return () => window.clearInterval(interval);
+    const stop = subscribeRealtimeRefresh(() => load(false));
+    return () => stop();
   }, []);
 
   const successRate = useMemo(() => {

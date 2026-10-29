@@ -117,6 +117,8 @@ class EisController extends Controller
     {
         app(BirCompliance::class)->administrativeUser($request);
         $query = $this->transmissionQuery();
+        $request->validate(['merchant' => 'nullable|string|max:80', 'search' => 'nullable|string|max:160']);
+        if ($request->filled('merchant') && $request->input('merchant') !== 'all') $query->where('t.merchant_id', $request->input('merchant'));
 
         if ($request->filled('status') && $request->string('status')->value() !== 'all') {
             $query->where('t.status', $request->string('status')->value());

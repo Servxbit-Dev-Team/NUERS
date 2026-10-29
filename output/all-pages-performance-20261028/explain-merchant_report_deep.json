@@ -1,0 +1,58 @@
+[
+    {
+        "id": 1,
+        "select_type": "SIMPLE",
+        "table": "ledger_documents",
+        "partitions": null,
+        "type": "range",
+        "possible_keys": "PRIMARY,ledger_merchant_period,ledger_merchant_recent,ledger_source_owner,ledger_merchant_number,ledger_merchant_filters,ledger_branch_options,ledger_type_options,ledger_merchant_document_order,ledger_customer_options,ledger_record_branch_options,ledger_channel_options,ledger_payment_options,ledger_merchant_recorded,ledger_merchant_overview",
+        "key": "PRIMARY",
+        "key_len": "402",
+        "ref": null,
+        "rows": 10,
+        "filtered": 9,
+        "Extra": "Using where; Using filesort"
+    },
+    {
+        "id": 1,
+        "select_type": "SIMPLE",
+        "table": "original",
+        "partitions": null,
+        "type": "eq_ref",
+        "possible_keys": "PRIMARY,ledger_merchant_period,ledger_merchant_recent,ledger_source_owner,ledger_merchant_number,ledger_merchant_filters,ledger_branch_options,ledger_type_options,ledger_merchant_document_order,ledger_customer_options,ledger_record_branch_options,ledger_channel_options,ledger_payment_options,ledger_merchant_recorded,ledger_merchant_overview",
+        "key": "PRIMARY",
+        "key_len": "402",
+        "ref": "func",
+        "rows": 1,
+        "filtered": 100,
+        "Extra": "Using where"
+    },
+    {
+        "id": 1,
+        "select_type": "SIMPLE",
+        "table": "cd",
+        "partitions": null,
+        "type": "eq_ref",
+        "possible_keys": "customer_document_once",
+        "key": "customer_document_once",
+        "key_len": "676",
+        "ref": "func,func,func",
+        "rows": 1,
+        "filtered": 100,
+        "Extra": "Using index condition"
+    },
+    {
+        "id": 1,
+        "select_type": "SIMPLE",
+        "table": "c",
+        "partitions": null,
+        "type": "eq_ref",
+        "possible_keys": "PRIMARY,merchant_customers_merchant_id_identity_hash_unique,merchant_customers_merchant_id_request_id_unique,merchant_customers_merchant_id_status_created_at_index,merchant_customers_merchant_id_type_created_at_index,merchant_customers_merchant_id_name_hash_index,merchant_customers_merchant_id_tin_hash_index,merchant_customers_merchant_id_email_hash_index,merchant_customers_merchant_id_phone_hash_index",
+        "key": "PRIMARY",
+        "key_len": "144",
+        "ref": "nuers_sales_lab_20261021.cd.customer_id",
+        "rows": 1,
+        "filtered": 100,
+        "Extra": "Using where"
+    }
+]

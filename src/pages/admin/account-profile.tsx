@@ -1,3 +1,4 @@
+import { useRealtimeRefresh } from "@/lib/use-realtime-refresh";
 import { useEffect, useRef, useState, type FormEvent, type ElementType } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Bell, Building2, CalendarDays, Camera, Check, ChevronRight, Clock3, Eye, EyeOff, KeyRound, LoaderCircle, LockKeyhole, Mail, MapPin, Monitor, Pencil, Phone, RefreshCw, Save, Settings2, ShieldCheck, UserRound, Users, X } from "lucide-react";
@@ -22,7 +23,9 @@ export function AdminAccountProfile(){
  const profileDirty=!!data&&!!draft&&JSON.stringify(draft)!==JSON.stringify(data.profile);const preferencesDirty=!!data&&!!notifications&&JSON.stringify(notifications)!==JSON.stringify(data.notifications);const dirty=profileDirty||preferencesDirty||!!(photoOpen&&photoFile)||!!(passwordOpen&&(currentPassword||password||confirmPassword));
  const zone=data?.profile.timezone||'Asia/Manila';const date=(value:string|null|undefined)=>value?new Date(value).toLocaleString('en-PH',{timeZone:zone,year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:data?.profile.time_format!=='24'}):'Not recorded';
  function adopt(result:AdminProfileData){setData(result);setDraft(result.profile);if(!preferencesDirty)setNotifications(result.notifications);setFieldErrors({});window.dispatchEvent(new CustomEvent('nuers:admin-profile-updated'));}
- async function load(){setLoading(true);setError('');try{adopt(await apiJson('/api/admin/account-profile'));}catch(e){setError(e instanceof Error?e.message:'Unable to load your profile.')}finally{setLoading(false)}}
+ const liveAllowed=useRef(true);liveAllowed.current=!dirty&&!editing&&!busy&&!photoOpen&&!passwordOpen&&!logoutOpen;
+ async function load(quiet=false){if(!quiet)setLoading(true);setError('');try{const next=await apiJson('/api/admin/account-profile');if(!quiet||liveAllowed.current)adopt(next);}catch(e){setError(e instanceof Error?e.message:'Unable to load your profile.')}finally{setLoading(false)}}
+ useRealtimeRefresh(()=>load(true),!dirty&&!editing&&!busy&&!photoOpen&&!passwordOpen&&!logoutOpen);
  useEffect(()=>{if(!initialRead.current){initialRead.current=true;void load()}},[]);
  useEffect(()=>{const id=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(id)},[]);
  useEffect(()=>{let active=true,url='';if(data?.account.has_avatar)apiFetch('/api/admin/account-profile/avatar').then(async r=>{if(!r.ok)throw new Error('Unable to load profile photo');return r.blob()}).then(blob=>{if(active){url=URL.createObjectURL(blob);setPhoto(url)}}).catch(()=>{if(active)setPhoto('')});else setPhoto('');return()=>{active=false;if(url)URL.revokeObjectURL(url)}},[data?.account.has_avatar,photoVersion]);

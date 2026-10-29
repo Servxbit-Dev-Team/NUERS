@@ -1,0 +1,30 @@
+[
+    {
+        "id": 1,
+        "select_type": "SIMPLE",
+        "table": "t",
+        "partitions": null,
+        "type": "ALL",
+        "possible_keys": null,
+        "key": null,
+        "key_len": null,
+        "ref": null,
+        "rows": 984564,
+        "filtered": 100,
+        "Extra": "Using temporary; Using filesort"
+    },
+    {
+        "id": 1,
+        "select_type": "SIMPLE",
+        "table": "m",
+        "partitions": null,
+        "type": "ALL",
+        "possible_keys": "PRIMARY",
+        "key": null,
+        "key_len": null,
+        "ref": null,
+        "rows": 2,
+        "filtered": 100,
+        "Extra": "Using where; Using join buffer (hash join)"
+    }
+]

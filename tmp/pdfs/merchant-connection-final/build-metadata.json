@@ -1,5 +1,5 @@
 {
-  "pages": 42,
+  "pages": 48,
   "titles": [
     [
       1,
@@ -168,6 +168,30 @@
     [
       42,
       "Track delivery independently"
+    ],
+    [
+      43,
+      "Buyer-confirmed CWT"
+    ],
+    [
+      44,
+      "Preserve the original"
+    ],
+    [
+      45,
+      "Authorized manual invoices"
+    ],
+    [
+      46,
+      "Readiness and fee invoices"
+    ],
+    [
+      47,
+      "Preserve the seller invoice number"
+    ],
+    [
+      48,
+      "Invoice and receipt fields"
     ]
   ],
   "minimum_body_y": 104.6

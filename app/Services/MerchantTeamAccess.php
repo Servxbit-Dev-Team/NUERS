@@ -104,7 +104,7 @@ class MerchantTeamAccess
                 $permission = str_ends_with($path, '/export') ? 'customers.manage' : 'customers.view';
             } elseif ($path === 'api/merchant/sales-reports') {
                 $permission = 'reports.view';
-            } elseif ($path === 'api/merchant/sales-reports/export') {
+            } elseif (Str::is(['api/merchant/sales-reports/export', 'api/merchant/sales-reports/exports', 'api/merchant/sales-reports/exports/*'], $path)) {
                 $permission = 'reports.export';
             } elseif (Str::is(['api/merchant/wallet', 'api/merchant/wallet/statement'], $path)) {
                 $permission = 'wallet.view';
@@ -112,11 +112,13 @@ class MerchantTeamAccess
                 $permission = 'integrations.view';
             }
             // Identity lookup exposes only the linked business's existing profile, never a membership grant.
-            elseif ($path === 'api/business-accounts/current') {
+            elseif (in_array($path, ['api/business-accounts/current', 'api/dashboard-revision'], true)) {
                 $this->sessionMfa($u);
 
                 return;
             }
+        } elseif ($path === 'api/merchant/sales-reports/exports' && $r->isMethod('POST')) {
+            $permission = 'reports.export';
         } elseif ($path === 'api/business-invoices' && $r->isMethod('POST')) {
             $permission = 'documents.create';
         } elseif (Str::is(['api/merchant/customers', 'api/merchant/customers/*'], $path) && in_array($r->method(), ['POST', 'PATCH'], true)) {

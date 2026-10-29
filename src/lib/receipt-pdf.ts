@@ -248,10 +248,10 @@ function buildContentStream(data: ReceiptPdfData) {
   text(totalX + 118, totalY + 45, data.reference, { font: "F2", size: 8 });
 
   line(formX, formY + formH - 30, formX + formW, formY + formH - 30);
-  text(formX + 8, formY + formH - 17, "PERMIT TO USE LOOSE LEAF NO.: NUERS-DIGITAL-2026", { size: 7.5 });
-  text(formX + 8, formY + formH - 7, `DATE ISSUED: ${footerDate || "On file"}`, { size: 7.5 });
-  text(formX + 258, formY + formH - 17, "BIR AUTHORITY TO PRINT NO.: DIGITAL E-RECEIPT", { size: 7.5 });
-  text(formX + 258, formY + formH - 7, `APPROVED SERIES: ${receiptNo} | STATUS: ${data.status || "issued"}`, { size: 7.5 });
+  text(formX + 8, formY + formH - 17, "PERMIT TO USE: NOT RECORDED", { size: 7.5 });
+  text(formX + 8, formY + formH - 7, "AUTHORITY DATE ISSUED: NOT RECORDED", { size: 7.5 });
+  text(formX + 258, formY + formH - 17, "BIR AUTHORITY: NOT RECORDED", { size: 7.5 });
+  text(formX + 258, formY + formH - 7, `RECORDED COPY: ${receiptNo} | STATUS: ${data.status || "issued"}`, { size: 7.5 });
 
   const noteY = formY + formH + 44;
   rect(formX, noteY, formW, 55, { stroke: [0, 0, 0], lineWidth: 0.75 });

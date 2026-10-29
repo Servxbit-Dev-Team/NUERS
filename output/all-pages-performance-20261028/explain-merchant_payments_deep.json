@@ -1,0 +1,44 @@
+[
+    {
+        "id": 1,
+        "select_type": "PRIMARY",
+        "table": "t",
+        "partitions": null,
+        "type": "ref",
+        "possible_keys": "merchant_external_reference_unique,merchant_transactions_merchant_id_index,mt_merchant_created_id,mt_merchant_type_options,mt_merchant_channel_options,mt_merchant_branch_options,mt_merchant_payment_options,mt_registry_summary",
+        "key": "mt_merchant_created_id",
+        "key_len": "145",
+        "ref": "const",
+        "rows": 492282,
+        "filtered": 100,
+        "Extra": null
+    },
+    {
+        "id": 1,
+        "select_type": "PRIMARY",
+        "table": "r",
+        "partitions": null,
+        "type": "eq_ref",
+        "possible_keys": "PRIMARY,transaction_receipts_merchant_id_index,tr_merchant_issued_id,tr_merchant_transaction",
+        "key": "PRIMARY",
+        "key_len": "144",
+        "ref": "func",
+        "rows": 1,
+        "filtered": 100,
+        "Extra": "Using where"
+    },
+    {
+        "id": 4,
+        "select_type": "DEPENDENT SUBQUERY",
+        "table": "rr",
+        "partitions": null,
+        "type": "index",
+        "possible_keys": "transaction_receipts_transaction_id_index,transaction_receipts_merchant_id_index,tr_merchant_issued_id,tr_merchant_transaction",
+        "key": "PRIMARY",
+        "key_len": "144",
+        "ref": null,
+        "rows": 183,
+        "filtered": 1.0000001192092896,
+        "Extra": "Using where"
+    }
+]

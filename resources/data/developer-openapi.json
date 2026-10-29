@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "NUERS Developer API",
-    "version": "2026-10-19.receipts-status",
+    "version": "2026-10-29.invoice-documents",
     "description": "Implemented NUERS application routes. This is not an official BIR EIS API specification. Live BIR transport remains unavailable. Additive hardening 2026-10-18: explicit original source capture, reviewed seller profiles, buyer/CWT preservation, environment isolation and unknown-field rejection. Download /guides/NUERS-API-Connection-Guide.pdf. Automatic owned-system connection generation requires no separate admin source approval for active verified accounts. Optional signed merchant callbacks are configured under Merchant API Integration > Webhooks, with separate Live/Sandbox receiver ownership checks. See /guides/NUERS-Webhook-Connection-Guide.pdf. These human-session management routes do not accept API keys."
   },
   "servers": [
@@ -30,7 +30,7 @@
         "properties": {
           "external_reference": {
             "type": "string",
-            "description": "Stable source reference, up to 120 characters. Duplicate lookup is scoped to the API key\u2019s merchant.",
+            "description": "Stable source reference, up to 120 characters. Duplicate lookup is scoped to the API key’s merchant.",
             "maxLength": 120
           },
           "amount": {
@@ -135,12 +135,14 @@
           },
           "receipt_number": {
             "type": "string",
-            "description": "Original finalized source number; must match the next configured authorized series.",
-            "maxLength": 120
+            "description": "Original seller invoice/document number: 1–50 characters; no control characters or surrounding whitespace. Preserve prefixes and leading zeros. This is EIS CompInvoiceId, not the separate 24-character EisUniqueId. Source capture preserves the source number; NUERS issuance uses the next registered series number. Never renumber accepted originals.",
+            "maxLength": 50,
+            "minLength": 1,
+            "pattern": "^[^\\s\\x00-\\x1F\\x7F](?:[^\\x00-\\x1F\\x7F]*[^\\s\\x00-\\x1F\\x7F])?$"
           },
           "items": {
             "type": "array",
-            "description": "1\u2013100 complete item lines. description, positive quantity, unit_price in PHP/pesos and supported tax treatment; server reconciles lines and gross total.",
+            "description": "1–100 complete item lines. description, positive quantity, unit_price in PHP/pesos and supported tax treatment; server reconciles lines and gross total.",
             "items": {
               "type": "object",
               "required": [
@@ -200,6 +202,14 @@
                   "maximum": 100,
                   "multipleOf": 0.01,
                   "description": "Legacy per-line percentage. Do not combine with manual_discount or statutory benefits on the same line."
+                },
+                "unit": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 40,
+                  "description": "Recorded unit of measure, printed with the item."
                 }
               },
               "additionalProperties": false
@@ -282,6 +292,194 @@
             "format": "email",
             "maxLength": 254,
             "description": "Optional customer_email: one valid checkout email address, maximum 254 characters. Omit or send null when absent. Map the checkout email explicitly; NUERS does not scan arbitrary payload fields. Invalid addresses return 422 before acceptance. Never use a customer address as an API credential."
+          },
+          "withholding_details": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "withholding_agent",
+              "classification",
+              "atc",
+              "rate",
+              "base",
+              "amount",
+              "evidence_reference"
+            ],
+            "properties": {
+              "withholding_agent": {
+                "type": "boolean",
+                "enum": [
+                  true
+                ]
+              },
+              "classification": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 200
+              },
+              "atc": {
+                "type": "string",
+                "pattern": "^[A-Z]{2}[0-9]{3}$"
+              },
+              "rate": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "base": {
+                "type": "number",
+                "minimum": 0
+              },
+              "amount": {
+                "type": "number",
+                "minimum": 0
+              },
+              "evidence_reference": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 2000
+              }
+            },
+            "description": "For buyer-confirmed CWT, send withholding_tax in PHP and withholding_basis_reference. Send withholding_details with withholding_agent=true, classification, atc (two uppercase letters and three digits), rate (percentage), base, amount and evidence_reference. Decimal money fields have at most two decimals. amount must equal withholding_tax and rounded base × rate / 100. CWT reduces net_payable; gross_amount, sales, VAT and the wallet fee basis stay unchanged. Existing amount-and-basis integrations remain supported; use the structured buyer confirmation for new mappings."
+          },
+          "manual_recovery_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Record an outage and its authorized manual invoices under Merchant → Compliance Operations, then record verified restoration. On a replacement Live invoice, send manual_recovery_id from that register and the original manual number in manual_invoice_number. The replacement must match merchant, branch, buyer and gross amount, explicitly reference the manual invoice and be dated after restoration. One manual invoice links to one replacement. A mismatch rolls back the new event and fee. Sandbox cannot link Live recovery records. The register tracks the three-calendar-day recovery deadline; it does not issue manual authority or claim BIR transmission."
+          },
+          "manual_invoice_number": {
+            "type": "string",
+            "maxLength": 114,
+            "description": "Required with manual_recovery_id. Exact original authorized manual invoice number."
+          },
+          "customer_type": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "business",
+              "retail",
+              "walk_in",
+              null
+            ],
+            "description": "business, retail or walk_in. business requires the buyer registered name, registered address and supported nonzero TIN. B2C address/TIN are optional. Declare the actual buyer type."
+          },
+          "invoice_reference": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 50,
+            "pattern": "^[^\\x00-\\x1F\\x7F]*$",
+            "description": "Original invoice number for a related payment or additional invoice, maximum 50 characters. Existing originals remain immutable. This reference is printed on the receipt; it does not cancel or replace the original."
+          },
+          "document_registration": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "system_type"
+            ],
+            "properties": {
+              "pti_number": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 120,
+                "pattern": "^[^\\x00-\\x1F\\x7F]*$"
+              },
+              "ptu_number": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 120,
+                "pattern": "^[^\\x00-\\x1F\\x7F]*$"
+              },
+              "ac_number": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 120,
+                "pattern": "^[^\\x00-\\x1F\\x7F]*$"
+              },
+              "machine_identification_number": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 120,
+                "pattern": "^[^\\x00-\\x1F\\x7F]*$"
+              },
+              "machine_serial_number": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 120,
+                "pattern": "^[^\\x00-\\x1F\\x7F]*$"
+              },
+              "software_license_number": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 120,
+                "pattern": "^[^\\x00-\\x1F\\x7F]*$"
+              },
+              "system_type": {
+                "type": "string",
+                "enum": [
+                  "CAS",
+                  "POS",
+                  "ELECTRONIC"
+                ]
+              },
+              "authority_issued_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date",
+                "description": "Authentic issue date, YYYY-MM-DD; not in the future."
+              },
+              "series_start": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 50,
+                "pattern": "^[^\\x00-\\x1F\\x7F]*$",
+                "description": "Full recorded boundary including prefix and leading zeros."
+              },
+              "series_end": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 50,
+                "pattern": "^[^\\x00-\\x1F\\x7F]*$",
+                "description": "Full recorded boundary including prefix and leading zeros."
+              },
+              "non_vat_basis": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "percentage_tax",
+                  "exempt",
+                  null
+                ],
+                "description": "Applicable seller tax basis; use reviewed evidence, not an inferred exemption."
+              }
+            },
+            "description": "Optional recorded source registration evidence. system_type: CAS, POS or ELECTRONIC. Supply authentic applicable PTI, PTU/AC, authority issue date, series range and POS MIN/machine/software identifiers. This snapshot is printed on copies; supplying it does not establish BIR approval. Missing historical evidence is shown as not recorded. Native NUERS issuance requires an evidence-backed series."
           }
         },
         "required": [
@@ -403,7 +601,7 @@
                 "pattern": "^[0-9]+(?:\\.[0-9]{1,2})?$"
               }
             ],
-            "description": "PHP for amount, 0\u2013100 for percentage; at most two decimals. Must not exceed original price."
+            "description": "PHP for amount, 0–100 for percentage; at most two decimals. Must not exceed original price."
           },
           "reason": {
             "type": "string",
@@ -675,7 +873,7 @@
                 "properties": {
                   "external_reference": {
                     "type": "string",
-                    "description": "Stable source reference, up to 120 characters. Duplicate lookup is scoped to the API key\u2019s merchant.",
+                    "description": "Stable source reference, up to 120 characters. Duplicate lookup is scoped to the API key’s merchant.",
                     "maxLength": 120
                   },
                   "amount": {
@@ -780,12 +978,14 @@
                   },
                   "receipt_number": {
                     "type": "string",
-                    "description": "Original finalized source number; must match the next configured authorized series.",
-                    "maxLength": 120
+                    "description": "Original seller invoice/document number: 1–50 characters; no control characters or surrounding whitespace. Preserve prefixes and leading zeros. This is EIS CompInvoiceId, not the separate 24-character EisUniqueId. Source capture preserves the source number; NUERS issuance uses the next registered series number. Never renumber accepted originals.",
+                    "maxLength": 50,
+                    "minLength": 1,
+                    "pattern": "^[^\\s\\x00-\\x1F\\x7F](?:[^\\x00-\\x1F\\x7F]*[^\\s\\x00-\\x1F\\x7F])?$"
                   },
                   "items": {
                     "type": "array",
-                    "description": "1\u2013100 complete item lines. description, positive quantity, unit_price in PHP/pesos and supported tax treatment; server reconciles lines and gross total.",
+                    "description": "1–100 complete item lines. description, positive quantity, unit_price in PHP/pesos and supported tax treatment; server reconciles lines and gross total.",
                     "items": {
                       "type": "object",
                       "required": [
@@ -815,6 +1015,22 @@
                             "vat_exempt"
                           ]
                         },
+                        "tax_basis_reference": {
+                          "type": "string",
+                          "maxLength": 2000
+                        },
+                        "qty": {
+                          "type": "number",
+                          "exclusiveMinimum": 0
+                        },
+                        "price": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "amount": {
+                          "type": "number",
+                          "minimum": 0
+                        },
                         "benefit_eligible": {
                           "type": "boolean",
                           "default": false,
@@ -829,8 +1045,17 @@
                           "maximum": 100,
                           "multipleOf": 0.01,
                           "description": "Legacy per-line percentage. Do not combine with manual_discount or statutory benefits on the same line."
+                        },
+                        "unit": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "maxLength": 40,
+                          "description": "Recorded unit of measure, printed with the item."
                         }
-                      }
+                      },
+                      "additionalProperties": false
                     },
                     "minItems": 1,
                     "maxItems": 100
@@ -862,6 +1087,40 @@
                     "format": "date-time",
                     "pattern": "T.*(?:Z|[+-][0-9]{2}:[0-9]{2})$"
                   },
+                  "record_mode": {
+                    "type": "string",
+                    "enum": [
+                      "source_capture",
+                      "nuers_issuance"
+                    ],
+                    "default": "nuers_issuance",
+                    "description": "Use source_capture for an existing ERP/POS original; nuers_issuance allocates a new authorized NUERS original."
+                  },
+                  "source_profile_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Required for source_capture: reviewed original issuer, exact system and branch, effective seller registration and original issue period."
+                  },
+                  "customer_address": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "withholding_tax": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Applicable CWT in PHP. Does not reduce gross_amount, VAT base or wallet eligibility. Reduces net_payable."
+                  },
+                  "withholding_basis_reference": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 2000,
+                    "description": "Required when withholding_tax is supplied."
+                  },
+                  "tax_basis_reference": {
+                    "type": "string",
+                    "maxLength": 2000,
+                    "description": "Applicable effective exemption/zero-rating or tax classification reference."
+                  },
                   "sales_benefit": {
                     "$ref": "#/components/schemas/SalesBenefit"
                   },
@@ -876,6 +1135,194 @@
                     "format": "email",
                     "maxLength": 254,
                     "description": "Optional customer_email: one valid checkout email address, maximum 254 characters. Omit or send null when absent. Map the checkout email explicitly; NUERS does not scan arbitrary payload fields. Invalid addresses return 422 before acceptance. Never use a customer address as an API credential."
+                  },
+                  "withholding_details": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "withholding_agent",
+                      "classification",
+                      "atc",
+                      "rate",
+                      "base",
+                      "amount",
+                      "evidence_reference"
+                    ],
+                    "properties": {
+                      "withholding_agent": {
+                        "type": "boolean",
+                        "enum": [
+                          true
+                        ]
+                      },
+                      "classification": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 200
+                      },
+                      "atc": {
+                        "type": "string",
+                        "pattern": "^[A-Z]{2}[0-9]{3}$"
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "base": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "amount": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "evidence_reference": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 2000
+                      }
+                    },
+                    "description": "For buyer-confirmed CWT, send withholding_tax in PHP and withholding_basis_reference. Send withholding_details with withholding_agent=true, classification, atc (two uppercase letters and three digits), rate (percentage), base, amount and evidence_reference. Decimal money fields have at most two decimals. amount must equal withholding_tax and rounded base × rate / 100. CWT reduces net_payable; gross_amount, sales, VAT and the wallet fee basis stay unchanged. Existing amount-and-basis integrations remain supported; use the structured buyer confirmation for new mappings."
+                  },
+                  "manual_recovery_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Record an outage and its authorized manual invoices under Merchant → Compliance Operations, then record verified restoration. On a replacement Live invoice, send manual_recovery_id from that register and the original manual number in manual_invoice_number. The replacement must match merchant, branch, buyer and gross amount, explicitly reference the manual invoice and be dated after restoration. One manual invoice links to one replacement. A mismatch rolls back the new event and fee. Sandbox cannot link Live recovery records. The register tracks the three-calendar-day recovery deadline; it does not issue manual authority or claim BIR transmission."
+                  },
+                  "manual_invoice_number": {
+                    "type": "string",
+                    "maxLength": 114,
+                    "description": "Required with manual_recovery_id. Exact original authorized manual invoice number."
+                  },
+                  "customer_type": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "business",
+                      "retail",
+                      "walk_in",
+                      null
+                    ],
+                    "description": "business, retail or walk_in. business requires the buyer registered name, registered address and supported nonzero TIN. B2C address/TIN are optional. Declare the actual buyer type."
+                  },
+                  "invoice_reference": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 50,
+                    "pattern": "^[^\\x00-\\x1F\\x7F]*$",
+                    "description": "Original invoice number for a related payment or additional invoice, maximum 50 characters. Existing originals remain immutable. This reference is printed on the receipt; it does not cancel or replace the original."
+                  },
+                  "document_registration": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "additionalProperties": false,
+                    "required": [
+                      "system_type"
+                    ],
+                    "properties": {
+                      "pti_number": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "maxLength": 120,
+                        "pattern": "^[^\\x00-\\x1F\\x7F]*$"
+                      },
+                      "ptu_number": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "maxLength": 120,
+                        "pattern": "^[^\\x00-\\x1F\\x7F]*$"
+                      },
+                      "ac_number": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "maxLength": 120,
+                        "pattern": "^[^\\x00-\\x1F\\x7F]*$"
+                      },
+                      "machine_identification_number": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "maxLength": 120,
+                        "pattern": "^[^\\x00-\\x1F\\x7F]*$"
+                      },
+                      "machine_serial_number": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "maxLength": 120,
+                        "pattern": "^[^\\x00-\\x1F\\x7F]*$"
+                      },
+                      "software_license_number": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "maxLength": 120,
+                        "pattern": "^[^\\x00-\\x1F\\x7F]*$"
+                      },
+                      "system_type": {
+                        "type": "string",
+                        "enum": [
+                          "CAS",
+                          "POS",
+                          "ELECTRONIC"
+                        ]
+                      },
+                      "authority_issued_at": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "format": "date",
+                        "description": "Authentic issue date, YYYY-MM-DD; not in the future."
+                      },
+                      "series_start": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "maxLength": 50,
+                        "pattern": "^[^\\x00-\\x1F\\x7F]*$",
+                        "description": "Full recorded boundary including prefix and leading zeros."
+                      },
+                      "series_end": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "maxLength": 50,
+                        "pattern": "^[^\\x00-\\x1F\\x7F]*$",
+                        "description": "Full recorded boundary including prefix and leading zeros."
+                      },
+                      "non_vat_basis": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "enum": [
+                          "percentage_tax",
+                          "exempt",
+                          null
+                        ],
+                        "description": "Applicable seller tax basis; use reviewed evidence, not an inferred exemption."
+                      }
+                    },
+                    "description": "Optional recorded source registration evidence. system_type: CAS, POS or ELECTRONIC. Supply authentic applicable PTI, PTU/AC, authority issue date, series range and POS MIN/machine/software identifiers. This snapshot is printed on copies; supplying it does not establish BIR approval. Missing historical evidence is shown as not recorded. Native NUERS issuance requires an evidence-backed series."
                   }
                 },
                 "required": [
@@ -903,7 +1350,8 @@
                       "gross_amount"
                     ]
                   }
-                ]
+                ],
+                "additionalProperties": false
               },
               "example": {
                 "external_reference": "TEST-POS-000001",
@@ -999,7 +1447,7 @@
             "name": "per_page",
             "in": "query",
             "required": false,
-            "description": "5\u2013100; default 15.",
+            "description": "5–100; default 15.",
             "schema": {
               "type": "integer"
             }
@@ -1134,7 +1582,7 @@
                   },
                   "rate_limit_per_day": {
                     "type": "integer",
-                    "description": "100\u20131,000,000. Defaults are 50,000 live / 5,000 sandbox."
+                    "description": "100–1,000,000. Defaults are 50,000 live / 5,000 sandbox."
                   },
                   "branch_type": {
                     "type": "string",
@@ -1230,7 +1678,7 @@
                   },
                   "rate_limit_per_day": {
                     "type": "integer",
-                    "description": "100\u20131,000,000."
+                    "description": "100–1,000,000."
                   },
                   "branch_type": {
                     "type": "string",
@@ -1487,7 +1935,7 @@
             "name": "per_page",
             "in": "query",
             "required": false,
-            "description": "1\u2013100.",
+            "description": "1–100.",
             "schema": {
               "type": "integer"
             }
@@ -1740,7 +2188,7 @@
       "post": {
         "operationId": "ingest-batch",
         "summary": "Accept a finalized source batch atomically",
-        "description": "transactions:write, active live key. One branch, 1\u201350 original source events using the finalized event contract. New financial events, numbering and all fees commit together or none commit.\n\nA failed batch returns 402 if the total fee for new eligible events exceeds available funds. Existing exact duplicates require no new fee. Any validation, authority, sequence or source conflict rejects the entire batch. Retain every unaccepted original on the client.\nBatches are limited to 10 requests/minute plus key admission budgets. These are protective limits, not measured throughput.\nClient preference can be realtime or batch. External POS/ERP connectors must implement the preference, durable source retention and bounded identical retries.\n\nMerchant transaction, batch and wallet responses do not expose bir_acceptance, bir_connection, bir_status or internal preparation blockers. Display NUERS status in the connector. NUERS Success confirms platform recording; it does not assert government acceptance.\n\nEvery ERP, POS or e-commerce sales row must show NUERS Status, failure reason, environment, NUERS reference and last attempt. Show Success only after a valid 201 or 200 duplicate acknowledgement with matching source_event_id, external_reference and environment, non-empty id/transaction_id/receipt_id, status=durably_recorded and nuers_status=success. Persist these identifiers atomically with the local outbox acknowledgement.\n\nA newly accepted Live event containing customer_email queues one customer PDF email in the same database transaction. Exact retries return the same record and do not queue another email or fee. Failed/rolled-back events queue no email. Sandbox always returns suppressed_sandbox and never emails customers. Existing transactions are not emailed retroactively.\n\nPoll GET status_url with the same environment and transactions:read scope for customer_receipt.status and reason. States: not_requested, suppressed_sandbox, queued, preparing, sending, smtp_accepted, failed, uncertain, expired, cancelled. smtp_accepted means the SMTP server accepted the message, not confirmed inbox delivery. Email failures never change a successfully recorded sale to Error. Do not retry the sale to resend mail; use the merchant document Send Copy action after investigating an uncertain delivery.",
+        "description": "transactions:write, active live key. One branch, 1–50 original source events using the finalized event contract. New financial events, numbering and all fees commit together or none commit.\n\nA failed batch returns 402 if the total fee for new eligible events exceeds available funds. Existing exact duplicates require no new fee. Any validation, authority, sequence or source conflict rejects the entire batch. Retain every unaccepted original on the client.\nBatches are limited to 10 requests/minute plus key admission budgets. These are protective limits, not measured throughput.\nClient preference can be realtime or batch. External POS/ERP connectors must implement the preference, durable source retention and bounded identical retries.\n\nMerchant transaction, batch and wallet responses do not expose bir_acceptance, bir_connection, bir_status or internal preparation blockers. Display NUERS status in the connector. NUERS Success confirms platform recording; it does not assert government acceptance.\n\nEvery ERP, POS or e-commerce sales row must show NUERS Status, failure reason, environment, NUERS reference and last attempt. Show Success only after a valid 201 or 200 duplicate acknowledgement with matching source_event_id, external_reference and environment, non-empty id/transaction_id/receipt_id, status=durably_recorded and nuers_status=success. Persist these identifiers atomically with the local outbox acknowledgement.\n\nA newly accepted Live event containing customer_email queues one customer PDF email in the same database transaction. Exact retries return the same record and do not queue another email or fee. Failed/rolled-back events queue no email. Sandbox always returns suppressed_sandbox and never emails customers. Existing transactions are not emailed retroactively.\n\nPoll GET status_url with the same environment and transactions:read scope for customer_receipt.status and reason. States: not_requested, suppressed_sandbox, queued, preparing, sending, smtp_accepted, failed, uncertain, expired, cancelled. smtp_accepted means the SMTP server accepted the message, not confirmed inbox delivery. Email failures never change a successfully recorded sale to Error. Do not retry the sale to resend mail; use the merchant document Send Copy action after investigating an uncertain delivery.",
         "tags": [
           "Merchant integration"
         ],
@@ -1964,7 +2412,7 @@
                 "properties": {
                   "events": {
                     "type": "array",
-                    "description": "1\u201350 complete NUERS-ingestion-1 events; use original legal source order.",
+                    "description": "1–50 complete NUERS-ingestion-1 events; use original legal source order.",
                     "items": {
                       "$ref": "#/components/schemas/IngestionEvent"
                     },
@@ -2011,7 +2459,7 @@
     },
     "/api/integrations/transactions/{id}": {
       "get": {
-        "summary": "Retrieve durable production intake result for the key\u2019s exact business and branch",
+        "summary": "Retrieve durable production intake result for the key’s exact business and branch",
         "security": [
           {
             "MerchantKeyHeader": []

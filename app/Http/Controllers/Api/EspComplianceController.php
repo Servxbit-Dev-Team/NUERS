@@ -14,12 +14,18 @@ class EspComplianceController extends Controller
     {
         $policy = app(BirCompliance::class); $user = $policy->administrativeUser($request);
         $accreditation = $policy->accreditation();
+        $production = $policy->gate($policy->integration(), true, true);
+        $production['blockers'][] = 'Per-company BIR credentials, profile release and actual certification evidence must be verified in API Integrations.';
+        if (!config('bir_eis.outbound_enabled')) $production['blockers'][] = 'Outbound BIR transmission is disabled.';
+        $production['can_transmit'] = false; // A global overview never grants a company-specific release.
+        $integrity = app(\App\Services\AuditIntegritySnapshot::class)->status();
         return response()->json([
-            ...$accreditation, 'production' => $policy->gate($policy->integration()),
+            ...$accreditation, 'production' => $production,
+            'technical_readiness' => ['wire_adapter_implemented'=>true,'outbound_enabled'=>(bool)config('bir_eis.outbound_enabled'),'source_intake_enforced'=>(bool)config('bir_compliance.source_capture_accreditation_enforced'),'service_issuer_configured'=>(bool)config('bir_compliance.service_invoice_issuer_id'),'notice'=>'The BIR wire adapter is implemented against the published guide. Credentials, per-company readiness and BIR certification/production acceptance must still be verified.'],
             'can_record_bir_review' => DB::table('profiles')->where('id', $user->id)->value('role') === 'bir',
             'solution' => ['name' => config('bir_compliance.solution_name'), 'version' => config('bir_compliance.solution_version')],
             'rules' => ['transmission_calendar_days' => 3, 'restoration_calendar_days' => 3, 'critical_incident_report_hours' => 24, 'certificate_years' => 5, 'renewal_lead_days' => 60, 'annual_review' => true, 'track_record' => config('bir_compliance.track_record')],
-            'audit_integrity' => $policy->auditIntegrity(),
+            'audit_integrity' => $integrity['integrity'], 'integrity_check' => $integrity,
             'incidents' => DB::table('eis_operational_incidents')->orderByDesc('detected_at')->limit(50)->get(),
             'source_notes' => ['The supplied circular and Annex A are the primary implementation references.', 'Annex A contains 17 requirements. Slides 32–33 omit joint-venture item 8 and renumber subsequent items.', 'The capacity requirement concerns verifiable supported systems over each preceding year; current NUERS dashboard totals alone do not establish it.', 'External certificates, BIR-supervised testing, hosting/data-residency attestations and legal approval require actual evidence.'],
         ])->header('Cache-Control', 'private, no-store');

@@ -24,10 +24,26 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 class IntegrationTransactionController extends Controller
 {
+    private function validateRawNumbers(Request $request, bool $batch = false): void
+    {
+        // Laravel trims normal form strings. Never let that silently change a seller serial.
+        $raw = json_decode($request->getContent(), true);
+        $events = $batch ? ($raw['events'] ?? []) : [$raw];
+        if (!is_array($events)) return;
+        foreach ($events as $index => $event) {
+            if (!is_array($event)) continue;
+            foreach (['receipt_number', 'invoice_reference'] as $field) {
+                if (!isset($event[$field]) || !is_string($event[$field])) continue;
+                if ($error = app(\App\Services\InvoiceDocumentRules::class)->numberError($event[$field])) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([($batch ? 'events.'.$index.'.' : '').$field => $error]);
+                }
+            }
+        }
+    }
+
     private function authenticate(Request $r, string $scope): array
     {
         $raw = (string) ($r->header('X-NUERS-API-Key') ?: $r->bearerToken());
@@ -87,6 +103,7 @@ class IntegrationTransactionController extends Controller
                 return app(IntegrationStatus::class)->accepted(['duplicate' => true, ...json_decode($old->response, true), 'environment' => 'live', 'customer_receipt' => app(ApiCustomerReceipt::class)->status((string) $merchant->id, (string) $old->receipt_id)]);
             }
             $profile = app(IntegrationSourceProfile::class)->forEvent($v, $merchant);
+            if ($profile) app(BirCompliance::class)->assertSourceCaptureAllowed();
             $sellerVat = $profile ? (bool) $profile->vat_registered : (bool) $merchant->vat_registered;
             $tax = app(IntegrationContract::class)->calculateDocument($v, $sellerVat);
             $resolved = app(IntegrationContract::class)->resolveDocument($v, $tax);
@@ -113,7 +130,7 @@ class IntegrationTransactionController extends Controller
             })->where('mt.merchant_id', $merchant->id)->where('mt.api_key_id', $key->id)->where('mt.status', 'active')->where('mb.status', 'active')->where('mb.bir_branch_code', $v['branch_code'])->pluck('mt.id');
             DB::table('transaction_receipts')->insert([
                 ...app(StatutorySales::class)->storage($v['sales_benefit'] ?? null, $tax),
-                ...$authority, 'issuer_terminal_id' => $terminals->count() === 1 ? $terminals->first() : null, 'id' => $receipt, 'transaction_id' => $transaction, 'merchant_id' => $merchant->id, 'receipt_number' => $series['number'], 'series_number' => $series['series_id'],
+                ...$authority, 'issuer_terminal_id' => $terminals->count() === 1 ? $terminals->first() : null, 'id' => $receipt, 'transaction_id' => $transaction, 'merchant_id' => $merchant->id, 'receipt_number' => $series['number'], 'series_number' => $series['series_id'], 'document_registration' => json_encode($profile ? ($v['document_registration'] ?? null) : $series['document_registration'], JSON_THROW_ON_ERROR),
                 'record_mode' => $profile ? 'source_capture' : 'nuers_issuance', 'source_profile_id' => $profile?->id, 'receipt_type' => $profile ? 'api_source_copy' : 'api_transaction_receipt', 'document_type' => $type, 'merchant_name' => $profile?->seller_name ?? $merchant->business_name, 'merchant_tin' => $profile?->seller_tin ?? $merchant->tin,
                 'merchant_address' => $profile?->seller_address ?? $merchant->address ?? '', 'merchant_vat_reg' => $sellerVat ? 'VAT Registered' : 'Non-VAT',
                 'seller_branch_code' => $v['branch_code'], 'buyer_email' => $v['customer_email'] ?? null, 'buyer_name' => $v['customer_name'] ?? null, 'buyer_tin' => $v['customer_tin'] ?? null, 'buyer_address' => $v['customer_address'] ?? null, 'withholding_tax' => $tax['withholding_tax'], 'withholding_basis_reference' => $v['withholding_basis_reference'] ?? null, 'sspt_sales' => $tax['sspt_sales'],
@@ -122,6 +139,7 @@ class IntegrationTransactionController extends Controller
                 'items' => json_encode(array_map(fn ($i) => $i + ['vat_inclusive' => (bool) ($v['vat_inclusive'] ?? true)], $tax['items'])),
                 'status' => 'issued', 'issued_at' => $at, 'created_at' => now(), 'updated_at' => now(),
             ]);
+            if (!empty($v['manual_recovery_id'])) app(\App\Services\ComplianceOperations::class)->linkManual((string)$merchant->id,$v['manual_recovery_id'],'receipt',$receipt,'api-key:'.$key->id);
             $prep = app(EisDocumentReadiness::class)->prepare('receipt', $receipt);
             $body = ['environment' => 'live', 'id' => $id, 'transaction_id' => $transaction, 'receipt_id' => $receipt, 'receipt_number' => $series['number'], 'external_reference' => $v['external_reference'],
                 'record_mode' => $profile ? 'source_capture' : 'nuers_issuance', 'source_profile_id' => $profile?->id, 'calculation' => $tax, 'source_event_id' => $v['source_event_id'], 'occurred_at' => $v['occurred_at'], 'accepted_at' => now()->toIso8601String(), 'status' => 'durably_recorded',
@@ -164,132 +182,86 @@ class IntegrationTransactionController extends Controller
 
     public function batch(Request $r)
     {
-        $started = microtime(true);
-        $key = null;
-        $merchant = null;
-        $status = 500;
-        try {
-            [$key,$merchant] = $this->authenticate($r, 'transactions:write');
-            // Sandbox acceptance uses its physically separate store below.
-            $v = $r->validate(['events' => 'required|array|min:1|max:50']);
-            $events = [];
-            foreach ($v['events'] as $event) {
-                abort_unless(is_array($event), 422, 'Each event must be a JSON object.');
-                $events[] = app(IntegrationContract::class)->validateEvent($event);
-            }
-            if ($key->environment === 'sandbox') {
-                $results = DB::transaction(function () use ($events, $key, $merchant) {
-                    $rows = [];
-                    foreach ($events as $event) {
-                        $rows[] = app(SandboxTransactions::class)->accept($event, $key, $merchant);
-                    }
+        [$key,$merchant] = $this->authenticate($r, 'transactions:write');
+        $this->validateRawNumbers($r, true);
+        // Sandbox acceptance uses its physically separate store below.
+        $v = $r->validate(['events' => 'required|array|min:1|max:50']);
+        $events = [];
+        foreach ($v['events'] as $event) {
+            abort_unless(is_array($event), 422, 'Each event must be a JSON object.');
+            $events[] = app(IntegrationContract::class)->validateEvent($event);
+        }
+        if ($key->environment === 'sandbox') {
+            $results = DB::transaction(function () use ($events, $key, $merchant) {
+                $rows = [];
+                foreach ($events as $event) {
+                    $rows[] = app(SandboxTransactions::class)->accept($event, $key, $merchant);
+                }
 
 return $rows;
-                }, 3);
-                $status = 201;
-
-                return response()->json(['environment' => 'sandbox', 'test_only' => true, 'atomic' => true, 'accepted' => count($results), 'results' => $results], 201)->header('Cache-Control', 'private, no-store');
-            }
-            $results = DB::transaction(function () use ($events, $key, $merchant) {
-                DB::table('merchants')->where('id', $merchant->id)->lockForUpdate()->first();
-                $p = app(TransactionPricing::class)->offer(true);
-                $required = 0;
-                $seen = [];
-                foreach ($events as $event) {
-                    abort_unless($event['branch_code'] === $key->branch_code, 403, 'API key does not authorize this batch branch.');
-                    $family = in_array($event['document_type'], ['payment_receipt', 'official_receipt'], true) ? 'payment' : 'invoice';
-                    $namespace = hash('sha256', json_encode([$merchant->id, $event['branch_code'], $event['source_system'], $family, $event['external_reference']]));
-                    $eventHash = hash('sha256', json_encode([$merchant->id, $event['branch_code'], $event['source_system'], $event['source_event_id']]));
-                    $hash = app(IntegrationContract::class)->canonicalHash($event);
-                    $old = DB::table('integration_inbox')->where('namespace_hash', $namespace)->orWhere('event_hash', $eventHash)->first();
-                    if ($old) {
-                        abort_unless(hash_equals($old->request_hash, $hash), 409, 'A batch source identity conflicts with an accepted original.');
-
-                        continue;
-                    }
-                    foreach ([$namespace, $eventHash] as $identity) {
-                        if (isset($seen[$identity])) {
-                            abort_unless($seen[$identity] === $hash, 409, 'A batch contains conflicting source identities.');
-                        }
-                    }
-                    $duplicate = isset($seen[$namespace]) || isset($seen[$eventHash]);
-                    $seen[$namespace] = $hash;
-                    $seen[$eventHash] = $hash;
-                    $profile = app(IntegrationSourceProfile::class)->forEvent($event, $merchant);
-                    $tax = app(IntegrationContract::class)->calculateDocument($event, $profile ? (bool) $profile->vat_registered : (bool) $merchant->vat_registered);
-                    if (! $duplicate && $family === 'invoice' && app(InvoiceCalculator::class)->cents($tax['gross_amount'], 'gross_amount') >= $p->minimum_transaction_centavos) {
-                        $required += (int) $p->fee_centavos;
-                    }
-                }
-                if ($required) {
-                    $w = app(MerchantWallet::class)->locked($merchant->id);
-                    if ($w->available_centavos < $required) {
-                        throw new InsufficientWalletBalance((int) $w->available_centavos, $required);
-                    }
-                }
-                $result = [];
-                foreach ($events as $event) {
-                    $result[] = $this->accept($event, $key, $merchant);
-                }
-
-                return $result;
             }, 3);
 
-            $status = 201;
-
-            return response()->json(['environment' => 'live', 'atomic' => true, 'accepted' => count($results), 'results' => $results], 201)->header('Cache-Control', 'no-store');
-        } catch (\Throwable $e) {
-            $status = $e instanceof ValidationException ? 422 : (method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500);
-            throw $e;
-        } finally {
-            $this->logRequest($r, $key, $merchant, $status, $started, '/api/integrations/transactions/batch');
+            return response()->json(['environment' => 'sandbox', 'test_only' => true, 'atomic' => true, 'accepted' => count($results), 'results' => $results], 201)->header('Cache-Control', 'private, no-store');
         }
+        $results = DB::transaction(function () use ($events, $key, $merchant) {
+            DB::table('merchants')->where('id', $merchant->id)->lockForUpdate()->first();
+            $p = app(TransactionPricing::class)->offer(true);
+            $required = 0;
+            $seen = [];
+            foreach ($events as $event) {
+                abort_unless($event['branch_code'] === $key->branch_code, 403, 'API key does not authorize this batch branch.');
+                $family = in_array($event['document_type'], ['payment_receipt', 'official_receipt'], true) ? 'payment' : 'invoice';
+                $namespace = hash('sha256', json_encode([$merchant->id, $event['branch_code'], $event['source_system'], $family, $event['external_reference']]));
+                $eventHash = hash('sha256', json_encode([$merchant->id, $event['branch_code'], $event['source_system'], $event['source_event_id']]));
+                $hash = app(IntegrationContract::class)->canonicalHash($event);
+                $old = DB::table('integration_inbox')->where('namespace_hash', $namespace)->orWhere('event_hash', $eventHash)->first();
+                if ($old) {
+                    abort_unless(hash_equals($old->request_hash, $hash), 409, 'A batch source identity conflicts with an accepted original.');
+
+                    continue;
+                }
+                foreach ([$namespace, $eventHash] as $identity) {
+                    if (isset($seen[$identity])) {
+                        abort_unless($seen[$identity] === $hash, 409, 'A batch contains conflicting source identities.');
+                    }
+                }
+                $duplicate = isset($seen[$namespace]) || isset($seen[$eventHash]);
+                $seen[$namespace] = $hash;
+                $seen[$eventHash] = $hash;
+                $profile = app(IntegrationSourceProfile::class)->forEvent($event, $merchant);
+                $tax = app(IntegrationContract::class)->calculateDocument($event, $profile ? (bool) $profile->vat_registered : (bool) $merchant->vat_registered);
+                if (! $duplicate && $family === 'invoice' && app(InvoiceCalculator::class)->cents($tax['gross_amount'], 'gross_amount') >= $p->minimum_transaction_centavos) {
+                    $required += (int) $p->fee_centavos;
+                }
+            }
+            if ($required) {
+                $w = app(MerchantWallet::class)->locked($merchant->id);
+                if ($w->available_centavos < $required) {
+                    throw new InsufficientWalletBalance((int) $w->available_centavos, $required);
+                }
+            }
+            $result = [];
+            foreach ($events as $event) {
+                $result[] = $this->accept($event, $key, $merchant);
+            }
+
+            return $result;
+        }, 3);
+
+
+        return response()->json(['environment' => 'live', 'atomic' => true, 'accepted' => count($results), 'results' => $results], 201)->header('Cache-Control', 'no-store');
     }
 
     public function store(Request $r)
     {
-        $started = microtime(true);
-        $key = null;
-        $merchant = null;
-        $status = 500;
-        try {
-            [$key,$merchant] = $this->authenticate($r, 'transactions:write');
+        [$key,$merchant] = $this->authenticate($r, 'transactions:write');
+        $this->validateRawNumbers($r);
 
-            $v = app(IntegrationContract::class)->validateEvent($r->all());
-            $result = $key->environment === 'sandbox' ? app(SandboxTransactions::class)->accept($v, $key, $merchant) : $this->accept($v, $key, $merchant);
-            $status = $result['duplicate'] ? 200 : 201;
+        $v = app(IntegrationContract::class)->validateEvent($r->all());
+        $result = $key->environment === 'sandbox' ? app(SandboxTransactions::class)->accept($v, $key, $merchant) : $this->accept($v, $key, $merchant);
+        $status = $result['duplicate'] ? 200 : 201;
 
-            return response()->json($result, $status)->header('Location', $result['status_url']);
-        } catch (\Throwable $e) {
-            $status = $e instanceof ValidationException ? 422 : (method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500);
-            throw $e;
-        } finally {
-            $this->logRequest($r, $key, $merchant, $status, $started, '/api/integrations/transactions');
-        }
+        return response()->json($result, $status)->header('Location', $result['status_url']);
     }
 
-    private function logRequest(Request $r, ?object $key, ?object $merchant, int $status, float $started, string $endpoint): void
-    {
-        // Best effort telemetry cannot turn a successfully committed acceptance into a false failure.
-        try {
-            DB::transaction(function () use ($r, $key, $merchant, $status, $started, $endpoint) {
-                // FK checks on telemetry also lock parents. Match financial admission's business -> key order.
-                if ($merchant) {
-                    DB::table('merchants')->where('id', $merchant->id)->lockForUpdate()->first();
-                }
-                if ($key) {
-                    DB::table('merchant_api_keys')->where('id', $key->id)->lockForUpdate()->first();
-                }
-                DB::table('merchant_api_request_logs')->insert(['id' => (string) Str::uuid(), 'merchant_api_key_id' => $key?->id, 'merchant_id' => $merchant?->id,
-                    'endpoint' => $endpoint, 'method' => 'POST', 'status_code' => $status, 'latency_ms' => (int) round((microtime(true) - $started) * 1000),
-                    'request_reference' => mb_substr((string) ($r->input('external_reference') ?? ($r->is('api/integrations/transactions/batch') ? 'batch' : null)), 0, 120), 'source_system' => mb_substr((string) $r->input('source_system'), 0, 120),
-                    'ip_address' => $r->ip(), 'created_at' => now(), 'updated_at' => now()]);
-                if ($key) {
-                    DB::table('merchant_api_keys')->where('id', $key->id)->update(['last_used_at' => now()]);
-                }
-            }, 3);
-        } catch (\Throwable $loggingError) {
-            report($loggingError);
-        }
-    }
 }

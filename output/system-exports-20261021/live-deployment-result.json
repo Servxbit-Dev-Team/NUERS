@@ -1,0 +1,24 @@
+{
+    "deployed": true,
+    "release": "2026-10-21.system-exports.1",
+    "deployed_at": "2026-10-21T00:58:34+00:00",
+    "verification": {
+        "verified": true,
+        "files_verified": 69,
+        "logo_and_fonts": true,
+        "csv_formula_escaping": true,
+        "pdf_limit": 500,
+        "api_boundary": true,
+        "mfa_enabled": true,
+        "production_transport_blocked": true,
+        "no_schema_changes": true,
+        "read_only_verification": true,
+        "verified_at": "2026-10-21T00:58:34+00:00"
+    },
+    "existing_records_preserved": true,
+    "environment_preserved": true,
+    "files_verified": 69,
+    "old_assets_retained": true,
+    "backup": "nuers-system-exports-backup-20261021-005826",
+    "package_sha256": "784b2bc9bfc468af1fa8e1102efda673f3b5b7b55bc1edec897b1a135f2e7d1f"
+}

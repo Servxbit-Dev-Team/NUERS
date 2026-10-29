@@ -15,6 +15,7 @@ class IntegrationApiResponse
             return $next($request);
         }
         $request->headers->set('Accept', 'application/json');
+        $started = microtime(true);
         $response = $next($request);
         $status = $response->getStatusCode();
         $body = json_decode($response->getContent(), true);
@@ -46,6 +47,7 @@ class IntegrationApiResponse
         $response->setContent(json_encode($body, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES));
         $response->headers->set('Content-Type', 'application/json');
         $response->headers->set('Cache-Control', 'private, no-store');
+        app(\App\Services\SubmissionAttempts::class)->record($request, $status, $body, $started);
 
         return $response;
     }

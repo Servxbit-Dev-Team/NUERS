@@ -1,0 +1,58 @@
+[
+    {
+        "id": 1,
+        "select_type": "SIMPLE",
+        "table": "ledger_documents",
+        "partitions": null,
+        "type": "range",
+        "possible_keys": "ledger_merchant_period,ledger_merchant_recent,ledger_source_owner,ledger_merchant_number,ledger_merchant_filters,ledger_merchant_recorded,ledger_branch_options,ledger_type_options",
+        "key": "ledger_merchant_period",
+        "key_len": "411",
+        "ref": null,
+        "rows": 478357,
+        "filtered": 20,
+        "Extra": "Using index condition; Using where; Using temporary; Using filesort"
+    },
+    {
+        "id": 1,
+        "select_type": "SIMPLE",
+        "table": "original",
+        "partitions": null,
+        "type": "eq_ref",
+        "possible_keys": "PRIMARY,ledger_merchant_period,ledger_merchant_recent,ledger_source_owner,ledger_merchant_number,ledger_merchant_filters,ledger_merchant_recorded,ledger_branch_options,ledger_type_options",
+        "key": "PRIMARY",
+        "key_len": "402",
+        "ref": "func",
+        "rows": 1,
+        "filtered": 100,
+        "Extra": "Using where"
+    },
+    {
+        "id": 1,
+        "select_type": "SIMPLE",
+        "table": "cd",
+        "partitions": null,
+        "type": "ALL",
+        "possible_keys": "customer_document_once,merchant_customer_documents_merchant_id_customer_id_index",
+        "key": null,
+        "key_len": null,
+        "ref": null,
+        "rows": 1,
+        "filtered": 100,
+        "Extra": "Using where; Using join buffer (hash join)"
+    },
+    {
+        "id": 1,
+        "select_type": "SIMPLE",
+        "table": "c",
+        "partitions": null,
+        "type": "eq_ref",
+        "possible_keys": "PRIMARY,merchant_customers_merchant_id_identity_hash_unique,merchant_customers_merchant_id_request_id_unique,merchant_customers_merchant_id_status_created_at_index,merchant_customers_merchant_id_type_created_at_index,merchant_customers_merchant_id_name_hash_index,merchant_customers_merchant_id_tin_hash_index,merchant_customers_merchant_id_email_hash_index,merchant_customers_merchant_id_phone_hash_index",
+        "key": "PRIMARY",
+        "key_len": "144",
+        "ref": "nuers_scale_lab_20261020.cd.customer_id",
+        "rows": 1,
+        "filtered": 100,
+        "Extra": "Using where"
+    }
+]

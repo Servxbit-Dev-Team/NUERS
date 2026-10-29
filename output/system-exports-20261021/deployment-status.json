@@ -1,0 +1,24 @@
+{
+  "status": "deployed_verified",
+  "reason": "Plesk deployment completed, all 69 files verified and original scheduler preserved.",
+  "release": "2026-10-21.system-exports.1",
+  "files": 69,
+  "upload_directory": "/var/www/vhosts/nuers.net",
+  "release_files": [
+    "nuers-system-exports-20261021.zip",
+    "nuers-system-exports-install.php",
+    "nuers-system-exports-verify.php"
+  ],
+  "runner": "Use existing PHP scheduled task Run Now with private installer; check first, then install. Cancel temporary edits so original httpdocs/artisan schedule:run --no-ansi remains.",
+  "standing_authorization": "User has authorized live deployment of NUERS updates. No new permissions, credentials or schema changes in this release.",
+  "remaining": [],
+  "validation_summary": "output/system-exports-20261021/validation-summary.json",
+  "preflight": {
+    "passed": true,
+    "files": 69,
+    "php": "8.4.26",
+    "schema_migration": false
+  },
+  "deployed_at": "2026-10-21T00:58:34+00:00",
+  "backup": "nuers-system-exports-backup-20261021-005826"
+}

@@ -86,7 +86,7 @@ class SecurityRemediationTest extends TestCase
 
     public function test_all_static_protected_api_aliases_require_authentication_before_dispatch(): void
     {
-        $public = ['api/health', 'api/legal/policies', 'api/registration/*', 'api/auth/login', 'api/auth/signup', 'api/auth/forgot-password', 'api/auth/reset-password', 'api/auth/verify-email', 'api/auth/session', 'api/auth/logout', 'api/pricing', 'api/subscription-plans', 'api/developer/*', 'api/locations/*', 'api/verify-receipt/*', 'api/team-invitations/preview', 'api/team-invitations/accept', 'api/support/conversations', 'api/integrations/transactions'];
+        $public = ['api/health', 'api/legal/policies', 'api/registration/*', 'api/auth/login', 'api/auth/signup', 'api/auth/forgot-password', 'api/auth/reset-password', 'api/auth/verify-email', 'api/auth/session', 'api/auth/logout', 'api/pricing', 'api/subscription-plans', 'api/developer/*', 'api/locations/*', 'api/team-invitations/preview', 'api/team-invitations/accept', 'api/business-activation/inspect', 'api/business-activation', 'api/support/conversations', 'api/integrations/transactions'];
         $checked = 0;
         foreach (app('router')->getRoutes() as $route) {
             $path = $route->uri();

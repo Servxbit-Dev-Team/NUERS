@@ -1,0 +1,215 @@
+REPORTS & RECORDS
+NUERS · Version 1.0.0
+RPT-6B51F067 CONFIDENTIAL · AUTHORIZED USE
+Transaction & Wallet Report · SAMPLE
+Synthetic QA records only. Complete fixture population; no merchant data.
+EXPORTED RECORDS
+7
+SOURCE FIELDS
+14
+CURRENCY / TIME
+PHP / PHT
+Report scope & generation
+Generated (Asia/Manila) Oct 21, 2026, 09:15:00 PHT
+Software National Unified Electronic Receipt System · Version 1.0.0
+Coverage Synthetic QA records only. Complete fixture population; no merchant data.
+Applied filters
+From 2026-10-01
+To 2026-10-21
+Environment Sandbox
+Recorded monetary totals
+Amount PHP PHP 6,597.50 · 7 recorded values
+VAT PHP PHP 843.50 · 7 recorded values
+Manual Discount PHP PHP 0.00 · 7 recorded values
+Statutory Discount PHP PHP 700.00 · 7 recorded values
+Reading this report
+This is an internal NUERS report of the exported records. Recorded totals are not a tax return or proof of BIR acceptance. Blank
+fields are marked “Not recorded”. Monetary totals include only the displayed source columns and must not be added across
+different financial measures.
+NUERS · RPT-6B51F067 Page 1 of 6
+REPORTS & RECORDS
+NUERS · Version 1.0.0
+RPT-6B51F067 CONFIDENTIAL · AUTHORIZED USE
+RECORD 1 OF 7
+Document Number QA-SAMPLE-00001
+Business NUERS Synthetic Merchant — Peña & Sons
+Seller TIN 000-000-000-000
+Recorded Date (PHT) 2026-10-21 09:15:00
+Status Recorded
+Sale Category regular
+Amount PHP PHP 1,120.50
+VAT PHP PHP 120.50
+Manual Discount PHP PHP 0.00
+Statutory Discount PHP PHP 100.00
+Balance After PHP PHP 5,000.00
+Customer José Dela Cruz
+Reason / Notes Synthetic demonstration only. No production transaction.
+Integrity Hash aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+RECORD 2 OF 7
+Document Number QA-SAMPLE-00002
+Business NUERS Synthetic Merchant — Peña & Sons
+Seller TIN 000-000-000-000
+Recorded Date (PHT) 2026-10-21 09:15:00
+Status Recorded
+Sale Category senior_citizen
+Amount PHP PHP 1,120.50
+VAT PHP PHP 120.50
+Manual Discount PHP PHP 0.00
+Statutory Discount PHP PHP 100.00
+Balance After PHP PHP 5,000.00
+Customer José Dela Cruz
+Reason / Notes Synthetic demonstration only. No production transaction.
+Integrity Hash aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+NUERS · RPT-6B51F067 Page 2 of 6
+REPORTS & RECORDS
+NUERS · Version 1.0.0
+RPT-6B51F067 CONFIDENTIAL · AUTHORIZED USE
+RECORD 3 OF 7
+Document Number QA-SAMPLE-00003
+Business NUERS Synthetic Merchant — Peña & Sons
+Seller TIN 000-000-000-000
+Recorded Date (PHT) 2026-10-21 09:15:00
+Status Recorded
+Sale Category pwd
+Amount PHP PHP 1,120.50
+VAT PHP PHP 120.50
+Manual Discount PHP PHP 0.00
+Statutory Discount PHP PHP 100.00
+Balance After PHP PHP 5,000.00
+Customer José Dela Cruz
+Reason / Notes Synthetic demonstration only. No production transaction.
+Integrity Hash aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+RECORD 4 OF 7
+Document Number QA-SAMPLE-00004
+Business NUERS Synthetic Merchant — Peña & Sons
+Seller TIN 000-000-000-000
+Recorded Date (PHT) 2026-10-21 09:15:00
+Status Recorded
+Sale Category national_athlete_coach
+Amount PHP PHP 1,120.50
+VAT PHP PHP 120.50
+Manual Discount PHP PHP 0.00
+Statutory Discount PHP PHP 100.00
+Balance After PHP PHP 5,000.00
+Customer José Dela Cruz
+Reason / Notes Long narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+NUERS · RPT-6B51F067 Page 3 of 6
+REPORTS & RECORDS
+NUERS · Version 1.0.0
+RPT-6B51F067 CONFIDENTIAL · AUTHORIZED USE
+Record details · continued
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. Long
+NUERS · RPT-6B51F067 Page 4 of 6
+REPORTS & RECORDS
+NUERS · Version 1.0.0
+RPT-6B51F067 CONFIDENTIAL · AUTHORIZED USE
+Record details · continued
+narrative. Long narrative. Long narrative. Long narrative. Long narrative. 
+Integrity Hash aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+RECORD 5 OF 7
+Document Number QA-SAMPLE-00005
+Business NUERS Synthetic Merchant — Peña & Sons
+Seller TIN 000-000-000-000
+Recorded Date (PHT) 2026-10-21 09:15:00
+Status Recorded
+Sale Category solo_parent
+Amount PHP PHP 1,120.50
+VAT PHP PHP 120.50
+Manual Discount PHP PHP 0.00
+Statutory Discount PHP PHP 100.00
+Balance After PHP PHP 5,000.00
+Customer José Dela Cruz
+Reason / Notes Synthetic demonstration only. No production transaction.
+Integrity Hash aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+RECORD 6 OF 7
+Document Number QA-SAMPLE-00006
+Business NUERS Synthetic Merchant — Peña & Sons
+Seller TIN 000-000-000-000
+Recorded Date (PHT) 2026-10-21 09:15:00
+Status Rejected
+Sale Category regular
+Amount PHP PHP 1,120.50
+VAT PHP PHP 120.50
+Manual Discount PHP PHP 0.00
+Statutory Discount PHP PHP 100.00
+Balance After PHP PHP 5,000.00
+Customer José Dela Cruz
+Reason / Notes Synthetic demonstration only. No production transaction.
+Integrity Hash aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+NUERS · RPT-6B51F067 Page 5 of 6
+REPORTS & RECORDS
+NUERS · Version 1.0.0
+RPT-6B51F067 CONFIDENTIAL · AUTHORIZED USE
+RECORD 7 OF 7
+Document Number QA-SAMPLE-00007
+Business NUERS Synthetic Merchant — Peña & Sons
+Seller TIN 000-000-000-000
+Recorded Date (PHT) 2026-10-21 09:15:00
+Status Recorded
+Sale Category senior_citizen
+Amount PHP PHP -125.50
+VAT PHP PHP 120.50
+Manual Discount PHP PHP 0.00
+Statutory Discount PHP PHP 100.00
+Balance After PHP PHP 5,000.00
+Customer José Dela Cruz
+Reason / Notes Synthetic demonstration only. No production transaction.
+Integrity Hash aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+NUERS · RPT-6B51F067 Page 6 of 6

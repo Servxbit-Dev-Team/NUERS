@@ -1,0 +1,441 @@
+===== PAGE 1 =====
+NUERS.NET | CONTROLLED INTERNAL SYSTEM SPECIFICATION | NOT BIR APPROVAL
+1
+NUERS official project branding
+NUERS.NET — Comprehensive BIR EIS Integration & Functional
+Specification
+Version 2.0 | October 2026 | For product, engineering, QA, compliance, and security review. Covers every admin navigation
+page, workflows, forms, modals, data, architecture and BIR EIS integration.
+Regulatory boundary: This document is a NUERS project specification, not BIR-issued documentation or proof of
+accreditation. RMC 110-2026 is the user-provided regulatory source; official EIS API schemas and technical specifications
+must be separately obtained and verified. All illustrated UI data, BIR badges and example identifiers are mock data.
+
+
+===== PAGE 2 =====
+NUERS.NET | CONTROLLED INTERNAL SYSTEM SPECIFICATION | NOT BIR APPROVAL
+2
+1. Regulatory framework and why each system capability exists
+Requirement
+NUERS response / source
+ESP accreditation
+Accreditation tracking, approved version/environment, controlled production gate.
+RMC pp.3,7-8.
+Taxpayer authority
+Verify registration and taxpayer PTI/PTT permissions; ESP approval is not taxpayer
+permission. RMC pp.3-5,8.
+Issuance and delivery
+Structured e-invoices, preserved audit trail, near-real-time BIR delivery within
+applicable 3-calendar-day limit. RMC pp.2,4.
+Integrity and reconciliation
+Accurate, complete, authentic, sequenced, nonduplicated transactions and reconciled
+acknowledgments. RMC pp.8-9.
+Incident and security
+Security assessments, certifications, critical incident reporting within 24 hours. RMC
+pp.6,9.
+Taxpayer data rights
+Ownership, continued access, export and migration without vendor lock-in. RMC
+pp.9-10.
+Business continuity
+Backup, DR, failover, manual invoicing recovery and linkage. RMC pp.8-9.
+The circular does not provide authoritative production EIS endpoint URLs, API credentials, payload schemas, exact response
+codes, tax computation rules, or a definitive receipt-vs-invoice classification. These are external regulatory dependencies;
+developers must not invent them.
+2. Platform architecture and transaction lifecycle
+Flow: POS / ERP / e-commerce / NUERS Portal -> WAF + authenticated tenant API -> taxpayer eligibility + PTI/PTT gate ->
+canonical invoice validation -> immutable invoice ledger and transactional outbox -> durable queue -> BIR EIS adapter ->
+acknowledgment storage -> reconciliation -> taxpayer portal / reports / audit.
+State machine: Draft -> Validated -> Issued -> Queued -> Transmitting -> Submitted -> Acknowledged / Rejected /
+Uncertain. Acknowledged means confirmed by an authoritative BIR response, not merely HTTP 200. Uncertain requires
+inquiry and reconciliation before any replay. Corrections are controlled events, never silent mutation of issued invoices.
+Idempotency: each source has stable source ID + tenant + branch + document type; requests with the same idempotency
+key return the original result. Persist invoice and outbox atomically. Queue consumers must tolerate duplicate delivery.
+Deadline management: submit in real/near-real time; track transaction time, attempt time, BIR acknowledgment and
+three-calendar-day compliance deadlines. Escalate before breach, and preserve evidence of BIR outages and recovery.
+3. Core data entities
+organizations, branches, users, roles, taxpayer_verifications, pti_ptt_authorizations, esp_accreditations, api_clients, api_keys,
+documents, document_lines, tax_breakdowns, invoice_sequences, transaction_events, outbox_events,
+transmission_attempts, bir_acknowledgments, reconciliation_cases, exceptions, audit_events, incident_reports, exports,
+legal_holds, backups, change_requests, support_tickets.
+Every transactional record includes immutable ID, tenant and branch ID, timestamps in UTC with Asia/Manila display,
+canonical schema version, status history, actor/system principal and source correlation ID. Encrypt personal information and
+isolate tenants server-side.
+4. User roles and permissions
+Super Admin: global operations under least privilege; Compliance Officer: accreditation and PTI/PTT review; Transmission
+Operator: retry and queue management without altering issued data; Taxpayer Admin: own branches and users; Taxpayer
+
+
+===== PAGE 3 =====
+NUERS.NET | CONTROLLED INTERNAL SYSTEM SPECIFICATION | NOT BIR APPROVAL
+3
+Operator: authorized invoice issuance; Auditor: read-only evidence; Security Officer: incidents and access reviews. Require
+MFA for privileged roles and two-person approval for sensitive overrides.
+
+
+===== PAGE 4 =====
+NUERS.NET | CONTROLLED INTERNAL SYSTEM SPECIFICATION | NOT BIR APPROVAL
+4
+5. Screen specification: Dashboard
+Design reference only; mock statuses and sample business data are not production evidence.
+Purpose and EIS justification
+Operational overview, KPIs, gateway status, alerts and navigation.
+Controls, forms and modals
+Date and tenant filters; metric drilldown; alert detail drawer.
+Standard form requirements: explicit required fields, server-side validation, contextual help, disabled submit while saving,
+meaningful error states, accessible keyboard focus and cancellation without partial writes. Confirmation dialogs show affected
+tenant/document, operation, risk and reason.
+Business rules and backend logic
+Counters from ledger and BIR status, not mocked client-side; clearly show last refresh.
+Audit, access and QA
+Enforce role and tenant/branch scope for every request. Record actor, before/after status, correlation ID, event time and
+evidence references. QA: empty state, invalid fields, duplicate submit, offline timeout, permissions, pagination, data
+consistency and safe retry.
+
+
+===== PAGE 5 =====
+NUERS.NET | CONTROLLED INTERNAL SYSTEM SPECIFICATION | NOT BIR APPROVAL
+5
+5. Screen specification: Live Transaction Monitor
+Design reference only; mock statuses and sample business data are not production evidence.
+Purpose and EIS justification
+Live issuance, error, queue, and throughput monitoring.
+Controls, forms and modals
+Pause/resume, status filters, transaction drawer, export modal.
+Standard form requirements: explicit required fields, server-side validation, contextual help, disabled submit while saving,
+meaningful error states, accessible keyboard focus and cancellation without partial writes. Confirmation dialogs show affected
+tenant/document, operation, risk and reason.
+Business rules and backend logic
+Cursor-based stream, reconnection, deduplication, latency and backlog telemetry.
+Audit, access and QA
+Enforce role and tenant/branch scope for every request. Record actor, before/after status, correlation ID, event time and
+evidence references. QA: empty state, invalid fields, duplicate submit, offline timeout, permissions, pagination, data
+consistency and safe retry.
+
+
+===== PAGE 6 =====
+NUERS.NET | CONTROLLED INTERNAL SYSTEM SPECIFICATION | NOT BIR APPROVAL
+6
+5. Screen specification: Electronic Invoices & Receipts
+Design reference only; mock statuses and sample business data are not production evidence.
+Purpose and EIS justification
+Manage legally classified invoices and receipt records.
+Controls, forms and modals
+Issue wizard, buyer/seller and line-item form, tax summary, preview, confirmation and download.
+Standard form requirements: explicit required fields, server-side validation, contextual help, disabled submit while saving,
+meaningful error states, accessible keyboard focus and cancellation without partial writes. Confirmation dialogs show affected
+tenant/document, operation, risk and reason.
+Business rules and backend logic
+Validate taxpayer authority, invoice numbering, tax calculations, canonical payload and immutable issuance.
+Audit, access and QA
+Enforce role and tenant/branch scope for every request. Record actor, before/after status, correlation ID, event time and
+evidence references. QA: empty state, invalid fields, duplicate submit, offline timeout, permissions, pagination, data
+consistency and safe retry.
+
+
+===== PAGE 7 =====
+NUERS.NET | CONTROLLED INTERNAL SYSTEM SPECIFICATION | NOT BIR APPROVAL
+7
+5. Screen specification: Transactions
+Design reference only; mock statuses and sample business data are not production evidence.
+Purpose and EIS justification
+Search authoritative transaction ledger across tenants.
+Controls, forms and modals
+Advanced filters, detail drawer, status timeline, export request.
+Standard form requirements: explicit required fields, server-side validation, contextual help, disabled submit while saving,
+meaningful error states, accessible keyboard focus and cancellation without partial writes. Confirmation dialogs show affected
+tenant/document, operation, risk and reason.
+Business rules and backend logic
+One transaction links to issued document, attempts, acknowledgments and audit events.
+Audit, access and QA
+Enforce role and tenant/branch scope for every request. Record actor, before/after status, correlation ID, event time and
+evidence references. QA: empty state, invalid fields, duplicate submit, offline timeout, permissions, pagination, data
+consistency and safe retry.
+
+
+===== PAGE 8 =====
+NUERS.NET | CONTROLLED INTERNAL SYSTEM SPECIFICATION | NOT BIR APPROVAL
+8
+5. Screen specification: BIR Transmission Center
+Design reference only; mock statuses and sample business data are not production evidence.
+Purpose and EIS justification
+Manage submission queue, BIR connectivity, acknowledgment and retry.
+Controls, forms and modals
+Queue tabs, transmission details, retry confirmation, failure details and gateway status.
+Standard form requirements: explicit required fields, server-side validation, contextual help, disabled submit while saving,
+meaningful error states, accessible keyboard focus and cancellation without partial writes. Confirmation dialogs show affected
+tenant/document, operation, risk and reason.
+Business rules and backend logic
+Durable outbox, exponential backoff, deadline alerts, unknown-result reconciliation; no duplicate submissions.
+Audit, access and QA
+Enforce role and tenant/branch scope for every request. Record actor, before/after status, correlation ID, event time and
+evidence references. QA: empty state, invalid fields, duplicate submit, offline timeout, permissions, pagination, data
+consistency and safe retry.
+
+
+===== PAGE 9 =====
+NUERS.NET | CONTROLLED INTERNAL SYSTEM SPECIFICATION | NOT BIR APPROVAL
+9
+5. Screen specification: Reconciliation & Exceptions
+Design reference only; mock statuses and sample business data are not production evidence.
+Purpose and EIS justification
+Detect missing BIR acknowledgments, mismatches, duplicate or rejected submissions.
+Controls, forms and modals
+Assign exception, evidence drawer, controlled resolution modal and reconciliation report.
+Standard form requirements: explicit required fields, server-side validation, contextual help, disabled submit while saving,
+meaningful error states, accessible keyboard focus and cancellation without partial writes. Confirmation dialogs show affected
+tenant/document, operation, risk and reason.
+Business rules and backend logic
+Compare canonical hashes and IDs; never auto-mark resolved without evidence.
+Audit, access and QA
+Enforce role and tenant/branch scope for every request. Record actor, before/after status, correlation ID, event time and
+evidence references. QA: empty state, invalid fields, duplicate submit, offline timeout, permissions, pagination, data
+consistency and safe retry.
+
+
+===== PAGE 10 =====
+NUERS.NET | CONTROLLED INTERNAL SYSTEM SPECIFICATION | NOT BIR APPROVAL
+10
+5. Screen specification: Summary List of Sales
+Design reference only; mock statuses and sample business data are not production evidence.
+Purpose and EIS justification
+Period-based sales, tax and branch summaries.
+Controls, forms and modals
+Date range, branch, document type, export, drilldown.
+Standard form requirements: explicit required fields, server-side validation, contextual help, disabled submit while saving,
+meaningful error states, accessible keyboard focus and cancellation without partial writes. Confirmation dialogs show affected
+tenant/document, operation, risk and reason.
+Business rules and backend logic
+Exclude double counting; credit/debit and void treatment follows applicable tax rules.
+Audit, access and QA
+Enforce role and tenant/branch scope for every request. Record actor, before/after status, correlation ID, event time and
+evidence references. QA: empty state, invalid fields, duplicate submit, offline timeout, permissions, pagination, data
+consistency and safe retry.
+
+
+===== PAGE 11 =====
+NUERS.NET | CONTROLLED INTERNAL SYSTEM SPECIFICATION | NOT BIR APPROVAL
+11
+5. Screen specification: Registered Businesses
+Design reference only; mock statuses and sample business data are not production evidence.
+Purpose and EIS justification
+Manage registered taxpayer organizations and branches.
+Controls, forms and modals
+New business wizard, identity review, branch form, import validation and suspension confirmation.
+Standard form requirements: explicit required fields, server-side validation, contextual help, disabled submit while saving,
+meaningful error states, accessible keyboard focus and cancellation without partial writes. Confirmation dialogs show affected
+tenant/document, operation, risk and reason.
+Business rules and backend logic
+Distinguish NUERS account status from BIR registration and EIS eligibility.
+Audit, access and QA
+Enforce role and tenant/branch scope for every request. Record actor, before/after status, correlation ID, event time and
+evidence references. QA: empty state, invalid fields, duplicate submit, offline timeout, permissions, pagination, data
+consistency and safe retry.
+
+
+===== PAGE 12 =====
+NUERS.NET | CONTROLLED INTERNAL SYSTEM SPECIFICATION | NOT BIR APPROVAL
+12
+5. Screen specification: Taxpayer Onboarding
+Design reference only; mock statuses and sample business data are not production evidence.
+Purpose and EIS justification
+Collect evidence, review and authorize taxpayer readiness.
+Controls, forms and modals
+Application wizard, file upload, reviewer checklist, request changes, approval modal.
+Standard form requirements: explicit required fields, server-side validation, contextual help, disabled submit while saving,
+meaningful error states, accessible keyboard focus and cancellation without partial writes. Confirmation dialogs show affected
+tenant/document, operation, risk and reason.
+Business rules and backend logic
+Require verified identity, approved authorization, integration tests and signoff before production.
+Audit, access and QA
+Enforce role and tenant/branch scope for every request. Record actor, before/after status, correlation ID, event time and
+evidence references. QA: empty state, invalid fields, duplicate submit, offline timeout, permissions, pagination, data
+consistency and safe retry.
+6. PTI / PTT Management
+Authorization registry, document validity, taxpayer ownership and expiration reminders. Forms: permit registration, evidence
+upload, review and revoke. Gate issuance and transmission separately.
+Why needed: This module supports a specific EIS operational, governance, reporting or continuity obligation; exact controls
+are NUERS design proposals unless expressly grounded in RMC 110-2026.
+Required workflow: Search/list -> create or inspect -> validate -> approval where sensitive -> persist -> notify -> audit ->
+export. Implement tenant scope, loading/empty/error states, status history and QA for unauthorized access and repeated
+submissions.
+
+
+===== PAGE 13 =====
+NUERS.NET | CONTROLLED INTERNAL SYSTEM SPECIFICATION | NOT BIR APPROVAL
+13
+6. API Integrations
+POS/ERP clients, credentials, scopes, IP policy, sandbox, webhooks, signature validation and rotation. Modals: create client,
+rotate/revoke key, test callback. Never expose stored secrets.
+Why needed: This module supports a specific EIS operational, governance, reporting or continuity obligation; exact controls
+are NUERS design proposals unless expressly grounded in RMC 110-2026.
+Required workflow: Search/list -> create or inspect -> validate -> approval where sensitive -> persist -> notify -> audit ->
+export. Implement tenant scope, loading/empty/error states, status history and QA for unauthorized access and repeated
+submissions.
+6. ESP Accreditation
+Approved solution/version/environment, certificate validity, annual review, material-change tracking. Forms: accreditation
+evidence, approved interfaces, renewal and controlled changes.
+Why needed: This module supports a specific EIS operational, governance, reporting or continuity obligation; exact controls
+are NUERS design proposals unless expressly grounded in RMC 110-2026.
+Required workflow: Search/list -> create or inspect -> validate -> approval where sensitive -> persist -> notify -> audit ->
+export. Implement tenant scope, loading/empty/error states, status history and QA for unauthorized access and repeated
+submissions.
+6. Compliance Management
+Control register, requirement-to-evidence mapping, owners, deadlines, findings and corrective action. Forms: control
+attestation, remediation, approval and exception request.
+Why needed: This module supports a specific EIS operational, governance, reporting or continuity obligation; exact controls
+are NUERS design proposals unless expressly grounded in RMC 110-2026.
+Required workflow: Search/list -> create or inspect -> validate -> approval where sensitive -> persist -> notify -> audit ->
+export. Implement tenant scope, loading/empty/error states, status history and QA for unauthorized access and repeated
+submissions.
+6. Security & Incidents
+Threat monitoring, access anomalies, vulnerabilities, severity and reporting. Forms: incident timeline, affected taxpayers,
+regulator notification, evidence and closure.
+Why needed: This module supports a specific EIS operational, governance, reporting or continuity obligation; exact controls
+are NUERS design proposals unless expressly grounded in RMC 110-2026.
+Required workflow: Search/list -> create or inspect -> validate -> approval where sensitive -> persist -> notify -> audit ->
+export. Implement tenant scope, loading/empty/error states, status history and QA for unauthorized access and repeated
+submissions.
+6. Immutable Audit Logs
+Append-only actor/system events, synchronized timestamps, tamper evidence, search, legal hold and export approvals. No
+delete/edit control for immutable records.
+Why needed: This module supports a specific EIS operational, governance, reporting or continuity obligation; exact controls
+are NUERS design proposals unless expressly grounded in RMC 110-2026.
+Required workflow: Search/list -> create or inspect -> validate -> approval where sensitive -> persist -> notify -> audit ->
+export. Implement tenant scope, loading/empty/error states, status history and QA for unauthorized access and repeated
+
+
+===== PAGE 14 =====
+NUERS.NET | CONTROLLED INTERNAL SYSTEM SPECIFICATION | NOT BIR APPROVAL
+14
+submissions.
+6. Data Governance & Portability
+Data ownership, access, export, retention, migration and lawful holds. Forms: machine-readable export request, migration
+authorization, delivery confirmation and deletion only where lawful.
+Why needed: This module supports a specific EIS operational, governance, reporting or continuity obligation; exact controls
+are NUERS design proposals unless expressly grounded in RMC 110-2026.
+Required workflow: Search/list -> create or inspect -> validate -> approval where sensitive -> persist -> notify -> audit ->
+export. Implement tenant scope, loading/empty/error states, status history and QA for unauthorized access and repeated
+submissions.
+6. Analytics & Reports
+Throughput, rejection rate, queue age, branch activity, compliance performance and capacity. Filters and scheduled report
+forms; all figures reconcile to source ledger.
+Why needed: This module supports a specific EIS operational, governance, reporting or continuity obligation; exact controls
+are NUERS design proposals unless expressly grounded in RMC 110-2026.
+Required workflow: Search/list -> create or inspect -> validate -> approval where sensitive -> persist -> notify -> audit ->
+export. Implement tenant scope, loading/empty/error states, status history and QA for unauthorized access and repeated
+submissions.
+6. BIR Reports & Exports
+Prescribed reports, SLS, detailed machine-readable extracts, secure delivery and response deadlines. Forms: reporting
+period, format, approval and delivery audit.
+Why needed: This module supports a specific EIS operational, governance, reporting or continuity obligation; exact controls
+are NUERS design proposals unless expressly grounded in RMC 110-2026.
+Required workflow: Search/list -> create or inspect -> validate -> approval where sensitive -> persist -> notify -> audit ->
+export. Implement tenant scope, loading/empty/error states, status history and QA for unauthorized access and repeated
+submissions.
+6. Infrastructure Health
+Web/database/storage/queue/BIR integration health, latency, capacity and alert escalation. Forms: alert rules, incident
+drilldown and maintenance approval.
+Why needed: This module supports a specific EIS operational, governance, reporting or continuity obligation; exact controls
+are NUERS design proposals unless expressly grounded in RMC 110-2026.
+Required workflow: Search/list -> create or inspect -> validate -> approval where sensitive -> persist -> notify -> audit ->
+export. Implement tenant scope, loading/empty/error states, status history and QA for unauthorized access and repeated
+submissions.
+6. Backup & Disaster Recovery
+Encrypted backups, replication, restore tests, failover drills, manual invoicing reconciliation and RTO/RPO evidence. Forms:
+restore request, DR exercise and signoff.
+Why needed: This module supports a specific EIS operational, governance, reporting or continuity obligation; exact controls
+are NUERS design proposals unless expressly grounded in RMC 110-2026.
+
+
+===== PAGE 15 =====
+NUERS.NET | CONTROLLED INTERNAL SYSTEM SPECIFICATION | NOT BIR APPROVAL
+15
+Required workflow: Search/list -> create or inspect -> validate -> approval where sensitive -> persist -> notify -> audit ->
+export. Implement tenant scope, loading/empty/error states, status history and QA for unauthorized access and repeated
+submissions.
+6. Configurations & Changes
+Versioned schema, templates, feature flags, integration endpoints and material change approval. Forms: change request, risk
+impact, rollout and rollback.
+Why needed: This module supports a specific EIS operational, governance, reporting or continuity obligation; exact controls
+are NUERS design proposals unless expressly grounded in RMC 110-2026.
+Required workflow: Search/list -> create or inspect -> validate -> approval where sensitive -> persist -> notify -> audit ->
+export. Implement tenant scope, loading/empty/error states, status history and QA for unauthorized access and repeated
+submissions.
+6. Users & Permissions
+Role and branch access, MFA, invitation, deactivation and access review. Forms: invite, role assignment, credential reset,
+privilege elevation approval.
+Why needed: This module supports a specific EIS operational, governance, reporting or continuity obligation; exact controls
+are NUERS design proposals unless expressly grounded in RMC 110-2026.
+Required workflow: Search/list -> create or inspect -> validate -> approval where sensitive -> persist -> notify -> audit ->
+export. Implement tenant scope, loading/empty/error states, status history and QA for unauthorized access and repeated
+submissions.
+6. Client Support & SLA
+Ticket intake, incident escalation, taxpayer communications, service levels and evidence. Forms: ticket, escalation, outage
+announcement and resolution.
+Why needed: This module supports a specific EIS operational, governance, reporting or continuity obligation; exact controls
+are NUERS design proposals unless expressly grounded in RMC 110-2026.
+Required workflow: Search/list -> create or inspect -> validate -> approval where sensitive -> persist -> notify -> audit ->
+export. Implement tenant scope, loading/empty/error states, status history and QA for unauthorized access and repeated
+submissions.
+
+
+===== PAGE 16 =====
+NUERS.NET | CONTROLLED INTERNAL SYSTEM SPECIFICATION | NOT BIR APPROVAL
+16
+7. Detailed invoice issuance form
+Field group
+Required fields / validation
+Seller
+TIN, legal name, branch, registered address, applicable tax status, verified PTI; derive
+from approved taxpayer record
+Buyer
+Name, address, TIN and other legally required fields according to invoice type; do not
+assume every buyer has TIN
+Document
+Document type, unique sequence, source reference, issuance timestamp, currency,
+transaction classification
+Line items
+Description, quantity, unit price, discount, tax treatment, computed totals
+Payment
+Payment references and settlement metadata where relevant; do not confuse
+payment status with invoice issuance
+Compliance
+Canonical schema version, integrity hash, permitted invoice authority, transmission
+eligibility
+Modals: Preview before issue; Confirm Issue (irreversible issued record); Validation Errors (field-by-field); Issue Result
+(document ID, state and next steps); Correct/Adjust (authorized legally permitted corrective document). Never provide a silent
+edit to an issued invoice.
+8. Detailed BIR transmission workflow
+1. Select issued eligible documents. 2. Validate taxpayer and interface authorization. 3. Serialize to BIR-approved schema. 4.
+Commit delivery intent and hash. 5. Submit through officially provisioned secure interface. 6. Record request/response and
+latency. 7. Parse authoritative acceptance/rejection. 8. Update state and reconciliation. 9. On timeout, mark uncertain and
+inquire before resubmission. 10. Preserve all attempts and notify owners on deadline risk.
+Transmission modals: Batch details with count and scope; retry confirmation with last response; response viewer with
+redacted secrets; incident/outage declaration; manual reconciliation approval. The official endpoint, response codes and
+payload schema remain pending authoritative BIR documentation.
+9. Security, performance and disaster recovery
+Proposed infrastructure: two 64-physical-core/128-GB Web nodes; two similarly sized database nodes plus independent
+quorum/fencing mechanism; three 64-core/128-GB object-storage nodes. Separate durable queue, monitoring, immutable
+backups and offsite DR. Two DB nodes alone are insufficient for quorum-safe automatic promotion.
+Target load: 1 million transactions/hour (~278 TPS average), with burst testing to 2,000 TPS; these are design targets, not
+proven capacity. Test complete invoice issuance, persistence, acknowledgments, audit and document delivery. Provide WAF,
+TLS, encryption at rest, MFA, access controls, security review, penetration testing and monitored incident response.
+10. Production acceptance gates
+Gate A: Confirm ESP eligibility and solution-specific accreditation path. Gate B: Confirm taxpayer PTI/PTT authority and
+applicable EIS requirements. Gate C: Obtain official interface specifications and complete conformance tests. Gate D:
+Validate accounting/tax rules and invoice numbering. Gate E: Complete load, security, failover, backup/restore, privacy and
+interoperability tests. Gate F: Document BIR-supervised tests and approvals before live taxpayer production.
+Acceptance cases: 1M/hour sustained, one web node loss, database promotion without lost acknowledged writes, one
+storage node failure, duplicate source replay, BIR 5xx/timeouts, acknowledgment mismatch, near-deadline queue, taxpayer
+permit expiry, tenant cross-access attempt, manual outage invoice linkage, full restore, and structured export on termination.
+11. Regulatory traceability and outstanding decisions
+
+
+===== PAGE 17 =====
+NUERS.NET | CONTROLLED INTERNAL SYSTEM SPECIFICATION | NOT BIR APPROVAL
+17
+Source-derived: RMC No. 110-2026 pages 2-12, covering ESP scope, accreditation, issuance/transmission distinctions,
+security, performance, obligations, taxpayer data rights and liability. Design-derived: NUERS screens, workflow names,
+server topology, tables, API abstraction, queue architecture, status names, field groups and UI modals.
+Open items: official EIS schema and API documentation; document tax classifications; PTI/PTT issuance process;
+authorized BIR sandbox and credentials; accreditation evidence checklist/Annex A; retention and residency interpretation;
+detailed service-level metrics; approved BIR logo usage and public representation.

@@ -1,0 +1,66 @@
+{
+  "verified_at": "2026-10-17T09:07:58.612029+08:00",
+  "scope": "Localhost code changes; isolated SQLite/browser tests. No production deployment or live Google account changes.",
+  "session_policy": {
+    "idle_minutes": 1440,
+    "absolute_minutes": 10080,
+    "renewal": "Valid bearer plus matching device; foreground user activity signaled on authenticated session checks",
+    "background_poll": "Visible pages check every 60 seconds; no activity renewal from passive polling",
+    "revoked_or_expired_tokens": "Cannot be revived",
+    "mfa": "Existing 15-minute privileged verification remains enforced"
+  },
+  "google": {
+    "forced_account_selection_removed": true,
+    "existing_nuers_session_reused_on_login_page": true,
+    "oauth_state_validation_preserved": true,
+    "one_time_handoff_minutes": 5,
+    "live_google_flow": "Not reauthorized against a real Google account; Google provider redirect and callback regression tests passed"
+  },
+  "chat": {
+    "allowed_roles": [
+      "merchant",
+      "client",
+      "consumer"
+    ],
+    "allowed_roots": [
+      "/merchant",
+      "/client",
+      "/consumer"
+    ],
+    "admin_and_public_widgets": "Not mounted; widget polling/event effects therefore absent",
+    "admin_support_inbox": "Preserved"
+  },
+  "verification": {
+    "backend": "168 tests, 1826 assertions passed",
+    "focused_auth": "21 tests, 137 assertions passed",
+    "client": "10 tests passed",
+    "build": "Laravel and static production builds passed",
+    "browser": [
+      "Existing QA admin login restored directly to /super-admin",
+      "Existing QA merchant login restored directly to /merchant",
+      "Admin /super-admin and /system: widget count 0",
+      "Public login: widget count 0",
+      "Merchant /merchant: widget count 1",
+      "Citizen /client: widget count 1",
+      "No console errors"
+    ]
+  },
+  "screenshots": [
+    "docs/design/admin-session-no-chat-qa.jpg",
+    "docs/design/merchant-session-chat-qa.jpg",
+    "docs/design/citizen-session-chat-qa.jpg"
+  ],
+  "code_sha256": {
+    "app/Http/Controllers/Auth/GoogleAuthController.php": "7b28a33fc013e848f2e2ca05cea26322e0ed0fb723bb7969b9a6c280d1fe108f",
+    "app/Http/Controllers/Api/AuthController.php": "4edb1760794cefbc4b75826de86ab4060009856b5ae5d62019b331676d8f6bd1",
+    "app/Services/DeviceSession.php": "bf399f5d01bb7a792fe5ab0a6217ab35888518f45c68c49352d50a705ca46c99",
+    "app/Services/ApiAccess.php": "b37b5385393eea224f0f1136b539332f33ae99dcebd48a1c9c72cc14d30ba191",
+    "app/Models/User.php": "984150b49e6ecd97bd9eb36ecd597faf1c1c7b0b6362f195173f85e7aff79d4e",
+    "config/security.php": "efafcc4def81a19d03665caff2d445d33497492b05bcf99e0d7d762f88b0185d",
+    "src/lib/auth.tsx": "d6f6c2c3a2c953be7bc7e321c25d009d8639532ac770f65ccc87fb5d05e2423a",
+    "src/lib/supabase.ts": "7f9b364feb681ab49151c1f4f94d1c0f9428e687065e23d6cd3638e164084aba",
+    "src/pages/auth/login.tsx": "b688d2cab2fb5fa8c93b67127312a125f68f356a9c134a3b3d1083cadf79c362",
+    "src/components/support/chat.tsx": "639edb2b9c3d5cc3603526a07b7ae8a2dd7df96f25d89cb264865acc762809aa",
+    "src/lib/support-visibility.ts": "88f7a583aa4be307183fdc9831acd7621ba608784c8ff5bde0ddbcec72034640"
+  }
+}

@@ -18,6 +18,8 @@ class EnterpriseDashboardTest extends TestCase
         (require database_path('migrations/0001_01_01_000000_create_users_table.php'))->up();
         (require database_path('migrations/2026_06_02_000001_create_nuers_tables.php'))->up();
         (require database_path('migrations/2026_10_17_000010_merchant_wallets.php'))->up();
+        (require database_path('migrations/2026_06_02_000015_create_business_api_integration_tables.php'))->up();
+        (require database_path('migrations/2026_10_20_000005_submission_outcomes.php'))->up();
         Schema::table('profiles', fn (Blueprint $t) => $t->string('tin')->nullable());
         Schema::create('client_accounts', function (Blueprint $t) {
             $t->string('id')->primary(); $t->unsignedBigInteger('user_id')->nullable();

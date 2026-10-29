@@ -1,0 +1,63 @@
+{
+  "release": "2026-10-28.bir-wire.1",
+  "status": "deployed_and_verified",
+  "deployed_at": "2026-10-28T15:39:58+00:00",
+  "public_location": "https://nuers.net/super-admin/api-platform?view=bir",
+  "tests": {
+    "passed": 89,
+    "assertions": 872,
+    "log": "regression-final.log"
+  },
+  "builds": [
+    "build-final.log",
+    "build-static-final.log"
+  ],
+  "local_browser_checks": [
+    "Create disabled certification connection",
+    "Incomplete seller address rejected without truncation",
+    "Prepare synthetic invoice locally and inspect exact CAS JSON",
+    "Review production PTI/PTT/certification form"
+  ],
+  "live_browser_check": "Authenticated BIR EIS Setup rendered with 0 credential bundles and outbound disabled",
+  "live_http_checks": [
+    {
+      "path": "/api/health",
+      "method": "GET",
+      "result": "200 0.246785",
+      "exit_code": 0
+    },
+    {
+      "path": "/api/admin/bir-wire",
+      "method": "GET",
+      "result": "401 0.207080",
+      "exit_code": 0
+    },
+    {
+      "path": "/api/bir-eis/receive_invoice_result/00000000-0000-4000-8000-000000000000",
+      "method": "PUT",
+      "result": "503 0.202084",
+      "exit_code": 0
+    }
+  ],
+  "existing_service_scheduler": "confirmed_present",
+  "records_and_environment_preserved": true,
+  "files_verified": 534,
+  "backup": "nuers-bir-wire-backup-20261028-153948",
+  "release_zip_sha256": "563be3051ddc2d114da5310530aff017fb7e8c9312cd645fb4eeab137b5874d8",
+  "real_bir_requests_sent": 0,
+  "live_test_sales_created": 0,
+  "activation_remaining": [
+    "BIR-issued environment-specific credentials",
+    "Issued endpoint/schema contract confirmation",
+    "Actual BIR certification scenarios and results",
+    "Current solution accreditation and taxpayer PTI/PTT/authority",
+    "Explicit server and per-company activation after review"
+  ],
+  "evidence_screenshots": [
+    "live-bir-setup.png",
+    "local-workspace.png",
+    "local-batch-preview.png",
+    "local-authority-link.png"
+  ],
+  "runbook": "docs/knowledge/bir-eis-credential-readiness.md"
+}

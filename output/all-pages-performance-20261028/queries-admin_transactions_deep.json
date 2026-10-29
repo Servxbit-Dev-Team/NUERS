@@ -1,0 +1,61 @@
+[
+    {
+        "ms": 1214.85,
+        "sql": "select COUNT(*) as total, COALESCE(SUM(CASE WHEN status='success' THEN 1 ELSE 0 END),0) as successful, COALESCE(SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END),0) as failed, COALESCE(SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END),0) as pending, COALESCE(SUM(CASE WHEN status='success' AND identity_count=1 AND document_family IN ('invoice','debit') THEN amount WHEN status='success' AND identity_count=1 AND document_family='credit' THEN -ABS(amount) ELSE 0 END),0) as total_amount,COALESCE(SUM(amount),0) as recorded_amount, COALESCE(SUM(vat_amount),0) as vat_amount, COALESCE(SUM(manual_discount_amount),0) as manual_discount_amount, COALESCE(SUM(statutory_discount_amount),0) as statutory_discount_amount, COALESCE(SUM(payment_count),0) as payment_events, COALESCE(SUM(payment_amount),0) as payment_amount, COALESCE(SUM(CASE WHEN identity_count>1 THEN 1 ELSE 0 END),0) as identity_conflicts, COALESCE(SUM(CASE WHEN category='invoices' THEN 1 ELSE 0 END),0) as invoices, COALESCE(SUM(CASE WHEN category='receipts' THEN 1 ELSE 0 END),0) as receipts, COALESCE(SUM(CASE WHEN category='notes' THEN 1 ELSE 0 END),0) as notes, COALESCE(SUM(CASE WHEN category='cancelled' THEN 1 ELSE 0 END),0) as cancelled from `ledger_documents` as `ledger` force index (ledger_transaction_summary) where `identity_rank` = ? and `is_draft` = ? limit 1",
+        "bindings": [
+            1,
+            false
+        ]
+    },
+    {
+        "ms": 435.49,
+        "sql": "select distinct `channel` from `merchant_transactions` where `channel` is not null order by `channel` asc limit 100",
+        "bindings": []
+    },
+    {
+        "ms": 18.11,
+        "sql": "select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'ledger_projection_state' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`",
+        "bindings": []
+    },
+    {
+        "ms": 5.37,
+        "sql": "select `id`, `business_name`, `tin` from `merchants` order by `business_name` asc limit 200",
+        "bindings": []
+    },
+    {
+        "ms": 2.9,
+        "sql": "select column_name as `name`, data_type as `type_name`, column_type as `type`, collation_name as `collation`, is_nullable as `nullable`, column_default as `default`, column_comment as `comment`, generation_expression as `expression`, extra as `extra` from information_schema.columns where table_schema = schema() and table_name = 'ledger_documents' order by ordinal_position asc",
+        "bindings": []
+    },
+    {
+        "ms": 2.77,
+        "sql": "select * from (select * from (select d.*,NULL as transmission_id,NULL as transmission_status,NULL as environment,NULL as submitted_at,NULL as acknowledged_at,NULL as due_at,NULL as recovery_due_at,NULL as incident_id,NULL as response_code,NULL as response_message,NULL as attempt_number,NULL as max_attempts,NULL as next_retry_at,NULL as payload_hash,NULL as acknowledgement_number,NULL as bir_reference_number,NULL as acknowledgement_received_at,'not_submitted' as bir_status from (select `projection_id`, `id`, `document_id`, `transaction_id`, `merchant_id`, `receipt_id`, `original_invoice_id`, `document_source`, `document_family`, `category`, `status`, `sale_category`, `transaction_ref`, `receipt_number`, `business`, `tin`, `branch_code`, `rdo_code`, `document_type`, `record_status`, `transaction_status`, `payment_method`, `region`, `branch`, `channel`, `customer_name`, `customer_tin`, `tin_digits`, `seller_tin_key`, `seller_branch_key`, `document_number_key`, `seller_address`, `amount`, `statutory_discount_amount`, `vat_relief_amount`, `discount_amount`, `manual_discount_amount`, `vat_amount`, `vatable_sales`, `vat_exempt_sales`, `zero_rated_sales`, `sspt_sales`, `net_amount`, `payment_amount`, `payment_count`, `business_date`, `created_at`, `recorded_at`, `business_day`, `identity_key`, `tenant_identity_key`, `tenant_identity_count`, `tenant_identity_rank`, `rank_key`, `financial_valid`, `non_vat_centavos`, `verified_branch`, `projected_at`, `operations_sales_valid`, `reconciliation_prefix`, `reconciliation_suffix`, `is_draft`, identity_count,identity_rank from `ledger_documents` where `record_status` <> ? and `identity_rank` = ?) as `d`) as `ledger`) as `ledger` where `id` in (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "bindings": [
+            "draft",
+            1,
+            "lab-t-0003300",
+            "lab-t-0003270",
+            "lab-t-0003240",
+            "lab-t-0003210",
+            "lab-t-0003180",
+            "lab-t-0003150",
+            "lab-t-0003120",
+            "lab-t-0003090",
+            "lab-t-0003060",
+            "lab-t-0003030"
+        ]
+    },
+    {
+        "ms": 1.11,
+        "sql": "select `id` from `ledger_documents` as `ledger` where `identity_rank` = ? and `is_draft` = ? order by `created_at` asc, `id` asc limit 10 offset 100",
+        "bindings": [
+            1,
+            false
+        ]
+    },
+    {
+        "ms": 1.04,
+        "sql": "select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'eis_invoice_payloads' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`",
+        "bindings": []
+    }
+]

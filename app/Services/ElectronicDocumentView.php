@@ -35,13 +35,19 @@ class ElectronicDocumentView
             }
             $items[] = ['description' => $i['description'] ?? $i['desc'] ?? $i['name'] ?? null, 'quantity' => is_numeric($qty) ? (float) $qty : null, 'unit' => $i['unit'] ?? null, 'unit_price' => is_numeric($price) ? (float) $price : null, 'amount' => is_numeric($amount) ? (float) $amount : null, 'amount_derived' => $derived, 'tax_type' => $i['tax_type'] ?? null, 'benefit_eligible' => ! empty($i['benefit_details']), 'discount' => (float) ($i['discount_amount'] ?? 0), 'discount_reason' => $i['discount_reason'] ?? null];
         }
+        $payload = json_decode($transaction->external_payload ?? '{}', true) ?: [];
+        $registration = json_decode($row->document_registration ?? 'null', true) ?: ($payload['document_registration'] ?? null);
+        $withholdingDetails = json_decode($row->withholding_details ?? 'null', true) ?: ($payload['withholding_details'] ?? null);
+        $identity = app(SellerIdentity::class)->parse($row->merchant_tin, $row->seller_branch_code ?? null);
+        $original = !empty($row->original_invoice_id) ? DB::table('business_invoices')->where('merchant_id',$row->merchant_id)->where('id',$row->original_invoice_id)->value('invoice_number') : null;
+        $invoiceReference = $original ?: ($payload['invoice_reference'] ?? null) ?: ($payload['manual_invoice_number'] ?? null) ?: ($row->reference_number ?? null);
         $amount = (float) ($invoice ? $row->total_amount : $row->total_due);
         $withholding = (float) ($row->withholding_tax ?? 0);
         $settlementValid = $invoice && $status !== 'draft' && isset($row->withholding_tax, $row->amount_paid, $row->amount_due)
             ? (int) round($amount * 100) - (int) round($withholding * 100) - (int) round($row->amount_paid * 100) === (int) round($row->amount_due * 100) : null;
         $check = $status === 'draft' ? null : app(EisDocumentReadiness::class)->inspect($source, (string) $row->id);
-        $registration = $row->vat_registered ?? ($row->merchant_vat_reg ?? null);
-        $registered = is_bool($registration) || in_array($registration, [0, 1, '0', '1'], true) ? (bool) $registration : match (strtolower(trim((string) $registration))) {
+        $vatRegistration = $row->vat_registered ?? ($row->merchant_vat_reg ?? null);
+        $registered = is_bool($vatRegistration) || in_array($vatRegistration, [0, 1, '0', '1'], true) ? (bool) $vatRegistration : match (strtolower(trim((string) $vatRegistration))) {
             'vat', 'vat registered', 'vat-registered' => true,
             'non-vat', 'non vat', 'non-vat registered', 'non-vat-registered' => false,
             default => null,
@@ -70,6 +76,11 @@ class ElectronicDocumentView
             'manual_discount' => max(0, round((float) ($row->discount_amount ?? 0) - (float) ($row->statutory_discount_amount ?? 0), 2)),
             'statutory_discount' => (float) ($row->statutory_discount_amount ?? 0), 'vat_adjustment' => (float) ($row->vat_relief_amount ?? 0),
             'presentation' => $presentation,
+            'registered_tin' => app(InvoiceDocumentRules::class)->registeredTin($row->merchant_tin, $row->seller_branch_code ?? null),
+            'document_registration' => $registration, 'withholding_details' => $withholdingDetails,
+            'invoice_reference' => $invoiceReference, 'buyer_customer_type' => $row->buyer_customer_type ?? ($payload['customer_type'] ?? null),
+            'copy_label' => $status === 'draft' ? null : 'REPRINT',
+            'number_validation_error' => app(InvoiceDocumentRules::class)->numberError((string)$number),
             'footer_note' => $row->footer_note ?? ($presentation['footer_text'] ?? null), 'notes' => $row->notes ?? ($presentation['additional_notes'] ?? null), 'terms_and_conditions' => $row->terms_and_conditions ?? ($presentation['terms_and_conditions'] ?? null),
             'id' => (string) $row->id, 'source' => $source, 'number' => $number, 'business' => $row->merchant_name, 'tin' => $row->merchant_tin,
             'document_type' => $type, 'record_status' => $status,
@@ -77,15 +88,15 @@ class ElectronicDocumentView
             'category' => $category, 'issued_at' => $date ? ($invoice ? substr($date, 0, 10) : CarbonImmutable::parse($date, config('app.timezone'))->setTimezone('Asia/Manila')->toIso8601String()) : '', 'date_precision' => $invoice ? 'day' : 'instant',
             'amount' => $amount, 'currency' => $row->currency ?? 'PHP', 'seller_address' => $row->merchant_address, 'seller_business_style' => $row->seller_business_style ?? null,
             'buyer_name' => $row->buyer_name ?: 'Not recorded', 'buyer_tin' => $row->buyer_tin, 'buyer_address' => $row->buyer_address ?? null, 'buyer_business_style' => $row->buyer_business_style ?? null,
-            'reference' => $row->reference_number ?? $transaction->transaction_ref ?? null, 'original_invoice_id' => $row->original_invoice_id ?? null,
-            'payment_method' => $transaction->payment_method ?? ($row->payment_method ?? null), 'branch' => $row->seller_branch_code ?? null,
+            'reference' => $row->reference_number ?? (json_decode($transaction->external_payload ?? '{}', true)['manual_invoice_number'] ?? null) ?? $transaction->transaction_ref ?? null, 'original_invoice_id' => $row->original_invoice_id ?? null,
+            'payment_method' => $transaction->payment_method ?? ($row->payment_method ?? null), 'branch' => $identity['branch_code'],
             'vat_registered' => $registered, 'items' => $items, 'subtotal' => $this->number($row->subtotal_amount ?? $row->gross_amount ?? null), 'discount' => $this->number($row->discount_amount ?? null),
             'vatable' => $this->number($row->taxable_amount ?? $row->vatable_sales ?? null), 'vat_exempt' => $splitNonVat ? max(0, round((float) ($row->vat_exempt_amount ?? 0) - $nonVatSales, 2)) : $this->number($row->vat_exempt_amount ?? $row->vat_exempt_sales ?? null), 'zero_rated' => $this->number($row->zero_rated_amount ?? $row->zero_rated_sales ?? null), 'vat' => $this->number($row->vat_amount ?? null),
             'record_mode' => $row->record_mode ?? 'nuers_issuance', 'sspt_sales' => $nonVatSales ?? $this->number($row->sspt_sales ?? null),
             'withholding' => $this->number($row->withholding_tax ?? null), 'other_charges' => $this->number($row->other_charges ?? null),
             'net_payable' => isset($row->withholding_tax) ? (round($amount * 100) - round($withholding * 100)) / 100 : null,
             'amount_paid' => $this->number($row->amount_paid ?? null), 'balance_due' => $this->number($row->amount_due ?? null),
-            'permit_number' => $row->permit_to_issue_number ?? null, 'accreditation_number' => $row->esp_accreditation_number ?? null,
+            'permit_number' => $row->permit_to_issue_number ?? ($registration['pti_number'] ?? null), 'accreditation_number' => $row->esp_accreditation_number ?? null,
             // No approved public-token issuer exists yet. A record number/digest is not a verification URL.
             'verification_url' => null, 'authority_status' => 'BIR acceptance not verified', 'bir_status' => 'not_verified',
             'financial_validation_passed' => $check['financial_validation_passed'] ?? null,

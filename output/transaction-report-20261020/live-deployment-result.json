@@ -1,0 +1,26 @@
+{
+    "deployed": true,
+    "release": "2026-10-20.transaction-reports.1",
+    "deployed_at": "2026-10-20T05:31:24+00:00",
+    "verification": {
+        "verified": true,
+        "checked_at": "2026-10-20T05:31:22+00:00",
+        "business_data_read_only": true,
+        "live_register_query": true,
+        "selected_scope_intersection": true,
+        "strict_mysql_advanced_filters": true,
+        "observed_live_documents": 4333,
+        "branded_pdf_render": true,
+        "pdf_bytes": 1255779,
+        "files_verified": 26,
+        "schema_migration": false,
+        "mfa_preserved": true,
+        "elapsed_ms": 1859.07
+    },
+    "existing_records_preserved": true,
+    "environment_preserved": true,
+    "files_verified": 26,
+    "old_assets_retained": true,
+    "backup": "nuers-transaction-reports-backup-20261020-053112",
+    "package_sha256": "6b1d4feb95bd21d8edbfd3c1c4f62eefa2773a377f3dd785c8cae38830e3b374"
+}

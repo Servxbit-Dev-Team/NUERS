@@ -1,0 +1,8 @@
+{
+    "state": "ready",
+    "records": 1000000,
+    "seconds": 62.165,
+    "peak_mb": 48,
+    "file_bytes": 152001206,
+    "sha256": "c04ce01222bcf5892799386b8eb85404cede1dcc175cf9f81a33a739fe1c723a"
+}

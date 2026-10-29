@@ -1,0 +1,28 @@
+{
+    "deployed": true,
+    "release": "2026-10-20.registry-actions.1",
+    "deployed_at": "2026-10-20T05:04:51+00:00",
+    "verification": {
+        "verified": true,
+        "checked_at": "2026-10-20T05:04:50+00:00",
+        "business_data_read_only": true,
+        "portfolio_parity": true,
+        "merchants_checked": 2,
+        "per_merchant_parity": true,
+        "mysql_stage_filter": true,
+        "mysql_strict_stage_aggregate": true,
+        "registry_list_queries": true,
+        "empty_scope_isolated": true,
+        "elapsed_ms": 350.12,
+        "files_verified": 20,
+        "schema_migration": false,
+        "mfa_preserved": true,
+        "bir_transport_enabled": false
+    },
+    "existing_records_preserved": true,
+    "environment_preserved": true,
+    "files_verified": 20,
+    "old_assets_retained": true,
+    "backup": "nuers-registry-actions-backup-20261020-050442",
+    "package_sha256": "a4efbbdad41bf666efb3aa66586d422e73320004c07e6066152709a71459ce61"
+}

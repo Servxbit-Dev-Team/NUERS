@@ -30,22 +30,22 @@ class LiveMonitoringController extends Controller
             $at = $now->subMinutes($i)->startOfMinute();
             $minuteRows[$at->format('Y-m-d H:i')] = ['time' => $at->format('H:i'), 'successful' => 0, 'failed' => 0, 'pending' => 0, 'other' => 0];
         }
-        $this->window(DB::table('merchant_transactions'), $now->subMinutes(59)->startOfMinute(), $now)
-            ->select('created_at', 'status')->orderBy('id')->chunk(1000, function ($rows) use (&$minuteRows) {
-                foreach ($rows as $row) {
-                    $key = $this->date($row->created_at)->format('Y-m-d H:i');
-                    if (isset($minuteRows[$key])) $minuteRows[$key][$this->state($row->status)]++;
-                }
-            });
+        $bucket = \App\Services\ReportingTime::bucket('created_at', 'Y-m-d H:i');
+        $groups = $this->window(DB::table('merchant_transactions'), $now->subMinutes(59)->startOfMinute(), $now)
+            ->selectRaw("$bucket as bucket,status,COUNT(*) as total")->groupByRaw("$bucket,status")->get();
+        foreach ($groups as $row) {
+            if (isset($minuteRows[$row->bucket])) $minuteRows[$row->bucket][$this->state($row->status)] += (int) $row->total;
+        }
         $lastMinute = $this->window(DB::table('merchant_transactions'), $now->subSeconds(60), $now)->count();
         $pending = DB::table('eis_transmissions')->whereIn('status', ['queued', 'submitting', 'submitted', 'recovered']);
         $queue = ['production' => (clone $pending)->where('environment', 'production')->count(), 'certification' => (clone $pending)->where('environment', '!=', 'production')->count(),
             'overdue' => (clone $pending)->where('environment', 'production')->where('due_at', '<', $this->dbDate($now))->count()];
-        $query = $this->transactions($request, $now);
+        $query = $this->transactions($request, $now, false);
         $total = (clone $query)->count();
         $page = max(1, $request->integer('page', 1));
         $perPage = min(100, max(10, $request->integer('per_page', 10)));
-        $rows = (clone $query)->orderByDesc('t.created_at')->orderByDesc('t.id')->offset(($page - 1) * $perPage)->limit($perPage)->get($this->columns());
+        $ids = (clone $query)->orderByDesc('t.created_at')->orderByDesc('t.id')->offset(($page - 1) * $perPage)->limit($perPage)->pluck('t.id');
+        $rows = $ids->isEmpty() ? collect() : $this->transactions($request, $now)->whereIn('t.id',$ids)->orderByDesc('t.created_at')->orderByDesc('t.id')->get($this->columns());
         $top = $this->window(DB::table('merchant_transactions as t'), $now->startOfDay(), $now, 't.created_at')->leftJoin('merchants as m', 'm.id', '=', 't.merchant_id')
             ->select('t.merchant_id', 'm.business_name')->selectRaw('COUNT(*) AS total')->groupBy('t.merchant_id', 'm.business_name')->orderByDesc('total')->limit(5)->get();
         $integration = $policy->integration();
@@ -76,10 +76,11 @@ class LiveMonitoringController extends Controller
         return in_array($status, self::SUCCESS, true) ? 'successful' : (in_array($status, self::FAILED, true) ? 'failed' : (in_array($status, self::PENDING, true) ? 'pending' : 'other'));
     }
 
-    private function transactions(Request $request, CarbonImmutable $cutoff): Builder
+    private function transactions(Request $request, CarbonImmutable $cutoff, bool $decorate = true): Builder
     {
-        $query = DB::table('merchant_transactions as t')->leftJoin('merchants as m', 'm.id', '=', 't.merchant_id')->leftJoin('transaction_receipts as r', 'r.id', '=', 't.receipt_id')->where('t.created_at', '<=', $this->dbDate($cutoff));
         $search = trim((string) $request->query('search', ''));
+        $query = DB::table('merchant_transactions as t')->where('t.created_at', '<=', $this->dbDate($cutoff));
+        if ($decorate || $search !== '') $query->leftJoin('merchants as m', 'm.id', '=', 't.merchant_id')->leftJoin('transaction_receipts as r', 'r.id', '=', 't.receipt_id');
         if ($search !== '') $query->where(function ($q) use ($search) {
             $like = '%'.$search.'%';
             $q->where('t.transaction_ref', 'like', $like)->orWhere('r.receipt_number', 'like', $like)->orWhere('m.business_name', 'like', $like)->orWhere('m.tin', 'like', $like)
@@ -149,18 +150,24 @@ class LiveMonitoringController extends Controller
     public function auditLog(Request $request)
     {
         $policy = app(BirCompliance::class); $actor = $policy->administrativeUser($request);
-        if ($request->boolean('download')) {
-            $policy->audit('eis.audit.exported', null, (string) $actor->id);
-            return response()->streamDownload(function () use ($policy) {
-                echo '{"integrity":'.json_encode($policy->auditIntegrity()).',"events":['; $comma = '';
-                foreach (DB::table('eis_audit_events')->orderBy('id')->cursor() as $row) { echo $comma.json_encode($row, JSON_THROW_ON_ERROR); $comma = ','; }
-                echo ']}';
-            }, 'nuers-audit-journal.json', ['Content-Type' => 'application/json', 'Cache-Control' => 'private, no-store']);
-        }
+        $request->validate(['page'=>'nullable|integer|min:1','search'=>'nullable|string|max:200','format'=>'nullable|in:csv,json','report_limit'=>'nullable|integer|min:1|max:500']);
         $query = DB::table('eis_audit_events');
         if ($request->filled('search')) $query->where(function ($q) use ($request) { $value = '%'.$request->query('search').'%'; $q->where('event', 'like', $value)->orWhere('subject_id', 'like', $value)->orWhere('actor_id', 'like', $value); });
+        if ($request->boolean('download')) {
+            $cutoff=(clone $query)->max('id');
+            $query->where('id','<=',$cutoff??0);
+            if ($request->has('report_limit')) \App\Services\ReportCsv::limit($request,(clone $query)->count());
+            $policy->audit('eis.audit.exported', null, (string) $actor->id, ['format'=>$request->query('format','json'),'search'=>$request->query('search')]);
+            if($request->query('format','json')==='json') return response()->streamDownload(function()use($policy,$query){
+                echo '{"integrity":'.json_encode($policy->auditIntegrity()).',"events":[';$comma='';
+                foreach($query->orderBy('id')->cursor() as $row){echo $comma.json_encode($row,JSON_THROW_ON_ERROR);$comma=',';}echo ']}';
+            },'NUERS-audit-journal.json',['Content-Type'=>'application/json','Cache-Control'=>'private, no-store']);
+            $rows=(function()use($query){foreach($query->orderBy('id')->cursor() as $row)yield [$row->id,$row->occurred_at,$row->event,$row->subject_id,$row->actor_id,$row->details,$row->previous_hash??'',$row->entry_hash??''];})();
+            return \App\Services\ReportCsv::download(['Sequence','Occurred At (UTC)','Event','Subject ID','Actor ID','Recorded Details','Previous Hash','Entry Hash'],$rows,'NUERS-audit-journal.csv');
+        }
         $total = (clone $query)->count(); $page = max(1, $request->integer('page', 1));
-        return response()->json(['integrity' => $policy->auditIntegrity(), 'total' => $total, 'page' => $page, 'pages' => max(1, (int) ceil($total / 25)), 'events' => $query->orderByDesc('id')->offset(($page - 1) * 25)->limit(25)->get()->map(fn ($r) => [...(array) $r, 'occurred_at' => CarbonImmutable::parse($r->occurred_at, 'UTC')->toIso8601String(), 'details' => json_decode($r->details, true)])])->header('Cache-Control', 'private, no-store');
+        $integrity = app(\App\Services\AuditIntegritySnapshot::class)->status();
+        return response()->json(['integrity' => $integrity['integrity'], 'integrity_check' => $integrity, 'total' => $total, 'page' => $page, 'pages' => max(1, (int) ceil($total / 25)), 'events' => $query->orderByDesc('id')->offset(($page - 1) * 25)->limit(25)->get()->map(fn ($r) => [...(array) $r, 'occurred_at' => CarbonImmutable::parse($r->occurred_at, 'UTC')->toIso8601String(), 'details' => json_decode($r->details, true)])])->header('Cache-Control', 'private, no-store');
     }
 
     public function export(Request $request)
@@ -170,6 +177,7 @@ class LiveMonitoringController extends Controller
         abort_unless(in_array($format, ['csv', 'json'], true), 422);
         $cutoff = CarbonImmutable::now('Asia/Manila');
         $query = $this->transactions($request, $cutoff)->select($this->columns())->orderBy('t.id');
+        if ($request->has('report_limit')) \App\Services\ReportCsv::limit($request,(clone $query)->count());
         $policy->audit('eis.records.exported', null, (string) $actor->id, ['format' => $format, 'cutoff' => $cutoff->toIso8601String(), 'count' => (clone $query)->count()]);
         return response()->streamDownload(function () use ($query, $format, $cutoff) {
             $handle = fopen('php://output', 'w'); $first = true;

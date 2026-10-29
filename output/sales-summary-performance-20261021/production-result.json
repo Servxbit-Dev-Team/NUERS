@@ -1,0 +1,29 @@
+{
+    "deployed": true,
+    "release": "2026-10-21.sales-performance.1",
+    "deployed_at": "2026-10-21T04:04:36+00:00",
+    "verification": {
+        "verified": true,
+        "files_verified": 24,
+        "query_mode": "indexed_sales",
+        "sales_records": 4338,
+        "page_records": 10,
+        "initial_read_ms": 213.7,
+        "cached_read_ms": 16.59,
+        "projection_backlog": 0,
+        "missing_eligibility": 0,
+        "trigger_definitions_verified": true,
+        "merchant_scopes_checked": 2,
+        "mfa_enabled": true,
+        "production_transport_blocked": true,
+        "pdf_limit": 500,
+        "csv_formula_escaping": true,
+        "verified_at": "2026-10-21T04:04:36+00:00"
+    },
+    "existing_records_preserved": true,
+    "environment_preserved": true,
+    "files_verified": 24,
+    "old_assets_retained": true,
+    "backup": "nuers-sales-performance-backup-20261021-040418",
+    "package_sha256": "0b4a2777d31b5bc54b1a65a9bf76a1fae88b428afe5f1a630e6fe1a1afeb5e1c"
+}

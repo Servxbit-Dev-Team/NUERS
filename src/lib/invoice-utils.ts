@@ -356,12 +356,9 @@ export const STATUS_META: Record<InvoiceStatus, { label: string; variant: "defau
 };
 
 // ─── Number generation ─────────────────────────────────────────────────────
-let _seq = 1000;
-export function generateInvoiceNumber(type: DocumentType): string {
-  const prefix = DOC_TYPE_META[type].prefix;
-  const year = new Date().getFullYear();
-  const seq = String(++_seq).padStart(6, "0");
-  return `${prefix}-${year}-${seq}`;
+/** Local draft reference only. The server allocates the registered serial at issuance. */
+export function generateInvoiceNumber(_type: DocumentType): string {
+  return `DRAFT-${crypto.randomUUID()}`;
 }
 
 // ─── Tax computation ───────────────────────────────────────────────────────

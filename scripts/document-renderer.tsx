@@ -1,18 +1,16 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import QRCode from 'qrcode';
 import { OfficialReceipt, type CenterDocument } from '../src/components/invoices/official-receipt';
 
 /** Reads only a server-authorized DTO. No client HTML or asset path is accepted. */
 export async function renderDocumentHtml(document: CenterDocument): Promise<string> {
   const styles = readFileSync(path.resolve('src/components/invoices/electronic-document.css'), 'utf8');
-  const qr = document.verification_url ? await QRCode.toDataURL(document.verification_url, { margin: 0, width: 220, errorCorrectionLevel: 'M' }) : '';
-  let content = renderToStaticMarkup(<div className="merchant-electronic-preview"><OfficialReceipt document={document} staticQr={qr} /></div>);
+  let content = renderToStaticMarkup(<div className="merchant-electronic-preview"><OfficialReceipt document={document} /></div>);
   // React's optional image preloads are unnecessary because every image is embedded below.
   content = content.replace(/<link\b[^>]*>/g, '');
   // Asset embedding avoids remote requests, expiring URLs and local file access in Chromium.
-  const assets = ['/auth-assets/nuers-digital-logo.png', '/invoice-assets/receipt-reference.png'];
+  const assets = ['/brand/nuers-official-logo.png', '/invoice-assets/receipt-reference.png'];
   const brand=document.presentation?.show_logo?document.presentation.logo_url:null;
   if(brand&&/^\/(?:public\/)?uploads\/(?:business-logos|invoice-logos)\/[a-f0-9-]+\.png$/i.test(brand))assets.push(brand);
   for (const asset of assets) {
@@ -28,7 +26,7 @@ export async function renderDocumentHtml(document: CenterDocument): Promise<stri
     *,::before,::after{box-sizing:border-box}html,body{margin:0;padding:0}body{width:900px}img,svg{display:block;vertical-align:middle}img{max-width:100%;height:auto}h1,h2,h3,p{margin:0}table{border-color:inherit;text-indent:0}strong{font-weight:bolder}
     ${styles}
     @page{size:${paper};margin:5mm}
-    @media print{html{width:${pageWidth}mm}body{width:900px;zoom:${zoom}}.merchant-electronic-preview{overflow:visible}.official-receipt{overflow:visible!important}.or-header,.or-parties,.or-buyer,.or-tax-warning,.or-source-notice,.or-financials,.or-tax-breakdown,.or-validation-row,.or-source-note,.or-footer,.or-items tr{break-inside:avoid}.or-items thead{display:table-header-group}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+    @media print{html{width:${pageWidth}mm}body{width:900px;zoom:${zoom}}.merchant-electronic-preview{overflow:visible}.official-receipt{overflow:visible!important}.or-header,.or-parties,.or-buyer,.or-tax-warning,.or-source-notice,.or-financials,.or-tax-breakdown,.or-source-note,.or-footer,.or-items tr{break-inside:avoid}.or-items thead{display:table-header-group}.official-receipt:not(.or-custom) .or-header{height:9em}.official-receipt:not(.or-custom) .or-logo{height:8em;margin-top:.7em}.official-receipt:not(.or-custom) .or-footer{min-height:6em}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
   </style></head><body>${content}</body></html>`;
 }
 

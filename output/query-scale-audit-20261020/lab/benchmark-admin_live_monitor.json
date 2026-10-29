@@ -1,0 +1,19 @@
+{
+    "engine": "8.4.11",
+    "records": 1000100,
+    "results": [
+        {
+            "case": "admin_live_monitor",
+            "run": 1,
+            "http": 200,
+            "ms": 259.78,
+            "peak_mb": 26,
+            "bytes": 10587,
+            "queries": 35,
+            "db_ms": 217.26,
+            "reported_count": 966666,
+            "gross_centavos": null,
+            "error": null
+        }
+    ]
+}

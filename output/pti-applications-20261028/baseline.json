@@ -1,0 +1,8 @@
+{
+  "src/pages/authorizations/index.tsx": "398f42e939aaa8889aae178d60676d6489ecce3b74fb160fd7ab7d0c28ad5971",
+  "src/pages/authorizations/permits.css": "34ab228499783584c290978415131f82d6481a18c0653fa4a6f314b4666a89d4",
+  "src/App.tsx": "644e1568035c1dcbae31235ef119205f858acb93e9d76fe36363f1d52d5abe85",
+  "src/components/layouts/dashboard-layout.tsx": "fff716696ac00ace76d229e3dd5a9a01949f51ea735bd9ace066b0fa598c4b25",
+  "src/components/enterprise/enterprise-shell.tsx": "686b99a3da45eb6da91e73b59f796eebada36150270ae151e0eaf9c37296ab7e",
+  "routes/api.php": "37ecb695e7e3d2a3978fecbe4f70bd8e5629b63c3cf06cd94896fd060d52c613"
+}

@@ -1,3 +1,4 @@
+import { useRealtimeRefresh } from "@/lib/use-realtime-refresh";
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch, readJsonResponse } from "@/lib/api-url";
 
@@ -107,8 +108,8 @@ export function useMerchantExpenses(filters: {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (quiet=false) => {
+    if(!quiet)setLoading(true);
     setError(null);
 
     const params = new URLSearchParams();
@@ -126,7 +127,7 @@ export function useMerchantExpenses(filters: {
 
       setData(payload);
     } catch (err) {
-      setData(emptyPayload);
+      if(!quiet)setData(emptyPayload);
       setError(err instanceof Error ? err.message : "Unable to load business account expenses.");
     } finally {
       setLoading(false);
@@ -137,7 +138,8 @@ export function useMerchantExpenses(filters: {
     load();
   }, [load]);
 
-  return { data, loading, error, refresh: load };
+  useRealtimeRefresh(()=>load(true));
+  return { data, loading, error, refresh: () => load() };
 }
 
 export async function createMerchantExpense(values: MerchantExpenseInput): Promise<{ id: string; claim_status: string; duplicate?: boolean }> {

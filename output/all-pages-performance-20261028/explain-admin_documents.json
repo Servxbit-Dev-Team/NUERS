@@ -1,0 +1,16 @@
+[
+    {
+        "id": 1,
+        "select_type": "SIMPLE",
+        "table": "ledger_documents",
+        "partitions": null,
+        "type": "ALL",
+        "possible_keys": null,
+        "key": null,
+        "key_len": null,
+        "ref": null,
+        "rows": 961018,
+        "filtered": 20,
+        "Extra": "Using where"
+    }
+]

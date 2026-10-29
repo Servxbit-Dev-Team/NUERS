@@ -115,8 +115,14 @@ class TaxpayerAuthorizationController extends Controller
     private function validated(array $data, ?string $id = null)
     {
         $data['reference'] = trim($data['reference'] ?? '');
-        $v = Validator::make($data, ['merchant_id' => 'required|exists:merchants,id', 'kind' => 'required|in:PTI,PTT', 'reference' => ['required', 'string', 'max:120', Rule::unique('taxpayer_authorizations')->where('kind', $data['kind'] ?? '')->ignore($id)], 'environment' => 'required|in:certification,production', 'branch_code'=>'nullable|regex:/^[0-9]{5}$/', 'scope' => 'required|string|min:5|max:2000', 'issued_at' => 'required|date_format:Y-m-d', 'valid_until' => 'nullable|date_format:Y-m-d|after_or_equal:issued_at', 'status' => 'required|in:pending,active,suspended,revoked', 'evidence' => 'required|string|min:10|max:3000', 'reason' => 'required|string|min:10|max:2000'])->validate();
+        $v = Validator::make($data, ['merchant_id' => 'required|exists:merchants,id', 'kind' => 'required|in:PTI,PTT', 'reference' => ['required', 'string', 'max:120', Rule::unique('taxpayer_authorizations')->where('kind', $data['kind'] ?? '')->where('merchant_id', $data['merchant_id'] ?? '')->where('environment', $data['environment'] ?? '')->where('branch_code', $data['branch_code'] ?? null)->ignore($id)], 'environment' => 'required|in:certification,production', 'branch_code'=>'nullable|regex:/^[0-9]{5}$/', 'system_reference' => 'nullable|string|max:160', 'branch_notification_reference' => 'nullable|string|max:1000', 'scope' => 'required|string|min:5|max:2000', 'issued_at' => 'required|date_format:Y-m-d', 'valid_until' => 'nullable|date_format:Y-m-d|after_or_equal:issued_at', 'status' => 'required|in:pending,active,suspended,revoked', 'evidence' => 'required|string|min:10|max:3000', 'reason' => 'required|string|min:10|max:2000'])->validate();
         $v['reference'] = trim($v['reference']);
+        $siblings = DB::table('taxpayer_authorizations')->where('kind', $v['kind'])->where('reference', $v['reference'])->when($id, fn ($q) => $q->where('id', '!=', $id))->get();
+        foreach ($siblings as $sibling) {
+            abort_unless($sibling->merchant_id === $v['merchant_id'], 422, 'This authority reference belongs to another taxpayer.');
+            abort_unless($v['kind'] === 'PTI' && !empty($v['system_reference']) && $sibling->system_reference === $v['system_reference'], 422, 'A shared PTI requires the same evidenced approved system. Different systems require separate PTIs.');
+            abort_unless(!empty($v['branch_notification_reference']), 422, 'Record the branch notification / coverage evidence for the shared PTI.');
+        }
         abort_if($v['reference'] === '', 422, 'A permit reference is required.');
         if ($v['status'] === 'active') {
             abort_unless(!empty($v['branch_code']),422,'Active authority requires its verified five-digit BIR branch code.');
@@ -254,6 +260,7 @@ class TaxpayerAuthorizationController extends Controller
         $u = $this->actor($r);
         $r->validate(['from' => 'nullable|date_format:Y-m-d', 'to' => 'nullable|date_format:Y-m-d|after_or_equal:from', 'search' => 'nullable|string|max:255']);
         $rows = $this->filtered($r, $this->permits());
+        if ($r->has('report_limit')) \App\Services\ReportCsv::limit($r,$rows->count());
         app(BirCompliance::class)->audit('permit.exported', null, $u->id, ['count' => $rows->count()]);
         $head = ['reference', 'kind', 'business_name', 'tin', 'rdo_code', 'environment', 'scope', 'issued_at', 'valid_until', 'effective_status', 'evidence'];
 

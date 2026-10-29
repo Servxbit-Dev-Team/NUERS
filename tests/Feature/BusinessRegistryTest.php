@@ -145,7 +145,7 @@ class BusinessRegistryTest extends TestCase
         $token = explode('#token=', $invite['url'])[1];
         $this->assertSame(64, strlen($token));
         $this->assertDatabaseHas('business_registry_requests', ['token_hash' => hash('sha256', $token), 'purpose' => 'invitation']);
-        $this->postJson('/api/business-activation/inspect', ['token' => $token])->assertOk()->assertJsonPath('business_name', 'Example Business')->assertJsonMissingPath('email');
+        $this->withoutToken()->postJson('/api/business-activation/inspect', ['token' => $token])->assertOk()->assertJsonPath('business_name', 'Example Business')->assertJsonMissingPath('email');
         $p = ['token' => $token, 'password' => 'NewPassword123', 'password_confirmation' => 'NewPassword123', 'terms_accepted' => true, 'privacy_accepted' => true, 'notice_version' => '2026-10-17.2'];
         $this->postJson('/api/business-activation', array_replace($p, ['terms_accepted' => false]))->assertUnprocessable();
         $this->postJson('/api/business-activation', $p)->assertOk();
@@ -155,7 +155,7 @@ class BusinessRegistryTest extends TestCase
         $this->assertNull($u->api_token);
         $this->assertDatabaseHas('profiles', ['id' => $u->id, 'role' => 'merchant']);
         $this->postJson('/api/business-activation', $p)->assertGone();
-        $this->postJson($url, ['request_id' => (string) Str::uuid(), 'reason' => 'Another account setup request'])->assertConflict();
+        $this->withToken($this->admin->api_token)->postJson($url, ['request_id' => (string) Str::uuid(), 'reason' => 'Another account setup request'])->assertConflict();
     }
 
     public function test_revoked_and_expired_invitations_fail(): void

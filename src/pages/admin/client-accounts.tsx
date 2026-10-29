@@ -1,3 +1,4 @@
+import { useRealtimeRefresh } from "@/lib/use-realtime-refresh";
 import { formatTin } from "@/lib/tin";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -104,7 +105,7 @@ export function AdminClientAccounts() {
   const [deleting, setDeleting] = useState(false);
 
   async function loadAccounts(options: { quiet?: boolean } = {}) {
-    if (options.quiet) setRefreshing(true);
+    if (options.quiet) setRefreshing(false);
     else setLoading(true);
 
     const { data, error } = await supabase
@@ -126,6 +127,7 @@ export function AdminClientAccounts() {
   useEffect(() => {
     loadAccounts();
   }, []);
+  useRealtimeRefresh(()=>loadAccounts({quiet:true}));
 
   const statusOptions = useMemo(
     () => Array.from(new Set(accounts.map((account) => account.status || "active"))).sort(),

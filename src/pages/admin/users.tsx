@@ -1,28 +1,17 @@
+import { useRealtimeRefresh } from "@/lib/use-realtime-refresh";
+import { Link } from "react-router-dom";
 import { formatTin } from "@/lib/tin";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Edit,
-  Key,
-  Mail,
   MoreHorizontal,
   RefreshCw,
   Search,
   Shield,
-  Trash2,
   UserCheck,
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,7 +28,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -141,16 +129,18 @@ export function AdminUsers({
   allowedRoles,
   defaultRoleFilter = "all",
 }: AdminUsersProps) {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, profile: currentProfile } = useAuth();
+  const requestSequence = useRef(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [total, setTotal] = useState(0);
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState(defaultRoleFilter);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [editUser, setEditUser] = useState<ProfileRow | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<ProfileRow | null>(null);
   const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   const roleOptions = useMemo(() => {
     const roles = allowedRoles?.length ? allowedRoles : Object.keys(roleConfig);
@@ -158,23 +148,27 @@ export function AdminUsers({
   }, [allowedRoles]);
 
   async function loadProfiles(options: { quiet?: boolean } = {}) {
-    if (options.quiet) setRefreshing(true);
-    else setLoading(true);
+    const sequence = ++requestSequence.current;
+    if (!options.quiet) setLoading(true);
 
     let query = supabase
       .from<ProfileRow[]>("profiles")
-      .select("*")
-      .order("created_at", { ascending: false });
+      .select("*", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range((page - 1) * pageSize, page * pageSize - 1)
+      .search(search.trim());
+    if (roleFilter !== "all") query = query.eq("role", roleFilter);
 
     if (allowedRoles?.length) {
       query = query.in("role", allowedRoles);
     }
 
-    const { data, error } = await query;
+    const { data, error, count } = await query;
+    if (sequence !== requestSequence.current) return;
+    setTotal(error ? 0 : count ?? 0);
 
     if (error) {
-      toast.error(error.message || "Unable to load user profiles.");
-      setProfiles([]);
+      if(!options.quiet){toast.error(error.message || "Unable to load user profiles.");setProfiles([]);}
     } else {
       setProfiles(data ?? []);
     }
@@ -184,25 +178,13 @@ export function AdminUsers({
   }
 
   useEffect(() => {
-    loadProfiles();
-  }, [allowedRoles?.join("|")]);
+    setLoading(true);
+    const timer = window.setTimeout(() => { void loadProfiles(); }, 250);
+    return () => { window.clearTimeout(timer); requestSequence.current++; };
+  }, [allowedRoles?.join("|"), page, pageSize, search, roleFilter]);
 
-  const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase();
-
-    return profiles.filter((profile) => {
-      const fullName = profile.full_name || profile.email || "Unnamed user";
-      const organization = profile.organization || "";
-      const tin = profile.tin || "";
-      const matchesSearch = !query || [fullName, profile.email, organization, tin, profile.role]
-        .join(" ")
-        .toLowerCase()
-        .includes(query);
-      const matchesRole = roleFilter === "all" || profile.role === roleFilter;
-
-      return matchesSearch && matchesRole;
-    });
-  }, [profiles, roleFilter, search]);
+  useRealtimeRefresh(()=>loadProfiles({quiet:true}),!saving&&!editUser);
+  const filtered = profiles;
 
   const activeRoles = roleOptions.map((role) => ({
     role,
@@ -214,12 +196,10 @@ export function AdminUsers({
     if (!editUser) return;
     setSaving(true);
 
+    const original = profiles.find(p => p.id === editUser.id);
     const payload = {
-      full_name: editUser.full_name ?? "",
-      email: editUser.email,
-      organization: editUser.organization ?? "",
-      role: editUser.role,
-      tin: editUser.tin ?? null,
+      ...(original?.role === "merchant" ? {} : { full_name: editUser.full_name ?? "", organization: editUser.organization ?? "" }),
+      ...(editUser.role !== profiles.find(p => p.id === editUser.id)?.role ? { role: editUser.role } : {}),
     };
 
     const { error } = await supabase.from("profiles").update(payload).eq("id", editUser.id);
@@ -235,30 +215,6 @@ export function AdminUsers({
     setSaving(false);
   }
 
-  async function handleDeleteUser() {
-    if (!deleteTarget) return;
-    setDeleting(true);
-
-    const { error, count } = await supabase.from("profiles").delete().eq("id", deleteTarget.id);
-
-    if (error) {
-      toast.error(error.message || "Unable to delete user.");
-    } else {
-      setProfiles((current) => current.filter((profile) => profile.id !== deleteTarget.id));
-      toast.success(`${deleteTarget.full_name || deleteTarget.email} deleted from NUERS.`);
-      if (count === 0) {
-        toast.info("No matching database row was removed.");
-      }
-      setDeleteTarget(null);
-    }
-
-    setDeleting(false);
-  }
-
-  function sendStub(message: string) {
-    toast.info(message);
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -271,14 +227,15 @@ export function AdminUsers({
         </Button>
       </div>
 
+      <p className="text-sm text-muted-foreground">Merchant identity and suspension are managed in <Link className="text-primary underline" to="/super-admin/merchants">Registered Businesses</Link>. Users recover their own passwords through the sign-in page. Privileged roles require a Super Administrator.</p>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Total Profiles</span>
+              <span className="text-xs text-muted-foreground">Matching Profiles</span>
               <Users className="h-4 w-4 text-muted-foreground" />
             </div>
-            <p className="mt-1 text-2xl font-bold text-foreground">{profiles.length}</p>
+            <p className="mt-1 text-2xl font-bold text-foreground">{total}</p>
           </CardContent>
         </Card>
         <Card>
@@ -294,7 +251,7 @@ export function AdminUsers({
           <Card key={item.role}>
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">{item.label}</span>
+                <span className="text-xs text-muted-foreground">{item.label} · this page</span>
                 <Shield className="h-4 w-4 text-muted-foreground" />
               </div>
               <p className="mt-1 text-2xl font-bold text-foreground">{item.count}</p>
@@ -311,11 +268,11 @@ export function AdminUsers({
               <Input
                 placeholder="Search name, email, TIN, organization..."
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => { setSearch(event.target.value); setPage(1); }}
                 className="pl-9"
               />
             </div>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <Select value={roleFilter} onValueChange={value => { setRoleFilter(value); setPage(1); }}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Role" />
               </SelectTrigger>
@@ -376,22 +333,8 @@ export function AdminUsers({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setEditUser(profile)}>
+                        <DropdownMenuItem disabled={currentProfile?.role !== "super_admin" && ["admin", "super_admin", "bir", "rdo"].includes(profile.role)} onClick={() => setEditUser(profile)}>
                           <Edit className="mr-2 h-3.5 w-3.5" /> Edit Profile
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => sendStub(`Password reset workflow queued for ${profile.email}.`)}>
-                          <Key className="mr-2 h-3.5 w-3.5" /> Reset Password
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => sendStub(`Notification workflow queued for ${profile.email}.`)}>
-                          <Mail className="mr-2 h-3.5 w-3.5" /> Send Email
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          disabled={isCurrent}
-                          onClick={() => setDeleteTarget(profile)}
-                        >
-                          <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete User
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -400,6 +343,10 @@ export function AdminUsers({
               })}
             </div>
           )}
+          <nav aria-label="User directory pagination" className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t pt-4 text-sm">
+            <span>{total ? `Showing ${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, total)} of ${total} profiles` : "No matching profiles"}</span>
+            <div className="flex flex-wrap items-center gap-2"><label>Rows per page <select className="rounded border px-2 py-1" value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}><option>10</option><option>25</option><option>50</option></select></label><Button variant="outline" size="sm" disabled={loading || page <= 1} onClick={() => setPage(p => p - 1)}>Previous</Button><span>Page {page} of {Math.max(1, Math.ceil(total / pageSize))}</span><Button variant="outline" size="sm" disabled={loading || page * pageSize >= total} onClick={() => setPage(p => p + 1)}>Next</Button></div>
+          </nav>
         </CardContent>
       </Card>
 
@@ -407,34 +354,34 @@ export function AdminUsers({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Edit User Profile</DialogTitle>
-            <DialogDescription>Update the profile fields used by the NUERS role-based portals.</DialogDescription>
+            <DialogDescription>Merchant identity changes belong in Registered Businesses. Login email and TIN remain controlled identity fields; account records are preserved.</DialogDescription>
           </DialogHeader>
           {editUser && (
             <div className="space-y-4 py-2">
               <div className="space-y-2">
                 <Label>Full Name</Label>
-                <Input value={editUser.full_name ?? ""} onChange={(event) => setEditUser({ ...editUser, full_name: event.target.value })} />
+                <Input disabled={profiles.find(p => p.id === editUser.id)?.role === "merchant"} value={editUser.full_name ?? ""} onChange={(event) => setEditUser({ ...editUser, full_name: event.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input type="email" value={editUser.email} onChange={(event) => setEditUser({ ...editUser, email: event.target.value })} />
+                <Input type="email" value={editUser.email} readOnly />
               </div>
               <div className="space-y-2">
                 <Label>Organization</Label>
-                <Input value={editUser.organization ?? ""} onChange={(event) => setEditUser({ ...editUser, organization: event.target.value })} />
+                <Input disabled={profiles.find(p => p.id === editUser.id)?.role === "merchant"} value={editUser.organization ?? ""} onChange={(event) => setEditUser({ ...editUser, organization: event.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>TIN</Label>
-                <Input value={editUser.tin ?? ""} onChange={(event) => setEditUser({ ...editUser, tin: event.target.value })} />
+                <Input value={editUser.tin ?? ""} readOnly />
               </div>
               <div className="space-y-2">
                 <Label>Role</Label>
-                <Select value={editUser.role} onValueChange={(value) => setEditUser({ ...editUser, role: value })}>
+                <Select disabled={currentProfile?.role !== "super_admin" || String(editUser.id) === String(currentUser?.id) || ["bir", "rdo"].includes(editUser.role)} value={editUser.role} onValueChange={(value) => setEditUser({ ...editUser, role: value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {roleOptions.map((role) => (
+                    {roleOptions.filter(role => !["bir", "rdo"].includes(role) || role === editUser.role).map((role) => (
                       <SelectItem key={role} value={role}>{roleLabel(role)}</SelectItem>
                     ))}
                   </SelectContent>
@@ -444,32 +391,12 @@ export function AdminUsers({
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditUser(null)}>Cancel</Button>
-            <Button onClick={handleSaveEdit} disabled={saving}>{saving ? "Saving..." : "Save Changes"}</Button>
+            <Button onClick={handleSaveEdit} disabled={saving || (profiles.find(p => p.id === editUser?.id)?.role === "merchant" && profiles.find(p => p.id === editUser?.id)?.role === editUser?.role)}>{saving ? "Saving..." : "Save Changes"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete User</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete <strong>{deleteTarget?.full_name || deleteTarget?.email}</strong> and remove the linked login account when one exists.
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDeleteUser}
-              disabled={deleting}
-            >
-              {deleting ? "Deleting..." : "Delete User"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+
     </div>
   );
 }

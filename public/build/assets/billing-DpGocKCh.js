@@ -1,0 +1,1 @@
+import{j as i}from"./main-CWHRG86E.js";import{P as r}from"./pricing-uNjpWukd.js";/* empty css                */import"./check-CqEySwFL.js";import"./arrow-right-DdlBiHe0.js";import"./clock-3-ji2EBpRW.js";function p(){return i.jsx("div",{className:"lp-site nuers-account-pricing",children:i.jsx(r,{account:!0})})}export{p as MerchantBilling};

@@ -1,0 +1,106 @@
+Page 1 of 3NUERS · CONFIDENTIAL · Authorized operational report
+NUERS · TRANSACTION INTELLIGENCE
+Transaction Report
+Detailed operational register · All amounts in Philippine pesos (PHP / ₱)
+LIVE · BUSINESS RECORDS
+National Unified Electronic Receipt System
+Software version 1.0.0
+TXR-IE91BVLV2C3P
+Matching records
+1
+Entire exported population
+Issued / recorded
+1
+0 failed · 0 pending
+Recorded document amount
+₱33,600.00
+All exported document states
+Recorded VAT
+₱3,600.00
+Source values, before reconciliation
+Total discounts
+₱0.00
+Manual + statutory amounts
+Report scope & control
+Generated (Philippine time) Oct 21, 2026 09:59:15 PHT
+Requested by Maribel Mann
+Merchant accounts 1
+Cancelled / voided 0
+Identity conflicts 0
+Export scope All matching rows across all pages
+Financial detail · recorded values
+VATable base ₱30,000.00
+Recorded exempt base ₱0.00
+Zero-rated base ₱0.00
+Recorded SSPT base ₱0.00
+Manual discounts ₱0.00
+Statutory discounts ₱0.00
+VAT adjustment ₱0.00
+Applied filters
+Keyword DEMO-INV-2026-0030Date basis document
+Sort order newest Merchant ID DEMO · Harbor Foods Corporation
+Page 2 of 3NUERS · CONFIDENTIAL · Authorized operational report
+LIVE · SUMMARY BREAKDOWN
+Merchants & sale categories
+TXR-IE91BVLV2C3P
+One canonical row is shown per document identity. Payment events are linked evidence, not additional invoice sales. Recorded sums include all exported document types and statuses; they are not reconciled revenue or tax-return totals. Identity
+conflicts require review. Discount and VAT amounts are recorded values, not a new tax calculation. BIR evidence remains a separate status. This report does not establish BIR acceptance. Dates are labeled; received timestamps use PHT. “Not
+recorded” means unavailable, not zero. Exempt and SSPT fields retain source classifications; item-level non-VAT verification belongs in Sales Reports.
+Integrity reference · SHA-256 of the exported environment, filters and records
+ff32b31ca3301e6d84e35680306f01fe6a96804739e7f8dd9675d5aa234ead7b
+Merchant breakdown
+Merchant / seller TIN Records Issued / recorded Amount (₱) VAT (₱) Discount (₱)
+DEMO · Harbor Foods Corporation
+123456789
+1 1 ₱33,600.00 ₱3,600.00 ₱0.00
+Sale category breakdown
+Sale category Records Amount (₱) Manual discount (₱) Statutory discount (₱) VAT adjustment (₱)
+Regular 1 ₱33,600.00 ₱0.00 ₱0.00 ₱0.00
+Each breakdown reconciles to the exported population on the first page. These amounts summarize recorded documents, including non-successful or supplementary records when those are selected. Do not add linked payment amounts to document
+amounts.
+Page 3 of 3NUERS · CONFIDENTIAL · Authorized operational report
+LIVE · DETAILED TRANSACTION REGISTER
+Records 1–1 of 1
+Original document values · All financial amounts in PHP / ₱
+TXR-IE91BVLV2C3P
+1 · DEMO-INV-2026-0030 · VAT Invoice Success
+Document & provenance
+Transaction reference
+DEMO-INV-2026-0030
+Original document date
+2026-09-22 00:00:00
+Received (PHT)
+Oct 21, 2026 09:53:10
+Source / channel
+Invoice / Not recorded
+Identity sources / sale category
+1 / Regular
+Merchant & customer
+DEMO · Harbor Foods Corporation
+TIN 123456789
+Synthetic demonstration address
+Customer / TIN
+Synthetic Buyer / Not recorded
+Branch / code · RDO
+00000 / 00000 · 027
+Region
+Not recorded
+Amount & tax bases
+Document amount ₱33,600.00
+VATable ₱30,000.00
+VAT ₱3,600.00
+Recorded exempt ₱0.00
+Zero-rated ₱0.00
+Recorded SSPT ₱0.00
+Recorded net ₱30,000.00
+Discounts & payment evidence
+Manual discount ₱0.00
+Statutory discount ₱0.00
+VAT adjustment ₱0.00
+Linked payment ₱0.00
+Payment method / events
+Not recorded / 0
+BIR evidence / transmission environment
+Not Submitted / Not recorded
+Record ID: invoice:sample-30 · Source ID: sample-30 · Merchant ID: demo
+End of report · 1 records · TXR-IE91BVLV2C3P · Generated Oct 21, 2026 09:59:15 PHT · NUERS 1.0.0

@@ -1,3 +1,4 @@
+import { subscribeRealtimeRefresh } from "@/lib/use-realtime-refresh";
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {AlertCircle,CheckCircle2,History,LoaderCircle,Mail,RefreshCw,Send,ShieldCheck} from 'lucide-react';
 import {Dialog,DialogContent,DialogDescription,DialogHeader,DialogTitle} from '@/components/ui/dialog';
@@ -17,7 +18,7 @@ export function BusinessReviewEmail({merchantId,revision}:{merchantId:string;rev
  const load=useCallback(async(signal?:AbortSignal)=>{try{const result=await apiJson<State>(endpoint,{signal});if(!alive.current||signal?.aborted)return;setData(result);setKind(previous=>result.drafts[previous]?.eligible?previous:result.drafts.account_approved.eligible?'account_approved':result.drafts.documents_verified.eligible?'documents_verified':'changes_requested')}catch(e){if(alive.current&&!signal?.aborted)setError((e as Error).message)}finally{if(alive.current&&!signal?.aborted)setLoading(false)}},[endpoint]);
  useEffect(()=>{alive.current=true;const c=new AbortController();setLoading(true);setPreview(null);setError('');void load(c.signal);return()=>{alive.current=false;c.abort()}},[load,revision]);
  const pending=data?.history.some(x=>['queued','preparing','sending'].includes(x.state));
- useEffect(()=>{if(!pending)return;const c=new AbortController(),timer=setInterval(()=>{if(!document.hidden)void load(c.signal)},10000);return()=>{c.abort();clearInterval(timer)}},[pending,load]);
+ useEffect(()=>{if(!pending)return;const c=new AbortController(),stop=subscribeRealtimeRefresh(()=>load(c.signal));return()=>{c.abort();stop()}},[pending,load]);
  async function prepare(){setBusy(true);setError('');setNotice('');try{const p=await apiJson<Preview>(endpoint+'/preview',{method:'POST',body:JSON.stringify({kind,message})});if(!alive.current)return;requestId.current=crypto.randomUUID();setConfirmed(false);setPreview(p)}catch(e){if(alive.current)setError((e as Error).message)}finally{if(alive.current)setBusy(false)}}
  async function send(){if(!preview||!confirmed||busy)return;setBusy(true);setError('');try{const r=await apiJson<{message:string;state:string}>(endpoint,{method:'POST',body:JSON.stringify({request_id:requestId.current,preview_token:preview.preview_token,confirmed:true,resend,resend_reason:resend?resendReason.trim():null})});if(!alive.current)return;setNotice(r.message);setPreview(null);setResend(false);setResendReason('');setMessage('');await load()}catch(e){if(alive.current)setError((e as Error).message)}finally{if(alive.current)setBusy(false)}}
  const draft=data?.drafts[kind];

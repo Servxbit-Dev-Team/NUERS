@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-18",
+  "purpose": "Make existing reviewed source-profile fields discoverable and copyable in the merchant dashboard.",
+  "primary_path": "/merchant/api-keys?tab=profiles&environment=live",
+  "entry_points": ["API Integration > Source Profiles", "API Keys > Find Your Source Connection Fields", "Settings > Source Profiles & Connection Fields"],
+  "read_only": true,
+  "data_source": "Existing merchant-scoped source_profiles returned by GET /api/merchant/api-keys",
+  "fields": ["source_profile_id", "source_system", "branch_code", "seller registration", "reviewed original issue period", "status"],
+  "actions": ["Search/select profile", "Copy exact field", "Copy partial connection JSON for active profile", "Search directory", "Paginate directory", "Refresh", "Open existing Submit a Request support view"],
+  "empty_state": "Explain independent source review; API key creation does not create or approve a profile.",
+  "sandbox": "Explain shared Live review metadata, test-only capture semantics and current merchant VAT calculation.",
+  "new_issuance": "Stable source_system required; source_profile_id omitted; existing authority and sequence checks unchanged.",
+  "revoked": "Metadata remains visible; connection JSON preparation unavailable; backend rejection remains authoritative.",
+  "changes_to_keys_permissions_wallets_reviews_or_records": false
+}

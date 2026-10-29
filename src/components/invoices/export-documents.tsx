@@ -1,9 +1,10 @@
+import {exportReport as openReportExport} from "@/components/reports/export-report";
 import {SALE_CATEGORIES} from '@/lib/statutory-sales';
 import { formatTin } from "@/lib/tin";
 import { useEffect, useState, type FormEvent } from "react";
 import { Download, LoaderCircle } from "lucide-react";
-import { toast } from "sonner";
-import { apiFetch, apiJson, readJsonResponse } from "@/lib/api-url";
+
+import { apiJson } from "@/lib/api-url";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SearchableSelect } from "@/components/registration/searchable-select";
 
@@ -46,17 +47,8 @@ export function ExportDocuments({ open, onClose, from, to, type, status, saleCat
     setExporting(true); setError("");
     try {
       const query = new URLSearchParams({ sale_category:sale, search, type: category, status: recordStatus, ...(dateFrom ? { from: dateFrom } : {}), ...(dateTo ? { to: dateTo } : {}), ...(business ? { merchant_id: business } : {}) });
-      const response = await apiFetch(`/api/invoice-center/export?${query}`);
-      if (!response.ok) await readJsonResponse(response, "Unable to export documents.");
-      if (!(response.headers.get("Content-Type") || "").includes("text/csv")) throw new Error("The export did not return a CSV file. Please try again.");
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const link = window.document.createElement("a");
-      link.href = url; link.download = `NUERS-documents-${dateFrom || "all"}-to-${dateTo || "latest"}.csv`;
-      window.document.body.appendChild(link); link.click(); link.remove();
-      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-      const count = Number(response.headers.get("X-Export-Count") || 0);
-      toast.success(count ? `${count.toLocaleString()} document records exported.` : "No matching documents. CSV contains column headings only.");
+      onClose();
+      await openReportExport({path:'/api/invoice-center/export?'+query,title:'Electronic Invoices & Receipts',scope:'All matching authorized Live document records across every page',filters:Object.fromEntries(query)});
       onClose();
     } catch (e) { setError(e instanceof Error ? e.message : "Unable to export documents."); }
     finally { setExporting(false); }
@@ -73,7 +65,7 @@ export function ExportDocuments({ open, onClose, from, to, type, status, saleCat
       </div>
       <label>Sale category<select value={sale} onChange={e=>setSale(e.target.value)}><option value="all">All sale categories</option>{Object.entries(SALE_CATEGORIES).map(([k,l])=><option key={k} value={k}>{l}</option>)}</select></label><div className="ic-form-grid"><label>Document type<select value={category} onChange={e => setCategory(e.target.value)}><option value="all">All document types</option><option value="invoices">Sales Invoices</option><option value="receipts">Official Receipts</option><option value="notes">Credit/Debit Notes</option><option value="cancelled">Cancelled/Voided</option></select></label><label>Status<select value={recordStatus} onChange={e => setRecordStatus(e.target.value)}><option value="all">All statuses</option><option value="valid">Valid records</option><option value="pending">Pending / Draft</option><option value="cancelled">Cancelled / Voided</option></select></label></div></fieldset>
       {error && <p role="alert" className="ic-form-error">{error}</p>}
-      <div className="ic-modal-actions"><button type="button" disabled={exporting} onClick={onClose}>Cancel</button><button type="submit" className="ic-primary" disabled={exporting || loading || !!loadError}>{exporting ? <LoaderCircle className="ic-spin" /> : <Download />}{exporting ? "Exporting…" : "Download CSV"}</button></div>
+      <div className="ic-modal-actions"><button type="button" disabled={exporting} onClick={onClose}>Cancel</button><button type="submit" className="ic-primary" disabled={exporting || loading || !!loadError}>{exporting ? <LoaderCircle className="ic-spin" /> : <Download />}{exporting ? "Exporting…" : "Choose PDF / CSV"}</button></div>
     </form>
   </DialogContent></Dialog>;
 }

@@ -1,7 +1,9 @@
+import { LoadingScreen } from "@/components/loading-screen";
+import { subscribeRealtimeRefresh } from "@/lib/use-realtime-refresh";
 import { DocumentDownloads } from "@/components/documentation/document-downloads";
-import { useCallback, useEffect, useState, type ElementType } from "react";
+import { useCallback, useEffect, useRef, useState, type ElementType } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
-import { ArrowDown, ArrowRight, ArrowUp, Building2, CalendarDays, ChartNoAxesCombined, CheckCircle2, CircleHelp, Eye, FileCheck2, FileText, List, Loader2, MoreVertical, Plus, RefreshCw, Send, ShoppingCart, TriangleAlert, Users, Wallet } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUp, Building2, CalendarDays, ChartNoAxesCombined, CheckCircle2, CircleHelp, Eye, FileCheck2, FileText, List, MoreVertical, Plus, RefreshCw, Send, ShoppingCart, TriangleAlert, Users, Wallet } from "lucide-react";
 import { Bar, CartesianGrid, Cell, ComposedChart, Line, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { apiJson, publicAssetUrl } from "@/lib/api-url";
@@ -44,25 +46,28 @@ export function MerchantDashboard() {
   const [error, setError] = useState("");
   const [days, setDays] = useState(7);
   const [loading, setLoading] = useState(true);
+  const requestSequence = useRef(0);
   const [clock, setClock] = useState(new Date());
   const [params, setParams] = useSearchParams();
   const [customerSearch, setCustomerSearch] = useState("");
   const panel = params.get("panel");
   useEffect(() => { if (panel === "support") { window.dispatchEvent(new Event("nuers:open-support")); const next = new URLSearchParams(params); next.delete("panel"); setParams(next, { replace: true }); } }, [panel, params, setParams]);
-  const load = useCallback(async (signal?: AbortSignal) => {
-    setLoading(true);
+  const load = useCallback(async (signal?: AbortSignal, quiet = false) => {
+    const sequence = ++requestSequence.current;
+    if (!quiet) setLoading(true);
     try {
-      const value = await apiJson<Overview>(`/api/merchant/overview?days=${days}`, { signal });
+      const value = await apiJson<Overview>(`/api/merchant/overview?days=${days}`, { signal, timeoutMs: 30000 });
+      if (signal?.aborted || sequence !== requestSequence.current) return;
       setData(value); setError("");
       window.dispatchEvent(new CustomEvent("nuers:enterprise-notifications", { detail: value.alerts.length }));
       window.dispatchEvent(new CustomEvent("nuers:merchant-connection", { detail: { connected: true, updatedAt: value.updated_at } }));
     } catch (e) {
-      if (signal?.aborted) return;
+      if (signal?.aborted || sequence !== requestSequence.current) return;
       setError(e instanceof Error ? e.message : "Unable to load merchant records.");
       window.dispatchEvent(new CustomEvent("nuers:merchant-connection", { detail: { connected: false, updatedAt: "" } }));
-    } finally { if (!signal?.aborted) setLoading(false); }
+    } finally { if (!signal?.aborted && sequence === requestSequence.current) setLoading(false); }
   }, [days]);
-  useEffect(() => { const controller = new AbortController(); void load(controller.signal); const timer = setInterval(() => { if (!document.hidden) void load(controller.signal); }, 60000); return () => { controller.abort(); clearInterval(timer); }; }, [load]);
+  useEffect(() => { const controller = new AbortController(); void load(controller.signal); const stop = subscribeRealtimeRefresh(() => load(controller.signal, true)); return () => { controller.abort(); stop(); }; }, [load]);
   useEffect(() => { const timer = setInterval(() => setClock(new Date()), 1000); return () => clearInterval(timer); }, []);
   const hour = Number(new Intl.DateTimeFormat("en", { timeZone: "Asia/Manila", hour: "numeric", hourCycle: "h23" }).format(clock));
   const reportedDays = data?.days ?? days;
@@ -84,8 +89,8 @@ export function MerchantDashboard() {
   if (panel === "customers") return <Navigate to="/merchant/customers" replace />;
   return <div className="merchant-overview">
     <section className="md-hero"><div className="md-welcome"><p>Good {hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening"},</p><h1>{data?.account.name || "Your business"}</h1><h2>Welcome to NUERS Merchant Portal</h2><span>Manage your electronic invoices, monitor transactions, and prepare for compliance.</span></div><p className="md-motto">Digital Transactions.<br />A Stronger Philippines.</p><div className="md-clock"><CalendarDays size={39} /><div><span>{clock.toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "Asia/Manila" })}</span><strong>{clock.toLocaleTimeString("en-PH", { hour12: true, timeZone: "Asia/Manila" })}</strong><small className={error ? "md-negative" : "md-positive"}><i />{error ? "Refresh unavailable" : data ? "NUERS responding" : "Connecting…"}</small></div></div></section>
-    {error && <div className="md-error" role="alert"><TriangleAlert size={17} /><span>{error} {data && "Showing the last successful response."}</span><button onClick={() => void load()}>Retry</button></div>}
-    {!data && loading ? <div className="md-loading" role="status"><Loader2 className="ne-spinning" size={24} />Loading your merchant dashboard…</div> : data && <>
+    {error && <div className="md-error" role="alert"><TriangleAlert size={17} /><span>{error} {data && "Showing the last successful response."}</span><button disabled={loading} onClick={() => void load()}>Retry</button></div>}
+    {!data && loading ? <LoadingScreen variant="panel" label="Loading your merchant dashboard…" /> : data && <>
     {data.account.status==='pending'&&<div className="md-error" role="status"><TriangleAlert size={20}/><span><strong>Account verification pending.</strong> Upload the required business documents and wait for NUERS administrator review before activation.</span><Link to="/merchant/profile?tab=documents">Upload documents →</Link></div>}
     <div className="md-stats">
       <Stat title="Total Sales Today" icon={FileText} color="blue" footer={<Difference current={data.current.sales} previous={data.previous.sales} />}>{money(data.current.sales)}</Stat>
@@ -106,7 +111,7 @@ export function MerchantDashboard() {
       <DocumentDownloads compact />
       <section className="md-panel md-account-info"><header><h2>Account Information</h2><Link to="/merchant/profile">Edit Profile <ArrowRight size={13} /></Link></header><div className="md-business"><span>{data.account.logo ? <img src={publicAssetUrl(data.account.logo)} alt="" /> : data.account.name.split(/\s+/).map(s => s[0]).slice(0, 3).join("")}</span><div><strong>{data.account.name}</strong><p>TIN: {data.account.tin || "Not recorded"}</p><p>RDO: {data.account.rdo ? `${data.account.rdo}${data.account.rdo_name ? ` · ${data.account.rdo_name}` : ""}` : "Not recorded"}</p></div></div><dl><dt>Business Type:</dt><dd>{data.account.vat_registered ? "VAT Registered" : "Non-VAT / verify COR"}</dd><dt>Pricing:</dt><dd>Current published fee per eligible sale<Link to="/merchant/wallet">Wallet & Current Fee</Link></dd><dt>Status:</dt><dd><span className={data.account.status === "active" ? "md-badge md-badge-good" : "md-badge md-badge-neutral"}>{data.account.status}</span></dd><dt>Account ID:</dt><dd className="md-account-id" title={data.account.id}>{data.account.id}</dd></dl></section></div>
     </div>
-    <div className="md-disclosure"><CircleHelp size={14} /><span title={data.notice}>Internal operational totals · BIR connection not verified.</span><button onClick={() => setParams({ panel: "help" })}>Learn more</button><span className="md-updated">Last refreshed {new Date(data.updated_at).toLocaleTimeString("en-PH", { timeZone: "Asia/Manila" })} PHT · Refreshes every minute</span></div>
+    <div className="md-disclosure"><CircleHelp size={14} /><span title={data.notice}>Internal operational totals · BIR connection not verified.</span><button onClick={() => setParams({ panel: "help" })}>Learn more</button><span className="md-updated">Last refreshed {new Date(data.updated_at).toLocaleTimeString("en-PH", { timeZone: "Asia/Manila" })} PHT · Checks for updates every second</span></div>
     </>}
     <Dialog open={Boolean(panel && panel !== "support")} onOpenChange={open => { if (!open) closePanel(); }}><DialogContent className="md-dialog sm:max-w-2xl"><DialogHeader><DialogTitle>{panel === "customers" ? "Customers from recent documents" : panel === "document" ? "Original Document Details" : panel === "alerts" ? "Merchant Notices" : "Merchant Help & Documentation"}</DialogTitle><DialogDescription>{panel === "customers" ? "Derived from your last eight source records. This is not an independently verified customer registry." : "Recorded information for your own business account."}</DialogDescription></DialogHeader>
     {panel === "customers" ? <div className="md-dialog-content"><label htmlFor="md-customer-search">Search recent customers</label><input id="md-customer-search" type="search" value={customerSearch} onChange={e => setCustomerSearch(e.target.value)} placeholder="Customer name…" /><ul>{customers.map(name => <li key={name}><Users size={16} /><span>{name}</span><Link to={`/merchant/invoices?search=${encodeURIComponent(name)}`}>View records</Link></li>)}</ul>{!customers.length && <p>No matching customer names in recent documents.</p>}</div> : panel === "document" ? <div className="md-dialog-content">{selected ? <><h3>{selected.number}</h3><p>{selected.customer} · {money(selected.amount)}</p><p>Original business date: {selected.date}</p><p>Local status: {selected.status} · BIR: {labels[selected.bir_status]}</p><Link to={documentLink(selected)}>Open original document <ArrowRight size={14} /></Link></> : <p>The record is no longer in this recent list. Find it in your transaction records.</p>}</div> : panel === "alerts" ? <div className="md-dialog-content">{data?.alerts.map(a => <article key={a.id}><h3>{a.title}</h3><p>{a.message}</p><Link to={a.href}>View details <ArrowRight size={14} /></Link></article>)}{!data?.alerts.length && <p>No current notices from this dashboard. This does not establish continuous monitoring.</p>}</div> : <div className="md-dialog-content"><DocumentDownloads /><article><h3>1. Prepare and review</h3><p>Confirm your business identity, branch, PTI/PTT, accreditation and authorized numbering evidence with the reviewing team. Start invoices as drafts while approvals are pending.</p><Link to="/merchant/profile">Business profile</Link></article><article><h3>2. Issue and preserve originals</h3><p>Issuance validates source amounts and reserves an authorized series atomically. Issued originals are preserved; corrections use linked documents and independent review.</p><Link to="/merchant/invoices">Invoices & receipts</Link></article><article><h3>3. Connect and reconcile</h3><p>Use expiring scoped API keys, stable source event IDs and status checks. BIR acceptance needs authentic verified evidence. Sales summaries are internal drafts and do not replace tax returns.</p><Link to="/merchant/api-keys">API integration</Link></article><button className="md-support-button" onClick={() => { closePanel(); window.dispatchEvent(new Event("nuers:open-support")); }}>Open support request</button></div>}

@@ -336,6 +336,7 @@ return $q;
         $v = $this->filters($r);
         $terminal = $r->query('registry') === 'terminals';
         $q = $terminal ? $this->terminalQuery($m->id, $v) : $this->branches($m->id, $v);
+        if ($r->has('report_limit')) \App\Services\ReportCsv::limit($r,(clone $q)->count());
         abort_if((clone $q)->count() > 5000,422,'Narrow the export filters to 5,000 records or fewer.');
         $name = $terminal ? 'terminals' : 'branches';
 

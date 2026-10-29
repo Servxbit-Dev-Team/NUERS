@@ -1,0 +1,10 @@
+[
+  "app/Http/Controllers/Api/EnterpriseDashboardController.php",
+  "app/Http/Controllers/Api/InvoiceCenterController.php",
+  "routes/api.php",
+  "src/components/enterprise/enterprise-dashboard.tsx",
+  "src/pages/operations/transactions.tsx",
+  "src/components/admin/merchant-receipt-dialog.tsx",
+  "src/components/admin/merchant-receipt-dialog.css",
+  "tests/Feature/AdminMerchantReceiptTest.php"
+]

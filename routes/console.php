@@ -42,6 +42,15 @@ Artisan::command('eis:prepare-pending {--limit=100}', function () {
 })->purpose('Preserve pending issued documents in the blocked internal EIS outbox');
 Schedule::command('eis:prepare-pending --limit=100')->everyMinute()->withoutOverlapping();
 
+Artisan::command('bir:wire-work {--limit=10}', function () {
+    for ($i=0;$i<max(1,min(100,(int)$this->option('limit')));$i++) {
+        $result=app(\App\Services\Eis\WireBatches::class)->runOne();
+        if (!$result) break;
+        $this->line($result['id'].' '.$result['state']);
+    }
+})->purpose('Submit explicitly released BIR batches and reconcile results; disabled until credential activation');
+Schedule::command('bir:wire-work --limit=10')->everyMinute()->withoutOverlapping(10);
+
 Artisan::command('eis:work {--limit=100}', function () {
     $limit = max(1, min(1000, (int) $this->option('limit')));
     for ($i = 0; $i < $limit; $i++) {
@@ -193,3 +202,24 @@ Artisan::command('security:prune-mfa-setups', function () {
     $this->info("Expired {$count} unused authenticator setups.");
 })->purpose('Erase expired authenticator setup secrets');
 Schedule::command('security:prune-mfa-setups')->everyTenMinutes()->withoutOverlapping();
+
+require __DIR__.'/infrastructure-console.php';
+
+require __DIR__.'/operations-console.php';
+
+Schedule::command('reports:refresh --max-seconds=45')->everyMinute()->withoutOverlapping(5);
+
+Schedule::command('reports:export')->everyMinute()->withoutOverlapping(15)->runInBackground();
+
+Artisan::command('eis:prepare-batches {--limit=10}', function () {
+    $count = app(\App\Services\EisTransmissionCenter::class)->work((int) $this->option('limit'));
+    $this->info("Prepared $count batch documents locally; no network submission.");
+})->purpose('Process reviewed company batches with per-document outcomes');
+Schedule::command('eis:prepare-batches --limit=10')->everyMinute()->withoutOverlapping()->runInBackground();
+
+Artisan::command('reports:audit-integrity', function () {
+    $result = app(\App\Services\AuditIntegritySnapshot::class)->verify();
+    $this->info(json_encode($result, JSON_THROW_ON_ERROR));
+    return $result['valid'] ? 0 : 1;
+})->purpose('Verify the complete audit chain in bounded batches for dashboard evidence');
+Schedule::command('reports:audit-integrity')->everyFiveMinutes()->withoutOverlapping(60)->runInBackground();

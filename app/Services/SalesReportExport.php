@@ -34,12 +34,31 @@ class SalesReportExport
         $rows = [['NUERS Sales Report — Internal'], ['Business', $r['merchant']['name'], 'TIN', $r['merchant']['tin']], ['Date From (PHT)', $r['filters']['from'], 'Date To (PHT)', $r['filters']['to']], ['Generated', $r['generated_at']], ['Snapshot SHA-256', $r['snapshot_hash']], ['Applied filters', json_encode($r['filters'], JSON_UNESCAPED_UNICODE)], [$r['notice']], [],
             ['Date (PHT)', 'Document No.', 'Customer / Buyer', 'Buyer TIN', 'Document Type', 'Branch', 'Customer Type (current registry)', 'Gross incl. VAT (PHP)', 'VATable Base (PHP)', 'VAT (PHP)', 'Zero-Rated Base (PHP)', 'Exempt Base (PHP)', 'Non-VAT Base (PHP)', 'Net excl. VAT (PHP)', 'BIR Evidence', 'Included', 'Exclusion reason', 'Original Source Amount (PHP)', 'Source', 'Source ID', 'Original Invoice ID', 'Sale Category', 'Statutory Discount (PHP)', 'VAT Adjustment (PHP)', 'Manual Discount PHP', 'Total Discount PHP']];
         foreach ([...$r['included'], ...$r['excluded']] as $v) {
-            $rows[] = [$v['date'], $v['number'], $v['customer'], $v['tin'] ?? '', $v['type'], $v['branch'] ?? 'Not recorded', $v['customer_type'], $v['gross'] / 100, $v['vatable'] / 100, $v['vat'] / 100, $v['zero'] / 100, $v['exempt'] / 100, $v['non_vat'] / 100, $v['net'] / 100, $v['bir_status'], $v['included'] ? 'Yes' : 'No', $v['exclusion_reason'] ?? '', $v['source_amount'] / 100, $v['source'], $v['document_id'], $v['original_invoice_id'] ?? '', $v['sale_category'], $v['statutory_discount'] / 100, $v['vat_adjustment'] / 100, $v['manual_discount'] / 100, $v['discount'] / 100];
+            $rows[] = $this->detailRow($v);
         }
         $t = $r['totals'];
         $rows[] = ['RECONCILED TOTAL', '', '', '', '', '', '', $t['gross'] / 100, $t['vatable'] / 100, $t['vat'] / 100, $t['zero'] / 100, $t['exempt'] / 100, $t['non_vat'] / 100, $t['net'] / 100, '', '', '', '', '', '', '', '', $t['statutory_discount'] / 100, $t['vat_adjustment'] / 100, $t['manual_discount'] / 100, $t['discount'] / 100];
 
         return $rows;
+    }
+
+    public function detailRow(array $v): array
+    {
+        return [$v['date'], $v['number'], $v['customer'], $v['tin'] ?? '', $v['type'], $v['branch'] ?? 'Not recorded', $v['customer_type'], $v['gross'] / 100, $v['vatable'] / 100, $v['vat'] / 100, $v['zero'] / 100, $v['exempt'] / 100, $v['non_vat'] / 100, $v['net'] / 100, $v['bir_status'], $v['included'] ? 'Yes' : 'No', $v['exclusion_reason'] ?? '', $v['source_amount'] / 100, $v['source'], $v['document_id'], $v['original_invoice_id'] ?? '', $v['sale_category'], $v['statutory_discount'] / 100, $v['vat_adjustment'] / 100, $v['manual_discount'] / 100, $v['discount'] / 100];
+    }
+
+    /** Keep large CSV files bounded in memory; worksheet/PDF exports have explicit limits. */
+    public function writeCsv($handle, array $report, iterable $records): int
+    {
+        $skeleton = $this->rows([...$report, 'included' => [], 'excluded' => []]);
+        $footer = array_pop($skeleton);
+        $write = static fn ($row) => fputcsv($handle, array_map(static fn ($value) => is_string($value) && preg_match('/^[\s\x00-\x1f]*[=+\-@]/u', $value) ? "'".$value : $value, $row), escape: '');
+        fwrite($handle, "\xEF\xBB\xBF");
+        foreach ($skeleton as $row) $write($row);
+        $count = 0;
+        foreach ($records as $row) { if ($write($this->detailRow($row)) === false) throw new \RuntimeException('Export storage is full.'); $count++; }
+        $write($footer);
+        return $count;
     }
 
     private function xlsx(array $rows): string

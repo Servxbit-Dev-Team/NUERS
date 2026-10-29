@@ -157,7 +157,9 @@ class RmcComplianceTest extends TestCase
         $this->assertTrue($policy->auditIntegrity());
         $this->withToken($this->admin->api_token)->getJson('/api/live-monitoring/audit?search=test.first')->assertOk()->assertJsonPath('integrity', true)->assertJsonCount(1, 'events');
         $export = $this->withToken($this->admin->api_token)->get('/api/live-monitoring/audit?download=1')->assertOk()->streamedContent();
-        $this->assertCount(3, json_decode($export, true, flags: JSON_THROW_ON_ERROR)['events']);
+        // The export freezes its cutoff before recording the export audit event.
+        $this->assertCount(2, json_decode($export, true, flags: JSON_THROW_ON_ERROR)['events']);
+        $this->assertSame(3, DB::table('eis_audit_events')->count());
         $row = DB::table('eis_audit_events')->orderBy('id')->first();
         DB::table('eis_audit_events')->where('id', $row->id)->update(['event' => 'tampered']);
         $this->assertFalse($policy->auditIntegrity());
@@ -203,7 +205,7 @@ class RmcComplianceTest extends TestCase
         DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit('seller', 600, (string) \Illuminate\Support\Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         DB::table('eis_integrations')->where('id', $integrationId)->update(['merchant_id'=>'seller','environment'=>'production','branch_code'=>'00000']);
         DB::table('taxpayer_authorizations')->insert(['id'=>'fixture-pti','request_id'=>fake()->uuid(),'request_hash'=>str_repeat('a',64),'merchant_id'=>'seller','kind'=>'PTI','reference'=>'TEST-PTI','environment'=>'production','branch_code'=>'00000','scope'=>'Synthetic branch fixture only','issued_at'=>'2026-01-01','valid_until'=>'2027-01-01','status'=>'active','evidence'=>'Synthetic evidence not real','reason'=>'Isolated fixture only','reviewed_by'=>$this->admin->id,'reviewed_at'=>now()]);
-        DB::table('invoice_series')->insert(['id'=>'fixture-series','merchant_id'=>'seller','branch_code'=>'00000','document_family'=>'invoice','prefix'=>'TEST-','range_start'=>1,'range_end'=>99,'status'=>'active','authority_reference'=>'Synthetic evidence not real','verified_by'=>$this->admin->id,'valid_from'=>'2026-01-01','valid_until'=>'2027-01-01','created_at'=>now(),'updated_at'=>now()]);
+        DB::table('invoice_series')->insert(['document_registration'=>json_encode(['system_type'=>'CAS','ac_number'=>'SYNTHETIC-AC-ONLY','authority_issued_at'=>'2020-01-01']),'id'=>'fixture-series','merchant_id'=>'seller','branch_code'=>'00000','document_family'=>'invoice','prefix'=>'TEST-','range_start'=>1,'range_end'=>99,'status'=>'active','authority_reference'=>'Synthetic evidence not real','verified_by'=>$this->admin->id,'valid_from'=>'2026-01-01','valid_until'=>'2027-01-01','created_at'=>now(),'updated_at'=>now()]);
         $invoice = ['request_id'=>fake()->uuid(),'invoice_number' => 'CLIENT-PROPOSED-NUMBER', 'document_type' => 'sales_invoice', 'buyer_name' => 'Test buyer', 'issue_date' => '2026-10-15', 'status' => 'issued', 'line_items' => [['line_number' => 1, 'description' => 'Test item', 'quantity' => 1, 'unit_price' => 10000, 'line_total' => 10000]]];
         $invoiceId = $this->withToken($merchant->api_token)->postJson('/api/business-invoices', $invoice)->assertCreated()->assertJsonPath('invoice.permit_to_issue_number', 'TEST-PTI')->assertJsonPath('invoice.esp_accreditation_number', 'FIXTURE-NOT-REAL')->json('invoice.id');
         $this->postJson('/api/business-invoices',$invoice)->assertOk()->assertJsonPath('invoice.id',$invoiceId);

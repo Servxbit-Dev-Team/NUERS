@@ -1,0 +1,14 @@
+[
+  "app/Http/Controllers/Api/SandboxRecordsController.php",
+  "app/Http/Controllers/Api/TransactionWorkspaceController.php",
+  "src/components/admin/registry-row-actions.tsx",
+  "src/components/admin/registry-transactions.tsx",
+  "src/components/admin/transaction-evidence.tsx",
+  "src/components/merchant/environment-records.tsx",
+  "src/pages/operations/transactions.tsx",
+  "src/pages/operations/transactions.css",
+  "src/pages/business-registry/index.tsx",
+  "src/pages/business-registry/registry.css",
+  "routes/api.php",
+  "docs/knowledge/business-registry-and-onboarding.md"
+]

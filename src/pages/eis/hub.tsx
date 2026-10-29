@@ -1,3 +1,4 @@
+import { subscribeRealtimeRefresh } from "@/lib/use-realtime-refresh";
 import { useEffect, useMemo, useState, type ElementType } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -102,8 +103,8 @@ export function EisHub() {
 
   useEffect(() => {
     load(true);
-    const interval = window.setInterval(() => load(false), 15000);
-    return () => window.clearInterval(interval);
+    const stop = subscribeRealtimeRefresh(() => load(false));
+    return () => stop();
   }, []);
 
   const blockers = useMemo(
@@ -255,9 +256,9 @@ export function EisHub() {
                     <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Line dataKey="submitted" stroke="var(--chart-1)" strokeWidth={2} dot={false} />
-                    <Line dataKey="acknowledged" stroke="var(--chart-4)" strokeWidth={2} dot={false} />
-                    <Line dataKey="failed" stroke="var(--chart-5)" strokeWidth={2} dot={false} />
+                    <Line isAnimationActive={false} dataKey="submitted" stroke="var(--chart-1)" strokeWidth={2} dot={false} />
+                    <Line isAnimationActive={false} dataKey="acknowledged" stroke="var(--chart-4)" strokeWidth={2} dot={false} />
+                    <Line isAnimationActive={false} dataKey="failed" stroke="var(--chart-5)" strokeWidth={2} dot={false} />
                   </LineChart>
                 </ChartContainer>
               ) : <EmptyChart />}
@@ -270,9 +271,9 @@ export function EisHub() {
                     <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="submitted" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="acknowledged" fill="var(--chart-4)" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="failed" fill="var(--chart-5)" radius={[4, 4, 0, 0]} />
+                    <Bar isAnimationActive={false} dataKey="submitted" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
+                    <Bar isAnimationActive={false} dataKey="acknowledged" fill="var(--chart-4)" radius={[4, 4, 0, 0]} />
+                    <Bar isAnimationActive={false} dataKey="failed" fill="var(--chart-5)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ChartContainer>
               ) : <EmptyChart />}

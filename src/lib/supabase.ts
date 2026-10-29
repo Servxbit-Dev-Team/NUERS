@@ -1,3 +1,4 @@
+import { apiFetch } from './api-url';
 import {storedToken,browserDevice,invalidateToken,TOKEN_KEY} from "./session-store";
 export type LaravelUser = {
   id: string;
@@ -18,7 +19,6 @@ type ApiError = { message: string };
 type ApiResult<T> = { data: T | null; error: ApiError | null; count?: number | null };
 type AuthListener = (event: string, session: LaravelSession | null) => void;
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 const listeners = new Set<AuthListener>();
 
 function storeSession(session: LaravelSession | null) {
@@ -45,7 +45,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<ApiResu
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
   try {
-    const response = await fetch(`${API_BASE_URL}${path}`, { cache:"no-store", ...init, headers });
+    const response = await apiFetch(path, { ...init, headers });
     const contentType = response.headers.get("Content-Type") ?? "";
 
     if (!contentType.toLowerCase().includes("application/json")) {
@@ -94,6 +94,8 @@ class LaravelQuery<T = any> implements PromiseLike<ApiResult<T>> {
   private orderColumn = "";
   private ascending = false;
   private limitValue?: number;
+  private offsetValue?: number;
+  private searchValue = "";
   private countMode?: string;
   private headOnly = false;
   private singleRow = false;
@@ -152,6 +154,12 @@ class LaravelQuery<T = any> implements PromiseLike<ApiResult<T>> {
     return this;
   }
 
+  range(from: number, to: number) {
+    this.offsetValue = from; this.limitValue = to - from + 1; return this;
+  }
+
+  search(value: string) { this.searchValue = value; return this; }
+
   maybeSingle() {
     this.maybeSingleRow = true;
     return this.execute();
@@ -177,6 +185,8 @@ class LaravelQuery<T = any> implements PromiseLike<ApiResult<T>> {
       params.set("order", this.orderColumn);
       params.set("ascending", this.ascending ? "1" : "0");
     }
+    if (this.offsetValue !== undefined) params.set("offset", String(this.offsetValue));
+    if (this.searchValue) params.set("search", this.searchValue);
     if (this.limitValue) params.set("limit", String(this.limitValue));
     if (this.singleRow) params.set("single", "1");
     if (this.maybeSingleRow) params.set("maybeSingle", "1");

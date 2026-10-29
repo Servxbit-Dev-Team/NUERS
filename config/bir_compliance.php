@@ -1,6 +1,10 @@
 <?php
 
 return [
+    // Prepared enforcement. Keep existing ERP storage intake available until explicitly enabled.
+    'source_capture_accreditation_enforced' => env('NUERS_SOURCE_CAPTURE_ACCREDITATION_ENFORCED', false),
+    'service_invoice_issuer_id' => env('NUERS_SERVICE_INVOICE_ISSUER_ID'),
+    'service_invoice_branch' => env('NUERS_SERVICE_INVOICE_BRANCH', '00000'),
     'reference' => 'RMC No. 110-2026 (October 12, 2026)',
     'solution_name' => 'NUERS',
     'solution_version' => env('NUERS_SOLUTION_VERSION', '1.0.0'),

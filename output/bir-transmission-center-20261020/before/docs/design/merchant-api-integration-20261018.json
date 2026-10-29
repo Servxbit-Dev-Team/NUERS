@@ -1,0 +1,83 @@
+{
+  "page": "Merchant API Integration",
+  "route": "/merchant/api-keys",
+  "reference": "NUERS API Integration Dashboard.png",
+  "files": [
+    "app/Http/Controllers/Api/MerchantApiKeyController.php",
+    "app/Http/Controllers/Api/DeveloperSandboxController.php",
+    "app/Http/Controllers/Api/IntegrationTransactionController.php",
+    "app/Services/IntegrationContract.php",
+    "app/Services/MerchantTeamAccess.php",
+    "bootstrap/app.php",
+    "config/trusted_proxies.php",
+    "routes/api.php",
+    "src/pages/merchant/api-keys.tsx",
+    "src/pages/merchant/api-integration.css",
+    "src/lib/integrations/merchant-guide.ts",
+    "src/lib/integrations/offline-outbox.ts",
+    "src/components/merchant/client-queue.tsx",
+    "resources/data/developer-openapi.json",
+    "docs/NUERS_TRANSACTION_API_INTEGRATION.md",
+    "docs/integrations/merchant-ingestion-1.md"
+  ],
+  "documentation": [
+    "docs/integrations/merchant-ingestion-1.md",
+    "docs/NUERS_TRANSACTION_API_INTEGRATION.md",
+    "resources/data/developer-openapi.json"
+  ],
+  "features": [
+    "Scoped expiring API credentials, owner + fresh MFA required for writes. Revoked keys cannot transition back to inactive/active.",
+    "Eight supported invoice/receipt values, supplementary payment distinction, server-shared type and calculation validation.",
+    "Synthetic complete-contract testing without keys, financial persistence or BIR requests.",
+    "Tenant-scoped request metadata, date/key/result filters and pagination. Expired keys excluded from active counts; unobserved latency shown honestly.",
+    "Manual encrypted source queue with identical payload retry, branch-filtered replay, authenticated tenant/branch preflight and memory-only keys.",
+    "Downloadable ERP/POS/ecommerce connection instructions, PHP/Node/cURL examples and updated OpenAPI fields.",
+    "Preserved transaction uniqueness, atomic wallet fee + sequence + ledger commit/rollback, no second fee on duplicates.",
+    "Explicit trusted Cloudflare forwarding for client IP only; direct spoofed forwarded headers rejected."
+  ],
+  "reference_adjustments": [
+    "No fake token, TIN-validation or external branch endpoint. Only implemented routes are listed.",
+    "No active merchant webhook or Add Webhook placeholder. Platform-controlled delivery remains disabled; status polling documented.",
+    "Credit/debit imports require a reviewed linked-correction workflow and are not arbitrarily accepted.",
+    "Connector outbox must live in source ERP/POS. Browser queue is an optional manual recovery path and not an installed ERP adapter."
+  ],
+  "verification": {
+    "php_tests": 336,
+    "php_assertions": 3541,
+    "javascript_tests": 7,
+    "focused_tests": 78,
+    "focused_assertions": 827,
+    "mixed_tax_synthetic_preview": true,
+    "guide_download": true,
+    "mobile_viewport_width": 390,
+    "mobile_document_width": 390,
+    "no_production_financial_test": true,
+    "build_all": true,
+    "php_curl_and_shell_examples_syntax_checked": true
+  },
+  "sources_for_proxy_ranges": [
+    "https://www.cloudflare.com/ips-v4/",
+    "https://www.cloudflare.com/ips-v6/"
+  ],
+  "live_deployment": {
+    "status": "deployed and verified",
+    "approved_by_user": true,
+    "backup_directory": "/var/www/vhosts/nuers.net/nuers-api-integration-backup-20261018-112135",
+    "package_sha256": "5037e5dbc308a6e7bc425c8685615f1b267b5e3b667c26ae1bebc0570a0decec",
+    "preservation_checks_passed": true,
+    "live_page_and_guide_rendered": true,
+    "live_asset_hashes_match": true,
+    "anonymous_logs_denied": true,
+    "health_http": 200,
+    "endpoint_aliases": [
+      "https://nuers.net/api/integrations/transactions",
+      "https://nuers.net/public/api/integrations/transactions"
+    ],
+    "live_download_recheck": "Not completed: session required fresh MFA during final browser download check. Local guide download previously verified.",
+    "no_live_financial_or_bir_test": true
+  },
+  "release_package": {
+    "sha256": "5037e5dbc308a6e7bc425c8685615f1b267b5e3b667c26ae1bebc0570a0decec",
+    "files": 52
+  }
+}

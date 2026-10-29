@@ -1,0 +1,71 @@
+[
+    {
+        "ms": 0.6,
+        "sql": "select `id` from (select `e`.*, CASE WHEN exception='Matched' THEN 'matched' ELSE 'open' END as review_status,\n                0 as review_revision,NULL as review_reason,NULL as owner_id,NULL as priority,NULL as review_due_at,NULL as closure_evidence,NULL as reviewed_at from (select `d`.*, CASE\n            WHEN reconciliation_prefix<>'' THEN reconciliation_prefix\n            WHEN identity_count>1 AND document_family IN ('credit','debit') THEN 'Adjustment Reference Unverified'\n            WHEN identity_count>1 THEN 'Duplicate Receipt Reference'\n            ELSE reconciliation_suffix END as exception from (select * from `ledger_documents` as `ledger` where `identity_rank` = ? and `is_draft` = ?) as `d`) as `e`) as `cases` order by `created_at` asc, `id` asc limit 10 offset 100",
+        "bindings": [
+            1,
+            false
+        ]
+    },
+    {
+        "ms": 0.48,
+        "sql": "select * from (select * from (select d.*,NULL as transmission_id,NULL as transmission_status,NULL as environment,NULL as submitted_at,NULL as acknowledged_at,NULL as due_at,NULL as recovery_due_at,NULL as incident_id,NULL as response_code,NULL as response_message,NULL as attempt_number,NULL as max_attempts,NULL as next_retry_at,NULL as payload_hash,NULL as acknowledgement_number,NULL as bir_reference_number,NULL as acknowledgement_received_at,'not_submitted' as bir_status from (select `projection_id`, `id`, `document_id`, `transaction_id`, `merchant_id`, `receipt_id`, `original_invoice_id`, `document_source`, `document_family`, `category`, `status`, `sale_category`, `transaction_ref`, `receipt_number`, `business`, `tin`, `branch_code`, `rdo_code`, `document_type`, `record_status`, `transaction_status`, `payment_method`, `region`, `branch`, `channel`, `customer_name`, `customer_tin`, `tin_digits`, `seller_tin_key`, `seller_branch_key`, `document_number_key`, `seller_address`, `amount`, `statutory_discount_amount`, `vat_relief_amount`, `discount_amount`, `manual_discount_amount`, `vat_amount`, `vatable_sales`, `vat_exempt_sales`, `zero_rated_sales`, `sspt_sales`, `net_amount`, `payment_amount`, `payment_count`, `business_date`, `created_at`, `recorded_at`, `business_day`, `identity_key`, `tenant_identity_key`, `tenant_identity_count`, `tenant_identity_rank`, `rank_key`, `financial_valid`, `non_vat_centavos`, `verified_branch`, `projected_at`, `operations_sales_valid`, `reconciliation_prefix`, `reconciliation_suffix`, `is_draft`, identity_count,identity_rank from `ledger_documents` where `record_status` <> ? and `identity_rank` = ?) as `d`) as `ledger`) as `records` where `id` in (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "bindings": [
+            "draft",
+            1,
+            "lab-t-0003300",
+            "lab-t-0003270",
+            "lab-t-0003240",
+            "lab-t-0003210",
+            "lab-t-0003180",
+            "lab-t-0003150",
+            "lab-t-0003120",
+            "lab-t-0003090",
+            "lab-t-0003060",
+            "lab-t-0003030"
+        ]
+    },
+    {
+        "ms": 0.43,
+        "sql": "select * from (select `e`.*, CASE WHEN exception='Matched' THEN 'matched' ELSE 'open' END as review_status,\n                0 as review_revision,NULL as review_reason,NULL as owner_id,NULL as priority,NULL as review_due_at,NULL as closure_evidence,NULL as reviewed_at from (select `d`.*, CASE\n            WHEN reconciliation_prefix<>'' THEN reconciliation_prefix\n            WHEN identity_count>1 AND document_family IN ('credit','debit') THEN 'Adjustment Reference Unverified'\n            WHEN identity_count>1 THEN 'Duplicate Receipt Reference'\n            ELSE reconciliation_suffix END as exception from (select * from `ledger_documents` as `ledger` where `identity_rank` = ? and `is_draft` = ?) as `d`) as `e`) as `cases` where `id` in (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "bindings": [
+            1,
+            false,
+            "lab-t-0003300",
+            "lab-t-0003270",
+            "lab-t-0003240",
+            "lab-t-0003210",
+            "lab-t-0003180",
+            "lab-t-0003150",
+            "lab-t-0003120",
+            "lab-t-0003090",
+            "lab-t-0003060",
+            "lab-t-0003030"
+        ]
+    },
+    {
+        "ms": 0.36,
+        "sql": "select column_name as `name`, data_type as `type_name`, column_type as `type`, collation_name as `collation`, is_nullable as `nullable`, column_default as `default`, column_comment as `comment`, generation_expression as `expression`, extra as `extra` from information_schema.columns where table_schema = schema() and table_name = 'ledger_documents' order by ordinal_position asc",
+        "bindings": []
+    },
+    {
+        "ms": 0.35,
+        "sql": "select column_name as `name`, data_type as `type_name`, column_type as `type`, collation_name as `collation`, is_nullable as `nullable`, column_default as `default`, column_comment as `comment`, generation_expression as `expression`, extra as `extra` from information_schema.columns where table_schema = schema() and table_name = 'ledger_documents' order by ordinal_position asc",
+        "bindings": []
+    },
+    {
+        "ms": 0.27,
+        "sql": "select column_name as `name`, data_type as `type_name`, column_type as `type`, collation_name as `collation`, is_nullable as `nullable`, column_default as `default`, column_comment as `comment`, generation_expression as `expression`, extra as `extra` from information_schema.columns where table_schema = schema() and table_name = 'users' order by ordinal_position asc",
+        "bindings": []
+    },
+    {
+        "ms": 0.23,
+        "sql": "select column_name as `name`, data_type as `type_name`, column_type as `type`, collation_name as `collation`, is_nullable as `nullable`, column_default as `default`, column_comment as `comment`, generation_expression as `expression`, extra as `extra` from information_schema.columns where table_schema = schema() and table_name = 'users' order by ordinal_position asc",
+        "bindings": []
+    },
+    {
+        "ms": 0.21,
+        "sql": "select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'eis_reporting_obligations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`",
+        "bindings": []
+    }
+]

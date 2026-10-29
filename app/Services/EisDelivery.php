@@ -16,6 +16,11 @@ class EisDelivery
         $this->provider ??= new BlockedProvider;
     }
 
+    public function ready(): bool
+    {
+        return $this->provider->ready();
+    }
+
     public function enqueue(string $outboxId): string
     {
         $o = DB::table('eis_document_outbox')->where('id', $outboxId)->first();
@@ -33,7 +38,7 @@ class EisDelivery
             return ['state' => 'blocked', 'reason' => 'An authorized interface, verified adapter and authentic-response verification are required.'];
         }
         $claim = DB::transaction(function () {
-            $q = DB::table('eis_delivery_jobs')->where(function ($q) {
+            $q = DB::table('eis_delivery_jobs')->when(\Illuminate\Support\Facades\Schema::hasTable('bir_eis_documents'), fn($q)=>$q->whereNotExists(fn($w)=>$w->selectRaw('1')->from('bir_eis_documents as wd')->join('bir_eis_batches as wb','wb.id','=','wd.batch_id')->whereColumn('wd.outbox_id','eis_delivery_jobs.outbox_id')->where('wb.state','!=','cancelled')))->where(function ($q) {
                 $q->whereIn('state', ['blocked', 'queued', 'retry', 'uncertain'])->orWhere(fn ($q) => $q->where('state', 'sending')->where('lease_until', '<', now()));
             })->where(fn ($q) => $q->whereNull('lease_until')->orWhere('lease_until', '<', now()))->where(fn ($q) => $q->whereNull('available_at')->orWhere('available_at', '<=', now()))
                 ->orderBy('updated_at')->orderBy('id')->lockForUpdate()->first();

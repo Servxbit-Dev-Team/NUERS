@@ -1,0 +1,1 @@
+ Commandhttpdocs/artisan schedule:run --no-ansiNUERS Laravel scheduler — transactional notifications and internal readiness reconciliationThe task is activated. Click to deactivate the task. The task is activated. Click to deactivate the task.* * * * *nuers.netRun Now

@@ -60,7 +60,7 @@ class DocumentGovernanceController extends Controller
             abort_unless($case->status === 'pending' && $case->revision === $v['revision'], 409, 'Review changed. Refresh before recording a decision.');
             abort_if($case->requested_by === (string) $u->id, 403, 'An independent reviewer must record the decision.');
             if ($v['status'] === 'resolved') {
-                $adjustment = DB::table('business_invoices')->where('id', $v['resolution_document_id'])->where('merchant_id', $case->merchant_id)->where('original_invoice_id', $case->document_id)->whereIn('document_type', ['credit_memo', 'debit_memo'])->where('status', 'issued')->first();
+                $adjustment = DB::table('business_invoices')->where('id', $v['resolution_document_id'])->where('merchant_id', $case->merchant_id)->where('original_invoice_id', $case->document_id)->whereIn('document_type', ['credit_memo', 'vat_invoice', 'non_vat_invoice', 'vat_exempt_invoice', 'zero_rated_invoice', 'mixed_sales_invoice', 'sales_invoice', 'service_invoice'])->where('status', 'issued')->first();
                 abort_unless($adjustment, 409, 'Resolution requires an issued corrective document linked to this exact original. Originals are never silently cancelled.');
             }
             DB::table('document_review_requests')->where('id', $id)->update(['status' => $v['status'], 'evidence_reference' => $v['evidence_reference'], 'reviewed_by' => (string) $u->id, 'reviewed_at' => now(), 'revision' => $case->revision + 1, 'updated_at' => now()]);
@@ -82,6 +82,7 @@ class DocumentGovernanceController extends Controller
             $draft = DB::table('business_invoices')->where('id', $row->id)->lockForUpdate()->first();
             abort_if($draft->issue_date && Carbon::parse($draft->issue_date)->isAfter(today()), 422, 'An issued document cannot have a future business date.');
             abort_unless($draft->status === 'draft', 409, 'Only a draft can be published. Existing originals are immutable.');
+            abort_if($draft->document_type === 'debit_memo', 409, 'Create a new electronic invoice referencing the original for an increase.');
             $row = $draft;
             DB::table('merchants')->where('id', $row->merchant_id)->lockForUpdate()->first();
             $merchant = DB::table('merchants')->where('id', $row->merchant_id)->first();
@@ -97,10 +98,12 @@ class DocumentGovernanceController extends Controller
             }
             app(MerchantWallet::class)->check($row->merchant_id, (int) $computed['total_amount'], $row->document_type);
             $authority = app(BirCompliance::class)->assertCanIssue($row->merchant_id, $v['branch_code']);
+            app(\App\Services\InvoiceDocumentRules::class)->assertBuyer($row->buyer_customer_type ?? null, $row->buyer_name, $row->buyer_tin, $row->buyer_address);
             $series = app(InvoiceSequence::class)->reserve($row->merchant_id, $v['branch_code'], $family);
             app(MerchantWallet::class)->charge($row->merchant_id, (int) $computed['total_amount'], $row->document_type, 'invoice', $row->id, $series['number'], $v['branch_code'], 'portal', (string) $u->id);
-            DB::table('business_invoices')->where('id', $row->id)->update($authority + ['invoice_number' => $series['number'], 'seller_branch_code' => $v['branch_code'], 'status' => 'issued', 'updated_at' => now()]);
+            DB::table('business_invoices')->where('id', $row->id)->update($authority + ['document_registration' => json_encode($series['document_registration'], JSON_THROW_ON_ERROR), 'invoice_number' => $series['number'], 'seller_branch_code' => $v['branch_code'], 'status' => 'issued', 'updated_at' => now()]);
             DB::table('invoice_lifecycle_events')->insert(['id' => (string) Str::uuid(), 'document_source' => 'invoice', 'document_id' => $row->id, 'merchant_id' => $row->merchant_id, 'event' => 'issued', 'actor' => (string) $u->id, 'reason' => 'Published from validated draft with recorded authority', 'details' => json_encode(['series_id' => $series['series_id'], 'original_issue_date' => $row->issue_date]), 'occurred_at' => now()]);
+            if ($row->manual_recovery_id) app(\App\Services\ComplianceOperations::class)->linkManual((string)$row->merchant_id,$row->manual_recovery_id,'invoice',$row->id,(string)$u->id);
             $outbox = app(EisDocumentReadiness::class)->prepare('invoice', $row->id);
             app(BirCompliance::class)->audit('invoice.draft.published', $row->id, (string) $u->id, ['number' => $series['number'], 'series_id' => $series['series_id']]);
 
@@ -169,9 +172,18 @@ class DocumentGovernanceController extends Controller
     public function series(Request $r)
     {
         $u = app(ApiAccess::class)->require($r, ['bir']);
-        $v = $r->validate(['merchant_id' => 'required|exists:merchants,id', 'branch_code' => 'required|regex:/^[0-9]{5}$/', 'document_family' => 'required|in:invoice,payment,credit_memo,debit_memo', 'prefix' => 'required|string|max:40|regex:/^[A-Z0-9-]*$/', 'range_start' => 'required|integer|min:1|max:99999999', 'range_end' => 'required|integer|gte:range_start|max:99999999', 'authority_reference' => 'required|string|min:10|max:2000', 'valid_from' => 'required|date|before_or_equal:now', 'valid_until' => 'required|date|after:valid_from']);
+        $v = $r->validate(['merchant_id' => 'required|exists:merchants,id', 'branch_code' => 'required|regex:/^[0-9]{5}$/', 'document_family' => 'required|in:invoice,payment,credit_memo,debit_memo', 'prefix' => 'present|nullable|string|max:38|regex:/^[A-Z0-9-]*$/', 'serial_digits' => 'sometimes|integer|min:1|max:12', 'range_start' => 'required|integer|min:1|max:99999999', 'range_end' => 'required|integer|gte:range_start|max:99999999', 'authority_reference' => 'required|string|min:10|max:2000', 'valid_from' => 'required|date|before_or_equal:now', 'valid_until' => 'required|date|after:valid_from']);
+        $v['prefix'] = $v['prefix'] ?? '';
+        $v['serial_digits'] = $v['serial_digits'] ?? 8;
+        abort_if(strlen((string)$v['range_end']) > $v['serial_digits'], 422, 'Serial padding must cover the entire registered range.');
+        $registration = $r->validate(app(\App\Services\InvoiceDocumentRules::class)->registrationRules());
+        $v['document_registration'] = json_encode(app(\App\Services\InvoiceDocumentRules::class)->registration($registration['document_registration'] ?? [], true), JSON_THROW_ON_ERROR);
         $id = (string) Str::uuid();
         DB::transaction(function () use ($id, $v, $u) {
+            DB::table('merchants')->where('id',$v['merchant_id'])->lockForUpdate()->first();
+            $existing = DB::table('invoice_series')->where('merchant_id',$v['merchant_id'])->where('branch_code',$v['branch_code'])->where('document_family',$v['document_family']);
+            abort_if((clone $existing)->where('prefix',$v['prefix'])->where('range_start','<=',$v['range_end'])->where('range_end','>=',$v['range_start'])->exists(), 409, 'This range overlaps a recorded series. Expired or retired numbers must not be reused.');
+            abort_if((clone $existing)->where('status','active')->where('valid_from','<=',$v['valid_until'])->where('valid_until','>=',$v['valid_from'])->exists(), 409, 'Another active series covers this branch and period. Review it before registering a replacement.');
             app(BirCompliance::class)->assertCanIssue($v['merchant_id'], $v['branch_code']);
             DB::table('invoice_series')->insert(['id' => $id, ...$v, 'status' => 'active', 'verified_by' => (string) $u->id, 'created_at' => now(), 'updated_at' => now()]);
             app(BirCompliance::class)->audit('invoice.series.recorded', $id, (string) $u->id, $v);

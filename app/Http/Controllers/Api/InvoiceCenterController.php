@@ -37,6 +37,14 @@ class InvoiceCenterController extends Controller
 
     private function ledger(object $user)
     {
+        if (app(\App\Services\LedgerProjection::class)->ready()) {
+            $indexed = app(\App\Services\LedgerProjection::class)->query(null, true, true, false)->whereIn('document_source', ['invoice','receipt']);
+            if ($user->role === 'merchant') $indexed->whereIn('merchant_id', $this->businesses($user)->select('id'));
+            $mapped = DB::query()->fromSub($indexed, 'd')->selectRaw("document_id as id,merchant_id,receipt_number as number,document_type,record_status,business,tin,created_at as issued_at,amount,document_source as source,sale_category,statutory_discount_amount,vat_relief_amount,discount_amount,manual_discount_amount,
+                CASE WHEN record_status IN ('cancelled','canceled','void','voided','refunded','refund') THEN 'cancelled' WHEN record_status IN ('issued','verified','valid','completed','paid','settled','validated','partially_paid','sent') THEN 'valid' ELSE 'pending' END as status,
+                CASE WHEN document_type IN ('credit_memo','debit_memo','credit_note','debit_note') THEN 'notes' WHEN document_type IN ('payment_receipt','official_receipt') THEN 'receipts' ELSE 'invoices' END as category");
+            return DB::query()->fromSub($mapped, 'ledger');
+        }
         $invoice = DB::table('business_invoices')->selectRaw("id, merchant_id, invoice_number as number, document_type, status as record_status, merchant_name as business, merchant_tin as tin, COALESCE(issue_date, created_at) as issued_at, total_amount as amount, 'invoice' as source, sale_category, statutory_discount_amount, vat_relief_amount, discount_amount, CASE WHEN discount_amount>statutory_discount_amount THEN discount_amount-statutory_discount_amount ELSE 0 END as manual_discount_amount");
         $receipt = DB::table('transaction_receipts')->selectRaw("id, merchant_id, receipt_number as number, COALESCE(document_type, receipt_type) as document_type, status as record_status, merchant_name as business, merchant_tin as tin, COALESCE(issued_at, created_at) as issued_at, total_due as amount, 'receipt' as source, sale_category, statutory_discount_amount, vat_relief_amount, discount_amount, CASE WHEN discount_amount>statutory_discount_amount THEN discount_amount-statutory_discount_amount ELSE 0 END as manual_discount_amount");
         if ($user->role === 'merchant') {
@@ -80,10 +88,10 @@ class InvoiceCenterController extends Controller
             });
         }
         if (! empty($v['from'])) {
-            $query->whereDate('issued_at', '>=', $v['from']);
+            $query->where('issued_at', '>=', $v['from']);
         }
         if (! empty($v['to'])) {
-            $query->whereDate('issued_at', '<=', $v['to']);
+            $query->where('issued_at', '<', \Carbon\CarbonImmutable::parse($v['to'])->addDay()->toDateString());
         }
         if (($v['status'] ?? 'all') !== 'all') {
             $query->where('status', $v['status']);
@@ -111,7 +119,7 @@ class InvoiceCenterController extends Controller
         $query = $this->filteredLedger($user, $v);
         $summary = (clone $query)->selectRaw("COUNT(*) as total, COALESCE(SUM(CASE WHEN category='invoices' THEN 1 ELSE 0 END),0) as invoices, COALESCE(SUM(CASE WHEN category='receipts' THEN 1 ELSE 0 END),0) as receipts, COALESCE(SUM(CASE WHEN category='notes' THEN 1 ELSE 0 END),0) as notes, COALESCE(SUM(CASE WHEN status='cancelled' THEN 1 ELSE 0 END),0) as cancelled")->first();
         $this->documentType($query, $v);
-        $page = $query->orderByDesc('issued_at')->orderBy('source')->orderBy('id')->paginate($v['per_page'] ?? 10);
+        $page = $query->orderByDesc('issued_at')->orderByDesc('source')->orderByDesc('id')->paginate($v['per_page'] ?? 10);
 
         return response()->json(['summary' => $summary, 'data' => $page->items(), 'total' => $page->total(), 'last_page' => $page->lastPage(), 'current_page' => $page->currentPage(), 'can_create' => in_array($user->role, ['admin', 'super_admin', 'merchant'], true)]);
     }
@@ -122,6 +130,7 @@ class InvoiceCenterController extends Controller
         $v = $this->filterValues($request);
         $query = $this->documentType($this->filteredLedger($user, $v), $v);
         $count = (clone $query)->count();
+        if ($request->has('report_limit')) \App\Services\ReportCsv::limit($request,$count);
 
         return response()->streamDownload(function () use ($query) {
             $out = fopen('php://output', 'w');
@@ -141,15 +150,38 @@ class InvoiceCenterController extends Controller
         ]);
     }
 
+    private function documentRecord(object $user, string $source, string $id): object
+    {
+        abort_unless(in_array($source, ['invoice', 'receipt'], true), 404);
+        // Fetch one original by its primary key; preview must not scan the document ledger.
+        $query = DB::table($source === 'invoice' ? 'business_invoices' : 'transaction_receipts')->where('id', $id);
+        if ($user->role === 'merchant') $query->whereIn('merchant_id', $this->businesses($user)->select('id'));
+        $row = $query->first();
+        abort_unless($row, 404, 'Document not found.');
+        return $row;
+    }
+
     public function show(Request $request, string $source, string $id)
     {
-        $user = $this->actor($request);
-        abort_unless(in_array($source, ['invoice', 'receipt'], true), 404);
-        $record = $this->ledger($user)->where('source', $source)->where('id', $id)->first();
-        abort_unless($record, 404, 'Document not found.');
-        $row = DB::table($source === 'invoice' ? 'business_invoices' : 'transaction_receipts')->where('id', $id)->first();
+        $row = $this->documentRecord($this->actor($request), $source, $id);
 
         return response()->json(['document' => app(ElectronicDocumentView::class)->make($source, $row)])->header('Cache-Control', 'private, no-store');
+    }
+
+    public function pdf(Request $request, string $source, string $id)
+    {
+        $user = $this->actor($request);
+        abort_unless(in_array($user->role, ['admin', 'super_admin', 'bir'], true), 403);
+        $row = $this->documentRecord($user, $source, $id);
+        $document = app(ElectronicDocumentView::class)->make($source, $row);
+        $renderer = app(\App\Services\DocumentPdf::class);
+        $pdf = $renderer->render($document);
+        app(BirCompliance::class)->audit('document.admin_copy.downloaded', $id, (string) $user->id, [
+            'merchant_id' => $row->merchant_id, 'source' => $source, 'pdf_hash' => hash('sha256', $pdf),
+        ]);
+        return response($pdf)->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'attachment; filename="'.$renderer->filename($document).'"')
+            ->header('Cache-Control', 'private, no-store');
     }
 
     public function merchants(Request $request)

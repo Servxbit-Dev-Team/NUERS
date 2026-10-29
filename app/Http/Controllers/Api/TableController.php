@@ -68,6 +68,7 @@ class TableController extends Controller
             abort_unless($actor, 401, 'An authenticated session is required.');
             $role = DB::table('profiles')->where('id', $actor->id)->value('role');
             $administrator = in_array($role, ['admin', 'super_admin'], true);
+            abort_unless(in_array($request->method(), ['PATCH', 'PUT'], true), 409, 'Use the verified account provisioning workflow.');
             abort_if($role === 'merchant', 403, 'Merchant identity changes require administrator review through Business Profile.');
             if (! $administrator) {
                 abort_unless(in_array($request->method(), ['PATCH', 'PUT'], true), 403, 'Only administrators may create or remove profiles.');
@@ -104,6 +105,15 @@ class TableController extends Controller
         $this->validateQuery($query, $request);
         $this->applyFilters($query, $request);
 
+        if ($model === Profile::class && $request->filled('search')) {
+            $term = '%'.trim($request->query('search')).'%';
+            $query->where(function ($q) use ($term) {
+                foreach (['full_name', 'email', 'organization', 'tin'] as $column) {
+                    $q->orWhere($column, 'like', $term);
+                }
+            });
+        }
+
         $count = null;
         if ($request->query('count') === 'exact') {
             $count = (clone $query)->count();
@@ -115,7 +125,7 @@ class TableController extends Controller
 
         $this->applyOrdering($query, $request);
 
-        $query->limit($request->integer('limit', 100));
+        $query->orderBy($query->getModel()->getKeyName())->offset($request->integer('offset', 0))->limit($request->integer('limit', 100));
 
         $single = $request->boolean('single') || $request->boolean('maybeSingle');
         $data = $single ? $query->first() : $query->get();
@@ -153,8 +163,28 @@ class TableController extends Controller
         $request->validate(['values' => 'required|array', 'values.full_name' => 'sometimes|string|max:255', 'values.organization' => 'sometimes|string|max:255', 'values.email' => 'sometimes|email|max:255', 'values.mobile' => 'sometimes|nullable|string|max:80', 'values.is_read' => 'sometimes|boolean', 'values.role' => 'sometimes|in:admin,super_admin,merchant,client,consumer', 'values.status' => 'sometimes|in:pending,under_review,suspended,inactive,rejected']);
         $payload = $this->normalizePayload($request->input('values', []));
         $affected = DB::transaction(function () use ($query, $payload, $request, $model) {
+            if ($model === Profile::class) {
+                $actor = $request->attributes->get('table_actor');
+                $actorRole = $request->attributes->get('table_role');
+                $targets = (clone $query)->lockForUpdate()->get();
+                abort_unless($targets->count() === 1, 422, 'Select one existing profile for each audited update.');
+                $target = $targets->first();
+                $privileged = ['admin', 'super_admin', 'bir', 'rdo'];
+                abort_if($actorRole === 'admin'
+                    && (in_array($target->role, $privileged, true) || in_array($payload['role'] ?? '', $privileged, true)), 403, 'Only a Super Administrator can manage privileged profiles.');
+                abort_if(isset($payload['role']) && $payload['role'] !== $target->role && (string) $target->id === (string) $actor->id, 403, 'You cannot change your own platform role.');
+                foreach (['id', 'email'] as $identity) {
+                    abort_if(isset($payload[$identity]) && (string) $payload[$identity] !== (string) $target->$identity, 403, 'Login identity changes require the verified account workflow.');
+                }
+                foreach (['full_name', 'organization'] as $identity) {
+                    abort_if($target->role === 'merchant' && array_key_exists($identity, $payload) && (string) $payload[$identity] !== (string) $target->$identity, 403, 'Change merchant identity in Registered Businesses so the business profile and owner directory remain aligned.');
+                }
+            }
             $roleChangedIds = $model === Profile::class && isset($payload['role']) ? (clone $query)->where('role', '!=', $payload['role'])->pluck('id')->all() : [];
             $affected = (clone $query)->update($payload);
+            if ($model === Profile::class && array_key_exists('full_name', $payload)) {
+                User::where('id', $target->id)->update(['name' => $payload['full_name']]);
+            }
             if ($roleChangedIds) {
                 foreach ($roleChangedIds as $changedId) app(\App\Services\PlatformNotifications::class)->user($changedId,'security.role.changed',(string)\Illuminate\Support\Str::uuid(),'Account access changed','An administrator changed your NUERS account permissions. Existing application sessions were revoked. If you were not expecting this change, contact NUERS support.','security');
                 User::whereIn('id', $roleChangedIds)->update(app(ApiAccess::class)->revocation());
@@ -304,7 +334,7 @@ class TableController extends Controller
 
     private function validateQuery(Builder $query, Request $request): void
     {
-        $request->validate(['limit' => 'nullable|integer|min:1|max:500', 'order' => 'nullable|string|max:80', 'eq' => 'nullable', 'in' => 'nullable', 'or' => 'nullable|string|max:2000']);
+        $request->validate(['offset' => 'nullable|integer|min:0|max:1000000', 'search' => 'nullable|string|max:200', 'limit' => 'nullable|integer|min:1|max:500', 'order' => 'nullable|string|max:80', 'eq' => 'nullable', 'in' => 'nullable', 'or' => 'nullable|string|max:2000']);
         $allowed = Schema::getColumnListing($query->getModel()->getTable());
         $columns = [...array_keys($this->jsonQuery($request, 'eq')), ...array_keys($this->jsonQuery($request, 'in'))];
         if ($request->filled('order')) {

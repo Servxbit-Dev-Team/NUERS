@@ -1,0 +1,47 @@
+{
+  "deployed": true,
+  "release": "2026-10-20.query-scale",
+  "deployed_at": "2026-10-20T03:26:35+00:00",
+  "verification": {
+    "verified": true,
+    "checked_at": "2026-10-20T03:26:28+00:00",
+    "business_data_read_only": true,
+    "database": "10.3.39-MariaDB-0ubuntu0.20.04.2-log",
+    "backlog": 0,
+    "triggers": 36,
+    "projection_rows": 1843,
+    "merchant_checks": [
+      {
+        "records": 503,
+        "included": 503,
+        "excluded": 0,
+        "canonical_parity": true,
+        "financial_parity": true,
+        "elapsed_ms": 1999
+      },
+      {
+        "records": 1340,
+        "included": 1340,
+        "excluded": 0,
+        "canonical_parity": true,
+        "financial_parity": true,
+        "elapsed_ms": 4642
+      }
+    ],
+    "indexes": {
+      "merchant_period": true,
+      "merchant_documents": true,
+      "admin_recent": true,
+      "option_covering": true
+    },
+    "export_routes_registered": true,
+    "mfa_preserved": true,
+    "bir_transport_enabled": false
+  },
+  "existing_records_preserved": true,
+  "environment_preserved": true,
+  "files_verified": 34,
+  "old_assets_retained": true,
+  "backup": "nuers-query-scale-backup-20261020-032620",
+  "package_sha256": "66870ab2d801efa9bb5cfb6d7936d8fb497e5c17773438b080028c601d68ee90"
+}

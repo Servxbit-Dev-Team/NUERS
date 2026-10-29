@@ -1,0 +1,31 @@
+{
+    "deployed": true,
+    "release": "2026-10-20.admin-security-audit",
+    "deployed_at": "2026-10-20T00:25:57+00:00",
+    "verification": {
+        "verified": true,
+        "software": "NUERS",
+        "version": "1.0.0",
+        "anonymous_protected_responses": {
+            "\/api\/verify-receipt\/AUDIT-NONEXISTENT": 401,
+            "\/api\/business-accounts\/lookup?tin=000000000": 401,
+            "\/api\/admin\/infrastructure\/servers": 401,
+            "\/api\/tables\/profiles": 401,
+            "\/api\/merchant\/api-keys": 401
+        },
+        "privileged_mfa": true,
+        "production_debug_disabled": true,
+        "database_query": true,
+        "cache_driver": "database",
+        "queue_driver": "database",
+        "controller_execution_disabled": true,
+        "schema_migration": false,
+        "php": "8.4.26"
+    },
+    "existing_records_preserved": true,
+    "environment_preserved": true,
+    "files_verified": 79,
+    "old_assets_retained": true,
+    "backup": "nuers-admin-security-audit-backup-20261020-002555",
+    "package_sha256": "213a78771d2015c623cc316ac3655ab185f01c6f7524a9d1b2e69fd39d6105f7"
+}

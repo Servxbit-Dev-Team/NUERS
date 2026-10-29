@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Bell, ShieldAlert, Clock, Trophy,
-  Info, CheckCheck, Trash2, X,
+  Info, CheckCheck, RefreshCw,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ const priorityVariant: Record<string, "default" | "secondary" | "destructive" | 
 export function AdminNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("all");
 
   useEffect(() => {
@@ -48,34 +49,26 @@ export function AdminNotifications() {
 
   async function fetchNotifications() {
     setLoading(true);
-    const { data } = await supabase
+    setError("");
+    const { data, error } = await supabase
       .from("notifications")
       .select("*")
       .order("created_at", { ascending: false });
-    setNotifications(data ?? []);
+    if (error) setError(error.message);
+    else setNotifications(data ?? []);
     setLoading(false);
   }
 
   async function markAllRead() {
-    await supabase.from("notifications").update({ is_read: true }).eq("is_read", false);
+    const { error } = await supabase.from("notifications").update({ is_read: true }).eq("is_read", false);
+    if (error) { setError(error.message); return; }
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
   }
 
   async function markRead(id: string) {
-    await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+    const { error } = await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+    if (error) { setError(error.message); return; }
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
-  }
-
-  async function deleteNotification(id: string) {
-    await supabase.from("notifications").delete().eq("id", id);
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  }
-
-  async function deleteAllRead() {
-    const readIds = notifications.filter((n) => n.is_read).map((n) => n.id);
-    if (readIds.length === 0) return;
-    await supabase.from("notifications").delete().in("id", readIds);
-    setNotifications((prev) => prev.filter((n) => !n.is_read));
   }
 
   const filtered = notifications.filter(
@@ -101,12 +94,12 @@ export function AdminNotifications() {
           <Button variant="outline" size="sm" className="gap-2" onClick={markAllRead}>
             <CheckCheck className="h-4 w-4" /> Mark All Read
           </Button>
-          <Button variant="outline" size="sm" className="gap-2 text-muted-foreground" onClick={deleteAllRead}>
-            <Trash2 className="h-4 w-4" /> Clear Read
-          </Button>
+          <Button variant="outline" size="sm" className="gap-2" disabled={loading} onClick={() => void fetchNotifications()}><RefreshCw className="h-4 w-4" />Refresh</Button>
         </div>
       </div>
 
+      {error && <p role="alert" className="text-red-600">{error}</p>}
+      <p className="text-sm text-muted-foreground">Notifications are preserved. Marking a notification read does not delete its history. Latest records shown.</p>
       {/* Priority summary */}
       <div className="grid gap-4 sm:grid-cols-4">
         {[
@@ -194,14 +187,7 @@ export function AdminNotifications() {
                           <Badge variant={priorityVariant[notif.priority] ?? "outline"} className="text-[10px]">
                             {notif.priority}
                           </Badge>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                            onClick={(e) => { e.stopPropagation(); deleteNotification(notif.id); }}
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
+
                         </div>
                       </div>
                       <div className="mt-2 flex items-center gap-3">

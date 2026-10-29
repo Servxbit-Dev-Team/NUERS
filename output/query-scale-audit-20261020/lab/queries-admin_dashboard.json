@@ -1,0 +1,34 @@
+[
+    {
+        "ms": 942.76,
+        "sql": "select DATE_FORMAT(DATE_ADD(t.created_at,INTERVAL 480 MINUTE),'%Y-%m-%d') as bucket,t.status,COUNT(*) as total from `merchant_transactions` as `t` where `t`.`created_at` >= ? and `t`.`created_at` < ? group by DATE_FORMAT(DATE_ADD(t.created_at,INTERVAL 480 MINUTE),'%Y-%m-%d'),t.status"
+    },
+    {
+        "ms": 939.87,
+        "sql": "select `t`.`id`, `t`.`transaction_ref`, `t`.`created_at`, `t`.`amount`, `t`.`status`, `m`.`tin`, `m`.`business_name` from `merchant_transactions` as `t` left join `merchants` as `m` on `m`.`id` = `t`.`merchant_id` order by `t`.`created_at` desc limit 5"
+    },
+    {
+        "ms": 294.06,
+        "sql": "select count(*) as aggregate from `transaction_receipts` as `r` where `r`.`status` in (?, ?, ?, ?)"
+    },
+    {
+        "ms": 286.12,
+        "sql": "select `t`.`region`, COUNT(*) as total from `merchant_transactions` as `t` group by `t`.`region` order by `total` desc"
+    },
+    {
+        "ms": 191.29,
+        "sql": "select count(*) as aggregate from `merchant_transactions` as `t`"
+    },
+    {
+        "ms": 178.45,
+        "sql": "select sum(`amount`) as aggregate from `merchant_transactions`"
+    },
+    {
+        "ms": 0.66,
+        "sql": "select sum(`amount_centavos`) as aggregate from `merchant_wallet_entries` where `kind` = ?"
+    },
+    {
+        "ms": 0.59,
+        "sql": "select sum(`available_centavos`) as aggregate from `merchant_wallets`"
+    }
+]

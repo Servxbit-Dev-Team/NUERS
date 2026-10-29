@@ -21,16 +21,16 @@ BASE='https://nuers.net/api/integrations/transactions'
 class Guide:
     def __init__(self):
         self.path=OUT/'NUERS-API-Connection-Guide.pdf';self.c=canvas.Canvas(str(self.path),pagesize=(W,H));self.n=0;self.y=0;self.titles=[];self.metrics=[]
-        self.c.setTitle('NUERS Merchant API Connection Guide');self.c.setAuthor('NUERS');self.c.setCreator('NUERS Merchant Documentation');self.c.setSubject('Merchant integration with ERP, POS and ecommerce | NUERS-ingestion-1 | 19 October 2026')
+        self.c.setTitle('NUERS Merchant API Connection Guide');self.c.setAuthor('NUERS');self.c.setCreator('NUERS Merchant Documentation');self.c.setSubject('Merchant integration with ERP, POS and ecommerce | NUERS-ingestion-1 | 29 October 2026')
     def footer(self):
         c=self.c
         for dx,ww,col in [(0,58,B),(58,42,HexColor('#ffca05')),(100,42,HexColor('#ed253c'))]:c.setFillColor(col);c.rect(X+dx,32,ww,2.5,fill=1,stroke=0)
-        c.setFillColor(M);c.setFont('Body',7.4);c.drawString(X,18,'NUERS  /  MERCHANT CONNECTION GUIDE  /  19 OCT 2026');c.drawRightString(W-X,18,f'{self.n:02d}')
+        c.setFillColor(M);c.setFont('Body',7.4);c.drawString(X,18,'NUERS  /  MERCHANT CONNECTION GUIDE  /  29 OCT 2026');c.drawRightString(W-X,18,f'{self.n:02d}')
     def page(self,k,title):
         if self.n:self.c.showPage()
         self.n+=1;c=self.c;c.setFillColor(BG);c.rect(0,H-63,W,63,fill=1,stroke=0)
         c.drawImage(str(LOGO),X,H-55,width=107,height=43,mask='auto',preserveAspectRatio=True)
-        c.setFillColor(M);c.setFont('Bold',7.6);c.drawRightString(W-X,H-28,'MERCHANT API CONNECTION');c.setFont('Body',7.3);c.drawRightString(W-X,H-41,'Version 1.3  |  NUERS-ingestion-1')
+        c.setFillColor(M);c.setFont('Bold',7.6);c.drawRightString(W-X,H-28,'MERCHANT API CONNECTION');c.setFont('Body',7.3);c.drawRightString(W-X,H-41,'Version 1.5  |  NUERS-ingestion-1')
         c.bookmarkPage('p'+str(self.n));c.addOutlineEntry(title,'p'+str(self.n),0,False);self.titles.append((self.n,title));self.footer()
         c.setFillColor(B);c.setFont('Bold',8.1);c.drawString(X,H-88,k.upper())
         p=Paragraph(esc(title),ParagraphStyle('title',fontName='Bold',fontSize=23,leading=28,textColor=N));_,ht=p.wrap(CW,90);p.drawOn(c,X,H-103-ht);self.y=H-119-ht
@@ -106,12 +106,12 @@ c.setFillColor(N);c.roundRect(X,150,CW,247,14,fill=1,stroke=0)
 c.setFillColor(white);c.setFont('Bold',16);c.drawString(X+23,362,'One connection. Reliable transaction records.')
 for i,(title,sub) in enumerate([('01  SET UP','Choose Live or Sandbox. Protect your API key.'),('02  CONNECT','Submit original transactions with clear tax mapping.'),('03  RECONCILE','Recover offline events and verify signed callbacks.')]):
     y=323-i*58;c.setFillColor(HexColor('#7ab6ff'));c.setFont('Bold',9);c.drawString(X+23,y,title);c.setFillColor(white);c.setFont('Body',10);c.drawString(X+23,y-19,sub)
-c.setFillColor(M);c.setFont('Bold',9);c.drawString(X,116,'EDITION 1.3  |  19 OCTOBER 2026');c.setFont('Body',9);c.drawString(X,97,'Contract: NUERS-ingestion-1  |  HTTPS / JSON  |  PHP currency')
+c.setFillColor(M);c.setFont('Bold',9);c.drawString(X,116,'EDITION 1.5  |  29 OCTOBER 2026');c.setFont('Body',9);c.drawString(X,97,'Contract: NUERS-ingestion-1  |  HTTPS / JSON  |  PHP currency')
 r.footer()
 # 2
 r.page('Start here','Your route to a working connection')
 r.text('This guide is for a merchant and the developer connecting the merchant\'s own system. Follow the setup once, implement the payload contract, then test recovery before going Live.')
-contents=[('3-6','Prepare your account, credentials and environment'),('7-10','Endpoints, fields, items and document types'),('11-15','Complete payloads, tax mapping and special sales'),('16-19','cURL, Node.js and PHP connection examples'),('20-23','Acceptance, status, wallet and batch processing'),('24-26','Offline outbox, duplicate protection and manual retry'),('27-31','Webhook configuration, verification and delivery'),('32-34','Errors, security and go-live checklist'),('35-38','Reconciliation, quick reference and manual discounts'),('39-42','Sales status, customer email, branding and checklist')]
+contents=[('3-6','Prepare your account, credentials and environment'),('7-10','Endpoints, fields, items and document types'),('11-15','Complete payloads, tax mapping and special sales'),('16-19','cURL, Node.js and PHP connection examples'),('20-23','Acceptance, status, wallet and batch processing'),('24-26','Offline outbox, duplicate protection and manual retry'),('27-31','Webhook configuration, verification and delivery'),('32-34','Errors, security and go-live checklist'),('35-38','Reconciliation, quick reference and manual discounts'),('39-42','Sales status, customer email, branding and checklist'),('43-46','Buyer CWT, corrections, manual recovery and fee invoices'),('47-48','Invoice numbering, buyer identity and printed registration')]
 r.table(['Pages','Connection topic'],[(f'<link href="#p{a.split("-")[0]}" color="#0067ff">{a}</link>',b) for a,b in contents],[.7,4.3])
 r.h('Use this guide in order')
 r.text('<b>Merchant owner:</b> start with pages 3-6, 22, 26 and 34.<br/><b>Integration developer:</b> read the field contract and examples, then implement the outbox and response checks.<br/><b>Webhook developer:</b> pages 27-31 are an optional completion channel; status polling remains available.')
@@ -165,7 +165,7 @@ r.text('Load NUERS_API_KEY privately before running the command. Confirm HTTP 20
 r.call('Use the intake id for status','GET /{id} uses the UUID named id from the acceptance response. It does not use receipt_id, source_event_id or receipt_number. The key must belong to the same merchant, branch and environment.')
 # 8
 r.page('02 / API reference','Required event fields')
-r.table(['Field','Required value / rule'],[['schema_version','Exactly NUERS-ingestion-1.'],['record_mode','Send source_capture explicitly for copies from your system.'],['source_profile_id','Assigned source UUID; required with source_capture.'],['source_system','Exact assigned identifier. Maximum 120 characters; letters, digits, underscore, dot and hyphen.'],['source_event_id','Stable original event identifier, maximum 120 characters. Never regenerate it on a retry.'],['external_reference','Stable source business reference, maximum 120 characters. Namespace it by system.'],['event_type','invoice.finalized for a sales invoice; payment.recorded for a supplementary payment receipt.'],['occurred_at','Original ISO 8601 timestamp with Z or an offset, e.g. +08:00. At most five minutes in the future.'],['branch_code','Exact assigned five-digit string; preserve leading zeros.'],['receipt_number','Original issued document number, maximum 120 characters.'],['document_type','Use sales_invoice to classify from calculated lines, or an explicit type from page 10.'],['payment_method','cash, card, bank_transfer, e_wallet, credit or other.'],['gross_amount','Final PHP total after discounts and VAT, before withholding. Prefer a two-decimal string.'],['tax_type','Default line treatment: vatable, vat_exempt, zero_rated or non_vat. Do not send mixed here.'],['items','An array of 1-100 line items. See page 9.']],[1.35,3.65])
+r.table(['Field','Required value / rule'],[['schema_version','Exactly NUERS-ingestion-1.'],['record_mode','Send source_capture explicitly for copies from your system.'],['source_profile_id','Assigned source UUID; required with source_capture.'],['source_system','Exact assigned identifier. Maximum 120 characters; letters, digits, underscore, dot and hyphen.'],['source_event_id','Stable original event identifier, maximum 120 characters. Never regenerate it on a retry.'],['external_reference','Stable source business reference, maximum 120 characters. Namespace it by system.'],['event_type','invoice.finalized for a sales invoice; payment.recorded for a supplementary payment receipt.'],['occurred_at','Original ISO 8601 timestamp with Z or an offset, e.g. +08:00. At most five minutes in the future.'],['branch_code','Exact assigned five-digit string; preserve leading zeros.'],['receipt_number','Original seller document number, 1-50 characters. Preserve prefix and leading zeros.'],['document_type','Use sales_invoice to classify from calculated lines, or an explicit type from page 10.'],['payment_method','cash, card, bank_transfer, e_wallet, credit or other.'],['gross_amount','Final PHP total after discounts and VAT, before withholding. Prefer a two-decimal string.'],['tax_type','Default line treatment: vatable, vat_exempt, zero_rated or non_vat. Do not send mixed here.'],['items','An array of 1-100 line items. See page 9.']],[1.35,3.65])
 r.text('Unknown fields are rejected. Use the names shown here rather than sending an entire ERP object. Send vat_inclusive explicitly even though its default is true.','small')
 # 9
 r.page('02 / API reference','Line items and optional details')
@@ -544,7 +544,7 @@ r.call('Keep the report safe','Never include the API key, webhook signing secret
 r.page('Quick reference','Connection essentials at a glance')
 r.table(['Item','Value / action'],[['Base URL',BASE],['Authentication','X-NUERS-API-Key; HTTPS; server-side use only'],['Schema','NUERS-ingestion-1'],['Mode for ERP originals','source_capture, explicitly supplied'],['Setup','Active account; name + environment; automatic assigned business/source context'],['Primary document','sales_invoice + invoice.finalized'],['Supplementary payment','payment_receipt + payment.recorded'],['Payload limit','1-100 items/event; batch 1-50 events'],['Acknowledgement','201 new, or 200 with duplicate: true; status durably_recorded; verify environment and IDs'],['Retry identity','Same original JSON, source IDs, reference, number and occurred_at'],['Wallet rejection','402: fund and resend unchanged'],['Callback security','HMAC-SHA256 of timestamp.event_id.raw_body; verify before parsing'],['Support','Merchant dashboard &gt; Submit a Request']],[1.45,3.55])
 r.h('Manual discounts and version')
-r.text('Edition 1.3, issued 19 October 2026 for contract NUERS-ingestion-1. Manual amount/percentage discounts are detailed on pages 37-38. This guide covers connecting a merchant-owned system and saving its already-issued originals. Separate original issuance, historical-source review and BIR reporting controls are outside this connection workflow.')
+r.text('Edition 1.4, issued 29 October 2026 for contract NUERS-ingestion-1. Manual amount/percentage discounts are detailed on pages 37-38. This guide covers connecting a merchant-owned system and saving its already-issued originals. Separate original issuance, historical-source review and BIR reporting controls are outside this connection workflow.')
 r.text('Use the current values shown in the merchant dashboard for credentials, source identifiers, expiry, limits and pricing. Keep this guide with your connector implementation and retest its acceptance suite when adopting a later contract version.','small')
 
 # 37 / Manual discount extension
@@ -624,5 +624,37 @@ r.text(contract['delivery_status'])
 r.h('Connector acceptance checklist')
 r.steps(['Show NUERS Status, environment, reference, last attempt and the error reason on every sales row.','Use synthetic addresses and separate Sandbox keys during mapping tests. Sandbox will not send test mail.','Test missing/invalid email, retry deduplication, batch rollback and branded PDF output in isolated fixtures.','Confirm the production email worker and SMTP configuration. Monitor delivery history; do not claim delivered when only smtp_accepted is known.'])
 r.text('Use the public API reference, this PDF and the merchant connection guide from the same release: '+contract['version']+'. Existing records are not emailed retroactively.','small')
+
+r.page('13 / Withholding & corrections','Buyer-confirmed CWT')
+r.text(contract['withholding_details'])
+r.code(json.dumps({'withholding_tax':'10.00','withholding_basis_reference':'BUYER-CONFIRMATION-001','withholding_details':{'withholding_agent':True,'classification':'Buyer-confirmed withholding agent','atc':'WC160','rate':'1.00','base':'1000.00','amount':'10.00','evidence_reference':'BUYER-CONFIRMATION-001'}},indent=2))
+r.call('Example only','ATC and rate are illustrative. The buyer/payor must determine the applicable classification and rate. A PHP 1,120 invoice with PHP 10 CWT still records PHP 1,120 gross and PHP 120 VAT; net payable is PHP 1,110.')
+r.page('13 / Withholding & corrections','Preserve the original')
+r.text(contract['withholding_corrections'])
+r.text(contract['corrections'])
+r.steps(['Open Compliance Operations and choose CWT adjustment memos.','Select the original invoice; provide buyer-confirmed classification, ATC, rate, base, amount and evidence.','Review the draft. Official issuance requires verified authority and an active credit-memo series.','Download the issued memo and retain the original invoice. Later corrections use the latest issued CWT adjustment.'])
+r.page('14 / Outage recovery','Authorized manual invoices')
+r.text(contract['manual_recovery'])
+r.code(json.dumps({'manual_recovery_id':'00000000-0000-4000-8000-000000000002','manual_invoice_number':'SAMPLE-MANUAL-001'},indent=2))
+r.steps(['Record the outage and retain its evidence.','Register each authorized manual invoice with its original number, branch, buyer, date, gross amount and authority reference.','Record verified service restoration. Track the replacement deadline shown in the register.','Send the replacement from your owned system with the recovery fields and matching original identity; preserve its acknowledgement.','Review unreconciled manual invoices. A retry must use the identical original event; a second replacement is rejected.'])
+r.page('15 / Platform controls','Readiness and fee invoices')
+r.text(contract['source_intake_policy'])
+r.text('NUERS service-fee statements use posted wallet debits and cannot bill a debit twice. An administrator prepares the billing period. The merchant can review and download the statement under Compliance Operations. Official service invoices require a separate registered NUERS billing entity, verified issuance authority and an active invoice series. Preparing or issuing a fee document does not debit the merchant wallet again.')
+r.call('External evidence remains separate','BIR credentials and transmission, actual accreditation, independent security certifications and production disaster-recovery evidence cannot be replaced by local software tests. Your records continue to be available under the current approved operational scope.')
+
+r.page('16 / Invoice identity','Preserve the seller invoice number')
+r.text(contract['invoice_numbering'])
+r.table(['Record mode','Numbering behavior'],[['source_capture','Retains the original finalized ERP/POS number. The connector must enforce the source system’s registered series; NUERS does not allocate a second invoice number for the copy.'],['nuers_issuance','Reserves the next number in the configured business / branch / document-family series. Checks its active period, range, recorded authority and collisions. A failed issuance rolls back the reservation.'],['Existing originals','Never renumber, overwrite or reuse a number, including a voided number. A legal correction has its own document identity and references the original.'],['Preview / draft','A unique DRAFT reference identifies unsaved work. Only successful issuance allocates a registered serial; a draft is not a tax invoice.']],[1.2,3.8])
+r.h('Buyer and related-document mapping')
+r.text(contract['buyer_identity'])
+r.text(contract['invoice_reference'])
+r.call('Keep identity stable on retry','Use the same complete payload, source_event_id and external_reference. After acceptance, changes to buyer, number, registration or financial data conflict with the stored event. Do not invent a new identity to bypass a conflict.')
+r.text('Reference: BIR EIS JSON Format v2.1 (CompInvoiceId); RR 7-2024, Section 6; RMC 98-2026. Official API guide: https://eis-cert.bir.gov.ph/#/apiGuide. BIR-issued credentials and authority remain separate prerequisites.','small')
+r.page('16 / Printed evidence','Invoice and receipt fields')
+r.text(contract['document_registration'])
+r.code(json.dumps({'customer_type':'business','invoice_reference':'SAMPLE-ORIGINAL-000001','document_registration':{'system_type':'CAS','pti_number':'SAMPLE-PTI-REFERENCE','ac_number':'SAMPLE-AC-REFERENCE','authority_issued_at':'2026-01-01','series_start':'SAMPLE-000001','series_end':'SAMPLE-999999'}},indent=2),7.7)
+r.text('Synthetic references only. Replace them with authentic recorded evidence; never send example values to claim authority. For POS, also map the MIN and machine serial or software license, plus final PTU. For a non-VAT seller, non_vat_basis distinguishes percentage_tax from an evidenced exempt basis.','small')
+r.table(['Shared preview / email / PDF','Printed content'],[['Seller and buyer','Registered seller name/address, VAT or Non-VAT Reg TIN and five-digit branch; applicable buyer name/address/TIN.'],['Items and amounts','Description, optional unit, quantity, unit cost, discounts, VAT classifications and separate totals. Buyer-confirmed CWT includes ATC, rate and base; it reduces net payable, not sales/VAT.'],['Evidence and copy','Recorded authority, date and series; original-invoice reference; REPRINT. Supplementary documents carry the input-tax warning. Unknown evidence stays not recorded.']],[1.55,3.45])
+r.text('Design stays consistent with Merchant Invoice Settings. RR 7-2024 specifies invoicing information; RMC 112-2026 addresses CWT presentation. These fields and local validation do not establish BIR approval or acceptance.','small')
 
 r.save()

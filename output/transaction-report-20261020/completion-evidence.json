@@ -1,0 +1,26 @@
+{
+  "deployed": true,
+  "main_release": "2026-10-20.transaction-reports.1",
+  "pdf_worker_release": "2026-10-20.transaction-pdf-worker.1",
+  "focused_tests": {
+    "report_filters_and_access": 30,
+    "document_pdf_and_mock_email": 9
+  },
+  "builds": [
+    "Laravel production",
+    "static production",
+    "document renderer"
+  ],
+  "live_checks": [
+    "exact reference filter returned one record and matching PHP 1400 total",
+    "browser received successful PDF response through background worker",
+    "live CLI render and encrypted private download verified",
+    "existing scheduler restored unchanged",
+    "documentation read-back confirmed HTTP 202 workflow"
+  ],
+  "pdf_limit": 500,
+  "csv": "all matching records streamed",
+  "source_business_records_preserved": true,
+  "documentation_post_deployment_sha256": "28dd09f20596288fae56d250ad849cecd9752a3eda8fad9e69831d11ddad7706",
+  "browser_artifact_note": "Browser download completion shown in application; Chrome download event did not return a local artifact path. Template visual QA used the local synthetic sample and a 500-record stress render."
+}

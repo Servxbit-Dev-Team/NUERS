@@ -29,6 +29,26 @@ Route::get('/legal/policies', fn()=>response()->json(json_decode(file_get_conten
 
 Route::get('/health', fn () => ['ok' => true, 'app' => 'NUERS Laravel API', 'solution' => ['name' => config('bir_compliance.solution_name'), 'version' => config('bir_compliance.solution_version')]]);
 
+Route::prefix('/admin/bir-wire')->controller(\App\Http\Controllers\Api\BirWireController::class)->group(function () {
+    Route::get('/', 'index');
+    Route::post('/profiles', 'save')->middleware('throttle:10,1,bir-profile:');
+    Route::put('/profiles/{id}', 'save')->whereUuid('id')->middleware('throttle:10,1,bir-profile:');
+    Route::post('/profiles/{id}/credentials', 'credentials')->whereUuid('id')->middleware('throttle:5,1,bir-credential:');
+    Route::post('/profiles/{id}/pause', 'pause')->whereUuid('id');
+    Route::post('/profiles/{id}/resume', 'resume')->whereUuid('id');
+    Route::post('/profiles/{id}/authenticate', 'probe')->whereUuid('id')->middleware('throttle:3,1,bir-auth:');
+    Route::get('/profiles/{id}/authority', 'authorityOptions')->whereUuid('id');
+    Route::post('/profiles/{id}/authority', 'authority')->whereUuid('id')->middleware('throttle:5,1,bir-authority:');
+    Route::get('/profiles/{id}/candidates', 'candidates')->whereUuid('id');
+    Route::post('/profiles/{id}/prepare', 'prepare')->whereUuid('id')->middleware('throttle:5,1,bir-prepare:');
+    Route::post('/profiles/{id}/fixture', 'fixture')->whereUuid('id')->middleware('throttle:5,1,bir-fixture:');
+    Route::get('/batches/{id}', 'detail')->whereUuid('id');
+    Route::post('/batches/{id}/release', 'release')->whereUuid('id')->middleware('throttle:5,1,bir-release:');
+    Route::post('/batches/{id}/cancel', 'cancel')->whereUuid('id');
+    Route::post('/batches/{id}/inquire', 'inquire')->whereUuid('id')->middleware('throttle:5,1,bir-inquiry:');
+});
+Route::put('/bir-eis/receive_invoice_result/{id}', [\App\Http\Controllers\Api\BirCallbackController::class,'receive'])->whereUuid('id')->middleware('throttle:120,1,bir-callback:');
+
 Route::get('/registration/options', [\App\Http\Controllers\Api\BusinessRegistrationController::class, 'options']);
 Route::get('/registration/locations', [\App\Http\Controllers\Api\BusinessRegistrationController::class, 'locations']);
 Route::get('/registration/rdo', [\App\Http\Controllers\Api\BusinessRegistrationController::class, 'resolveRdo']);
@@ -56,6 +76,7 @@ Route::get('/invoice-center/export', [\App\Http\Controllers\Api\InvoiceCenterCon
 Route::get('/invoice-center/businesses', [\App\Http\Controllers\Api\InvoiceCenterController::class, 'merchants']);
 Route::post('/invoice-center', [\App\Http\Controllers\Api\InvoiceCenterController::class, 'store']);
 Route::get('/invoice-center/{source}/{id}', [\App\Http\Controllers\Api\InvoiceCenterController::class, 'show']);
+Route::get('/invoice-center/{source}/{id}/pdf', [\App\Http\Controllers\Api\InvoiceCenterController::class, 'pdf'])->middleware('throttle:20,1,admin-document-pdf:');
 
 Route::get('/auth/session', [AuthController::class, 'session']);
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
@@ -64,6 +85,7 @@ Route::post('/auth/logout', [AuthController::class, 'logout']);
 Route::post('/auth/forgot-password', [\App\Http\Controllers\Api\AccountSecurityController::class, 'forgot'])->middleware('throttle:3,1,password-forgot:');
 Route::post('/auth/reset-password', [\App\Http\Controllers\Api\AccountSecurityController::class, 'reset'])->middleware('throttle:10,1,password-reset:');
 Route::post('/auth/change-password', [\App\Http\Controllers\Api\AccountSecurityController::class, 'change'])->middleware('throttle:5,1,password-change:');
+Route::get('/dashboard-revision', \App\Http\Controllers\Api\DashboardRevisionController::class)->middleware('throttle:120,1,dashboard-revision:');
 Route::get('/auth/security-overview', [\App\Http\Controllers\Api\AccountSecurityController::class, 'overview']);
 Route::get('/auth/notification-preferences', [\App\Http\Controllers\Api\AccountSecurityController::class, 'preferences']);
 Route::put('/auth/notification-preferences', [\App\Http\Controllers\Api\AccountSecurityController::class, 'preferences']);
@@ -100,11 +122,15 @@ Route::get('/merchant/receipts', [MerchantReceiptController::class, 'index']);
 Route::get('/merchant/receipts/verify', [MerchantReceiptController::class, 'verify']);
 Route::get('/merchant/transactions', [MerchantTransactionController::class, 'index']);
 Route::get('/merchant/tax-center', [MerchantTaxCenterController::class, 'show']);
-Route::get('/merchant/sales-reports', [\App\Http\Controllers\Api\MerchantSalesReportController::class, 'show'])->middleware('throttle:30,1,merchant-sales-report:');
+Route::get('/merchant/sales-reports', [\App\Http\Controllers\Api\MerchantSalesReportController::class, 'show'])->middleware('throttle:90,1,merchant-sales-report:');
 Route::get('/merchant/sales-reports/export', [\App\Http\Controllers\Api\MerchantSalesReportController::class, 'export'])->middleware('throttle:5,1,merchant-sales-export:');
+Route::get('/merchant/sales-reports/exports', [\App\Http\Controllers\Api\MerchantSalesReportController::class, 'exportJobs'])->middleware('throttle:90,1,merchant-sales-job-status:');
+Route::post('/merchant/sales-reports/exports', [\App\Http\Controllers\Api\MerchantSalesReportController::class, 'exportJobs'])->middleware('throttle:10,1,merchant-sales-jobs:');
+Route::get('/merchant/sales-reports/exports/{id}/download', [\App\Http\Controllers\Api\MerchantSalesReportController::class, 'exportDownload'])->whereUuid('id')->middleware('throttle:5,1,merchant-sales-download:');
 Route::post('/integrations/transactions', [IntegrationTransactionController::class, 'store']);
 Route::get('/dashboards/{portal}', [DashboardController::class, 'show']);
 Route::get('/enterprise-dashboards/{portal}', [EnterpriseDashboardController::class, 'show']);
+Route::get('/admin/submission-attempts', [\App\Http\Controllers\Api\SubmissionAttemptsController::class, 'index']);
 Route::get('/merchant/overview', [\App\Http\Controllers\Api\MerchantOverviewController::class, 'show']);
 Route::get('/merchant/records/export', [\App\Http\Controllers\Api\MerchantRecordsController::class, 'export']);
 Route::get('/merchant/records', [\App\Http\Controllers\Api\MerchantRecordsController::class, 'index']);
@@ -128,6 +154,13 @@ Route::post('/business-registry/import', [\App\Http\Controllers\Api\BusinessRegi
 Route::post('/business-registry/import/{id}', [\App\Http\Controllers\Api\BusinessRegistryController::class, 'importCommit']);
 Route::get('/business-registry', [\App\Http\Controllers\Api\BusinessRegistryController::class, 'index']);
 Route::post('/business-registry', [\App\Http\Controllers\Api\BusinessRegistryController::class, 'store']);
+// Read-only financial activity is locked to the selected registry merchant.
+Route::get('/business-registry/{registryMerchant}/transactions/export', [\App\Http\Controllers\Api\TransactionWorkspaceController::class, 'export']);
+Route::get('/business-registry/{registryMerchant}/transactions', [\App\Http\Controllers\Api\TransactionWorkspaceController::class, 'index']);
+Route::get('/business-registry/{registryMerchant}/transactions/{id}', [\App\Http\Controllers\Api\TransactionWorkspaceController::class, 'merchantShow']);
+Route::get('/business-registry/{registryMerchant}/sandbox-records/export', [\App\Http\Controllers\Api\SandboxRecordsController::class, 'export']);
+Route::get('/business-registry/{registryMerchant}/sandbox-records', [\App\Http\Controllers\Api\SandboxRecordsController::class, 'index']);
+Route::get('/business-registry/{registryMerchant}/sandbox-records/{id}', [\App\Http\Controllers\Api\SandboxRecordsController::class, 'merchantShow'])->whereUuid('id');
 Route::get('/business-registry/{id}', [\App\Http\Controllers\Api\BusinessRegistryController::class, 'show']);
 Route::put('/business-registry/{id}', [\App\Http\Controllers\Api\BusinessRegistryController::class, 'update']);
 Route::post('/business-registry/{id}/review', [\App\Http\Controllers\Api\BusinessRegistryController::class, 'review']);
@@ -141,11 +174,20 @@ Route::get('/eis-readiness', [\App\Http\Controllers\Api\EisReadinessController::
 Route::post('/eis-readiness/coverage', [\App\Http\Controllers\Api\EisReadinessController::class,'coverage']);
 Route::post('/eis-readiness/{source}/{id}/branch-review', [\App\Http\Controllers\Api\EisReadinessController::class,'branchReview'])->middleware('throttle:20,1');
 Route::post('/eis-readiness/{source}/{id}/prepare', [\App\Http\Controllers\Api\EisReadinessController::class,'prepare'])->middleware('throttle:30,1');
+Route::get('/transaction-workspace/exports/{id}', [\App\Http\Controllers\Api\TransactionWorkspaceController::class,'exportDownload'])->whereUuid('id');
 Route::get('/transaction-workspace/export', [\App\Http\Controllers\Api\TransactionWorkspaceController::class,'export']);
 Route::get('/transaction-workspace', [\App\Http\Controllers\Api\TransactionWorkspaceController::class,'index']);
 Route::get('/transaction-workspace/{id}', [\App\Http\Controllers\Api\TransactionWorkspaceController::class,'show']);
 Route::get('/transactions/overview', [TransactionController::class, 'overview']);
 Route::get('/tax-intelligence/{scope}', [TaxIntelligenceController::class, 'show']);
+Route::get('/admin/eis-center', [\App\Http\Controllers\Api\EisTransmissionCenterController::class, 'index']);
+Route::get('/admin/eis-center/export', [\App\Http\Controllers\Api\EisTransmissionCenterController::class, 'export'])->middleware('throttle:10,1');
+Route::post('/admin/eis-center/preview', [\App\Http\Controllers\Api\EisTransmissionCenterController::class, 'preview'])->middleware('throttle:10,1');
+Route::post('/admin/eis-center/batches', [\App\Http\Controllers\Api\EisTransmissionCenterController::class, 'createBatch'])->middleware('throttle:10,1');
+Route::get('/admin/eis-center/batches', [\App\Http\Controllers\Api\EisTransmissionCenterController::class, 'batches']);
+Route::get('/admin/eis-center/batches/{id}', [\App\Http\Controllers\Api\EisTransmissionCenterController::class, 'batches']);
+Route::post('/admin/eis-center/batches/{id}/release', [\App\Http\Controllers\Api\EisTransmissionCenterController::class, 'release'])->middleware('throttle:5,1');
+Route::get('/admin/eis-center/documents/{source}/{id}', [\App\Http\Controllers\Api\EisTransmissionCenterController::class, 'detail']);
 Route::get('/bir-eis/readiness', [EisController::class, 'readiness']);
 Route::get('/bir-eis/transmissions', [EisController::class, 'transmissions']);
 Route::post('/bir-eis/validate', [EisController::class, 'validatePayload']);
@@ -160,42 +202,20 @@ Route::get('/locations/cities', [LocationController::class, 'cities']);
 Route::get('/locations/barangays', [LocationController::class, 'barangays']);
 Route::get('/locations/rdo', [LocationController::class, 'rdo']);
 
-Route::get('/verify-receipt/{receiptNumber}', function (string $receiptNumber) {
-    $receipt = DB::table('transaction_receipts')
-        ->where('receipt_number', $receiptNumber)
-        ->first();
-
-    abort_unless($receipt, 404, 'Receipt not found in the NUERS registry.');
-
-    DB::table('receipt_verifications')->insert([
-        'id' => (string) Str::uuid(),
-        'receipt_id' => $receipt->id,
-        'receipt_number' => $receipt->receipt_number,
-        'verification_method' => 'receipt_number',
-        'verifier_ip' => request()->ip(),
-        'status' => 'registry_match',
-        'signature_valid' => false,
-        'verified_at' => now(),
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
-
-    return [
-        'receipt' => [
-            'receipt_number' => $receipt->receipt_number,
-            'merchant_name' => $receipt->merchant_name,
-            'merchant_tin' => $receipt->merchant_tin,
-            'gross_amount' => $receipt->gross_amount,
-            'total_due' => $receipt->total_due,
-            'status' => $receipt->status,
-            'issued_at' => $receipt->issued_at,
-            'signature_valid' => null,
-            'authenticity' => 'NUERS registry match — cryptographic signature and BIR acceptance not verified',
-        ],
-    ];
-});
+Route::get('/verify-receipt/{receiptNumber}', [\App\Http\Controllers\Api\ReceiptVerificationController::class, 'show'])->middleware('throttle:20,1,receipt-lookup:');
 
 Route::match(['get', 'post', 'put', 'patch', 'delete'], '/tables/{table}', [TableController::class, 'handle']);
+
+// Owner-scoped PTI preparation; official filing and authority require documentary evidence.
+Route::get('/pti-applications/businesses', [\App\Http\Controllers\Api\PtiApplicationController::class,'businesses']);
+Route::get('/pti-applications', [\App\Http\Controllers\Api\PtiApplicationController::class,'index']);
+Route::post('/pti-applications', [\App\Http\Controllers\Api\PtiApplicationController::class,'store'])->middleware('throttle:10,1');
+Route::get('/pti-applications/{id}', [\App\Http\Controllers\Api\PtiApplicationController::class,'show'])->whereUuid('id');
+Route::put('/pti-applications/{id}', [\App\Http\Controllers\Api\PtiApplicationController::class,'update'])->whereUuid('id')->middleware('throttle:20,1');
+Route::post('/pti-applications/{id}/documents', [\App\Http\Controllers\Api\PtiApplicationController::class,'upload'])->whereUuid('id')->middleware('throttle:10,1');
+Route::get('/pti-applications/{id}/documents/{document}', [\App\Http\Controllers\Api\PtiApplicationController::class,'download'])->whereUuid(['id','document']);
+Route::post('/pti-applications/{id}/status', [\App\Http\Controllers\Api\PtiApplicationController::class,'transition'])->whereUuid('id')->middleware('throttle:10,1');
+Route::get('/pti-applications/{id}/packet', [\App\Http\Controllers\Api\PtiApplicationController::class,'packet'])->whereUuid('id')->middleware('throttle:3,1');
 
 Route::get('/taxpayer-authorizations/export', [\App\Http\Controllers\Api\TaxpayerAuthorizationController::class,'export']);
 Route::get('/taxpayer-authorizations/template', [\App\Http\Controllers\Api\TaxpayerAuthorizationController::class,'template']);
@@ -354,6 +374,7 @@ Route::delete('/merchant/invoice-settings/logo', [\App\Http\Controllers\Api\Merc
 // Isolated API test records; no production financial or document mutation.
 Route::get('/merchant/sandbox-records',[\App\Http\Controllers\Api\SandboxRecordsController::class,'index']);
 Route::get('/merchant/sandbox-records/{id}',[\App\Http\Controllers\Api\SandboxRecordsController::class,'show'])->whereUuid('id');
+Route::get('/admin/sandbox-records/export',[\App\Http\Controllers\Api\SandboxRecordsController::class,'export']);
 Route::get('/admin/sandbox-records',[\App\Http\Controllers\Api\SandboxRecordsController::class,'index']);
 Route::get('/admin/sandbox-records/{id}',[\App\Http\Controllers\Api\SandboxRecordsController::class,'show'])->whereUuid('id');
 
@@ -380,3 +401,13 @@ Route::post('/auth/mfa/devices', [\App\Http\Controllers\Api\MfaDeviceController:
 Route::post('/auth/mfa/devices/{id}/confirm', [\App\Http\Controllers\Api\MfaDeviceController::class,'confirm'])->middleware('throttle:5,1');
 Route::post('/auth/mfa/devices/{id}/cancel', [\App\Http\Controllers\Api\MfaDeviceController::class,'cancel'])->middleware('throttle:5,1');
 Route::delete('/auth/mfa/devices/{id}', [\App\Http\Controllers\Api\MfaDeviceController::class,'revoke'])->middleware('throttle:5,1');
+
+require __DIR__.'/infrastructure.php';
+
+// Owner-scoped compliance operations; administrative roles are checked in the controller.
+Route::get('/compliance-operations', [\App\Http\Controllers\Api\ComplianceOperationsController::class, 'index']);
+Route::get('/compliance-operations/businesses', [\App\Http\Controllers\Api\ComplianceOperationsController::class, 'businesses']);
+Route::get('/compliance-operations/documents', [\App\Http\Controllers\Api\ComplianceOperationsController::class, 'documents']);
+Route::get('/compliance-operations/export', [\App\Http\Controllers\Api\ComplianceOperationsController::class, 'export']);
+Route::post('/compliance-operations', [\App\Http\Controllers\Api\ComplianceOperationsController::class, 'store']);
+Route::post('/compliance-operations/{id}/actions', [\App\Http\Controllers\Api\ComplianceOperationsController::class, 'action']);

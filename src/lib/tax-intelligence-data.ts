@@ -1,3 +1,4 @@
+import { subscribeRealtimeRefresh } from "@/lib/use-realtime-refresh";
 import { useEffect, useState } from "react";
 import { apiFetch, readJsonResponse } from "@/lib/api-url";
 
@@ -82,8 +83,8 @@ export function useTaxIntelligenceData(scope: TaxScope) {
   useEffect(() => {
     let cancelled = false;
 
-    async function loadTaxIntelligence() {
-      setLoading(true);
+    async function loadTaxIntelligence(quiet=false) {
+      if(!quiet)setLoading(true);
       setError(null);
 
       try {
@@ -96,7 +97,7 @@ export function useTaxIntelligenceData(scope: TaxScope) {
         if (!cancelled) setData(payload);
       } catch (err) {
         if (!cancelled) {
-          setData({ ...emptyPayload, scope });
+          if(!quiet)setData({ ...emptyPayload, scope });
           setError(err instanceof Error ? err.message : "Unable to load tax intelligence data.");
         }
       } finally {
@@ -105,9 +106,9 @@ export function useTaxIntelligenceData(scope: TaxScope) {
     }
 
     loadTaxIntelligence();
-
+    const stop=subscribeRealtimeRefresh(()=>loadTaxIntelligence(true));
     return () => {
-      cancelled = true;
+      stop(); cancelled = true;
     };
   }, [scope]);
 

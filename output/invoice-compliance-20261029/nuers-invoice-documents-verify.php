@@ -1,0 +1,23 @@
+<?php
+if(PHP_SAPI!=='cli')exit(1);
+umask(0077);$root=__DIR__.'/httpdocs';require $root.'/vendor/autoload.php';
+$app=require $root.'/bootstrap/app.php';$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+use Illuminate\Support\Facades\Schema;
+if(parse_url(config('app.url'),PHP_URL_HOST)!=='nuers.net'||!config('security.enforce_privileged_mfa'))throw new RuntimeException('Wrong target or security policy');
+$m=json_decode(file_get_contents(__DIR__.'/nuers-invoice-documents-stage-20261029/audit-release-manifest.json'),true,512,JSON_THROW_ON_ERROR);
+foreach($m['files']as$p=>$h)if(!is_file($root.'/'.$p)||!hash_equals($h,hash_file('sha256',$root.'/'.$p)))throw new RuntimeException('Installed checksum mismatch: '.$p);
+foreach(['business_invoices','transaction_receipts','invoice_series'] as $t)if(!Schema::hasColumn($t,'document_registration'))throw new RuntimeException('Registration snapshot missing');
+if(!Schema::hasColumn('invoice_series','serial_digits')||!Schema::hasColumn('business_invoices','buyer_customer_type'))throw new RuntimeException('Identity field missing');
+if(config('bir_eis.outbound_enabled')||config('bir_eis.callback_enabled')||config('bir_compliance.source_capture_accreditation_enforced'))throw new RuntimeException('BIR / intake policy changed');
+app(App\Services\BirCompliance::class)->assertSourceCaptureAllowed();
+if(config('infrastructure.enabled')||config('infrastructure.execution_enabled'))throw new RuntimeException('Infrastructure controller changed');
+$rules=app(App\Services\InvoiceDocumentRules::class);
+if($rules->numberError(str_repeat('A',50))!==null||$rules->numberError(str_repeat('A',51))===null||$rules->numberError(' INV-1')===null)throw new RuntimeException('Number guard mismatch');
+if($rules->registeredTin('123456789000',null)!=='123-456-789-00000')throw new RuntimeException('TIN presentation mismatch');
+$spec=json_decode(file_get_contents($root.'/resources/data/developer-openapi.json'),true);
+$fields=$spec['paths']['/api/integrations/transactions']['post']['requestBody']['content']['application/json']['schema']['properties'];
+if($fields['receipt_number']['maxLength']!==50||!isset($fields['document_registration'],$fields['customer_type'],$fields['invoice_reference']))throw new RuntimeException('OpenAPI contract incomplete');
+if($fields!==$spec['components']['schemas']['IngestionEvent']['properties'])throw new RuntimeException('Batch contract drift');
+$guide=hash_file('sha256',$root.'/public/guides/NUERS-API-Connection-Guide.pdf');
+foreach(['guides/NUERS-API-Connection-Guide.pdf','guides/NUERS-API-Developer-Documentation.pdf','public/guides/NUERS-API-Developer-Documentation.pdf','dist/guides/NUERS-API-Connection-Guide.pdf'] as $p)if(hash_file('sha256',$root.'/'.$p)!==$guide)throw new RuntimeException('Guide alias drift');
+echo json_encode(['verified'=>true,'release'=>$m['release'],'php'=>PHP_VERSION,'files_verified'=>count($m['files']),'schema_verified'=>true,'mfa_enabled'=>true,'outbound_enabled'=>false,'callbacks_enabled'=>false,'source_intake_enforced'=>false,'source_intake_available'=>true,'invoice_number_max'=>50,'openapi_aligned'=>true,'guide_sha256'=>$guide,'verified_at'=>gmdate('c')]);

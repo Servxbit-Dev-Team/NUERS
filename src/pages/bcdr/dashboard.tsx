@@ -1,8 +1,10 @@
+import {exportReport as openReportExport} from "@/components/reports/export-report";
+import { subscribeRealtimeRefresh, useRealtimeRefresh } from "@/lib/use-realtime-refresh";
 import { useEffect, useState, type ElementType, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { Activity, Archive, ArrowRight, CalendarDays, Check, CheckCircle2, ClipboardCheck, Clock3, Cloud, Database, Download, FileCheck2, FileText, FolderOpen, Layers, List, LockKeyhole, Megaphone, Play, Plus, RefreshCw, Server, Settings, Shield, ShieldCheck, Target, TriangleAlert } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { apiFetch, apiJson, readJsonResponse } from "@/lib/api-url";
+import { apiJson } from "@/lib/api-url";
 import { useAuth } from "@/lib/auth";
 import "./dashboard.css";
 
@@ -30,11 +32,12 @@ const components:Record<string,string>={database:"Database Replication",storage:
 
 export function BackupRecoveryDashboard(){
  const {user}=useAuth();const [data,setData]=useState<Recovery|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(""),[message,setMessage]=useState(""),[modal,setModal]=useState<Modal|null>(null),[clock,setClock]=useState(new Date()),[exporting,setExporting]=useState(false);
- async function load(){setLoading(true);setError("");try{setData(await apiJson<Recovery>("/api/admin/backups"))}catch(e){setError(e instanceof Error?e.message:"Could not load backup and recovery records.")}finally{setLoading(false)}}
+ async function load(quiet=false){if(!quiet)setLoading(true);setError("");try{setData(await apiJson<Recovery>("/api/admin/backups"))}catch(e){setError(e instanceof Error?e.message:"Could not load backup and recovery records.")}finally{setLoading(false)}}
+ useRealtimeRefresh(()=>load(true),!modal&&!exporting);
  useEffect(()=>{void load();const timer=setInterval(()=>setClock(new Date()),1000);return()=>clearInterval(timer)},[]);
  const p=data?.policy.values||{},s=data?.stats;
  function open(mode:Modal["mode"],kind:string,row?:Evidence,type?:Modal["type"]){setModal({mode,kind,row,type});setMessage("")}
- async function exportReport(){setExporting(true);try{const response=await apiFetch("/api/admin/backups/export");if(!response.ok)await readJsonResponse(response);const url=URL.createObjectURL(await response.blob());const a=document.createElement("a");a.href=url;a.download="NUERS-backup-recovery-report.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);setMessage("Recovery evidence report downloaded.")}catch(e){setError(e instanceof Error?e.message:"Could not export the report.")}finally{setExporting(false)}}
+ async function exportReport(){setExporting(true);try{await openReportExport({path:'/api/admin/backups/export',title:'Backup & Disaster Recovery Evidence',scope:'Readiness snapshot: up to 100 evidence records per section; rollups use the latest 2,000 evidence records. This is not the full backup archive.'});}finally{setExporting(false)}}
  const policies:{title:string;value:string;description:string;icon:ElementType;color:string}[]=[
   {title:"Database Backup",value:p.database_minutes?`Every ${duration(p.database_minutes)}`:"—",description:"Recovery copies and checkpoints",icon:Database,color:"blue"},
   {title:"Object Storage Backup",value:p.objects_minutes?`Every ${duration(p.objects_minutes)}`:"—",description:"Invoice documents and attachments",icon:FileText,color:"blue"},
@@ -123,7 +126,7 @@ export function BackupRecoveryDashboard(){
 function RecordDetail({row,canReview,onReview}:{row:Evidence;canReview:boolean;onReview:()=>void}){return <div className="bdr-detail"><Pill>{nice(row.status)}</Pill><dl><dt>Record ID</dt><dd>{row.id}</dd><dt>Evidence reference</dt><dd>{row.evidence_reference}</dd>{Object.entries(row.payload).map(([key,value])=><div className="bdr-detail-row" key={key}><dt>{nice(key)}</dt><dd>{typeof value==="object"?JSON.stringify(value):typeof value==="boolean"?value?"Yes":"No":String(value??"Not recorded")}</dd></div>)}<dt>Review</dt><dd>{row.review_note||"Not yet reviewed"}</dd></dl>{canReview&&<button className="bdr-primary-button" onClick={onReview}>Review evidence / request</button>}</div>}
 function Records({modal,onOpen}:{modal:Modal;onOpen:(mode:Modal["mode"],kind:string,row?:Evidence,type?:Modal["type"])=>void}){
  const [rows,setRows]=useState<Evidence[]>([]),[page,setPage]=useState(1),[pages,setPages]=useState(1),[error,setError]=useState(""),[loading,setLoading]=useState(true);
- useEffect(()=>{let active=true;setLoading(true);apiJson<{data:Evidence[];last_page:number}>(`/api/admin/backups/records?type=${modal.type}&kind=${modal.kind}&page=${page}`).then(x=>{if(active){setRows(x.data);setPages(x.last_page)}}).catch(e=>{if(active)setError(e.message)}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[modal.type,modal.kind,page]);
+ useEffect(()=>{let active=true;const controller=new AbortController();const read=(quiet=false)=>{if(!quiet)setLoading(true);return apiJson<{data:Evidence[];last_page:number}>(`/api/admin/backups/records?type=${modal.type}&kind=${modal.kind}&page=${page}`,{signal:controller.signal}).then(x=>{if(active){setRows(x.data);setPages(x.last_page);setError("")}}).catch(e=>{if(active)setError(e.message)}).finally(()=>{if(active)setLoading(false)})};void read();const off=subscribeRealtimeRefresh(()=>read(true));return()=>{active=false;controller.abort();off()}},[modal.type,modal.kind,page]);
  return <div>{error&&<p role="alert" className="bdr-error">{error}</p>}<div className="bdr-table"><table><thead><tr><th>Reference</th><th>Type</th><th>Recorded (PHT)</th><th>Status</th><th/></tr></thead><tbody>{rows.map(row=><tr key={row.id}><td>{short(row.id)}</td><td>{nice(row.kind)}</td><td>{stamp(row.created_at)}</td><td>{nice(row.status)}</td><td><button onClick={()=>onOpen("detail",row.kind,row,modal.type)}>View details</button></td></tr>)}</tbody></table>{loading?<p className="bdr-table-empty">Loading records…</p>:!rows.length&&<Empty>No matching records.</Empty>}</div><div data-slot="table-pagination" className="bdr-pagination"><button disabled={loading||page<=1} onClick={()=>setPage(page-1)}>Previous</button><span>Page {page} of {pages}</span><button disabled={loading||page>=pages} onClick={()=>setPage(page+1)}>Next</button></div></div>
 }
 

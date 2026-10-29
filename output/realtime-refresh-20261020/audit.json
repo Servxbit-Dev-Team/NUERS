@@ -1,0 +1,80 @@
+{
+  "release": "2026-10-20.realtime-refresh",
+  "status": "deployed and verified on nuers.net",
+  "refresh": {
+    "interval_ms": 1000,
+    "transport": "authenticated actor-bound revision heartbeat",
+    "scope": "active merchant and admin data views",
+    "unchanged_revision": "no expensive page queries",
+    "guards": [
+      "hidden/offline pause",
+      "request serialization",
+      "backoff and Retry-After",
+      "form and filter preservation",
+      "abort obsolete filters",
+      "last good data preserved"
+    ]
+  },
+  "typography": {
+    "body_px": 14,
+    "heading_px": 28,
+    "helpers_min_px": 12,
+    "mobile_width": 390,
+    "mobile_scroll_width": 390
+  },
+  "tests": {
+    "php_tests": 618,
+    "assertions": 6692,
+    "frontend_tests": 7,
+    "production_build": "passed",
+    "synthetic_browser_change": "server label appeared without reload",
+    "filter_after_change": "WEB preserved",
+    "unsaved_form_after_change": "preserved"
+  },
+  "limits": [
+    "Changes from outside the application that do not touch the financial invalidation queue reconcile on a one-minute clock boundary.",
+    "Update latency includes server query time; requests do not overlap.",
+    "No telemetry is fabricated when infrastructure is not connected."
+  ],
+  "deployment": {
+    "deployed": true,
+    "release": "2026-10-20.realtime-refresh",
+    "deployed_at": "2026-10-20T04:02:47+00:00",
+    "verification": {
+      "verified": true,
+      "checked_at": "2026-10-20T04:02:47+00:00",
+      "business_data_read_only": true,
+      "heartbeat_samples": 30,
+      "heartbeat_mean_ms": 4.31,
+      "financial_scans": 0,
+      "actor_bound_token": true,
+      "anonymous_status": 401,
+      "mfa_preserved": true,
+      "files_verified": 91,
+      "schema_migration": false,
+      "bir_transport_enabled": false
+    },
+    "existing_records_preserved": true,
+    "environment_preserved": true,
+    "files_verified": 91,
+    "old_assets_retained": true,
+    "backup": "nuers-realtime-refresh-backup-20261020-040245",
+    "package_sha256": "067188650dac2f81c2f634cae698b90dcc1046dbb39db5ac1e75b815f2b8e438"
+  },
+  "live_browser_checks": {
+    "merchant_dashboard": "rendered with live data and every-second update label",
+    "merchant_console_errors": 0,
+    "server_management": "body/table 14px and heading 28px verified",
+    "asset": "/assets/index-InANHeSl.js",
+    "scheduler": "original task 507 preserved"
+  },
+  "evidence": [
+    "server-management-live.png",
+    "merchant-dashboard-live.png",
+    "live-result.json",
+    "php-tests-unrestricted.log",
+    "frontend-tests.log",
+    "build.log"
+  ],
+  "test_cleanup": "isolated preview server stopped; temporary synthetic SQLite database and session fixture removed"
+}

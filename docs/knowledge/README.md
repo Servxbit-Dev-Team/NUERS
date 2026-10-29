@@ -29,3 +29,5 @@ Source documents describe proposed requirements and design references. Their emb
 - [Preserved complete EIS system specification](sources/NUERS_EIS_Complete_System_Documentation.pdf)
 
 - [Developer overview, API reference and isolated sandbox](developer-portal.md)
+
+- [BIR EIS credential setup and activation runbook](bir-eis-credential-readiness.md) — public-guide wire protocol, company authority, batch reconciliation and certification boundaries (28 October 2026).

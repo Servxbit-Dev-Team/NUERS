@@ -32,6 +32,20 @@ class MerchantOverviewController extends Controller
         $daily = [$today->toDateString() => ['sales' => 0, 'invoices' => 0], $today->subDay()->toDateString() => ['sales' => 0, 'invoices' => 0]];
         $documents = ['issued' => 0, 'for_review' => 0, 'cancelled' => 0, 'pending' => 0];
         $bir = ['acknowledged' => 0, 'queued' => 0, 'needs_attention' => 0, 'not_verified' => 0];
+        $indexed = app(\App\Services\IndexedSalesReport::class)->available();
+        $jobs = collect(); $verified = [];
+        if ($indexed) {
+            $groups = app(\App\Services\IndexedMerchantOverview::class)->aggregate((string) $merchant->id, $start->toDateString(), $today->toDateString());
+            foreach ($groups as $key => $row) {
+                $series[$key]['sales'] = (int) $row->sales;
+                $series[$key]['documents'] = (int) $row->documents;
+                if (isset($daily[$key])) $daily[$key] = ['sales' => (int) $row->sales, 'invoices' => (int) $row->invoices];
+                foreach (array_keys($documents) as $state) $documents[$state] += (int) $row->$state;
+                $bir['queued'] += (int) $row->queued;
+                $bir['needs_attention'] += (int) $row->needs_attention;
+                $bir['not_verified'] += (int) $row->documents - (int) $row->queued - (int) $row->needs_attention;
+            }
+        } else {
         $jobs = DB::table('eis_document_outbox as o')->leftJoin('eis_delivery_jobs as j', 'j.outbox_id', '=', 'o.id')
             ->where('o.merchant_id', $merchant->id)->orderByDesc('o.prepared_at')->orderByDesc('o.source_review_revision')->get(['o.document_source', 'o.document_id', 'j.state'])
             ->unique(fn ($j) => $j->document_source.':'.$j->document_id)->keyBy(fn ($j) => $j->document_source.':'.$j->document_id);
@@ -46,31 +60,35 @@ class MerchantOverviewController extends Controller
                 }
             }
         }
-        $query = app(IssuedDocumentLedger::class)->query()->where('merchant_id', $merchant->id)
+        $query = app(IssuedDocumentLedger::class)->query((string) $merchant->id)
             ->where('business_date', '>=', $start->subDay()->toDateString())->where('business_date', '<', $today->addDays(2)->toDateString());
-        foreach ($query->orderBy('id')->cursor() as $row) {
-            $key = $this->businessDay($row, $zone);
-            if (! isset($series[$key])) {
-                continue;
-            }
-            $review = $row->document_source !== 'transaction' ? app(EisDocumentReadiness::class)->inspect($row->document_source, $row->document_id) : null;
-            $sound = $row->identity_count === 1 || (int) $row->identity_count === 1;
-            $sound = $sound && ($review['financial_validation_passed'] ?? false);
-            $state = $row->status === 'cancelled' ? 'cancelled' : (! $sound || $row->status === 'failed' ? 'for_review' : ($row->status === 'success' ? 'issued' : 'pending'));
-            $documents[$state]++;
-            $series[$key]['documents']++;
-            if ($row->document_family === 'invoice' && $row->status === 'success' && isset($daily[$key])) {
-                $daily[$key]['invoices']++;
-            }
-            $linkedAdjustment = ! in_array($row->document_family, ['credit', 'debit'], true) || ($row->original_invoice_id && DB::table('business_invoices')->where('id', $row->original_invoice_id)->where('merchant_id', $merchant->id)->whereNotIn('status', ['draft', 'cancelled', 'voided'])->whereNotIn('document_type', ['credit_memo', 'debit_memo', 'credit_note', 'debit_note', 'payment_receipt', 'official_receipt', 'purchase_invoice', 'delivery_receipt'])->exists());
-            if ($sound && $row->status === 'success' && in_array($row->document_family, ['invoice', 'credit', 'debit'], true) && $linkedAdjustment) {
-                $amount = (int) round((float) $row->amount * 100) * ($row->document_family === 'credit' ? -1 : 1);
-                $series[$key]['sales'] += $amount;
-                if (isset($daily[$key])) {
-                    $daily[$key]['sales'] += $amount;
+        foreach ($query->orderBy('id')->lazy(500)->chunk(500) as $batch) {
+            $financials = app(EisDocumentReadiness::class)->financialBatch($batch, (string) $merchant->id);
+            foreach ($batch as $row) {
+                $key = $this->businessDay($row, $zone);
+                if (! isset($series[$key])) {
+                    continue;
                 }
+                $review = $financials[$row->document_source.':'.$row->document_id] ?? null;
+                $sound = $row->identity_count === 1 || (int) $row->identity_count === 1;
+                $sound = $sound && ($review['financial_validation_passed'] ?? false);
+                $state = $row->status === 'cancelled' ? 'cancelled' : (! $sound || $row->status === 'failed' ? 'for_review' : ($row->status === 'success' ? 'issued' : 'pending'));
+                $documents[$state]++;
+                $series[$key]['documents']++;
+                if ($row->document_family === 'invoice' && $row->status === 'success' && isset($daily[$key])) {
+                    $daily[$key]['invoices']++;
+                }
+                $linkedAdjustment = ! in_array($row->document_family, ['credit', 'debit'], true) || ($row->original_invoice_id && DB::table('business_invoices')->where('id', $row->original_invoice_id)->where('merchant_id', $merchant->id)->whereNotIn('status', ['draft', 'cancelled', 'voided'])->whereNotIn('document_type', ['credit_memo', 'debit_memo', 'credit_note', 'debit_note', 'payment_receipt', 'official_receipt', 'purchase_invoice', 'delivery_receipt'])->exists());
+                if ($sound && $row->status === 'success' && in_array($row->document_family, ['invoice', 'credit', 'debit'], true) && $linkedAdjustment) {
+                    $amount = (int) round((float) $row->amount * 100) * ($row->document_family === 'credit' ? -1 : 1);
+                    $series[$key]['sales'] += $amount;
+                    if (isset($daily[$key])) {
+                        $daily[$key]['sales'] += $amount;
+                    }
+                }
+                $bir[$this->birState($row, $jobs, $verified)]++;
             }
-            $bir[$this->birState($row, $jobs, $verified)]++;
+        }
         }
         $paymentDaily = [];
         foreach ([$today, $today->subDay()] as $date) {
@@ -84,7 +102,11 @@ class MerchantOverviewController extends Controller
         // Expose PHP amounts consistently; sums above use integer centavos.
         $current['sales'] /= 100;
         $previous['sales'] /= 100;
-        $recent = app(IssuedDocumentLedger::class)->query()->where('merchant_id', $merchant->id)->whereIn('document_source', ['invoice', 'receipt'])->orderByDesc('recorded_at')->limit(8)->get()->map(function ($row) use ($jobs, $verified, $zone) {
+        $recent = app(IssuedDocumentLedger::class)->query((string) $merchant->id)->whereIn('document_source', ['invoice', 'receipt'])->orderByDesc('recorded_at')->limit(8)->get();
+        if ($indexed && $recent->isNotEmpty()) {
+            $jobs = DB::table('eis_document_outbox as o')->leftJoin('eis_delivery_jobs as j', 'j.outbox_id', '=', 'o.id')->where('o.merchant_id', $merchant->id)->whereIn('o.document_id', $recent->pluck('document_id'))->orderByDesc('o.source_review_revision')->orderByDesc('o.prepared_at')->get(['o.document_source', 'o.document_id', 'j.state'])->unique(fn ($j) => $j->document_source.':'.$j->document_id)->keyBy(fn ($j) => $j->document_source.':'.$j->document_id);
+        }
+        $recent = $recent->map(function ($row) use ($jobs, $verified, $zone) {
             return ['id' => $row->id, 'document_id' => $row->document_id, 'source' => $row->document_source, 'number' => $row->receipt_number ?: $row->transaction_ref, 'customer' => $row->customer_name ?: 'Unspecified customer', 'date' => $this->businessDay($row, $zone), 'amount' => (float) $row->amount, 'status' => $row->record_status, 'bir_status' => $this->birState($row, $jobs, $verified)];
         });
         $drafts = DB::table('business_invoices')->where('merchant_id', $merchant->id)->where('status', 'draft')->count();

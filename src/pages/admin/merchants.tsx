@@ -1,3 +1,4 @@
+import {exportReport as openReportExport} from "@/components/reports/export-report";
 import { formatTin } from "@/lib/tin";
 import { useEffect, useState, useMemo } from "react";
 import {
@@ -578,25 +579,7 @@ export function AdminMerchants() {
     }
   }
 
-  function handleExport() {
-    const rows = [
-      ["Business Name", "TIN", "Owner", "Email", "Phone", "Sector", "Region", "Status", "Compliance Score", "Monthly Revenue", "VAT Registered", "POS System"],
-      ...merchants.map((m) => [
-        m.business_name, m.tin, m.owner_name, m.email, m.phone,
-        m.sector, m.region, m.status, m.compliance_score,
-        m.monthly_revenue, m.vat_registered ? "Yes" : "No", m.pos_system,
-      ]),
-    ];
-    const csv = rows.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `merchants_export_${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Business account data exported as CSV.");
-  }
+  function handleExport(){void openReportExport({title:'Business Accounts',scope:merchants.length+' business accounts loaded in this registry view',table:{headers:['Business Name','TIN','Owner','Email','Phone','Sector','Region','Status','Compliance Score','Monthly Revenue PHP','VAT Registered','POS System'],rows:merchants.map(m=>[m.business_name,m.tin,m.owner_name,m.email,m.phone,m.sector,m.region,m.status,m.compliance_score,m.monthly_revenue,m.vat_registered?'Yes':'No',m.pos_system].map(v=>String(v??'')))}});}
 
   async function handleRegisterMerchant() {
     if (!regForm.business_name || !regForm.tin || !regForm.email) {

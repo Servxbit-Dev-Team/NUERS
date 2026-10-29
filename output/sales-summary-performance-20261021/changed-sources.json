@@ -1,0 +1,11 @@
+[
+  "app/Http/Controllers/Api/TransactionWorkspaceController.php",
+  "app/Http/Controllers/Api/OperationsReportController.php",
+  "app/Services/LedgerProjection.php",
+  "app/Services/OperationsSalesQuery.php",
+  "app/Services/TransactionTransmissionQuery.php",
+  "app/Services/OperationsSalesEvidence.php",
+  "src/pages/operations/workspace.tsx",
+  "database/migrations/2026_10_21_000001_index_operations_sales_evidence.php",
+  "docs/knowledge/operations-dashboards.md"
+]

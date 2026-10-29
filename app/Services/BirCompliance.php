@@ -20,6 +20,13 @@ class BirCompliance
         return $user;
     }
 
+    public function assertSourceCaptureAllowed(): void
+    {
+        if (!config('bir_compliance.source_capture_accreditation_enforced')) return;
+        $state=$this->accreditation();
+        abort_unless($state['authorized'],409,'New Live source intake is paused by the accreditation policy. Existing records remain available.');
+    }
+
     public function accreditation(?string $id = null): array
     {
         $record = null;
@@ -96,7 +103,7 @@ class BirCompliance
         return $query->when(DB::transactionLevel() > 0, fn ($q) => $q->lockForUpdate())->orderByDesc('updated_at')->first();
     }
 
-    public function gate(?object $integration, bool $transmission = true): array
+    public function gate(?object $integration, bool $transmission = true, bool $implementedWireAdapter = false): array
     {
         $accreditation = $this->accreditation($integration?->esp_accreditation_id ?? null);
         $blockers = $accreditation['blockers'];
@@ -113,7 +120,7 @@ class BirCompliance
             if (! $integration || $integration->ptt_status !== 'approved' || ! $integration->permit_to_transmit_number) {
                 $blockers[] = 'Taxpayer Permit to Transmit is required separately from PTI.';
             }
-            if (! $integration?->credentials_present || ! $integration?->public_key_fingerprint) {
+            if (! $implementedWireAdapter && (! $integration?->credentials_present || ! $integration?->public_key_fingerprint)) {
                 $blockers[] = 'BIR production credentials and key material are not registered.';
             }
         }
@@ -123,7 +130,7 @@ class BirCompliance
                 if (! $reference) {
                     continue;
                 }
-                $permit = DB::table('taxpayer_authorizations')->where('kind', $kind)->where('reference', $reference)->when(DB::transactionLevel() > 0, fn ($q) => $q->lockForUpdate())->first();
+                $permit = DB::table('taxpayer_authorizations')->where('kind', $kind)->where('reference', $reference)->where('merchant_id', $integration->merchant_id)->where('environment', $integration->environment)->where('branch_code', $integration->branch_code)->when(DB::transactionLevel() > 0, fn ($q) => $q->lockForUpdate())->first();
                 if (! $permit || $permit->merchant_id !== $integration->merchant_id || $permit->environment !== $integration->environment || ($permit->branch_code ?? null) !== $integration->branch_code || ! in_array(app(TaxpayerAuthorizationController::class)->effective($permit), ['active', 'expiring_soon'])) {
                     $blockers[] = $kind.' maintained authority is not current for this taxpayer and environment.';
                 }
@@ -142,19 +149,19 @@ class BirCompliance
             $blockers[] = 'The registered branch is operationally inactive.';
         }
         $authorizationReady = ! $blockers;
-        if ($transmission && ! config('bir_compliance.transport_implemented')) {
+        if ($transmission && ! $implementedWireAdapter && ! config('bir_compliance.transport_implemented')) {
             $blockers[] = 'Verified BIR production transport is not implemented; certification acknowledgements are simulations.';
         }
 
-        if ($transmission && ! config('bir_compliance.official_interface_verified')) {
+        if ($transmission && ! $implementedWireAdapter && ! config('bir_compliance.official_interface_verified')) {
             $blockers[] = 'The authorized BIR interface and official schema mapping have not been verified.';
         }
-        if ($transmission && ! config('bir_compliance.production_response_verification_implemented')) {
+        if ($transmission && ! $implementedWireAdapter && ! config('bir_compliance.production_response_verification_implemented')) {
             $blockers[] = 'Authenticated BIR production response verification is not implemented.';
         }
 
         return ['can_issue' => ! $transmission && ! $blockers, 'can_transmit' => $transmission && ! $blockers,
-            'authorization_ready' => $authorizationReady, 'transport_ready' => (bool) config('bir_compliance.transport_implemented'),
+            'authorization_ready' => $authorizationReady, 'transport_ready' => $implementedWireAdapter || (bool) config('bir_compliance.transport_implemented'),
             'blockers' => $blockers, 'accreditation' => $accreditation];
     }
 
@@ -197,7 +204,7 @@ class BirCompliance
             return false;
         }
         $previous = str_repeat('0', 64);
-        foreach (DB::table('eis_audit_events')->orderBy('id')->cursor() as $row) {
+        foreach (DB::table('eis_audit_events')->lazyById(1000) as $row) {
             $expected = hash('sha256', json_encode([$previous, $row->event, $row->subject_id, $row->actor_id, $row->details, $row->occurred_at], JSON_THROW_ON_ERROR));
             if ($row->previous_hash !== $previous || ! hash_equals($expected, $row->entry_hash)) {
                 return false;

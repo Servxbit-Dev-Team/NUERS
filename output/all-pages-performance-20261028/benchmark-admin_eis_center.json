@@ -1,0 +1,32 @@
+{
+    "engine": "8.4.11",
+    "records": 1000100,
+    "results": [
+        {
+            "case": "admin_eis_center",
+            "run": 1,
+            "http": 200,
+            "ms": 6151.88,
+            "peak_mb": 28,
+            "bytes": 19609,
+            "queries": 29,
+            "db_ms": 6105.3,
+            "reported_count": 1000100,
+            "gross_centavos": null,
+            "error": null
+        },
+        {
+            "case": "admin_eis_center",
+            "run": 2,
+            "http": 200,
+            "ms": 124.27,
+            "peak_mb": 28,
+            "bytes": 19609,
+            "queries": 28,
+            "db_ms": 121.32,
+            "reported_count": 1000100,
+            "gross_centavos": null,
+            "error": null
+        }
+    ]
+}

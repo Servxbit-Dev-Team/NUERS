@@ -1,0 +1,15 @@
+{
+  "scope": "localhost synthetic; all external requests blocked; stale response explicitly simulated",
+  "checks": [
+    "Actual API health results render",
+    "Audit and wallet integrity render",
+    "No invented backup success",
+    "Delivery backlog renders",
+    "Stale observation loses healthy badge",
+    "Mobile has no horizontal overflow",
+    "Backup evidence link resolves"
+  ],
+  "errors": [],
+  "failed": [],
+  "mobileOverflow": false
+}

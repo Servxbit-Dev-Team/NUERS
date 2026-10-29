@@ -162,3 +162,16 @@ Merchant transaction, batch and wallet responses do not expose bir_acceptance, b
 ```
 
 Client adapter: `/guides/NUERS-Transaction-Status.mjs`. Shared documentation contract: `resources/data/merchant-api-receipts.json`.
+
+
+## Invoice identity and printed contents — 29 October 2026
+
+`receipt_number` is the seller’s original document serial, 1–50 characters, preserving its prefix and leading zeros. Control characters and surrounding whitespace are rejected. It maps to EIS `CompInvoiceId`; it is not the separately generated 24-character `EisUniqueId`. Existing issued identities are never renumbered. NUERS issuance reserves an evidence-backed series under transaction/merchant/series locks, rejects reused numbers (including voided records), and rolls back the counter when issuance rolls back. Draft references are not legal invoice numbers.
+
+Supply `customer_type` (`business`, `retail`, `walk_in`). Business buyers require registered name, address and TIN; B2C address/TIN remain optional. Send `invoice_reference` for the original invoice behind a payment or additional invoice. Optional `items[].unit` prints the recorded unit of measure.
+
+`document_registration` records source evidence with `system_type` (`CAS`, `POS`, `ELECTRONIC`) and the applicable `pti_number`, `ptu_number`, `ac_number`, `authority_issued_at`, `series_start`, `series_end`, `machine_identification_number`, `machine_serial_number`, `software_license_number`, `non_vat_basis` (`percentage_tax` or `exempt`). Date uses YYYY-MM-DD. Native issuance requires authentic series registration details; source copies can retain missing evidence without inventing it. A submitted value is not a verified authority. This snapshot cannot be changed by replaying an accepted event.
+
+The shared preview, customer-email PDF and downloaded copy display recorded seller name/address, VAT or Non-VAT Reg TIN with five-digit branch, prominent invoice number, transaction date, buyer details, quantity/unit/price/description, totals and separate tax classes. Applicable CWT details, statutory-benefit evidence, original-invoice reference and registration details remain visible. Copies use REPRINT. Supplementary documents display the input-tax warning and do not create another primary sale. Missing historical details are labelled not recorded; the original financial data stays immutable. Existing receipt branding/layout is retained.
+
+References: [RR 7-2024](https://bir-cdn.bir.gov.ph/BIR/pdf/RR%20No.%207-%202024.pdf), [RMC 98-2026](https://bir-cdn.bir.gov.ph/BIR/pdf/RMC%20No.%2098-2026%20redacted.pdf), [RMC 112-2026](https://bir-cdn.bir.gov.ph/BIR/pdf/RMC%20No.%20112-2026_redacted.pdf), [BIR EIS certification API guide](https://eis-cert.bir.gov.ph/#/apiGuide). Actual authority and BIR acceptance require external evidence.

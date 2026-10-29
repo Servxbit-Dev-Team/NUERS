@@ -1,0 +1,6 @@
+{
+  "route_entries": 296,
+  "method_entries_excluding_head": 300,
+  "merchant_denial_test_method_count": 123,
+  "scope": "Route enumeration and targeted negative tests; not exhaustive object authorization or penetration proof"
+}

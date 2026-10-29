@@ -1,0 +1,20 @@
+[
+  {
+    "path": "/api/health",
+    "method": "GET",
+    "result": "200 0.246785",
+    "exit_code": 0
+  },
+  {
+    "path": "/api/admin/bir-wire",
+    "method": "GET",
+    "result": "401 0.207080",
+    "exit_code": 0
+  },
+  {
+    "path": "/api/bir-eis/receive_invoice_result/00000000-0000-4000-8000-000000000000",
+    "method": "PUT",
+    "result": "503 0.202084",
+    "exit_code": 0
+  }
+]

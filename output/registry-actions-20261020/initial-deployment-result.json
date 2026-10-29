@@ -1,0 +1,6 @@
+{
+    "deployed": false,
+    "previous_files_restored": true,
+    "error": "Existing records changed during deployment; review required",
+    "backup": "nuers-registry-actions-backup-20261020-045856"
+}

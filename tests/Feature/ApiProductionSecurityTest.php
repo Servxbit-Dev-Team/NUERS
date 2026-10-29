@@ -34,7 +34,7 @@ class ApiProductionSecurityTest extends TestCase
     }
     private function issue(): void
     {
-        DB::table('invoice_series')->insert(['id'=>'audit-series','merchant_id'=>'audit','branch_code'=>'00000','document_family'=>'invoice','prefix'=>'AUD-','range_start'=>1,'range_end'=>100,'status'=>'active','authority_reference'=>'SYNTHETIC','verified_by'=>'fixture','valid_from'=>now()->subDay(),'valid_until'=>now()->addDay(),'created_at'=>now(),'updated_at'=>now()]);
+        DB::table('invoice_series')->insert(['document_registration'=>json_encode(['system_type'=>'CAS','ac_number'=>'SYNTHETIC-AC-ONLY','authority_issued_at'=>'2020-01-01']),'id'=>'audit-series','merchant_id'=>'audit','branch_code'=>'00000','document_family'=>'invoice','prefix'=>'AUD-','range_start'=>1,'range_end'=>100,'status'=>'active','authority_reference'=>'SYNTHETIC','verified_by'=>'fixture','valid_from'=>now()->subDay(),'valid_until'=>now()->addDay(),'created_at'=>now(),'updated_at'=>now()]);
         $this->partialMock(BirCompliance::class,fn($m)=>$m->shouldReceive('assertCanIssue')->andReturn(['permit_to_issue_number'=>'SYNTHETIC','esp_accreditation_number'=>'SYNTHETIC']));
     }
     private function profile(): string

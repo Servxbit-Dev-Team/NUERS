@@ -1,0 +1,89 @@
+[
+    {
+        "ms": 1785.15,
+        "sql": "select d.business_day,\n            COUNT(*) as documents,\n            COALESCE(SUM(CASE WHEN (d.identity_count=1 AND d.financial_valid=1) AND d.status='success' AND d.document_family IN ('invoice','credit','debit')\n            AND (d.document_family='invoice' OR (original.document_family='invoice' AND original.status='success' AND original.financial_valid=1 AND original.tenant_identity_count=1)) THEN ROUND(d.amount*100)*(CASE WHEN d.document_family='credit' THEN -1 ELSE 1 END) ELSE 0 END),0) as sales,\n            SUM(CASE WHEN d.document_family='invoice' AND d.status='success' THEN 1 ELSE 0 END) as invoices,\n            SUM(CASE WHEN d.status='cancelled' THEN 1 ELSE 0 END) as cancelled,\n            SUM(CASE WHEN d.status<>'cancelled' AND (NOT(d.identity_count=1 AND d.financial_valid=1) OR d.status='failed') THEN 1 ELSE 0 END) as for_review,\n            SUM(CASE WHEN (d.identity_count=1 AND d.financial_valid=1) AND d.status='success' THEN 1 ELSE 0 END) as issued,\n            SUM(CASE WHEN (d.identity_count=1 AND d.financial_valid=1) AND d.status NOT IN ('success','cancelled','failed') THEN 1 ELSE 0 END) as pending,\n            SUM(CASE WHEN NULL IN ('queued','retry','leased','sending','inquiry') THEN 1 ELSE 0 END) as queued,\n            SUM(CASE WHEN NULL IN ('dead_letter','rejected','uncertain') THEN 1 ELSE 0 END) as needs_attention from (select `merchant_id`, `business_day`, `financial_valid`, `status`, `document_family`, `amount`, `original_invoice_id`, `document_source`, `document_id`, tenant_identity_count as identity_count from `ledger_documents` force index (ledger_merchant_overview) where `merchant_id` = ? and `tenant_identity_rank` = ? and `is_draft` = ?) as `d` left join `ledger_documents` as `original` on `original`.`projection_id` = CONCAT('invoice:',d.original_invoice_id) and `original`.`merchant_id` = `d`.`merchant_id` and `d`.`document_family` in (?, ?) where `d`.`business_day` between ? and ? group by `d`.`business_day`",
+        "bindings": [
+            "lab-merchant-a",
+            1,
+            false,
+            "credit",
+            "debit",
+            "2026-09-21",
+            "2026-10-20"
+        ]
+    },
+    {
+        "ms": 244.23,
+        "sql": "select `projection_id`, `id`, `document_id`, `transaction_id`, `merchant_id`, `receipt_id`, `original_invoice_id`, `document_source`, `document_family`, `category`, `status`, `sale_category`, `transaction_ref`, `receipt_number`, `business`, `tin`, `branch_code`, `rdo_code`, `document_type`, `record_status`, `transaction_status`, `payment_method`, `region`, `branch`, `channel`, `customer_name`, `customer_tin`, `tin_digits`, `seller_tin_key`, `seller_branch_key`, `document_number_key`, `seller_address`, `amount`, `statutory_discount_amount`, `vat_relief_amount`, `discount_amount`, `manual_discount_amount`, `vat_amount`, `vatable_sales`, `vat_exempt_sales`, `zero_rated_sales`, `sspt_sales`, `net_amount`, `payment_amount`, `payment_count`, `business_date`, `created_at`, `recorded_at`, `business_day`, `identity_key`, `tenant_identity_key`, `tenant_identity_count`, `tenant_identity_rank`, `rank_key`, `financial_valid`, `non_vat_centavos`, `verified_branch`, `projected_at`, `operations_sales_valid`, `reconciliation_prefix`, `reconciliation_suffix`, `is_draft`, tenant_identity_count as identity_count, tenant_identity_rank as identity_rank from `ledger_documents` where `record_status` <> ? and `merchant_id` = ? and `tenant_identity_rank` = ? and `document_source` in (?, ?) order by `recorded_at` desc limit 8",
+        "bindings": [
+            "draft",
+            "lab-merchant-a",
+            1,
+            "invoice",
+            "receipt"
+        ]
+    },
+    {
+        "ms": 52.64,
+        "sql": "select count(*) as aggregate from `merchant_transactions` where `merchant_id` = ? and `created_at` >= ? and `created_at` < ?",
+        "bindings": [
+            "lab-merchant-a",
+            "2026-10-19 16:00:00",
+            "2026-10-20 16:00:00"
+        ]
+    },
+    {
+        "ms": 52.24,
+        "sql": "select count(*) as aggregate from `merchant_transactions` where `merchant_id` = ? and `created_at` >= ? and `created_at` < ?",
+        "bindings": [
+            "lab-merchant-a",
+            "2026-10-18 16:00:00",
+            "2026-10-19 16:00:00"
+        ]
+    },
+    {
+        "ms": 18.69,
+        "sql": "select count(*) as aggregate from `business_invoices` where `merchant_id` = ? and `status` = ?",
+        "bindings": [
+            "lab-merchant-a",
+            "draft"
+        ]
+    },
+    {
+        "ms": 3.78,
+        "sql": "select count(*) as aggregate from `merchant_transactions` where `merchant_id` = ? and `created_at` >= ? and `created_at` < ? and `status` not in (?, ?, ?, ?, ?, ?)",
+        "bindings": [
+            "lab-merchant-a",
+            "2026-10-19 16:00:00",
+            "2026-10-20 16:00:00",
+            "completed",
+            "paid",
+            "settled",
+            "verified",
+            "success",
+            "valid"
+        ]
+    },
+    {
+        "ms": 1.45,
+        "sql": "select `o`.`document_source`, `o`.`document_id`, `j`.`state` from `eis_document_outbox` as `o` left join `eis_delivery_jobs` as `j` on `j`.`outbox_id` = `o`.`id` where `o`.`merchant_id` = ? and `o`.`document_id` in (?, ?, ?, ?, ?, ?, ?, ?) order by `o`.`source_review_revision` desc, `o`.`prepared_at` desc",
+        "bindings": [
+            "lab-merchant-a",
+            "lab-r-0999989",
+            "lab-r-0999959",
+            "lab-r-0999929",
+            "lab-r-0999899",
+            "lab-r-0999869",
+            "lab-r-0999839",
+            "lab-r-0999809",
+            "lab-r-0999779"
+        ]
+    },
+    {
+        "ms": 1.18,
+        "sql": "select exists(select * from `eis_delivery_jobs` where `merchant_id` = ?) as `exists`",
+        "bindings": [
+            "lab-merchant-a"
+        ]
+    }
+]

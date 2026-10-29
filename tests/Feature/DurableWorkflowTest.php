@@ -58,7 +58,7 @@ class DurableWorkflowTest extends TestCase
 
     private function series(): void
     {
-        DB::table('invoice_series')->insert(['id' => 'series', 'merchant_id' => 'm', 'branch_code' => '00000', 'document_family' => 'invoice', 'prefix' => 'SYN-', 'range_start' => 1, 'range_end' => 3, 'status' => 'active', 'authority_reference' => 'Synthetic fixture, not real authority', 'verified_by' => 'fixture-reviewer', 'valid_from' => now()->subDay(), 'valid_until' => now()->addDay(), 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('invoice_series')->insert(['document_registration'=>json_encode(['system_type'=>'CAS','ac_number'=>'SYNTHETIC-AC-ONLY','authority_issued_at'=>'2020-01-01']),'id' => 'series', 'merchant_id' => 'm', 'branch_code' => '00000', 'document_family' => 'invoice', 'prefix' => 'SYN-', 'range_start' => 1, 'range_end' => 3, 'status' => 'active', 'authority_reference' => 'Synthetic fixture, not real authority', 'verified_by' => 'fixture-reviewer', 'valid_from' => now()->subDay(), 'valid_until' => now()->addDay(), 'created_at' => now(), 'updated_at' => now()]);
     }
 
     private function payload(): array

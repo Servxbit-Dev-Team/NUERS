@@ -1,0 +1,93 @@
+[
+    {
+        "ms": 1373.21,
+        "sql": "select COUNT(*) as total,COALESCE(SUM(CASE WHEN status IN ('issued','completed') THEN 1 ELSE 0 END),0) as successful,COALESCE(SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END),0) as pending,COALESCE(SUM(CASE WHEN status IN ('failed','cancelled') THEN 1 ELSE 0 END),0) as failed,COALESCE(SUM(CASE WHEN bir_status='acknowledged' THEN 1 ELSE 0 END),0) as acknowledged,COALESCE(SUM(CASE WHEN bir_status='queued' THEN 1 ELSE 0 END),0) as queued,COALESCE(SUM(CASE WHEN bir_status IN ('blocked','uncertain','needs_review') THEN 1 ELSE 0 END),0) as attention,COALESCE(SUM(CASE WHEN family='invoice' THEN 1 ELSE 0 END),0) as invoices,COALESCE(SUM(CASE WHEN family IN ('receipt','supplementary') THEN 1 ELSE 0 END),0) as receipts,COALESCE(SUM(CASE WHEN family='credit' THEN 1 ELSE 0 END),0) as credit,COALESCE(SUM(CASE WHEN family='debit' THEN 1 ELSE 0 END),0) as debit,COALESCE(SUM(CASE WHEN status='draft' THEN 1 ELSE 0 END),0) as drafts,COALESCE(SUM(sales_centavos),0) as total_sales_centavos from (select d.amount,d.document_family as family,'not_submitted' as bir_status,\n                    CASE WHEN d.is_draft=1 THEN 'draft' WHEN d.status='success' THEN 'issued' ELSE d.status END as status,\n                    CASE WHEN d.status='success' AND d.tenant_identity_count=1 AND d.financial_valid=1 AND d.document_family IN ('invoice','credit','debit')\n                    AND (d.document_family='invoice' OR (original.document_family='invoice' AND original.status='success' AND original.financial_valid=1 AND original.tenant_identity_count=1))\n                    THEN ROUND(d.amount*100)*(CASE WHEN d.document_family='credit' THEN -1 ELSE 1 END) ELSE 0 END as sales_centavos from (select `merchant_id`, `document_family`, `status`, `is_draft`, `amount`, `tenant_identity_count`, `financial_valid`, `original_invoice_id` from `ledger_documents` force index (ledger_merchant_overview) where `merchant_id` = ? and `tenant_identity_rank` = ? and `document_source` in (?, ?)) as `d` left join `ledger_documents` as `original` on `original`.`projection_id` = CONCAT('invoice:',d.original_invoice_id) and `original`.`merchant_id` = `d`.`merchant_id` and `d`.`document_family` in (?, ?)) as `r` limit 1",
+        "bindings": [
+            "lab-merchant-a",
+            1,
+            "invoice",
+            "receipt",
+            "credit",
+            "debit"
+        ]
+    },
+    {
+        "ms": 454.81,
+        "sql": "select distinct COALESCE(branch_code,branch) as option_value from `ledger_documents` force index (ledger_record_branch_options) where `merchant_id` = ? and `tenant_identity_rank` = ? and `document_source` in (?, ?) and COALESCE(branch_code,branch) IS NOT NULL AND COALESCE(branch_code,branch)<>'' order by `option_value` asc limit 200",
+        "bindings": [
+            "lab-merchant-a",
+            1,
+            "invoice",
+            "receipt"
+        ]
+    },
+    {
+        "ms": 419.14,
+        "sql": "select distinct channel as option_value from `ledger_documents` force index (ledger_channel_options) where `merchant_id` = ? and `tenant_identity_rank` = ? and `document_source` in (?, ?) and channel IS NOT NULL AND channel<>'' order by `option_value` asc limit 200",
+        "bindings": [
+            "lab-merchant-a",
+            1,
+            "invoice",
+            "receipt"
+        ]
+    },
+    {
+        "ms": 418.36,
+        "sql": "select distinct document_type as option_value from `ledger_documents` force index (ledger_type_options) where `merchant_id` = ? and `tenant_identity_rank` = ? and `document_source` in (?, ?) and document_type IS NOT NULL AND document_type<>'' order by `option_value` asc limit 200",
+        "bindings": [
+            "lab-merchant-a",
+            1,
+            "invoice",
+            "receipt"
+        ]
+    },
+    {
+        "ms": 386.71,
+        "sql": "select distinct payment_method as option_value from `ledger_documents` force index (ledger_payment_options) where `merchant_id` = ? and `tenant_identity_rank` = ? and `document_source` in (?, ?) and payment_method IS NOT NULL AND payment_method<>'' order by `option_value` asc limit 200",
+        "bindings": [
+            "lab-merchant-a",
+            1,
+            "invoice",
+            "receipt"
+        ]
+    },
+    {
+        "ms": 1.58,
+        "sql": "select column_name as `name`, data_type as `type_name`, column_type as `type`, collation_name as `collation`, is_nullable as `nullable`, column_default as `default`, column_comment as `comment`, generation_expression as `expression`, extra as `extra` from information_schema.columns where table_schema = schema() and table_name = 'users' order by ordinal_position asc",
+        "bindings": []
+    },
+    {
+        "ms": 0.87,
+        "sql": "select `id` from (select records.*,NULL as delivery_state,NULL as delivery_updated_at,CASE WHEN records.document_source='payment' AND records.document_id IS NULL THEN 'not_linked' ELSE 'not_submitted' END as bir_status from (select d.id,d.document_id as record_id,d.document_id,d.document_source,d.receipt_number as number,d.business_date as source_date,d.recorded_at,d.customer_name as customer,d.customer_tin,d.document_type,d.document_family as family,\n                CASE WHEN d.record_status='draft' THEN 'draft' WHEN d.status='success' THEN 'issued' ELSE d.status END as status,d.record_status as raw_status,d.amount,d.vat_amount as vat,COALESCE(d.branch_code,d.branch) as branch,d.channel,d.payment_method,d.tin as seller_tin,d.identity_count,d.original_invoice_id,\n                CASE WHEN d.document_source='invoice' THEN 'day' ELSE 'instant' END as date_precision,d.sale_category,d.statutory_discount_amount,d.vat_relief_amount,d.discount_amount, CASE WHEN d.status='success' AND d.identity_count=1 AND d.financial_valid=1 AND d.document_family IN ('invoice','credit','debit')\n                AND (d.document_family='invoice' OR (original.document_family='invoice' AND original.status='success' AND original.financial_valid=1 AND original.tenant_identity_count=1))\n                THEN ROUND(d.amount*100)*(CASE WHEN d.document_family='credit' THEN -1 ELSE 1 END) ELSE 0 END as sales_centavos from (select `projection_id`, `id`, `document_id`, `transaction_id`, `merchant_id`, `receipt_id`, `original_invoice_id`, `document_source`, `document_family`, `category`, `status`, `sale_category`, `transaction_ref`, `receipt_number`, `business`, `tin`, `branch_code`, `rdo_code`, `document_type`, `record_status`, `transaction_status`, `payment_method`, `region`, `branch`, `channel`, `customer_name`, `customer_tin`, `tin_digits`, `seller_tin_key`, `seller_branch_key`, `document_number_key`, `seller_address`, `amount`, `statutory_discount_amount`, `vat_relief_amount`, `discount_amount`, `manual_discount_amount`, `vat_amount`, `vatable_sales`, `vat_exempt_sales`, `zero_rated_sales`, `sspt_sales`, `net_amount`, `payment_amount`, `payment_count`, `business_date`, `created_at`, `recorded_at`, `business_day`, `identity_key`, `tenant_identity_key`, `tenant_identity_count`, `tenant_identity_rank`, `rank_key`, `financial_valid`, `non_vat_centavos`, `verified_branch`, `projected_at`, `operations_sales_valid`, `reconciliation_prefix`, `reconciliation_suffix`, `is_draft`, tenant_identity_count as identity_count, tenant_identity_rank as identity_rank from `ledger_documents` where `merchant_id` = ? and `tenant_identity_rank` = ? and `document_source` in (?, ?)) as `d` left join `ledger_documents` as `original` on `original`.`projection_id` = CONCAT('invoice:',d.original_invoice_id) and `original`.`merchant_id` = `d`.`merchant_id` and `d`.`document_family` in (?, ?)) as `records`) as `r` order by `source_date` asc, `recorded_at` asc, `id` asc limit 10 offset 0",
+        "bindings": [
+            "lab-merchant-a",
+            1,
+            "invoice",
+            "receipt",
+            "credit",
+            "debit"
+        ]
+    },
+    {
+        "ms": 0.81,
+        "sql": "select * from (select records.*,NULL as delivery_state,NULL as delivery_updated_at,CASE WHEN records.document_source='payment' AND records.document_id IS NULL THEN 'not_linked' ELSE 'not_submitted' END as bir_status from (select d.id,d.document_id as record_id,d.document_id,d.document_source,d.receipt_number as number,d.business_date as source_date,d.recorded_at,d.customer_name as customer,d.customer_tin,d.document_type,d.document_family as family,\n                CASE WHEN d.record_status='draft' THEN 'draft' WHEN d.status='success' THEN 'issued' ELSE d.status END as status,d.record_status as raw_status,d.amount,d.vat_amount as vat,COALESCE(d.branch_code,d.branch) as branch,d.channel,d.payment_method,d.tin as seller_tin,d.identity_count,d.original_invoice_id,\n                CASE WHEN d.document_source='invoice' THEN 'day' ELSE 'instant' END as date_precision,d.sale_category,d.statutory_discount_amount,d.vat_relief_amount,d.discount_amount, CASE WHEN d.status='success' AND d.identity_count=1 AND d.financial_valid=1 AND d.document_family IN ('invoice','credit','debit')\n                AND (d.document_family='invoice' OR (original.document_family='invoice' AND original.status='success' AND original.financial_valid=1 AND original.tenant_identity_count=1))\n                THEN ROUND(d.amount*100)*(CASE WHEN d.document_family='credit' THEN -1 ELSE 1 END) ELSE 0 END as sales_centavos from (select `projection_id`, `id`, `document_id`, `transaction_id`, `merchant_id`, `receipt_id`, `original_invoice_id`, `document_source`, `document_family`, `category`, `status`, `sale_category`, `transaction_ref`, `receipt_number`, `business`, `tin`, `branch_code`, `rdo_code`, `document_type`, `record_status`, `transaction_status`, `payment_method`, `region`, `branch`, `channel`, `customer_name`, `customer_tin`, `tin_digits`, `seller_tin_key`, `seller_branch_key`, `document_number_key`, `seller_address`, `amount`, `statutory_discount_amount`, `vat_relief_amount`, `discount_amount`, `manual_discount_amount`, `vat_amount`, `vatable_sales`, `vat_exempt_sales`, `zero_rated_sales`, `sspt_sales`, `net_amount`, `payment_amount`, `payment_count`, `business_date`, `created_at`, `recorded_at`, `business_day`, `identity_key`, `tenant_identity_key`, `tenant_identity_count`, `tenant_identity_rank`, `rank_key`, `financial_valid`, `non_vat_centavos`, `verified_branch`, `projected_at`, `operations_sales_valid`, `reconciliation_prefix`, `reconciliation_suffix`, `is_draft`, tenant_identity_count as identity_count, tenant_identity_rank as identity_rank from `ledger_documents` where `merchant_id` = ? and `tenant_identity_rank` = ? and `document_source` in (?, ?)) as `d` left join `ledger_documents` as `original` on `original`.`projection_id` = CONCAT('invoice:',d.original_invoice_id) and `original`.`merchant_id` = `d`.`merchant_id` and `d`.`document_family` in (?, ?)) as `records`) as `r` where `id` in (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "bindings": [
+            "lab-merchant-a",
+            1,
+            "invoice",
+            "receipt",
+            "credit",
+            "debit",
+            "lab-t-0000300",
+            "lab-t-0000270",
+            "lab-t-0000240",
+            "lab-t-0000210",
+            "lab-t-0000180",
+            "lab-t-0000150",
+            "lab-t-0000120",
+            "lab-t-0000090",
+            "lab-t-0000060",
+            "lab-t-0000030"
+        ]
+    }
+]

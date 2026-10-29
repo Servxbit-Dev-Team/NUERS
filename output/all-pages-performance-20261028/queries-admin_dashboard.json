@@ -1,0 +1,63 @@
+[
+    {
+        "ms": 1009.98,
+        "sql": "select `t`.`id`, `t`.`transaction_ref`, `t`.`created_at`, `t`.`amount`, `t`.`status`, `m`.`tin`, `m`.`business_name` from `merchant_transactions` as `t` left join `merchants` as `m` on `m`.`id` = `t`.`merchant_id` order by `t`.`created_at` desc limit 5",
+        "bindings": []
+    },
+    {
+        "ms": 850.85,
+        "sql": "select DATE_FORMAT(DATE_ADD(t.created_at,INTERVAL 480 MINUTE),'%Y-%m-%d') as bucket,t.status,COUNT(*) as total from `merchant_transactions` as `t` where `t`.`created_at` >= ? and `t`.`created_at` < ? group by DATE_FORMAT(DATE_ADD(t.created_at,INTERVAL 480 MINUTE),'%Y-%m-%d'),t.status",
+        "bindings": [
+            "2026-09-30 16:00:00",
+            "2026-10-31 16:00:00"
+        ]
+    },
+    {
+        "ms": 309.76,
+        "sql": "select count(*) as aggregate from `transaction_receipts` as `r` where `r`.`status` in (?, ?, ?, ?)",
+        "bindings": [
+            "issued",
+            "valid",
+            "verified",
+            "validated"
+        ]
+    },
+    {
+        "ms": 282.63,
+        "sql": "select `t`.`region`, COUNT(*) as total from `merchant_transactions` as `t` group by `t`.`region` order by `total` desc",
+        "bindings": []
+    },
+    {
+        "ms": 164.14,
+        "sql": "select sum(`amount`) as aggregate from `merchant_transactions`",
+        "bindings": []
+    },
+    {
+        "ms": 153.02,
+        "sql": "select count(*) as aggregate from `merchant_transactions` as `t`",
+        "bindings": []
+    },
+    {
+        "ms": 1.74,
+        "sql": "select count(*) as aggregate from `merchant_transactions` as `t` where `t`.`status` in (?, ?, ?, ?, ?)",
+        "bindings": [
+            "invalid",
+            "failed",
+            "rejected",
+            "voided",
+            "cancelled"
+        ]
+    },
+    {
+        "ms": 1.25,
+        "sql": "select count(*) as aggregate from `merchant_api_request_logs` as `l` left join `merchant_api_keys` as `k` on `k`.`id` = `l`.`merchant_api_key_id` inner join `merchants` as `m` on `m`.`id` = `l`.`merchant_id` where `l`.`endpoint` in (?, ?) and `l`.`method` = ? and `l`.`status_code` >= ? and (`l`.`environment` = ? or (`l`.`environment` is null and `k`.`environment` = ?))",
+        "bindings": [
+            "\/api\/integrations\/transactions",
+            "\/api\/integrations\/transactions\/batch",
+            "POST",
+            400,
+            "live",
+            "live"
+        ]
+    }
+]

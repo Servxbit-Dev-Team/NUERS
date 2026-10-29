@@ -1,0 +1,29 @@
+{
+    "scope": "Isolated synthetic SQLite database/object restore; not production RTO/RPO or failover",
+    "measured_at": "2026-10-20T01:03:20+00:00",
+    "software_version": "1.0.0",
+    "synthetic_merchants": 2,
+    "restored_receipts": 40,
+    "wallet_and_audit_integrity": true,
+    "table_hashes_matched": 8,
+    "private_objects_matched": 2,
+    "lab_restore_seconds": 0.016,
+    "lab_snapshot_age_at_simulated_outage_seconds": 0.072,
+    "expected_post_snapshot_records_not_recovered": 1,
+    "production_restore_verified": false,
+    "offsite_verified": false,
+    "encrypted_archive_sha256": "71dc76e9deeadc3e5480004cb26a2d2a2da27ed7c52735ce097129d55eae4bf0",
+    "archive_bytes": 73713,
+    "archive_verification": {
+        "archive_id": "20261020-010320-1dbb5cb5e4e2539e",
+        "environment": "testing",
+        "verified": true,
+        "archive_authenticated": true,
+        "file_hashes_verified": true,
+        "database_verified": true,
+        "production_restore_verified": false,
+        "duration_seconds": 0.014,
+        "files": 3,
+        "limitation": "Isolated SQLite lab verification. This is not a production RTO/RPO or failover test."
+    }
+}

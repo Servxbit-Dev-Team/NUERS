@@ -1,3 +1,4 @@
+import { PageBoundary } from "@/components/page-boundary";
 import { useEffect, useMemo, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -234,6 +235,8 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
         section: "Account",
         items: [
           { label: "Business Profile", href: "/merchant/profile", icon: Store },
+          { label: "Compliance Operations", href: "/merchant/compliance-operations", icon: Store },
+          { label: "PTI Applications", href: "/merchant/pti-applications", icon: Store },
           { label: "Notifications", href: "/merchant/notifications", icon: Bell },
         ],
       },
@@ -1323,12 +1326,12 @@ export function DashboardLayout({ portal }: { portal: PortalType }) {
           <SidebarHeader className="border-b border-sidebar-border/70 px-4 py-4">
             <div className="flex h-14 items-center gap-2">
               <img
-                src="/NUERSLOGOWHITE.png"
+                src="/brand/nuers-official-logo.png"
                 alt="NUERS"
                 className="h-11 max-w-[190px] object-contain group-data-[collapsible=icon]:hidden"
               />
               <img
-                src="/NUERSLOGOWHITE.png"
+                src="/app-icon-192.png?v=b50631c79afb"
                 alt="NUERS"
                 className="hidden h-8 w-auto object-contain group-data-[collapsible=icon]:block"
               />
@@ -1543,7 +1546,7 @@ export function DashboardLayout({ portal }: { portal: PortalType }) {
 
           {/* Page content */}
           <main className="dashboard-main flex-1 overflow-y-auto overflow-x-hidden bg-background p-3 sm:p-4 lg:p-6">
-            <Outlet />
+            <PageBoundary><Outlet /></PageBoundary>
           </main>
         </div>
       </div>

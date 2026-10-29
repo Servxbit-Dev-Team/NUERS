@@ -1,0 +1,24 @@
+{
+    "deployed": true,
+    "release": "2026-10-20.bir-transmission-center.1",
+    "deployed_at": "2026-10-20T07:11:43+00:00",
+    "verification": {
+        "verified": true,
+        "batch_tables": true,
+        "canonical_documents": 4337,
+        "company_filter_documents": 1503,
+        "safe_metadata": true,
+        "production_transport_blocked": true,
+        "api_routes": 7,
+        "mfa_enabled": true,
+        "preparation_worker_scheduled": true,
+        "read_only_verification": true,
+        "verified_at": "2026-10-20T07:11:42+00:00"
+    },
+    "existing_records_preserved": true,
+    "environment_preserved": true,
+    "files_verified": 27,
+    "old_assets_retained": true,
+    "backup": "nuers-bir-center-backup-20261020-071134",
+    "package_sha256": "3c32da59301dea0dc4b57bad0234c75e5add886305d3012b2c6a84c4abed0eb3"
+}

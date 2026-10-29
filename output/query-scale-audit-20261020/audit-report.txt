@@ -1,0 +1,93 @@
+NUERS — REPORTING SCALE AUDIT
+Release: 2026-10-20.query-scale
+Audit date: 20 October 2026 (Asia/Manila)
+
+OUTCOME
+The reporting update is deployed on nuers.net. The tested merchant and super-admin query paths completed successfully against an isolated dataset containing 1,000,100 canonical documents (1,000,000 for merchant A and 100 for merchant B). This establishes functional and bounded-memory behavior for the measured workload, not a production throughput SLA or a guarantee for every dashboard at any load.
+
+CHANGES IMPLEMENTED
+- Rebuildable indexed reporting table; original receipts, invoices and financial records remain authoritative.
+- Transactional database triggers queue changed source IDs, including raw SQL writes and metadata changes. Rollbacks do not leak dirty work.
+- Paginated database reads replace large PHP collections. Only bounded page rows are hydrated for document detail.
+- Financial validation runs when a changed document is projected; aggregates execute in the database.
+- Tenant and global canonical identity ranking remain separate. Duplicate handling matches the source database collation.
+- Aggregate caches include database, merchant, filters and source revision. Updates invalidate before the next reporting read.
+- Large merchant sales CSV exports run in the background with 1,000-row keyset batches, consistent snapshots, private files and authenticated tenant/actor downloads.
+- Exports expire after 24 hours; two active exports per merchant; partial output is never offered as a completed download.
+
+MEASURED LAB RESULTS
+Times below measure PHP request handling and database work; they exclude network latency and browser rendering.
+Environment: PHP 8.5.9, MySQL 8.4.11, private Unix socket, no TCP listener, 512 MiB InnoDB buffer pool. Production uses PHP 8.4.26 and MariaDB 10.3.39.
+
+Query path                           First (ms)       Repeat range (ms)   Peak PHP MiB
+merchant_dashboard                      6876.36      36.21–     36.79             26
+merchant_report                        11462.83       5.74–      5.87             28
+merchant_report_deep                    5989.85    5925.47–   6292.90             28
+merchant_documents                      7932.18       5.48–      6.66             28
+merchant_payments                      12211.36       4.93–      5.86             28
+admin_dashboard                         2839.40    1962.77–   1968.08             28
+admin_live_monitor                       225.67     171.41–    174.27             28
+admin_transactions                      8487.29    6411.00–   6535.63             28
+admin_documents                          966.50     942.78–    954.60             28
+other_merchant_report                     11.28       5.13–      5.26             28
+
+All measured requests returned HTTP 200. The first request started after clearing the application report cache; this does not imply a fully cold operating-system/database cache.
+Million-row CSV: 62.165 seconds; 48 MiB PHP peak; 152,001,206 output bytes. Row count and checksum were verified, then the synthetic CSV was removed.
+Four simultaneous read processes passed (merchant documents, merchant payments, admin documents and live monitor). This is a concurrency smoke test, not a capacity or sustained-load certification.
+Refreshing 1,000 existing document projections completed in 3.419 seconds with 38 MiB PHP peak and no remaining backlog. Full initial backfill of one million independent source documents was not timed.
+
+SECURITY AND CORRECTNESS
+- A request using merchant B authentication while supplying merchant A identifiers returned only B’s 100 records in the lab.
+- Automated coverage includes cross-merchant access, scoped team access, duplicate identity, financial tampering, raw-write invalidation, deletes, transaction rollback and metadata cache invalidation.
+- Export tests cover actor ownership, merchant ownership, quotas, expiry, partial failures and spreadsheet formula escaping.
+- MFA, permissions, API keys, source records, wallet balances and BIR transport settings were preserved.
+- The million-record dataset was synthetic and isolated. No synthetic test sales were inserted into nuers.net by this audit.
+
+TEST EVIDENCE
+Full regression: 610 tests / 6,639 assertions passed before the final compatibility adjustments.
+Final application-focused run: 69 tests / 708 assertions passed.
+Final MariaDB migration/trigger compatibility regression: 60 tests / 622 assertions passed.
+Build: npm run build:all passed. All packaged PHP files passed the live PHP 8.4 syntax check.
+Focused tests were rerun after final changes. Counts overlap; do not sum these as distinct tests.
+
+LIVE VERIFICATION
+Deployed: 2026-10-20T03:26:35+00:00
+Package SHA-256: 66870ab2d801efa9bb5cfb6d7936d8fb497e5c17773438b080028c601d68ee90
+Private rollback backup: nuers-query-scale-backup-20261020-032620
+Verified files: 34; reporting triggers: 36; projection rows at verification: 1843; dirty backlog: 0.
+Both current merchants passed canonical-population and financial-total parity against the previous authoritative reporting calculation.
+Preservation hashes confirmed original financial records, profiles, API keys, verification documents, wallet entries, deposits and environment were unchanged during deployment.
+Live browser checks: Golden Bay merchant dashboard, sales reports and next-page navigation; super-admin dashboard, live monitor and electronic documents pagination all loaded.
+Existing Plesk task 507 runs httpdocs/artisan schedule:run --no-ansi every minute. No duplicate recurring task was created.
+
+DEPLOYMENT COMPATIBILITY AND RECOVERY
+The first deployment safely restored previous application files after MariaDB 10.3 rejected a constant SELECT ... WHERE without FROM DUAL. Additive reporting tables/indexes remained. The syntax was corrected.
+The production application database user cannot create triggers with binary logging enabled. The existing Plesk DBA session installed the 36 reviewed queue triggers with the existing nuers database user as DEFINER. No SUPER privilege, new credentials, or global log_bin_trust_function_creators setting was granted or changed.
+The resumable migration validates existing trigger definitions and refuses unexpected definitions. It does not silently replace them.
+A second preflight invocation used an invalid mode and exited before changing application state. The correct check mode passed, followed by the successful release.
+
+OPERATING PROCEDURE
+1. Keep the existing Laravel scheduler running every minute.
+2. reports:refresh --max-seconds=45 processes bounded batches. reports:export builds one private queued export per invocation.
+3. After an approved large import, monitor COUNT(*) from ledger_dirty_documents and the ready/revision/updated_at fields of ledger_projection_state.
+4. A dirty backlog over 1,000 makes reporting return a retryable HTTP 503 rather than attempting an unbounded refresh inside a web request. Other merchants can also be affected because this is a shared backlog.
+5. To rebuild: run php artisan reports:refresh --rebuild --max-seconds=45 once. Then repeat php artisan reports:refresh --activate --max-seconds=45 until remaining=0 and ready=true. Do not repeatedly pass --rebuild; that requeues all sources.
+6. During a deliberate rebuild, use an application maintenance window: while ready=false, legacy reporting remains the fallback and is unsuitable for large datasets.
+7. Rollback: enter maintenance, set reporting ready=false, restore previous-files.zip from the private release backup, clear route/config/view caches, then leave maintenance. Retain original data and additive reporting tables. Queue-only triggers may remain until a DBA removes them in a controlled window; they do not alter source amounts.
+8. Retain the release package, hashes, verification JSON and rollback backup. Do not expose installers or exports in the public web root.
+
+LIMITS AND FOLLOW-UP CAPACITY WORK
+- Some uncached million-row queries take 7–12 seconds; deep page offsets and admin transaction scans remain about 6–8 seconds. Warm cache improvements do not remove this cold-query cost.
+- Arbitrary contains-search and large date ranges can still scan many rows. Prefer bounded dates and exact identifiers for high-volume operational searches.
+- Only the named query paths above were benchmarked with one million records. This does not certify every support/configuration page, every export format, ingestion throughput or multi-million scale.
+- Only merchant sales CSV was verified at one million exported rows. PDF and spreadsheet requests remain bounded (500 and 2,000 rows respectively).
+- Large filter-option lists are bounded; they are not a complete searchable directory for millions of distinct values.
+- The private lab used MySQL 8.4; production MariaDB 10.3 was verified with current live records, not one million copied production records.
+- Initial million-row ingestion/backfill, long-duration concurrent ingestion plus exports, cache invalidation under sustained write load, disk exhaustion, failover and production p95/p99 latency need separate controlled load tests.
+- Do not describe these results as one million concurrent users or 100% production-capacity certification.
+
+EVIDENCE FILES
+lab/benchmark.json; lab/export-result.json; lab/consistency-result.json; lab/refresh-batch-result.json; lab/concurrent-*.log
+full-tests.log; final-focused-tests.log; mariadb-compat-tests.log; build.log
+live-deployment.json; live-browser-verification.json; live-merchant-dashboard.png; live-admin-dashboard.png
+release/manifest.json; release/package-sha256.txt; release/nuers-reporting-triggers.sql

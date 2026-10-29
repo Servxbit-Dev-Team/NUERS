@@ -1,0 +1,30 @@
+[
+    {
+        "id": 1,
+        "select_type": "SIMPLE",
+        "table": "m",
+        "partitions": null,
+        "type": "index",
+        "possible_keys": "PRIMARY",
+        "key": "merchants_merchant_account_id_foreign",
+        "key_len": "9",
+        "ref": null,
+        "rows": 2,
+        "filtered": 100,
+        "Extra": "Using index"
+    },
+    {
+        "id": 1,
+        "select_type": "SIMPLE",
+        "table": "merchant_transactions",
+        "partitions": null,
+        "type": "ref",
+        "possible_keys": "merchant_external_reference_unique,merchant_transactions_merchant_id_index,mt_merchant_created_id,mt_merchant_type_options,mt_merchant_channel_options,mt_merchant_branch_options,mt_merchant_payment_options,mt_registry_summary",
+        "key": "merchant_external_reference_unique",
+        "key_len": "145",
+        "ref": "nuers_sales_lab_20261021.m.id",
+        "rows": 984564,
+        "filtered": 100,
+        "Extra": null
+    }
+]

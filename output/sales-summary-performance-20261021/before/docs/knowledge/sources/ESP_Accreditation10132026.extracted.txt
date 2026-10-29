@@ -1,0 +1,701 @@
+## Slide 1
+
+
+Accreditation of Electronic Invoicing Solutions
+Technical, operational, security, data-governance, institutional, legal, and continuing compliance requirements for Electronic Invoicing Service Providers (ESPs)
+
+
+Notes: 1
+
+## Slide 2
+
+TABLE OF CONTENTS
+What This Circular Covers
+01
+Purpose & Objectives
+Why the Circular is issued and what it aims to achieve
+02
+Coverage & Definitions
+Who is regulated and the key terms used
+03
+Policies & Qualification
+General policies and accreditation requirements
+04
+Accreditation Stages
+The stage-gated validation process
+05
+Evaluation & Obligations
+Approval, validity, and duties of ESPs
+06
+Data Governance & Sanctions
+Ownership, access, liability, and penalties
+07
+Annex A Checklist
+Documentary requirements for application
+08
+Key Takeaways
+Summary of the compliance framework
+
+02
+
+Notes: 2
+
+## Slide 3
+
+01
+SECTION ONE
+Purpose & Objectives
+Establishing a transparent, risk-based, and stage-gated framework for reliable, secure, and auditable e-invoicing solutions.
+
+03
+
+Notes: 3
+
+## Slide 4
+
+PURPOSE
+Why This Circular Is Issued
+
+Provides policies and specific requirements for the accreditation and regulation of e-invoicing solutions supporting e-invoicing and electronic sales reporting under Sections 237 and 237-A of the Tax Code.
+
+Implements the TRAIN Law (RA 10963) and CREATE MORE Act (RA 12066) through RR No. 11-2025, as amended by RR No. 26-2025.
+
+Ensures ESP solutions are reliable, interoperable, secure, auditable, and financially sustainable while protecting taxpayer information.
+
+LEGAL BASIS
+237 & 237-A
+National Internal Revenue Code (Tax Code)
+RA 10963
+TRAIN Law
+RA 12066
+CREATE MORE Act
+RR 11-2025
+As amended by RR 26-2025
+
+04
+
+Notes: 4
+
+## Slide 5
+
+OBJECTIVES
+Six Core Objectives
+
+
+A
+Accreditation Framework
+A clear, transparent, risk-based, and stage-gated framework for validation.
+
+
+B
+Data Integrity
+Accurate, complete, secure, timely, traceable, and tamper-evident invoice and sales data.
+
+
+C
+Taxpayer Protection
+Protect data, ensure continuity, and prevent unreasonable vendor lock-in.
+
+
+D
+Security Controls
+Internationally recognized information security management controls and processes.
+
+
+E
+Continuous Access
+Data remains accessible to taxpayer and BIR; retrievable and machine-readable.
+
+
+F
+Digitalization
+Support BIR digitalization, compliance monitoring, and revenue assurance.
+
+05
+
+Notes: 5
+
+## Slide 6
+
+COVERAGE
+Who the Circular Applies To
+
+
+COVERED
++
+ESPs providing e-invoicing and electronic sales reporting services
++
+Integration, storage, validation, and middleware services to taxpayers
++
+Systems offered to an affiliate, subsidiary, franchisee, or separate juridical entity
+
+
+NOT COVERED
+–
+Internally developed or acquired systems used exclusively by one taxpayer and its registered branches
+–
+Such systems remain governed by existing CAS, POS, or other applicable registration rules
+–
+Treatment as ESP service applies unless expressly exempted by the BIR
+An ESP must maintain an authorized representative and accountable technical, compliance, data-protection, and security officers in the Philippines.
+
+06
+
+Notes: 6
+
+## Slide 7
+
+DEFINITIONS
+Key Terms Defined
+
+
+Electronic Invoicing Service Provider (ESP)
+A juridical entity organized or duly licensed to do business in the Philippines that provides e-invoicing, sales reporting, integration, validation, transmission, storage, preservation, retrieval, reconciliation, migration, and audit-support services to taxpayers.
+
+
+Electronic Invoicing Solution 
+A system that generates, validates, records, preserves, and issues e-invoices in a structured electronic format and maintains the corresponding invoice data and audit trail. It shall also transmit such e-invoices to buyers/customers and sales data to the BIR
+
+07
+
+Notes: 7
+
+## Slide 8
+
+DEFINITIONS
+Key Terms Defined
+
+
+Electronic Invoicing Solutions Accreditation Certificate 
+A certification issued by the BIR confirming that an e-invoicing solutions offered by an ESP, including its system, version, interface, infrastructure, and production environment, has been approved for use in live taxpayer transactions.
+
+
+Material Change 
+refers to a change in control, system architecture, core functionality, data model, interface, hosting or cloud environment, encryption or authentication method, data location, or any other change listed in the Accreditation Certificate that materially affects security, integrity, interoperability, reliability, or BIR access.
+
+07
+
+Notes: 8
+
+## Slide 9
+
+DEFINITIONS
+Key Terms Defined
+
+
+Permit to Issue (PTI) Electronic Invoice 
+The authority granted by the BIR authorizing a taxpayer to issue e-invoices that comply with the prescribed              e-invoicing requirements, through a duly registered and/or approved invoicing system.
+ 
+The PTI is distinct from the Permit to Use (PTU) or Acknowledgement Certificate (AC) for CAS, which authorizes the use of such systems but does not by itself constitute authority to issue e-invoices.
+
+
+Permit to Transmit (PTT) 
+The authorization issued by the BIR permitting mandated taxpayers to transmit sales data to the BIR.
+
+07
+
+Notes: 9
+
+## Slide 10
+
+02
+SECTION TWO
+Policies, Qualification & Accreditation
+Mandatory accreditation, scope of services, qualification requirements, and the stage-gated validation process.
+
+08
+
+Notes: 10
+
+## Slide 11
+
+POLICIES & GUIDELINES
+General Policies
+
+1
+Mandatory Accreditation
+No one may commercially deploy e-invoicing or sales-reporting services without a valid Accreditation Certificate. Accreditation is solution-specific — tied to the particular version, modules, interfaces, and configuration approved.
+
+2
+Scope of Services
+End-to-end service: generation, issuance, preservation, validation, processing, storage, retrieval, audit support, and transmission. Data must be transmitted in real or near-real time within three (3) calendar days.
+
+3
+Legal Personality
+An applicant may be a corporation, partnership, joint venture, or consortium. Joint-venture or consortium members are jointly and severally liable for compliance.
+
+4
+Cost to Taxpayers
+Fees must be transparent, reasonable, and fully disclosed. No hidden charges, unreasonable exit or data-retrieval fees, or restrictions preventing provider changes.
+
+09
+
+Notes: 11
+
+## Slide 12
+
+Mandatory Accreditation
+
+10
+No ESP shall commercially deploy, activate, or provide e-invoicing solutions and electronic sales reporting services to taxpayers unless its solution is accredited by the Bureau and it holds a valid Electronic Invoicing Solutions Accreditation Certificate. 
+An applicant may conduct product demonstrations and controlled pre-production testing, provided that it clearly discloses that the service is not yet authorized for production use and does not process live taxpayer transactions. 
+Accreditation shall be solution-specific and shall apply only to the particular solution, version, modules, interfaces and deployment configuration evaluated and approved by the BIR. Updates that are not Material Changes do not require reaccreditation.
+GENERAL POLICIES
+
+Notes: 12
+
+## Slide 13
+
+SCOPE OF SERVICES
+
+10
+Provide an e-invoicing system capable of generating and preserving structured e-invoices that comply with applicable BIR functional, data, validation, security, and audit-trail requirements;
+Ensure that the PTI Electronic Invoice Number is properly reflected on e-invoices, as may be required under applicable revenue issuances and technical specifications;
+Facilitate the application for, issuance of, or updating of the taxpayer's PTI Electronic Invoice through the BIR-prescribed procedure. The client-taxpayer shall remain the holder of such registration or authority, and the ESP shall acquire no proprietary interest in or control over the same.
+GENERAL POLICIES
+
+Notes: 13
+
+## Slide 14
+
+SCOPE OF SERVICES
+
+10
+Transmission of e-invoice and sales data shall be made real time or near real time within three (3) calendar days from the date of transaction. Where immediate transmission is unavailable, the system shall securely queue, preserve, reconcile, and retransmit the data within three (3) calendar days upon system restoration without loss, alteration, corruption, or duplication; and
+Manage all required Application Programming Interface (API) integrations, certifications, and pre-production testing on behalf of the client-taxpayer, subject to the client's written authorization.
+GENERAL POLICIES
+
+Notes: 14
+
+## Slide 15
+
+LEGAL PERSONALITY OF AN ESP
+
+10
+An applicant may be a corporation, partnership, joint venture, or consortium organized or duly licensed to do business in the Philippines. 
+The designation of a lead member or principal applicant shall not relieve any member from solidary responsibility.
+Where the applicant is a joint venture or consortium, the accreditation requirements under this Circular may be satisfied by any one (1) member designated as the lead member or principal applicant. 
+GENERAL POLICIES
+
+Notes: 15
+
+## Slide 16
+
+COST TO CLIENT-TAXPAYERS
+
+10
+ESP fees shall be transparent, reasonable, proportionate to the services provided, and fully disclosed before taxpayer onboarding. No ESP shall impose hidden charges, exit, data-retrieval, or migration fees that are not disclosed in the service agreement or that exceed the ESP’s documented cost, or contractual restrictions that prevent a taxpayer from changing providers or retrieving its records. This is a condition of accreditation.
+The BIR shall require disclosure of standard packages, fees, material price changes, and charges imposed for onboarding, storage, transmission, retrieval, migration, and termination.
+
+GENERAL POLICIES
+
+Notes: 16
+
+## Slide 17
+
+GENERAL POLICIES
+RELATIONSHIP WITH CAS AND POS REGULATIONS
+
+10
+Accreditation under this Circular shall not replace taxpayer-level CAS, POS, or other system registration or approval requirements under applicable revenue issuances, including the PTI Electronic Invoice and EIS Certification of the taxpayer under RMC No. 98-2026.
+
+
+Notes: 17
+
+## Slide 18
+
+GENERAL POLICIES
+QUALIFICATION AND ACCREDITATION REQUIREMENTS 
+
+10
+The ESP shall: 
+
+Comply with all requirements identified in the Checklist of Requirements for the Application for Electronic Invoicing Solutions Accreditation (Annex “A”). 
+
+Submission of incomplete, inaccurate, misleading, or falsified documents shall be a ground for non-acceptance or denial of the application;
+
+Provide a detailed system overview; 
+
+
+Notes: 18
+
+## Slide 19
+
+GENERAL POLICIES
+QUALIFICATION AND ACCREDITATION REQUIREMENTS 
+
+10
+The ESP shall: 
+
+Demonstrate compliance with mandatory technical, security, and data privacy requirements, business continuity, disaster recovery, interoperability, auditability, and data portability prescribed by the BIR; and
+
+Designate authorized technical and compliance focal persons.  
+
+
+Notes: 19
+
+## Slide 20
+
+GENERAL POLICIES
+QUALIFICATION AND ACCREDITATION REQUIREMENTS 
+
+10
+The ESP shall disclose beneficial owners, directors, officers, key technical personnel, subcontractors, cloud service providers, and relevant affiliates involved in the processing, storage, transmission, hosting, or support of taxpayer data. The ESP shall update the disclosure before engaging or changing any material subcontractor, hosting provider, cloud provider, affiliate, or foreign processor.
+
+
+Notes: 20
+
+## Slide 21
+
+GENERAL POLICIES
+QUALIFICATION AND ACCREDITATION REQUIREMENTS 
+
+10
+The BIR shall conduct fit-and-proper review of the ESP, including tax compliance status, financial capacity, prior regulatory violations, cybersecurity incidents, breach history, operational sustainability, beneficial ownership, integrity, financial condition, tax compliance, litigation and enforcement history, and capacity to sustain operations.
+
+
+Notes: 21
+
+## Slide 22
+
+Accreditation Stages
+
+
+a
+Documentary completeness review
+
+b
+Fit-and-proper & financial capacity review
+
+c
+Technical architecture & end-to-end data-flow review
+
+d
+Data-privacy, EO 119, and cybersecurity assessment
+
+e
+System / solution demonstration
+
+f
+Interoperability & end-to-end transmission testing
+g
+Load, stress, scalability, failover, backup & recovery testing
+
+Documentary compliance alone is NOT sufficient. Failure of any stage halts progression until corrected and successfully retested.
+
+10
+GENERAL POLICIES
+
+Notes: 22
+
+## Slide 23
+
+MINIMUM THRESHOLDS
+Track Record & Operational Capability
+
+11
+The ESP shall demonstrate independently verifiable experience, financial capacity, qualified personnel, infrastructure, scalability, reliability, and operational maturity appropriate to its proposed service model and projected taxpayer and transaction volumes.
+The e-invoicing solutions shall pass BIR-supervised stress, load, concurrency, scalability, failover, recovery, and peak-volume tests based on projected and contingency transaction volumes.
+
+Notes: 23
+
+## Slide 24
+
+MINIMUM THRESHOLDS
+Track Record & Operational Capability
+
+11
+The ESP shall maintain a secure, resilient, and scalable cloud infrastructure that supports high-volume operations, business continuity, regulatory compliance, and reliable integration with BIR systems. It shall provide documented architecture, monitoring and reporting capabilities, operational visibility, and full disclosure of hosting, support, disaster recovery, and administrative access arrangements.
+
+Notes: 24
+
+## Slide 25
+
+MINIMUM THRESHOLDS
+Track Record & Operational Capability
+
+5M
+TRANSACTIONS
+Processed annually, for each of the immediately preceding three (3) years
+
+1,000
+ACTIVE ACCOUNTS
+Active user or customer accounts supported per year
+
+3
+YEARS
+Of verifiable experience operating or supporting comparable systems
+Solutions must pass BIR-supervised stress, load, concurrency, scalability, failover, and recovery tests based on projected and peak transaction volumes.
+
+11
+
+Notes: 25
+
+## Slide 26
+
+PROCESS & LIFECYCLE
+Evaluation, Approval & Validity
+EVALUATION PROCESS
+
+Reviewed by the Electronic Invoicing Solutions Accreditation Board, drawn from the ISG, Operations, and Strategic Reforms Groups.
+
+Every applicant undergoes a live end-to-end demonstration plus baseline conformance, interoperability, security, and continuity tests.
+
+Provide a functional demonstration of platform capabilities, including taxpayer onboarding, e-invoice issuance, administrative governance and oversight, operational reporting, audit visibility, and monitoring capabilities as part of the accreditation assessment process.
+
+ACCREDITATION LIFECYCLE
+5 years
+Validity, subject to annual compliance review and continuous monitoring
+60 days
+Minimum renewal lead time before certificate expiration
+24 hours
+Window to report a critical security or transmission incident
+
+12
+
+Third-party certifications may support, but cannot replace, BIR testing, inspection, audit, or independent verification.
+
+Notes: 26
+
+## Slide 27
+
+CONTINUING COMPLIANCE
+Key Obligations of ESPs
+
+
+✓
+Validate the legal existence of taxpayer-clients before onboarding
+
+
+✓
+Ensure accuracy, completeness, integrity, and non-duplication of data
+
+
+✓
+Maintain immutable, time-synchronized audit logs accessible to the BIR
+
+
+✓
+Meet service levels: availability, RTO, RPO, and transmission-success rates
+
+
+✓
+Report critical incidents to the RDO in writing within 24 hours
+
+
+✓
+Obtain prior BIR approval before any material change
+
+
+✓
+Provide manual-invoicing functionality during service interruptions
+
+
+✓
+Maintain a facility for automatic generation of the Summary List of Sales
+
+13
+
+Notes: 27
+
+## Slide 28
+
+DATA GOVERNANCE
+Data Ownership, Access & Portability
+
+Ownership & Control
+Taxpayers retain ownership of underlying records. All e-invoice and sales data transmitted to or stored for the BIR are official tax-administration records under BIR custody. The ESP acquires no proprietary right.
+
+BIR Access
+The ESP shall provide the BIR complete, direct, secure, timely, and continuous access to all e-invoice and sales data, metadata, audit logs, acknowledgments, rejection and error records, and other information lawfully required for tax 
+
+Summary and Detailed Reports 
+Standard summary reports in the format prescribed by the BIR within one working day and
+Complete transaction-level extracts in a structured, machine-readable, and non-proprietary format within three working days, or within a shorter period when required for an authorized audit, investigation, enforcement action, cybersecurity incident, or system emergency.
+
+Storage Pending BIR Readiness 
+The ESP shall securely retain complete transaction-level e-invoice and sales data, associated metadata, acknowledgments, error records, and audit trails for the period required under the Tax Code and thereafter until the BIR confirms in writing that the required data have been completely and successfully migrated to the BIR infrastructure and authorizes discontinuance of storage. 
+
+Continuing Obligation 
+Expiration, suspension, revocation, termination of a taxpayer contract, insolvency, cessation of business, merger, or change in control shall not extinguish the ESP’s storage, access, preservation, confidentiality, audit-support, or migration obligations. 
+
+14
+
+Notes: 28
+
+## Slide 29
+
+DATA GOVERNANCE
+Data Ownership, Access & Portability
+
+No Vendor Lock-In 
+The ESP shall not withhold, disable, delete, degrade, or condition access to data because of a contractual dispute, unpaid service fee, termination, or change of provider.
+
+Portability and Migration 
+The ESP shall maintain the capability to export and transfer all relevant data, metadata, logs, and audit trails to the taxpayer, the BIR, or another accredited ESP without loss, alteration, duplication, unreasonable delay, or unreasonable cost.
+
+Permitted Use 
+The ESP shall use the data only for authorized e-invoicing, reporting, storage, support, security, reconciliation, and compliance purposes. It shall not sell, monetize, profile, combine, disclose, or use the data for advertising, credit scoring, competitive intelligence, or an unrelated purpose.
+
+Personnel and Third-party Service Providers’ Disclosure 
+No affiliate, hosting provider, cloud provider, subcontractor, or foreign processor may access or process covered data unless disclosed to and approved by the BIR and contractually bound to obligations at least equivalent to those imposed on the ESP. 
+
+Preservation of Records 
+The ESP shall support legal hold or preservation orders for records subject to audit, investigation, enforcement, litigation, or fraud review. 
+
+14
+
+Notes: 29
+
+## Slide 30
+
+ENFORCEMENT
+Accountability, Liability & Sanctions
+ESP ACCOUNTABILITY
+▪
+Directly accountable to the BIR and client-taxpayers for compliance.
+▪
+Liable for fraud, breach, unauthorized data use, and system manipulation such as sales suppression or invoice falsification.
+▪
+May be required to post a performance bond, cyber-risk, or professional-liability insurance.
+▪
+Using an ESP does not relieve the taxpayer of statutory tax responsibilities.
+
+CORRECTIVE ACTION & SANCTIONS
+→
+Corrective action or restricted onboarding
+→
+Suspension of accreditation
+→
+Revocation of accreditation
+→
+Immediate temporary suspension for imminent risk
+→
+Without prejudice to civil, criminal, tax, or data-privacy liability
+
+15
+
+Notes: 30
+
+## Slide 31
+
+03
+ANNEX A
+Checklist of Requirements
+Documentary requirements for the application for Electronic Invoicing Solutions Accreditation. Mark submitted items with a check; items for compliance with an X.
+
+16
+
+Notes: 31
+
+## Slide 32
+
+ANNEX A CHECKLIST
+Documentary Requirements (1–16)
+1
+Sworn Statement, duly notarized or apostilled
+2
+SEC Certificate of Registration
+3
+Latest General Information Sheet (if applicable)
+4
+Proof of authority of representative & certifying employee
+5
+Latest Audited Financial Statements
+6
+Evidence of required insurance or financial assurance
+7
+Company Profile
+8
+Standard Service-Level Agreement (ESP & client)
+9
+Screenshots showing Software Name & Version Number
+10
+Screenshot of Online/Offline Indicator (if applicable)
+11
+List & sample copies of principal & supplementary documents
+12
+List of system-generated reports with sample printouts
+13
+Technical & Functional Specifications / System Manual
+14
+Third-Party Assessment Report / Certification
+15
+Back-up Procedure & Disaster Recovery Plan (RTO/RPO)
+16
+Exit, migration & data-portability plan
+
+17
+
+Notes: 32
+
+## Slide 33
+
+ANNEX A — ITEMS 13 & 14
+Technical Specs & Certifications
+
+13 · Technical & Functional Specifications
+•
+End-to-end data flow & transmission architecture
+•
+Dataflow & data-lineage diagrams
+•
+Hosting, cloud & data-location disclosures
+•
+Security, encryption & authentication protocols
+•
+Identity, access & key-management controls
+•
+Incident-response plan
+•
+Service-level framework
+
+14 · Third-Party Assessment & Certification
+✓
+EO No. 119 (2026) data classification & residency compliance
+✓
+Multi-layer protection: firewall, anti-DDoS, WAF, anti-malware
+✓
+Source Code Review and VAPT with favorable result
+✓
+ISO/IEC 27001, 27017 & 27018
+✓
+SOC 1 and SOC 2
+
+18
+
+Notes: 33
+
+## Slide 34
+
+KEY TAKEAWAYS
+A Secure, Accountable e-Invoicing Ecosystem
+
+✓
+Accreditation is mandatory
+No commercial deployment without a valid, solution-specific Accreditation Certificate.
+
+✓
+Testing beats paperwork
+Seven stage-gated reviews — documentary compliance alone is never sufficient.
+
+Taxpayer data is protected
+Continuous BIR access, no vendor lock-in, and full portability are guaranteed.
+
+Capacity is proven
+5M transactions/year, 1,000 accounts, and a 3-year verifiable track record.
+
+Accountability is enforced
+Suspension, revocation, and liability back every obligation under the Circular.
+
+Bureau of Internal Revenue  ·  Electronic Invoicing & Sales Reporting System (EIS)
+
+19
+
+✓
+
+✓
+
+✓
+
+Notes: 34

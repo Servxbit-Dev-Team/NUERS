@@ -1,0 +1,1 @@
+function n(s){const t=(s??"").trim();if(!/^[\d\s-]+$/.test(t))return t;const e=t.replace(/[\s-]/g,"");if(![9,12,14].includes(e.length))return t;const i=`${e.slice(0,3)}-${e.slice(3,6)}-${e.slice(6,9)}`;return e.length===9?i:`${i}-${e.slice(9)}`}export{n as f};

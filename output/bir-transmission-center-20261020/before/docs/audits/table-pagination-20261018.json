@@ -1,0 +1,838 @@
+{
+  "date": "2026-10-18",
+  "scope": "Dashboard table pagination presentation across admin, merchant, BIR/RDO, operations and client routes",
+  "all_table_source_files": 70,
+  "table_definitions": 107,
+  "table_source_inventory": [
+    {
+      "file": "src/components/ui/table.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/components/enterprise/enterprise-dashboard.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/components/invoices/official-receipt.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/components/admin/integration-source-profiles.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/components/admin/business-wallet.tsx",
+      "table_definitions": 1,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/components/merchant/records-workspace.tsx",
+      "table_definitions": 1,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/components/merchant/client-queue.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/archive/center.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/invoices/center.tsx",
+      "table_definitions": 1,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/bir/dashboard.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/auth/account-security.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/taxpayer/businesses.tsx",
+      "table_definitions": 2,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/taxpayer/registry.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/taxpayer/users.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/soc/dashboard.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/soc/operations.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/bcdr/dashboard.tsx",
+      "table_definitions": 6,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/platform/architecture.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/authorizations/index.tsx",
+      "table_definitions": 1,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/admin/tax-filings.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/admin/transactions.tsx",
+      "table_definitions": 4,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/admin/compliance.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/admin/merchants.tsx",
+      "table_definitions": 1,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/admin/account-profile.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/admin/fraud.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/admin/client-accounts.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/certificates/management.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/compliance/center.tsx",
+      "table_definitions": 2,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/operations/workspace.tsx",
+      "table_definitions": 2,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/eis/hub.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/integrations/index.tsx",
+      "table_definitions": 3,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/system/configuration.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/system/notification-operations.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/system/admin.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/audit/log.tsx",
+      "table_definitions": 1,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/tax-intelligence/center.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/api/eis-transmissions.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/api/monitoring.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/api/eis-performance.tsx",
+      "table_definitions": 2,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/api/portal.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/monitoring/transmissions.tsx",
+      "table_definitions": 1,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/legal/policy.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/engine/index.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/client/dashboard.tsx",
+      "table_definitions": 2,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/business-registry/index.tsx",
+      "table_definitions": 1,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/business-registry/rdo-mappings.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/rdo/portal.tsx",
+      "table_definitions": 2,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/notifications/center.tsx",
+      "table_definitions": 2,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/merchant/wallet.tsx",
+      "table_definitions": 6,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/merchant/dashboard.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/merchant/invoice-bulk.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/merchant/invoice-detail.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/merchant/sales-reports.tsx",
+      "table_definitions": 1,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/merchant/invoice-recurring.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/merchant/notifications.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/merchant/profile.tsx",
+      "table_definitions": 3,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/merchant/users.tsx",
+      "table_definitions": 1,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/merchant/vat-reports.tsx",
+      "table_definitions": 2,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/merchant/receipts.tsx",
+      "table_definitions": 1,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/merchant/expenses.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/merchant/invoice-create.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/merchant/api-keys.tsx",
+      "table_definitions": 7,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/merchant/security.tsx",
+      "table_definitions": 2,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/merchant/branches.tsx",
+      "table_definitions": 3,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/merchant/customers.tsx",
+      "table_definitions": 4,
+      "pagination_footer": true
+    },
+    {
+      "file": "src/pages/executive/analytics.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/developers/shared.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/developers/overview.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/developers/docs.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    },
+    {
+      "file": "src/pages/developers/sandbox.tsx",
+      "table_definitions": 1,
+      "pagination_footer": false
+    }
+  ],
+  "pagination_footer_definitions": 25,
+  "pagination_inventory": [
+    {
+      "file": "src/components/invoices/eis-readiness-panel.tsx",
+      "footers": 1,
+      "status": "footer follows its table or record list in normal document flow"
+    },
+    {
+      "file": "src/components/admin/business-wallet.tsx",
+      "footers": 1,
+      "status": "footer follows its table or record list in normal document flow"
+    },
+    {
+      "file": "src/components/merchant/records-workspace.tsx",
+      "footers": 1,
+      "status": "footer follows its table or record list in normal document flow"
+    },
+    {
+      "file": "src/pages/invoices/center.tsx",
+      "footers": 1,
+      "status": "footer follows its table or record list in normal document flow"
+    },
+    {
+      "file": "src/pages/bcdr/dashboard.tsx",
+      "footers": 1,
+      "status": "footer follows its table or record list in normal document flow"
+    },
+    {
+      "file": "src/pages/authorizations/index.tsx",
+      "footers": 1,
+      "status": "footer follows its table or record list in normal document flow"
+    },
+    {
+      "file": "src/pages/admin/support-inbox.tsx",
+      "footers": 1,
+      "status": "footer follows its table or record list in normal document flow"
+    },
+    {
+      "file": "src/pages/operations/workspace.tsx",
+      "footers": 1,
+      "status": "footer follows its table or record list in normal document flow"
+    },
+    {
+      "file": "src/pages/integrations/index.tsx",
+      "footers": 1,
+      "status": "footer follows its table or record list in normal document flow"
+    },
+    {
+      "file": "src/pages/monitoring/transmissions.tsx",
+      "footers": 1,
+      "status": "footer follows its table or record list in normal document flow"
+    },
+    {
+      "file": "src/pages/business-registry/index.tsx",
+      "footers": 1,
+      "status": "footer follows its table or record list in normal document flow"
+    },
+    {
+      "file": "src/pages/merchant/wallet.tsx",
+      "footers": 2,
+      "status": "footer follows its table or record list in normal document flow"
+    },
+    {
+      "file": "src/pages/merchant/sales-reports.tsx",
+      "footers": 1,
+      "status": "footer follows its table or record list in normal document flow"
+    },
+    {
+      "file": "src/pages/merchant/users.tsx",
+      "footers": 1,
+      "status": "footer follows its table or record list in normal document flow"
+    },
+    {
+      "file": "src/pages/merchant/api-keys.tsx",
+      "footers": 1,
+      "status": "footer follows its table or record list in normal document flow"
+    },
+    {
+      "file": "src/pages/merchant/branches.tsx",
+      "footers": 1,
+      "status": "footer follows its table or record list in normal document flow"
+    },
+    {
+      "file": "src/pages/merchant/customers.tsx",
+      "footers": 1,
+      "status": "footer follows its table or record list in normal document flow"
+    },
+    {
+      "file": "src/pages/admin/transactions.tsx",
+      "footers": 1,
+      "status": "footer follows its table in normal document flow"
+    },
+    {
+      "file": "src/pages/admin/merchants.tsx",
+      "footers": 1,
+      "status": "footer follows its table in normal document flow"
+    },
+    {
+      "file": "src/pages/audit/log.tsx",
+      "footers": 1,
+      "status": "footer follows its table in normal document flow"
+    },
+    {
+      "file": "src/pages/client/dashboard.tsx",
+      "footers": 1,
+      "status": "footer follows its table in normal document flow"
+    },
+    {
+      "file": "src/pages/merchant/vat-reports.tsx",
+      "footers": 1,
+      "status": "footer follows its table in normal document flow"
+    },
+    {
+      "file": "src/pages/merchant/receipts.tsx",
+      "footers": 1,
+      "status": "footer follows its table in normal document flow"
+    },
+    {
+      "file": "src/pages/merchant/customers.tsx",
+      "footers": 1,
+      "status": "footer follows its table in normal document flow"
+    }
+  ],
+  "findings_fixed": [
+    "Merchant user table forced 270px of empty space for short results",
+    "Merchant directory stretched to the role-card column height after its footer",
+    "Admin invoice footer flex-grow filled spare panel height and centered its controls",
+    "Admin invoice table/list reserved fixed minimum heights",
+    "Monitoring stream retained arbitrary minimum panel height"
+  ],
+  "layout_contract": {
+    "placement": "normal document flow after table/record list, outside tbody",
+    "footer": "static position, no flex growth or shrink, full width, content height",
+    "mobile": "footer controls wrap without joining the horizontally scrolling table",
+    "empty_results": "existing explanatory empty states remain before footer",
+    "expanded_monitoring": "scrollable table remains flexible; footer remains compact at bottom"
+  },
+  "behavior_preservation": "All changed TSX files match pre-change source exactly after removing the presentation data-slot attribute; no API, permissions, page counts, filters or data writes changed",
+  "browser_checks": [
+    {
+      "route": "/merchant/users",
+      "state": "one row desktop",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 12,
+          "height": 46.84375,
+          "insideTable": false,
+          "position": "static",
+          "previous": "mu-table-scroll",
+          "text": "Showing 1 to 1 of 1 users\u20391of 1\u203aRows per page 8102550",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/merchant/users",
+      "state": "one row mobile",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 12,
+          "height": 75.6875,
+          "insideTable": false,
+          "position": "static",
+          "previous": "mu-table-scroll",
+          "text": "Showing 1 to 1 of 1 users\u20391of 1\u203aRows per page 8102550",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/merchant/customers",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 15,
+          "height": 29,
+          "insideTable": false,
+          "position": "static",
+          "previous": "mc-table",
+          "text": "Showing 0 customers1Rows per page102550100",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/merchant/invoices",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 12,
+          "height": 59.5,
+          "insideTable": false,
+          "position": "static",
+          "previous": "mr-table-scroll",
+          "text": "Showing 0 records1of 1Rows per page102550100",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/merchant/wallet",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 16,
+          "height": 33.5,
+          "insideTable": false,
+          "position": "static",
+          "previous": "mw-table",
+          "text": "3 wallet entriesPrevious1 / 1Next",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/merchant/branches",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 12,
+          "height": 40,
+          "insideTable": false,
+          "position": "static",
+          "previous": "mc-table mb-table",
+          "text": "Showing 1\u20132 of 21 / 1",
+          "withinViewport": true
+        },
+        {
+          "flex": "0 0 auto",
+          "gap": 12,
+          "height": 40,
+          "insideTable": false,
+          "position": "static",
+          "previous": "mc-table mb-table",
+          "text": "No records1 / 1",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/merchant/users",
+      "state": "full first page",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 12,
+          "height": 46.84375,
+          "insideTable": false,
+          "position": "static",
+          "previous": "mu-table-scroll",
+          "text": "Showing 1 to 8 of 12 users\u20391of 2\u203aRows per page 8102550",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/merchant/users",
+      "state": "last page",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 12,
+          "height": 46.84375,
+          "insideTable": false,
+          "position": "static",
+          "previous": "mu-table-scroll",
+          "text": "Showing 9 to 12 of 12 users\u20392of 2\u203aRows per page 8102550",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/merchant/users",
+      "state": "page size changed to 25",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 12,
+          "height": 46.84375,
+          "insideTable": false,
+          "position": "static",
+          "previous": "mu-table-scroll",
+          "text": "Showing 1 to 12 of 12 users\u20391of 2\u203aRows per page 8102550",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/merchant/users",
+      "state": "empty search",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 12,
+          "height": 46.84375,
+          "insideTable": false,
+          "position": "static",
+          "previous": "mu-table-scroll",
+          "text": "No matching users\u20391of 1\u203aRows per page 8102550",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/merchant/sales-reports",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 14,
+          "height": 29.5,
+          "insideTable": false,
+          "position": "static",
+          "previous": "srp-table ",
+          "text": "Showing 0 records1of 1Rows per page102550100",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/merchant/api-keys?tab=logs",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 15,
+          "height": 36,
+          "insideTable": false,
+          "position": "static",
+          "previous": "mi-scroll",
+          "text": "0 recorded attemptsPrevious1 / 1Next",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/super-admin/merchants",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 20,
+          "height": 43,
+          "insideTable": false,
+          "position": "static",
+          "previous": "ow-scroll",
+          "text": "Showing 1 to 1 of 1 entriesPer Page10 per page1of 1",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/invoices",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 12,
+          "height": 32,
+          "insideTable": false,
+          "position": "static",
+          "previous": "ic-table-scroll ",
+          "text": "Showing 0 entries102550100 per page1",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/super-admin/transactions",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 20,
+          "height": 43,
+          "insideTable": false,
+          "position": "static",
+          "previous": "ow-scroll",
+          "text": "Showing 0 to 0 of 0 entriesPer page10 per page1",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/super-admin/pti-ptt",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 20,
+          "height": 43,
+          "insideTable": false,
+          "position": "static",
+          "previous": "ow-scroll",
+          "text": "Showing 0 to 0 of 0 entriesPer page10 per page1",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/super-admin/audit",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 12,
+          "height": 64,
+          "insideTable": false,
+          "position": "static",
+          "previous": "w-full text-sm border-collapse",
+          "text": "Previous1 / 1Next",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/monitoring",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 12,
+          "height": 40.5,
+          "insideTable": false,
+          "position": "static",
+          "previous": "lm-table-wrap",
+          "text": "0 recordsRows 1025501 / 1",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/super-admin/api-platform",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 20,
+          "height": 43,
+          "insideTable": false,
+          "position": "static",
+          "previous": "ow-scroll",
+          "text": "0 recorded requests \u00b7 Page 1Per page10 per page1",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/super-admin/wallets",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 16,
+          "height": 33.5,
+          "insideTable": false,
+          "position": "static",
+          "previous": "mw-table",
+          "text": "1 merchantsPrevious1 / 1Next",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/super-admin/support",
+      "checks": [
+        {
+          "flex": "0 0 auto",
+          "gap": 12,
+          "height": 52.5,
+          "insideTable": false,
+          "position": "static",
+          "previous": "si-list",
+          "text": "0 conversations\u20391/1\u203a",
+          "withinViewport": true
+        }
+      ]
+    },
+    {
+      "route": "/client/transactions",
+      "state": "TIN-bound ledger gate preserved; footer placement reviewed in source",
+      "checks": []
+    }
+  ],
+  "build": "npm run build:all passed (TypeScript, Laravel assets, static assets, document renderer)",
+  "deployment_authorization": "User explicitly authorized automatic live deployment for this pagination update",
+  "database_changes": false,
+  "live_verification": "pending"
+}

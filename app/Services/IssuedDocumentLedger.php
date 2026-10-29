@@ -19,7 +19,7 @@ class IssuedDocumentLedger
         return DB::getDriverName() === 'sqlite' ? "'$prefix' || $column" : "CONCAT('$prefix',$column)";
     }
 
-    public function candidates(): Builder
+    public function candidates(?string $merchantId = null, ?array $targets = null, bool $includeDrafts = false): Builder
     {
         $rbranch = $this->col('transaction_receipts', 'r', 'seller_branch_code');
         $bbranch = $this->col('business_invoices', 'b', 'seller_branch_code');
@@ -44,7 +44,7 @@ class IssuedDocumentLedger
             NULL as original_invoice_id,
             (SELECT COUNT(*) FROM merchant_transactions tx WHERE tx.receipt_id=r.id AND tx.merchant_id=r.merchant_id) as payment_count,
             COALESCE((SELECT SUM(tx.amount) FROM merchant_transactions tx WHERE tx.receipt_id=r.id AND tx.merchant_id=r.merchant_id AND tx.status IN ('completed','paid','settled','verified')),0) as payment_amount");
-        $invoices = DB::table('business_invoices as b')->whereNotIn('b.status', ['draft'])->selectRaw($this->prefix('invoice:', 'b.id')." as id,'invoice' as document_source,b.id as document_id,NULL as transaction_id,b.merchant_id,b.invoice_number as transaction_ref,NULL as receipt_id,b.invoice_number as receipt_number,
+        $invoices = DB::table('business_invoices as b')->when(!$includeDrafts, fn ($q) => $q->whereNotIn('b.status', ['draft']))->selectRaw($this->prefix('invoice:', 'b.id')." as id,'invoice' as document_source,b.id as document_id,NULL as transaction_id,b.merchant_id,b.invoice_number as transaction_ref,NULL as receipt_id,b.invoice_number as receipt_number,
             b.merchant_name as business,b.merchant_tin as tin,b.merchant_address as seller_address,$bbranch as branch_code,$brdo as rdo_code,
             b.document_type,b.status as record_status,NULL as transaction_status,
             b.total_amount as amount,$bb,b.vat_amount,b.taxable_amount as vatable_sales,b.vat_exempt_amount as vat_exempt_sales,b.zero_rated_amount as zero_rated_sales,0 as sspt_sales,
@@ -61,12 +61,17 @@ class IssuedDocumentLedger
             NULL as business_date,t.created_at,t.created_at as recorded_at,t.payment_method,t.region,t.branch,t.channel,t.customer_name,t.customer_tin,NULL as original_invoice_id,
             1 as payment_count,t.amount as payment_amount");
 
+        foreach ([['receipt', $receipts, 'r'], ['invoice', $invoices, 'b'], ['transaction', $orphans, 't']] as [$source, $q, $alias]) {
+            if ($merchantId !== null) $q->where($alias.'.merchant_id', $merchantId);
+            if ($targets !== null) $q->whereIn($alias.'.id', $targets[$source] ?? []);
+        }
+
         return DB::query()->fromSub($receipts->unionAll($invoices)->unionAll($orphans), 'documents');
     }
 
-    public function normalizedCandidates(): Builder
+    public function normalizedCandidates(?string $merchantId = null, ?array $targets = null, bool $includeDrafts = false): Builder
     {
-        $typed = $this->candidates()->selectRaw("documents.*, CASE WHEN discount_amount>statutory_discount_amount THEN discount_amount-statutory_discount_amount ELSE 0 END as manual_discount_amount, REPLACE(REPLACE(REPLACE(COALESCE(tin,''),'-',''),' ',''),'.','') as tin_digits,
+        $typed = $this->candidates($merchantId, $targets, $includeDrafts)->selectRaw("documents.*, CASE WHEN discount_amount>statutory_discount_amount THEN discount_amount-statutory_discount_amount ELSE 0 END as manual_discount_amount, REPLACE(REPLACE(REPLACE(COALESCE(tin,''),'-',''),' ',''),'.','') as tin_digits,
             CASE WHEN record_status IN ('cancelled','canceled','voided','void','refunded','refund') THEN 'cancelled' WHEN record_status IN ('issued','sent','paid','partially_paid','validated','completed','settled','verified','valid','overdue') THEN 'success' WHEN record_status IN ('failed','rejected') THEN 'failed' ELSE 'pending' END as status,
             CASE WHEN document_type IN ('credit_note','credit_memo') THEN 'credit' WHEN document_type IN ('debit_note','debit_memo') THEN 'debit' WHEN document_type IN ('official_receipt','payment_receipt') THEN 'receipt' WHEN document_type IN ('purchase_invoice','delivery_receipt') THEN 'supplementary' ELSE 'invoice' END as document_family");
         $embedded = $this->prefix('00', 'SUBSTR(tin_digits,10,3)');
@@ -79,7 +84,14 @@ class IssuedDocumentLedger
 
     public function query(?string $merchantId = null): Builder
     {
-        $typed = $this->normalizedCandidates()->when($merchantId !== null, fn ($q) => $q->where('merchant_id', $merchantId));
+        if (app(LedgerProjection::class)->ready()) return app(LedgerProjection::class)->query($merchantId);
+
+        return $this->legacyQuery($merchantId);
+    }
+
+    public function legacyQuery(?string $merchantId = null): Builder
+    {
+        $typed = $this->normalizedCandidates($merchantId);
         // Document identity is independent of payment count, formatting and import time.
         $identity = "CASE WHEN seller_tin_key='' THEN merchant_id ELSE '' END, seller_tin_key, seller_branch_key, document_family, document_number_key";
         $ranked = DB::query()->fromSub($typed, 'normalized')->selectRaw("normalized.*,

@@ -1,3 +1,4 @@
+import { subscribeRealtimeRefresh } from "@/lib/use-realtime-refresh";
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Building2, ChevronLeft, ChevronRight, Link2, RefreshCw, Search } from 'lucide-react';
@@ -18,8 +19,8 @@ export function AdminMerchantConnections({ dashboard = false }: { dashboard?: bo
   const [busy, setBusy] = useState(true), [error, setError] = useState('');
   useEffect(() => {
     const controller = new AbortController(); let running = false;
-    async function load() {
-      if (running || controller.signal.aborted) return; running = true; setBusy(true);
+    async function load(quiet = false) {
+      if (running || controller.signal.aborted) return; running = true; if (!quiet) setBusy(true);
       try {
         const result = await apiJson<Overview>('/api/admin/merchant-connections?' + new URLSearchParams({ search: applied, environment, page: String(page), per_page: size }), { signal: controller.signal });
         if (!controller.signal.aborted) { setData(result); setError(''); }
@@ -27,9 +28,8 @@ export function AdminMerchantConnections({ dashboard = false }: { dashboard?: bo
       finally { running = false; if (!controller.signal.aborted) setBusy(false); }
     }
     setData(null); void load();
-    const focus = () => { if (document.visibilityState === 'visible') void load(); };
-    const timer = window.setInterval(focus, 60000); window.addEventListener('focus', focus);
-    return () => { controller.abort(); window.clearInterval(timer); window.removeEventListener('focus', focus); };
+    const stop = subscribeRealtimeRefresh(() => load(true));
+    return () => { controller.abort(); stop(); };
   }, [applied, environment, page, size, refresh]);
   const pagination = data?.pagination;
   return <section className="amc-panel" aria-label="Merchant API connections" aria-busy={busy}>

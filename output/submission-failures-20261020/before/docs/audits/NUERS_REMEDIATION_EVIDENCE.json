@@ -1,0 +1,103 @@
+{
+  "observed_at": "2026-10-16T23:45:29+08:00",
+  "target": "local NUERS working tree; no production inspection/deployment",
+  "verdict": "NOT READY for BIR production",
+  "php_tests": 143,
+  "php_assertions": 1568,
+  "crypto_tests": 2,
+  "current_control_counts": {
+    "PARTIAL": 40,
+    "PASS": 6,
+    "NOT VERIFIED": 8
+  },
+  "dependency_advisories": {
+    "composer": 0,
+    "npm": 0
+  },
+  "local_database": {
+    "tables": 87,
+    "pending_migrations": [],
+    "transactions": 13,
+    "payment_total": "750400.00",
+    "canonical_documents": 16,
+    "preparations": 48,
+    "preparation_hash_errors": 0,
+    "audit_integrity": true,
+    "missing_branch_snapshots": 16,
+    "legacy_api_keys_needing_rotation": 6,
+    "delivery_jobs": [
+      {
+        "state": "blocked",
+        "count": 16
+      }
+    ],
+    "production_flags": {
+      "transport_implemented": false,
+      "official_interface_verified": false,
+      "production_response_verification_implemented": false
+    }
+  },
+  "source_sha256": {
+    "app/Http/Controllers/Api/AuthController.php": "3212dd0046f605da86b557bb41e1d799305ec1588f6cffa14ea9a45d7f5920f6",
+    "app/Http/Controllers/Api/BusinessInvoiceController.php": "b124c3c0771dc6e3b735c19c5c01cb72371dc65985beb5f56a3de8fd1e330db7",
+    "app/Http/Controllers/Api/ClientProfileController.php": "3f835610a05d8d6873603d422099bc923fcf82a4fa9b19bba769da7f22fb705c",
+    "app/Http/Controllers/Api/DocumentGovernanceController.php": "02a7ecdf1976d71c24590444d86f028197112c7918504eaa9a35554758a8ad6f",
+    "app/Http/Controllers/Api/IntegrationTransactionController.php": "d40fd845d4ec98bf8821625c8a7f80dd88f0445a68f493c1d0b87084af9e8ca3",
+    "app/Http/Controllers/Api/MerchantExpenseController.php": "173e6300568331ebf10b6256aa2e4dc13cb396d1897a0e25bbce9a4392e1d922",
+    "app/Http/Controllers/Api/MerchantTaxCenterController.php": "cfe25b44615931d52a4a1278cd84b433d27457dbdc6d1fd32599f1f5fad272c4",
+    "app/Http/Controllers/Api/MfaController.php": "f0eb4f865d8c177f42a44629699617bc18f4f1a0ef2fe3277406553aadb2aa8f",
+    "app/Http/Controllers/Api/OperationalEvidenceController.php": "c8df8ef0a9d5da44141196cf862ae5137dedcdba691fca97a770c821cfe2c036",
+    "app/Http/Controllers/Api/OperationsReportController.php": "5dc9e3407027a54ecfc5fa79bedf8463d73f5514952c5227cb7565b9ef1266e0",
+    "app/Http/Controllers/Api/RdoController.php": "5689af1c8e26eccc186d5c81e95aa3e0b933a7e5e6b52d4b733cbd8b27f55363",
+    "app/Http/Controllers/Api/TableController.php": "f3fbe1db914a714c7fe83639ae2e50262e090b0a59b619dd32f2e099abfe4a10",
+    "app/Http/Controllers/Api/TaxIntelligenceController.php": "42cadb1f5c04c38960cd1376abd1f3b0b5839e054e0eb52bfbddd78f1e2dbb35",
+    "app/Http/Controllers/Auth/GoogleAuthController.php": "711a122b08701654da7d05146b9c416e8596bfa3f29c054f74984a173b4c349d",
+    "app/Http/Middleware/ApiBoundary.php": "d354ea7eb34b8b74271598e32fa13d23b2419cee9d083ade23aa8e2169dd317d",
+    "app/Http/Middleware/SecurityHeaders.php": "a7fd317395cae1ddd98758aafb78b06741448c1bca1a8c6a45c32284eadbde60",
+    "app/Services/ApiAccess.php": "6b7e99442a05fd174138be03c8954d73d3c676a387c1499a6970f1c301f8a3ac",
+    "app/Services/AtomicQuota.php": "289ff3b83316da9c776ef45cc8b9ca608f8d6caf5223f497f063a8f610e180fc",
+    "app/Services/BirCompliance.php": "0bef3ba5703afb9a0a5baaab40a3290fe1831a6455ecfeca9fd506ff099d07f6",
+    "app/Services/Eis/BlockedProvider.php": "f72b1df0035a13719d016a313c3635e343a2bafdb1c4cb518a6a7956af76d692",
+    "app/Services/EisDelivery.php": "8a9f0475efee4dc46963b3273625326daee6464f0196070bd1a77aca2c54e250",
+    "app/Services/ExpenseCreditEvidence.php": "14dfad54ececc735b65193861737f4c4a7e16838e1240c26227375292a6ea6ab",
+    "app/Services/IntegrationContract.php": "8fddaccbb18275fb46efa236e3577c8b7bf097b45ff46b509736b87f566c71a7",
+    "app/Services/InvoiceSequence.php": "ecd5926c5c37add534b71eff25ce9d577ec54dcd13aed26b28251cd08ed2980e",
+    "app/Services/SafeImage.php": "8ae68b3054f0ab5f2877551350cb899222f08e2f195f896f97859df15775483b",
+    "app/Services/SignedWebhook.php": "d27ea57d491653d116ba50641872df798e342833b7832aa000f939e0fd4b92ff",
+    "app/Services/SubmissionEvidence.php": "6323ac5ada42d12120883dc5dc171fee7d1ebada07276fb132dcaa6dbbb96939",
+    "app/Services/TenantPortability.php": "b22f8c614085665b8e607a47e2eb35e7464c91e86bc5b921d17b2d2232875e50",
+    "composer.lock": "5c30e26835fc554b9bc5fd707b9bee98f9e61a58a4eacfc624575fe088b600a6",
+    "database/migrations/2026_10_16_000004_secure_sessions_and_governance.php": "23dcdb2250d9b117d380c25a2756a11acacdf01d8cb289a4ed3efb9562856c7d",
+    "database/migrations/2026_10_16_000005_durable_ingestion_and_operations.php": "4aa33853301041934ce247cd1319aca854afc5cb394cde854119c21c0f5c498a",
+    "database/migrations/2026_10_16_000006_signed_webhook_outbox.php": "315a63a121c76a2240de5b2af781f4a461bbc8c995eaabbf74d914cf9f14c781",
+    "database/migrations/2026_10_16_000007_scope_expenses_to_original_source.php": "b9e8eb094506d684cbacd2df8927f3bdbf513ef3aec486830ab7c59989449b94",
+    "package-lock.json": "15d9199c931b6965ad9ba673093c50f65f2a09ba2f89b6b543d8465cffec2388",
+    "routes/console.php": "0d5f91c09c52c81e82e4228dc82281903c11bc7f64ba035fb173ca68338b8942",
+    "src/lib/integrations/offline-outbox.ts": "d3e1b661adac92be075f8193ab595f0bcfaf7a1b916c9b7cb953ff8a869ea992",
+    "src/lib/merchant-expenses-data.ts": "1e714cbda4f35e0fc186f6486593c1d00c160f380cad5299229fb6c0b266b59e",
+    "src/lib/tax-intelligence-data.ts": "d977194882770c2373404fd50584b63706f3e6f550bafd890aafb4f752a39a44",
+    "src/pages/auth/client-register.tsx": "09db0057a6a10f150729df443b4083b0ddad3216b5aba41b5a84f3815c15854a",
+    "src/pages/auth/mfa.tsx": "13cbf51fb1e069bcbb0e6158556dc845f3c37b3cbdf05b45261ebddd0c0f7f50",
+    "src/pages/client/dashboard.tsx": "40e05ac04ead445a4de8d040d20476a7ff8ffa7862a7d61c8ab0d84482ca7801",
+    "src/pages/merchant/api-keys.tsx": "8ec56ff054758bb364470690f67d67bfc6b4d85daf145759172968b5ea1bba6e",
+    "src/pages/merchant/expenses.tsx": "d20c6c74a7560e61986ce4ff0e6f86f9fa1b6955c1f4cea9afec0578dfeac5a3",
+    "src/pages/merchant/invoice-detail.tsx": "f47c1e1586b178b34aabb5e988529df7d72510677655554e635289f22b3e25d7",
+    "src/pages/operations/readiness.tsx": "af08662eecb9eeb7ceefcad31e9bbb889e5e18c101c5f1ef6ca52f9e96f89ffb",
+    "src/pages/tax-intelligence/center.tsx": "95b298f2de6e0566ec407a0669e159ff10a528f286814c7fee80e02592e9721f",
+    "tests/Feature/DurableWorkflowTest.php": "7bc5d5b6262cc61cf53d13423c9d7811d6d4798564e08fd2428c368826bd6c53",
+    "tests/Feature/SecurityRemediationTest.php": "8a50e755449d6113a1fa55e1ad10c2bc4931790f2fd79b514e6edfcd3747179c",
+    "tests/Feature/WebhookSecurityTest.php": "cc585261bb701e3989b4591cc90c3a3e5bc7840a121888ce464616d86685723a",
+    "tests/js/offline-outbox.test.mjs": "293a24bff9113ac9b999bf54244e47987aac49106944a835d4c17d6deb328b79"
+  },
+  "verification_sha256": {
+    "tests.log": "563d447f74bbfef077f9b4006492ef286d81bc98557587a8cf1791310e5f8dc5",
+    "offline-tests.log": "ba7e76feb0091f1835a77b7505a7c6a631320731abcfb2e8c4d04c5737934871",
+    "build-all.log": "178cbf93c24584e910596925a08976cdd508a485b036f317cdf226b611d6fa6b",
+    "composer-audit.json": "3d68c4566587606c21e4bcd82b55d322ddb79158f657d9fb90bf0d24ab5bccdf",
+    "npm-audit.json": "d2fc53e6e72fb9e5d5b26a0068dba8f3d1a630350ef59d716653735f9dfe6ea8",
+    "reaudit-local.json": "40c3282c5e59798585b464826231b601096067dc60d5adf57b4a198b2a5720f1",
+    "http-headers.txt": "4d33f2d1f44fe003c93101c2a876c56aa0bf4e60ff3af07ba983f827cec74728",
+    "native-mysql-regression.json": "0c072c5482a3307bc76981e8ba799e85e3d3a3879f61ea0b574c21019262a24c",
+    "native-expense-regression.json": "c59394215bc5f06441357274293532a398975182e599bc13c572014dd1322fd2"
+  }
+}

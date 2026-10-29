@@ -1,0 +1,20 @@
+{
+  "source": "/Users/marksioson/Downloads/Glossy Blue N Logo with Pixel Tiles.png",
+  "sha256": "b50631c79afbad1d155a9d2580b369991f28060bdf56f0b19bcf2f4cd64c239d",
+  "version": "b50631c79afb",
+  "files": [
+    "index.html",
+    "resources/views/app.blade.php",
+    "resources/views/errors/429.blade.php",
+    "src/components/enterprise/enterprise-shell.tsx",
+    "vite.static.config.ts",
+    "public/icon.png",
+    "public/nuers-favicon.png",
+    "public/favicon.ico",
+    "public/apple-touch-icon.png",
+    "public/app-icon-192.png",
+    "public/app-icon-512.png",
+    "public/site.webmanifest",
+    "public/site.webmanifest.json"
+  ]
+}

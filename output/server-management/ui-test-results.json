@@ -1,0 +1,20 @@
+{
+  "environment": "isolated localhost; synthetic account; no live server actions",
+  "checks": [
+    "Nine planned nodes; unknown metrics",
+    "Grid/table and server search",
+    "Reboot preflight blocked without controller",
+    "All nine section tabs",
+    "Real local maintenance save with MFA",
+    "Authenticated CSV export",
+    "390px responsive layout without horizontal overflow",
+    "Mobile accessible modal"
+  ],
+  "console_errors": [],
+  "mobile_overflow": {
+    "document": 390,
+    "width": 390,
+    "page": 366,
+    "client": 366
+  }
+}

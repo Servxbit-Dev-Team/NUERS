@@ -18,18 +18,25 @@ class ApiBoundary
         $path = $r->decodedPath();
         // Limit rejected traffic before credential lookup. Shared store required across web nodes.
         $uploadPart = $r->isMethod('POST') && Str::is(['api/merchant/verification-uploads/*/chunks', 'api/registration/document-uploads/*/chunks'], $path);
-        $key = ($uploadPart ? 'api-upload-ip:' : 'api-ip:').hash('sha256', $r->ip());
-        if (RateLimiter::tooManyAttempts($key, $uploadPart ? 600 : 300)) {
+        $heartbeat = $r->isMethod('GET') && $path === 'api/dashboard-revision';
+        $key = ($heartbeat ? 'api-heartbeat-ip:' : ($uploadPart ? 'api-upload-ip:' : 'api-ip:')).hash('sha256', $r->ip());
+        if (RateLimiter::tooManyAttempts($key, ($uploadPart || $heartbeat) ? 600 : 300)) {
             return response()->json(['code' => 'NETWORK_RATE_LIMITED', 'message' => 'This network has reached the request limit. Please wait before trying again.', 'retry_after' => max(1, RateLimiter::availableIn($key))], 429)->header('Retry-After', max(1, RateLimiter::availableIn($key)))->header('Cache-Control', 'no-store');
         }
         RateLimiter::hit($key, 60);
-        $public = ['api/health', 'api/legal/policies', 'api/registration/*', 'api/auth/login', 'api/auth/signup', 'api/auth/forgot-password', 'api/auth/reset-password', 'api/auth/verify-email', 'api/auth/session', 'api/auth/logout', 'api/pricing', 'api/subscription-plans', 'api/developer/*', 'api/locations/*', 'api/verify-receipt/*', 'api/team-invitations/preview', 'api/team-invitations/accept'];
+        $public = ['api/health', 'api/legal/policies', 'api/registration/*', 'api/auth/login', 'api/auth/signup', 'api/auth/forgot-password', 'api/auth/reset-password', 'api/auth/verify-email', 'api/auth/session', 'api/auth/logout', 'api/pricing', 'api/subscription-plans', 'api/developer/*', 'api/locations/*', 'api/team-invitations/preview', 'api/team-invitations/accept', 'api/business-activation/inspect', 'api/business-activation'];
         $visitor = Str::is(['api/support/conversations', 'api/support/conversations/*'], $path);
         $integration = Str::is(['api/integrations/transactions', 'api/integrations/transactions/*'], $path);
-        if (! Str::is($public, $path) && ! $visitor && ! $integration) {
+        $birCallback = $r->isMethod('PUT') && preg_match('~^api/bir-eis/receive_invoice_result/[0-9a-f-]{36}$~D', $path);
+        if (! Str::is($public, $path) && ! $visitor && ! $integration && ! $birCallback) {
             $access = app(ApiAccess::class);
             $u = $access->require($r);
             $role = $r->attributes->get('api_role');
+            // The administrative namespace is never a merchant or citizen entry point.
+            // Controllers continue to enforce narrower roles and operation permissions.
+            if (Str::is('api/admin/*', $path)) {
+                $access->require($r, ['admin', 'super_admin', 'bir', 'rdo']);
+            }
             app(MerchantTeamAccess::class)->enforce($r);
             if ($role === 'merchant' && ! Str::is(['api/auth/change-password', 'api/auth/notification-preferences', 'api/auth/resend-verification', 'api/auth/mfa/*'], $path) && ! $r->isMethod('GET') && DB::table('merchants')->where('merchant_account_id', $u->id)->whereIn('status', ['suspended', 'inactive'])->exists()) {
                 abort(403, 'This business is suspended. Preserved documents and portability remain available for authorized retrieval.');
@@ -47,6 +54,10 @@ class ApiBoundary
             }
         }
 
-        return $next($r);
+        $response = $next($r);
+        if (!in_array($r->method(), ['GET', 'HEAD', 'OPTIONS'], true) && $response->getStatusCode() < 400) {
+            app(\App\Services\DashboardRevision::class)->publishIfChanged();
+        }
+        return $response;
     }
 }

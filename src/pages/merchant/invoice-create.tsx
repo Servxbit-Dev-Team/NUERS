@@ -118,7 +118,7 @@ export function InvoiceCreate() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const requestedType = searchParams.get("type") as DocumentType | null;
-  const initialType = requestedType && requestedType in DOC_TYPE_META ? requestedType : "vat_invoice";
+  const initialType = requestedType && requestedType !== "debit_memo" && requestedType in DOC_TYPE_META ? requestedType : "vat_invoice";
 
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -169,6 +169,9 @@ export function InvoiceCreate() {
 
   // Tax/charges
   const [withholdingPct, setWithholdingPct] = useState(0);
+  const [cwt, setCwt] = useState({base:"",classification:"",atc:"",evidence_reference:"",confirmed:false});
+  const [increaseCorrection,setIncreaseCorrection]=useState(false);
+  const [manualRecoveryId,setManualRecoveryId]=useState("");
   const otherCharges = 0;
   const [preferences,setPreferences]=useState<InvoicePreferences|null>(null);
   const [pricesIncludeVat,setPricesIncludeVat]=useState(true);
@@ -296,7 +299,8 @@ export function InvoiceCreate() {
   // ── Totals ─────────────────────────────────────────────────────────────
   const statutoryDiscount=lines.reduce((s,l)=>s+(l.benefit_details?.discount_centavos||0),0);
   const vatAdjustment=lines.reduce((s,l)=>s+(l.benefit_details?.vat_adjustment_centavos||0),0);
-  const totals = computeInvoiceTotals(lines, withholdingPct, toCentavos(otherCharges));
+  const baseTotals = computeInvoiceTotals(lines, 0, toCentavos(otherCharges));
+  const totals = {...baseTotals, withholding: Math.round(toCentavos(Number(cwt.base||0))*withholdingPct/100)};
 
   // ── Sign & validate ────────────────────────────────────────────────────
   const handleSign = async () => {
@@ -318,7 +322,7 @@ export function InvoiceCreate() {
 
   };
 
-  useEffect(() => { setIsValidated(false); setIsSigned(false); setSignature(""); setQrPayload(""); setValidationHash(""); }, [rawLines, salesBenefit, docType, merchantName, merchantTin, merchantAddress, buyerName, buyerTin, buyerAddress, buyerEmail, buyerPhone, buyerType, issueDate, withholdingPct, originalInvoice, refNumber, poNumber, soNumber, merchantVatRegistered]);
+  useEffect(() => { setIsValidated(false); setIsSigned(false); setSignature(""); setQrPayload(""); setValidationHash(""); }, [rawLines, salesBenefit, docType, merchantName, merchantTin, merchantAddress, buyerName, buyerTin, buyerAddress, buyerEmail, buyerPhone, buyerType, issueDate, withholdingPct, cwt, manualRecoveryId, originalInvoice, refNumber, poNumber, soNumber, merchantVatRegistered]);
 
   const handleValidate = () => {
     const error=benefitError(salesBenefit,rawLines,issueDate);if(error){toast.error(error);return;}
@@ -404,6 +408,8 @@ export function InvoiceCreate() {
           vat_amount: totals.vat,
           withholding_tax: totals.withholding,
           withholding_pct: withholdingPct,
+          withholding_details: withholdingPct>0 ? {withholding_agent:cwt.confirmed,classification:cwt.classification,atc:cwt.atc,rate:withholdingPct,base:Number(cwt.base),amount:totals.withholding/100,evidence_reference:cwt.evidence_reference} : null,
+          manual_recovery_id: manualRecoveryId || null,
           other_charges: totals.other_charges,
           total_amount: totals.total,
           amount_paid: 0,
@@ -438,10 +444,10 @@ export function InvoiceCreate() {
       const response = await apiFetch("/api/business-invoices",{method:"POST",headers,body:JSON.stringify(invoicePayload)});
       if(response.status===402){setPendingWalletPayload(invoicePayload);return;}
 
-      const saved = await readJsonResponse<{customer?:{created:boolean;code:string}}>(response, "Unable to save invoice to the database.");
+      const saved = await readJsonResponse<{invoice?:{invoice_number:string};customer?:{created:boolean;code:string}}>(response, "Unable to save invoice to the database.");
       if (saved.customer?.created) toast.success(`New buyer saved to Customers (${saved.customer.code}).`);
 
-      toast.success(send ? `Invoice ${invoiceNumber} issued locally; BIR submission remains subject to authorization.` : `Invoice ${invoiceNumber} saved to database.`);
+      toast.success(send ? `Invoice ${saved.invoice?.invoice_number || "saved"} issued locally; BIR submission remains subject to authorization.` : `Invoice ${invoiceNumber} saved to database.`);
       navigate("/merchant/invoices");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to save invoice to the database.");
@@ -452,7 +458,7 @@ export function InvoiceCreate() {
 
   const showPeriod = docType === "service_invoice";
   const showDelivery = docType === "delivery_receipt";
-  const showCorrection = docType === "credit_memo" || docType === "debit_memo";
+  const showCorrection = docType === "credit_memo" || increaseCorrection;
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -502,7 +508,7 @@ export function InvoiceCreate() {
           </CardHeader>
           <CardContent className="px-5 pb-5 space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {BIR_DOCUMENT_TYPES.map((type) => {
+              {BIR_DOCUMENT_TYPES.filter(type=>type!=="debit_memo").map((type) => {
                 const meta = DOC_TYPE_META[type];
                 const Icon = DOC_ICON[type];
                 return (
@@ -527,7 +533,7 @@ export function InvoiceCreate() {
             <div className="flex items-center gap-3 pt-2">
               <div className="flex-1 space-y-1">
                 <Label className="text-xs">Invoice Number</Label>
-                <Input value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} className="font-mono text-xs h-8" />
+                <Input value={invoiceNumber} readOnly aria-label="Draft reference" className="font-mono text-xs h-8" /><p className="text-xs text-muted-foreground">Draft reference only. The server assigns the next registered invoice number when issuance is authorized.</p>
               </div>
               <div className="flex-1 space-y-1">
                 <Label className="text-xs">Issue Date</Label>
@@ -558,11 +564,13 @@ export function InvoiceCreate() {
                 </div>
               </div>
             )}
+            {docType !== "credit_memo" && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={increaseCorrection} onChange={e=>{setIncreaseCorrection(e.target.checked);if(!e.target.checked){setOriginalInvoice("");setCorrectionReason("")}}}/>Additional invoice for an increase to an earlier invoice</label>}
+            <p className="text-xs text-muted-foreground">For a decrease, use a credit memo. For an increase, issue a new invoice for the additional amount and reference the original. For CWT-only changes, use Compliance Operations.</p>
             {showCorrection && (
               <div className="space-y-3 border rounded-lg p-4 bg-warning/5 border-warning/30">
                 <p className="text-xs font-medium text-warning flex items-center gap-1.5">
                   <Info className="h-3.5 w-3.5" />
-                  {docType === "credit_memo" ? "Credit Memo requires reference to original invoice" : "Debit Memo details"}
+                  {docType === "credit_memo" ? "Credit Memo requires reference to original invoice" : "Additional invoice referencing the original"}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
@@ -755,9 +763,13 @@ export function InvoiceCreate() {
             </CardHeader>
             <CardContent className="px-5 pb-5 space-y-4">
               <div className="space-y-1">
-                <Label className="text-xs">Withholding Tax %</Label>
+                <Label className="text-xs">Buyer-confirmed CWT rate (%)</Label>
                 <Input type="number" value={withholdingPct} min={0} max={100} step={0.01} onChange={e => setWithholdingPct(+e.target.value)} className="text-xs h-8 w-32" />
               </div>
+              {withholdingPct>0 && <div className="space-y-3 border rounded-lg p-4">
+                {([['base','CWT tax base (PHP)'],['classification','Buyer withholding-agent classification'],['atc','Alphanumeric Tax Code (ATC)'],['evidence_reference','Buyer / payor confirmation reference']] as const).map(([key,label])=><label className="block text-sm" key={key}>{label}<Input value={cwt[key]} type={key==='base'?'number':'text'} min={0} step="0.01" onChange={e=>setCwt({...cwt,[key]:e.target.value})}/></label>)}
+                <label className="flex gap-2 text-sm"><input type="checkbox" checked={cwt.confirmed} onChange={e=>setCwt({...cwt,confirmed:e.target.checked})}/>Buyer/payor confirmed the CWT basis, rate and classification.</label><p className="text-xs text-muted-foreground">CWT is shown separately. It reduces the net payable, without reducing sales or VAT.</p></div>}
+              <div className="space-y-1"><Label>Manual recovery record ID (optional)</Label><Input value={manualRecoveryId} onChange={e=>setManualRecoveryId(e.target.value)} placeholder="Copy the ID from Compliance Operations"/><p className="text-xs text-muted-foreground">For outage replacements, also enter the original manual invoice number in Reference Number. Amount, branch and buyer must match.</p></div>
               <div className="space-y-1">
                 <Label className="text-xs">Other Charges (₱)</Label>
                 <Input type="number" value={otherCharges} disabled aria-label="Add charges as classified line items" className="text-xs h-8 w-32" /><p className="text-xs text-muted-foreground">Add extra charges as line items with their tax classification.</p>
@@ -930,7 +942,7 @@ export function InvoiceCreate() {
             <span className="text-sm text-muted-foreground">Unsaved draft preview</span>
           </CardHeader>
           <CardContent className="px-5 pb-5">
-            <BirDocumentPreview salesBenefit={salesBenefit} statutoryDiscount={statutoryDiscount} vatAdjustment={vatAdjustment}
+            <BirDocumentPreview salesBenefit={salesBenefit} statutoryDiscount={statutoryDiscount} vatAdjustment={vatAdjustment} withholdingDetails={cwt.confirmed && totals.withholding>0 ? {classification:cwt.classification,atc:cwt.atc,rate:withholdingPct,base:cwt.base} : null}
               documentType={docType}
               documentNumber={invoiceNumber}
               issueDate={issueDate}
@@ -953,6 +965,7 @@ export function InvoiceCreate() {
                 unitPrice: line.unit_price,
                 amount: line.line_total,
                 vatAmount: line.vat_amount,
+                taxType: line.tax_type,
               }))}
               totals={{
                 gross: totals.subtotal,

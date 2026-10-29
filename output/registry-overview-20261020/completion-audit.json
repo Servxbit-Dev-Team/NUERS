@@ -1,0 +1,52 @@
+{
+  "deployed": true,
+  "release": "2026-10-20.registry-overview.2",
+  "deployed_at": "2026-10-20T04:43:39+00:00",
+  "verification": {
+    "verified": true,
+    "checked_at": "2026-10-20T04:43:39+00:00",
+    "business_data_read_only": true,
+    "portfolio_parity": true,
+    "merchants_checked": 2,
+    "per_merchant_parity": true,
+    "mysql_stage_filter": true,
+    "mysql_strict_stage_aggregate": true,
+    "registry_list_queries": true,
+    "empty_scope_isolated": true,
+    "elapsed_ms": 277.11,
+    "files_verified": 21,
+    "schema_migration": false,
+    "mfa_preserved": true,
+    "bir_transport_enabled": false
+  },
+  "existing_records_preserved": true,
+  "environment_preserved": true,
+  "files_verified": 21,
+  "old_assets_retained": true,
+  "backup": "nuers-registry-overview-fix-backup-20261020-044336",
+  "package_sha256": "cb26131c7000535eeba79f821898df8414f1e5ae414c5c5db4997982dcb7208c",
+  "local_validation": {
+    "full_suite": {
+      "tests": 624,
+      "assertions": 6774,
+      "passed": true
+    },
+    "after_strict_sql_fix": {
+      "tests": 15,
+      "assertions": 398,
+      "passed": true
+    },
+    "typescript": "passed",
+    "build": "passed",
+    "responsive_mobile_width": 390
+  },
+  "browser_validation": {
+    "live_registry_rendered": true,
+    "wallet_drill_down_matches": true,
+    "search_scopes_portfolio": true,
+    "local_csv_filter_and_financial_columns": true,
+    "pagination_below_table": true,
+    "screenshot": "registered-businesses-live.png"
+  },
+  "production_issue_resolved": "MariaDB ONLY_FULL_GROUP_BY stage aggregation replaced with grouped derived column and reverified on production."
+}

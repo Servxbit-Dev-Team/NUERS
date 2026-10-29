@@ -1,0 +1,31 @@
+[Unit]
+Description=NUERS isolated sandboxed PDF renderer
+Requires=nuers-pdf.socket
+After=nuers-pdf.socket
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/lib/nuers-pdf/worker.py
+User=nuers-pdf
+Group=nuers-pdf
+Environment=NUERS_PDF_CLIENT_UID=10011
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+PrivateNetwork=true
+ProtectSystem=strict
+ProtectHome=true
+InaccessiblePaths=/var/www /opt/plesk
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+ReadWritePaths=/tmp /var/tmp
+MemoryMax=768M
+TasksMax=512
+CPUQuota=150%
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=10

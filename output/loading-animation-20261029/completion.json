@@ -1,0 +1,32 @@
+{
+  "status": "deployed_and_verified",
+  "asset": "public/brand/nuers-loading-ring.gif",
+  "original_sha256": "e3f0c5577cfb3cb8d6f867683f56b5906c30a14b386b55b221706e1aa889ab0a",
+  "animation_unchanged": true,
+  "frames": 24,
+  "surfaces": [
+    "Initial HTML startup",
+    "Lazy page loading",
+    "Session and permission checks",
+    "Merchant dashboard initial load"
+  ],
+  "reduced_motion": "Static official N icon via picture media query",
+  "build": "npm run build:all passed",
+  "http_checks": 8,
+  "live_monitoring": {
+    "loading_animation_captured": true,
+    "loading_completed": true,
+    "table_rows_rendered": 10
+  },
+  "screenshot": "live-loading-screen.png",
+  "deployment": {
+    "deployed": true,
+    "release": "2026-10-29.loading-animation.1",
+    "files_verified": 521,
+    "entry": "/assets/index-DXuDjVno.js",
+    "database_untouched": true,
+    "old_assets_retained": true,
+    "backup": "nuers-loading-animation-backup-20261029-001307",
+    "deployed_at": "2026-10-29T00:13:07+00:00"
+  }
+}

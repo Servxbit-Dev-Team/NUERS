@@ -1,5 +1,6 @@
+import { useRealtimeRefresh } from "@/lib/use-realtime-refresh";
 import { formatTin } from "@/lib/tin";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -144,10 +145,12 @@ export function CitizenApprovalPage({ scope }: { scope: "bir" | "super-admin" })
     [rows],
   );
 
+  const sequence = useRef(0);
+  useRealtimeRefresh(() => loadApprovals({ quiet: true }), !savingId);
+
   async function loadApprovals(options: { quiet?: boolean } = {}) {
-    if (options.quiet) {
-      setRefreshing(true);
-    } else {
+    const ticket = ++sequence.current;
+    if (!options.quiet) {
       setLoading(true);
     }
     setError(null);
@@ -162,13 +165,14 @@ export function CitizenApprovalPage({ scope }: { scope: "bir" | "super-admin" })
       });
       const payload = await readJsonResponse<CitizenApprovalPayload>(response, "Unable to load citizen approvals.");
 
+      if (ticket !== sequence.current) return;
       setRows(payload.data ?? []);
       setSummary(payload.summary ?? emptySummary);
     } catch (err) {
+      if (ticket !== sequence.current) return;
       setError(err instanceof Error ? err.message : "Unable to load citizen approvals.");
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (ticket === sequence.current) { setLoading(false); setRefreshing(false); }
     }
   }
 
@@ -177,7 +181,7 @@ export function CitizenApprovalPage({ scope }: { scope: "bir" | "super-admin" })
       loadApprovals();
     }, 250);
 
-    return () => window.clearTimeout(timeoutId);
+    return () => { window.clearTimeout(timeoutId); ++sequence.current; };
   }, [search, status]);
 
   async function updateStatus(row: CitizenApprovalRow, nextStatus: "active" | "under_review" | "rejected") {

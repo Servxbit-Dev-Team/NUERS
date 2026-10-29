@@ -1,0 +1,891 @@
+{
+  "status": "completed_after_explicit_user_approval",
+  "files_and_directories": [
+    {
+      "directory": "Home",
+      "name": "nuers-pricing-stage-20261017",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/pricing-20261017/nuers-pricing-install.php",
+        ".local/pricing-20261017/nuers-pricing-deploy.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-branches-stage-20261017",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/branches-20261017/nuers-branches-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-onboarding-stage-20261017-v2",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/registration-documents-20261017/nuers-onboarding-install-v2.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-wallet-stage-20261017",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/wallet-20261017/nuers-wallet-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-hover-stage-20261017",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/hover-20261017/nuers-hover-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-mfa-design-stage-20261017",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/mfa-20261017/nuers-mfa-design-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-admin-profile-stage-20261017",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/admin-profile-20261017/nuers-admin-profile-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-registration-recovery-stage-20261017",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/registration-recovery-20261017/nuers-registration-recovery-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-form-limits-stage-20261017",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/form-limits-20261017/nuers-form-limits-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-admin-nav-stage-20261017",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/admin-nav-20261017/nuers-admin-nav-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-otp-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/otp-20261018/nuers-otp-install.php",
+        ".local/otp-20261018/nuers-otp-install-v2.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-business-profile-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/business-profile-20261018/nuers-business-profile-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-profile-integration-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/profile-integration-20261018/nuers-profile-integration-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-merchant-admin-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/merchant-admin-20261018/nuers-merchant-admin-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-merchant-bir-nav-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/remove-merchant-bir-20261018/nuers-merchant-bir-nav-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-merchant-security-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/merchant-security-20261018/nuers-merchant-security-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-api-integration-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/api-integration-20261018/nuers-api-integration-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-admin-business-wallet-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/admin-business-wallet-20261018/nuers-admin-business-wallet-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-admin-tin-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/admin-tin-20261018/nuers-admin-tin-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-api-production-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/api-production-20261018/nuers-api-production-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-mfa-session-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/mfa-session-20261018/nuers-mfa-session-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-document-100mb-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/document-100mb-20261018/nuers-document-100mb-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-admin-document-review-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/admin-document-review-20261018/nuers-admin-document-review-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-review-email-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/review-email-20261018/nuers-review-email-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-manual-review-mail-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/manual-review-mail-20261018/nuers-manual-review-mail-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-review-presets-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/review-presets-20261018/nuers-review-presets-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-mfa-login-session-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/mfa-login-session-20261018/nuers-mfa-login-session-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-registry-esp-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/registry-esp-20261018/nuers-registry-esp-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-branch-address-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/branch-address-20261018/nuers-branch-address-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-table-pagination-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/table-pagination-20261018/nuers-table-pagination-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-invoice-settings-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/invoice-settings-20261018/nuers-invoice-settings-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-api-key-simplification-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/api-key-simplification-20261018/nuers-api-key-simplification-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-api-environments-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/api-environments-20261018/nuers-api-environments-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-source-profile-discovery-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/source-profile-discovery-20261018/nuers-source-profile-discovery-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-verified-api-onboarding-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/verified-api-onboarding-20261018/nuers-verified-api-onboarding-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-merchant-webhooks-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/merchant-webhooks-20261018/nuers-merchant-webhooks-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-statutory-sales-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/statutory-sales-20261018/nuers-statutory-sales-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-onboarded-api-fix-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/onboarded-api-fix-20261018/nuers-onboarded-api-fix-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-admin-connections-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/admin-merchant-connections-20261018/nuers-admin-connections-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-admin-financial-widgets-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/admin-financial-widgets-20261018/nuers-admin-financial-widgets-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-merchant-dashboard-wallet-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/merchant-dashboard-wallet-20261018/nuers-merchant-dashboard-wallet-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-configurable-pricing-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/pricing-reset-filters-20261018/nuers-configurable-pricing-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-manual-discounts-stage-20261018",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/manual-discounts-20261018/nuers-manual-discounts-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-profile-approval-stage-20261019",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/profile-approval-20261019/nuers-profile-approval-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-google-mfa-devices-stage-20261019",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/google-mfa-devices-20261019/nuers-google-mfa-devices-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-api-customer-receipts-stage-20261019",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/api-customer-receipts-20261019/nuers-api-customer-receipts-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-independent-branding-stage-20261019",
+      "reason": "Extracted deployment staging directory; installer copies files into httpdocs",
+      "installer_evidence": [
+        ".local/independent-branding-20261019/nuers-independent-branding-install.php"
+      ]
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-pricing-20261017.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "10.8 MB",
+      "local_copy": ".local/pricing-20261017/nuers-pricing-20261017.zip",
+      "local_bytes": 11355621,
+      "local_sha256": "5f959d11ce3befbb3629946a185f8125591301b9866c580317137c8d0c82e357"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-pricing-20261017-v2.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "10.8 MB",
+      "local_copy": ".local/pricing-20261017/nuers-pricing-20261017-v2.zip",
+      "local_bytes": 11368439,
+      "local_sha256": "c99c6d847ada78cc1fe248e98138972bc56421de021b9a73b43462eaad07b4ee"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-branches-20261017.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.1 MB",
+      "local_copy": ".local/branches-20261017/nuers-branches-20261017.zip",
+      "local_bytes": 3225915,
+      "local_sha256": "67249ae8306302d2e9e2ae780a87904c613c74d5e0d78119d65778d3ac1f6a48"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-onboarding-20261017.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.1 MB",
+      "local_copy": ".local/registration-documents-20261017/nuers-onboarding-20261017.zip",
+      "local_bytes": 3268435,
+      "local_sha256": "2cf2555cf092e498b3c1e6aa2ba380d016eb9bb185973093204e376c7b28db35"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-onboarding-20261017-v2.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.1 MB",
+      "local_copy": ".local/registration-documents-20261017/nuers-onboarding-20261017-v2.zip",
+      "local_bytes": 3274752,
+      "local_sha256": "eb34c000b819b8f83d85ba72745c0addfec1b07a3e63ffa6e4678c2e73bd2b28"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-wallet-20261017.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.2 MB",
+      "local_copy": ".local/wallet-20261017/nuers-wallet-20261017.zip",
+      "local_bytes": 3396458,
+      "local_sha256": "0683a9e862f1355b34df9395f14c93a02cfffdedec2a7f14f63eb0cd674d4a1f"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-hover-20261017.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.2 MB",
+      "local_copy": ".local/hover-20261017/nuers-hover-20261017.zip",
+      "local_bytes": 3368395,
+      "local_sha256": "0b93ecec1524e1d2d4a1ed41a8e3413bc04ba2c46e18acd0fb01630260ac4b3e"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-mfa-design-20261017.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.1 MB",
+      "local_copy": ".local/mfa-20261017/nuers-mfa-design-20261017.zip",
+      "local_bytes": 3286240,
+      "local_sha256": "30dc3d15b1141bd6d67510ed0f64b8654784c9ed10e4419d28ebf724bb835ac9"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-admin-profile-20261017.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.2 MB",
+      "local_copy": ".local/admin-profile-20261017/nuers-admin-profile-20261017.zip",
+      "local_bytes": 3344670,
+      "local_sha256": "b56b620b373e1458e1b41701a0972e1e915fd1320675665c599e3acf752a872b"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-registration-recovery-20261017.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.2 MB",
+      "local_copy": ".local/registration-recovery-20261017/nuers-registration-recovery-20261017.zip",
+      "local_bytes": 3336477,
+      "local_sha256": "1c5ea49c0ab27e996bab874bc52ec9da49be43652ce45344b80425567d6612ab"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-form-limits-20261017.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.2 MB",
+      "local_copy": ".local/form-limits-20261017/nuers-form-limits-20261017.zip",
+      "local_bytes": 3321426,
+      "local_sha256": "2138d20c442b128731f3eddc5dc48cc5a34e6038b5be760a472ba83c91081553"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-admin-nav-20261017.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.2 MB",
+      "local_copy": ".local/admin-nav-20261017/nuers-admin-nav-20261017.zip",
+      "local_bytes": 3316039,
+      "local_sha256": "428ced457215472090d8c1dbd5b94e9d8053141333e389190c073b353daa1a92"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-otp-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "5.4 KB",
+      "local_copy": ".local/otp-20261018/nuers-otp-20261018.zip",
+      "local_bytes": 5537,
+      "local_sha256": "f201cad985e44a16bef8b99a7a7671c196b14da8604b8e7f2ca742c96f17a449"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-business-profile-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.2 MB",
+      "local_copy": ".local/business-profile-20261018/nuers-business-profile-20261018.zip",
+      "local_bytes": 3328200,
+      "local_sha256": "5a3f70c917aa0c1eab288e235234d5bd207f0b609a2662c80aae6c28af913aa2"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-profile-integration-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.2 MB",
+      "local_copy": ".local/profile-integration-20261018/nuers-profile-integration-20261018.zip",
+      "local_bytes": 3320129,
+      "local_sha256": "3eeb4a6e9fc29edcee6e88ea540acea757826a76e01c456505c65d8a10d1f371"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-merchant-admin-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.2 MB",
+      "local_copy": ".local/merchant-admin-20261018/nuers-merchant-admin-20261018.zip",
+      "local_bytes": 3328344,
+      "local_sha256": "3a14dc56f6914ad6b449ef60a427c0f413fa6c04133ad3a0fdfb14ba62930c0e"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-merchant-bir-nav-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.2 MB",
+      "local_copy": ".local/remove-merchant-bir-20261018/nuers-merchant-bir-nav-20261018.zip",
+      "local_bytes": 3344576,
+      "local_sha256": "b04cadd377a7cf519ade54bcd9dbce59e9ff6d1e2e433eee0e8f629a387f5438"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-merchant-security-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.2 MB",
+      "local_copy": ".local/merchant-security-20261018/nuers-merchant-security-20261018.zip",
+      "local_bytes": 3363862,
+      "local_sha256": "02a8324b100637a44712e7e502a133159d83ee0b15b288a8d51a5c5f5db5b241"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-api-integration-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.2 MB",
+      "local_copy": ".local/api-integration-20261018/nuers-api-integration-20261018.zip",
+      "local_bytes": 3393173,
+      "local_sha256": "5037e5dbc308a6e7bc425c8685615f1b267b5e3b667c26ae1bebc0570a0decec"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-admin-business-wallet-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.2 MB",
+      "local_copy": ".local/admin-business-wallet-20261018/nuers-admin-business-wallet-20261018.zip",
+      "local_bytes": 3390737,
+      "local_sha256": "7f53b1960a3c7827a86ce253f4a2eb986ee3356955984225e0933f6fc0f31f3f"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-admin-tin-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.3 MB",
+      "local_copy": ".local/admin-tin-20261018/nuers-admin-tin-20261018.zip",
+      "local_bytes": 3471513,
+      "local_sha256": "18df5837ed375c5a46ba0cf5edb98f5cbf3c845dfcfb6e894166279a4fdd6ed5"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-api-production-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.5 MB",
+      "local_copy": ".local/api-production-20261018/nuers-api-production-20261018.zip",
+      "local_bytes": 3685161,
+      "local_sha256": "c8372e024ba23aef6e3783f1b9c0b3ed254791a72f289ae9d32244452166ba57"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-mfa-session-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.2 MB",
+      "local_copy": ".local/mfa-session-20261018/nuers-mfa-session-20261018.zip",
+      "local_bytes": 3364383,
+      "local_sha256": "697b1c3d099b620a58503c2dd218b935fc99c98b2d5a713e49ec42d9f4a9d697"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-document-100mb-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "3.2 MB",
+      "local_copy": ".local/document-100mb-20261018/nuers-document-100mb-20261018.zip",
+      "local_bytes": 3404550,
+      "local_sha256": "ac8c9fc1f51359933cc2f48f1257ba336e4b0c777231d0f73a40e78925fed27a"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-admin-document-review-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "9.2 MB",
+      "local_copy": ".local/admin-document-review-20261018/nuers-admin-document-review-20261018.zip",
+      "local_bytes": 9661613,
+      "local_sha256": "523df85deadf3b7b966187c065ff2b2b08c10b430f3438e6d35b0fe130a4bae7"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-review-email-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "16.0 KB",
+      "local_copy": ".local/review-email-20261018/nuers-review-email-20261018.zip",
+      "local_bytes": 16401,
+      "local_sha256": "5126dd7132ba4972c4d28755c8dac907d1893bec1c222b9c80f7ba46e65c435f"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-manual-review-mail-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "4.7 MB",
+      "local_copy": ".local/manual-review-mail-20261018/nuers-manual-review-mail-20261018.zip",
+      "local_bytes": 4938368,
+      "local_sha256": "c3790369c6454ca1f2c6bdc8de0b724f3aa08f58fb70f13cd5c0b207884bc60e"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-review-presets-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "4.7 MB",
+      "local_copy": ".local/review-presets-20261018/nuers-review-presets-20261018.zip",
+      "local_bytes": 4946986,
+      "local_sha256": "a51b030870c00916d83ce5541869f4fa5c95ea88fe0cb5171f0765032e2b3116"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-mfa-login-session-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "5.1 MB",
+      "local_copy": ".local/mfa-login-session-20261018/nuers-mfa-login-session-20261018.zip",
+      "local_bytes": 5350873,
+      "local_sha256": "c2db55816ebb5425ce533a3d9d49e73caf69a40b58e7b3321c057b4ef79938ed"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-registry-esp-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "4.7 MB",
+      "local_copy": ".local/registry-esp-20261018/nuers-registry-esp-20261018.zip",
+      "local_bytes": 4935032,
+      "local_sha256": "8ed2dd3830a412d37417a3ec06d1490c867084c040aade43c6f16f7a2a2c5af7"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-branch-address-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "4.7 MB",
+      "local_copy": ".local/branch-address-20261018/nuers-branch-address-20261018.zip",
+      "local_bytes": 4942088,
+      "local_sha256": "fb57fae33685e7f906b5d484a1c7625639c65390db6e903b5699aabfed427056"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-table-pagination-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "4.9 MB",
+      "local_copy": ".local/table-pagination-20261018/nuers-table-pagination-20261018.zip",
+      "local_bytes": 5147510,
+      "local_sha256": "fca591823bf11a6590decbbbe37ffe18c896f40338115532022bbe3cbca9943a"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-invoice-settings-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "4.8 MB",
+      "local_copy": ".local/invoice-settings-20261018/nuers-invoice-settings-20261018.zip",
+      "local_bytes": 5032809,
+      "local_sha256": "bfe60865cbf4a0ade9bfc4dfefe9616a4407ee5a62d0fe12e3a64c7b7d74dbb5"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-api-key-simplification-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "5.0 MB",
+      "local_copy": ".local/api-key-simplification-20261018/nuers-api-key-simplification-20261018.zip",
+      "local_bytes": 5217263,
+      "local_sha256": "4093e4ff8c4c1429427bf60592a00706498057f4f389419011e237a6490515aa"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-api-environments-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "5.0 MB",
+      "local_copy": ".local/api-environments-20261018/nuers-api-environments-20261018.zip",
+      "local_bytes": 5264559,
+      "local_sha256": "8cb1d5d7bd2fe072927ccae555ce4c0af46591dcc742028a1f88eb2d719a66b3"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-source-profile-discovery-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "4.7 MB",
+      "local_copy": ".local/source-profile-discovery-20261018/nuers-source-profile-discovery-20261018.zip",
+      "local_bytes": 4954187,
+      "local_sha256": "8dc8d35f4ab4148d53e4b0b9bb242425d7d497c874c45b523a04bc55ec1a10ad"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-verified-api-onboarding-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "5.5 MB",
+      "local_copy": ".local/verified-api-onboarding-20261018/nuers-verified-api-onboarding-20261018.zip",
+      "local_bytes": 5811240,
+      "local_sha256": "a771082e712f410c5c65e27071e6ae20132af5ba1352bbf3d4f43c60c0644923"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-merchant-webhooks-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "5.9 MB",
+      "local_copy": ".local/merchant-webhooks-20261018/nuers-merchant-webhooks-20261018.zip",
+      "local_bytes": 6209132,
+      "local_sha256": "2a5056cb93e96a23fbbcf7182beb9371af79a3db95a0df6273efe45034512882"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-statutory-sales-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "5.4 MB",
+      "local_copy": ".local/statutory-sales-20261018/nuers-statutory-sales-20261018.zip",
+      "local_bytes": 5675345,
+      "local_sha256": "99a846443d5acd902b0c03c6deccd49c2f60f28f189819b14957312ae15dd587"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-onboarded-api-fix-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "4.8 MB",
+      "local_copy": ".local/onboarded-api-fix-20261018/nuers-onboarded-api-fix-20261018.zip",
+      "local_bytes": 4997625,
+      "local_sha256": "4c9c8e0f12a5f47582a91216f43c4d69c7468fdae0256a101e8c0c5f6b31222d"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-admin-connections-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "4.8 MB",
+      "local_copy": ".local/admin-merchant-connections-20261018/nuers-admin-connections-20261018.zip",
+      "local_bytes": 4994794,
+      "local_sha256": "079a9e971795c54691d09d57126b5234af085de7901a873d61ad913b9105c781"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-admin-financial-widgets-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "4.8 MB",
+      "local_copy": ".local/admin-financial-widgets-20261018/nuers-admin-financial-widgets-20261018.zip",
+      "local_bytes": 4993035,
+      "local_sha256": "a6cda146b80da7df6f9f1370c5c7f1b463dfe1715d3313334da9dd1c166a62ce"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-merchant-dashboard-wallet-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "4.8 MB",
+      "local_copy": ".local/merchant-dashboard-wallet-20261018/nuers-merchant-dashboard-wallet-20261018.zip",
+      "local_bytes": 4995976,
+      "local_sha256": "2901d7617a9ac279df41f0cd2c74eae50f4e1c0c0f524d561c1a1d16e714a45d"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-configurable-pricing-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "12.2 MB",
+      "local_copy": ".local/pricing-reset-filters-20261018/nuers-configurable-pricing-20261018.zip",
+      "local_bytes": 12776752,
+      "local_sha256": "ccccde406e17b54243051a886ade9dc6b5e89c3f7503f87a9a3bc01eabdccd47"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-manual-discounts-20261018.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "12.2 MB",
+      "local_copy": ".local/manual-discounts-20261018/nuers-manual-discounts-20261018.zip",
+      "local_bytes": 12824068,
+      "local_sha256": "b91802b8e7511ac7bc29a8f89f18a466451e7738eaefadabbb6b2ff44a6ce4e8"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-profile-approval-20261019.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "4.8 MB",
+      "local_copy": ".local/profile-approval-20261019/nuers-profile-approval-20261019.zip",
+      "local_bytes": 5057518,
+      "local_sha256": "0c277f50d872b9c0b8b953af23bd966c9b99fbaf5635f768986f99293b64f9ad"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-google-mfa-devices-20261019.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "4.8 MB",
+      "local_copy": ".local/google-mfa-devices-20261019/nuers-google-mfa-devices-20261019.zip",
+      "local_bytes": 5033066,
+      "local_sha256": "09b63a37e85719f9836f9471995aa50fb87e0ad956ef7dc8c0a937568ee1da4f"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-api-customer-receipts-20261019.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "12.3 MB",
+      "local_copy": ".local/api-customer-receipts-20261019/nuers-api-customer-receipts-20261019.zip",
+      "local_bytes": 12938974,
+      "local_sha256": "b328b41622bd86052f4bc2b45529c60e58ebd1739529d819c680ab55bd83c7b1"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-doc-assets-20261019.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "2.1 KB",
+      "local_copy": ".local/api-doc-assets-20261019/nuers-doc-assets-20261019.zip",
+      "local_bytes": 2144,
+      "local_sha256": "23b735c6c25f3abad8adc310ee5d1a2466db1e3d30a959f2691886938c0cc9ac"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-doc-content-20261019.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "4.8 MB",
+      "local_copy": ".local/api-doc-content-20261019/nuers-doc-content-20261019.zip",
+      "local_bytes": 5016835,
+      "local_sha256": "81486d523c8297041ca921e91355db47b32c5c12c4f15a0b946f53a29a99176b"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-independent-branding-20261019.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "16.7 MB",
+      "local_copy": ".local/independent-branding-20261019/nuers-independent-branding-20261019.zip",
+      "local_bytes": 17488429,
+      "local_sha256": "29e622772ebca76155e7391a0d85d8a094f76341b921360787911271efd5fe74"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-branding-links-20261019.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "4.8 MB",
+      "local_copy": ".local/independent-branding-20261019/nuers-branding-links-20261019.zip",
+      "local_bytes": 5016703,
+      "local_sha256": "00eaa63928303d109a584f6e7304a4c3dd90dc64da17c8389342ff36c4dfc8a3"
+    },
+    {
+      "directory": "Home",
+      "name": "nuers-document-downloads-20261019.zip",
+      "reason": "Superseded deployment package; local archive retained",
+      "display_size": "66.9 MB",
+      "local_copy": ".local/document-downloads-20261019/nuers-document-downloads-20261019.zip",
+      "local_bytes": 70153563,
+      "local_sha256": "67c3a80a3bee802b9d53f4b76e5accfc04d9d620361e8c158eb9e5f018d45cb3"
+    },
+    {
+      "directory": "httpdocs",
+      "name": "nuers-software-identity-20261019.zip",
+      "reason": "Completed one-time deployment artifact in application root; matching local copy retained",
+      "display_size": "4.8 MB",
+      "local_copy": ".local/system-documentation-20261019/nuers-software-identity-20261019.zip",
+      "local_bytes": 5023283,
+      "local_sha256": "be7ae0bbba5c50300e4beb2304dbbc69583064c97f6a27d753d64cc2c3786af4"
+    },
+    {
+      "directory": "httpdocs",
+      "name": "nuers-software-identity-install.php",
+      "reason": "Completed one-time deployment artifact in application root; matching local copy retained",
+      "display_size": "8.2 KB",
+      "local_copy": ".local/system-documentation-20261019/nuers-software-identity-install.php",
+      "local_bytes": 8447,
+      "local_sha256": "da94d17eb87fe892f7ce450e288a5d902d895c4560ae8388c4b4ac005fd6c8d2"
+    },
+    {
+      "directory": "httpdocs",
+      "name": "nuers-software-identity-run.php",
+      "reason": "Completed one-time deployment artifact in application root; matching local copy retained",
+      "display_size": "380 B",
+      "local_copy": ".local/system-documentation-20261019/nuers-software-identity-run.php",
+      "local_bytes": 380,
+      "local_sha256": "10ac8fb525da89e54a9e067d8e7eea20b6cc12498960c4b7cffd74a05497390b"
+    }
+  ],
+  "unresolved_excluded": [
+    "nuers-pricing-stage-20261017-v2"
+  ],
+  "approval": "Approve the 103 listed live cleanup targets"
+}

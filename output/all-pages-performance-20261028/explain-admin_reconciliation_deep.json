@@ -1,0 +1,16 @@
+[
+    {
+        "id": 1,
+        "select_type": "SIMPLE",
+        "table": "ledger",
+        "partitions": null,
+        "type": "ref",
+        "possible_keys": "ledger_global_recent,ledger_global_period,ledger_sales_recent,ledger_sales_amount,ledger_sales_summary,ledger_global_amount,ledger_global_received,ledger_reconciliation_summary,ledger_transaction_summary,ledger_eis_order,ledger_eis_summary",
+        "key": "ledger_global_recent",
+        "key_len": "4",
+        "ref": "const",
+        "rows": 480509,
+        "filtered": 10,
+        "Extra": "Using where"
+    }
+]

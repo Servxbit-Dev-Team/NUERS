@@ -31,7 +31,11 @@ class MerchantSalesReportController extends Controller
     public function show(Request $request)
     {
         $merchant = app(ApiAccess::class)->merchant($request);
-        $r = app(MerchantSalesReport::class)->generate($merchant, $this->filters($request));
+        $filters = $this->filters($request);
+        if (app(\App\Services\IndexedSalesReport::class)->available()) {
+            return response()->json(app(\App\Services\IndexedSalesReport::class)->page($merchant, $filters, $request->integer('page', 1), $request->integer('per_page', 10), $request->query('view', 'sales')))->header('Cache-Control', 'private, no-store');
+        }
+        $r = app(MerchantSalesReport::class)->generate($merchant, $filters);
         $rows = $request->query('view') === 'review' ? $r['excluded'] : $r['included'];
         $size = (int) $request->query('per_page', 10);
         $last = max(1, (int) ceil(count($rows) / $size));
@@ -54,8 +58,10 @@ class MerchantSalesReportController extends Controller
         abort_unless($lock->get(), 429, 'Another sales report export is running for this business. Please wait for it to finish.');
         try {
             $limiter->hit($budget, 60);
-            $r = app(MerchantSalesReport::class)->generate($merchant, $filters);
             $format = $request->query('format', 'csv');
+            $r = app(\App\Services\IndexedSalesReport::class)->available()
+                ? app(\App\Services\IndexedSalesReport::class)->boundedExport($merchant, $filters, $format === 'pdf' ? 500 : 2000)
+                : app(MerchantSalesReport::class)->generate($merchant, $filters);
             abort_if($format === 'pdf' && count($r['included']) + count($r['excluded']) > 500, 422, 'PDF reports support 500 source documents. Narrow the filters or use Excel / CSV.');
             [$content, $mime] = app(SalesReportExport::class)->render($r, $format);
             app(BirCompliance::class)->audit('merchant.sales_report.exported', (string) $merchant->id, (string) app(ApiAccess::class)->user($request)->id, ['merchant_id' => $merchant->id, 'format' => $format, 'period' => [$r['filters']['from'], $r['filters']['to']], 'records' => $r['count'], 'excluded' => $r['excluded_count'], 'snapshot_hash' => $r['snapshot_hash']]);
@@ -64,5 +70,35 @@ class MerchantSalesReportController extends Controller
         } finally {
             $lock->release();
         }
+    }
+
+    public function exportJobs(Request $request)
+    {
+        $merchant = app(ApiAccess::class)->merchant($request);
+        $actor = (string) app(ApiAccess::class)->user($request)->id;
+        if ($request->isMethod('POST')) {
+            $job = app(\App\Services\SalesExportQueue::class)->request($merchant, $actor, $this->filters($request));
+            return response()->json(['data' => $this->exportStatus($job)], 202);
+        }
+        $jobs = \Illuminate\Support\Facades\DB::table('sales_report_exports')->where('merchant_id', $merchant->id)->where('actor_id', $actor)->orderByDesc('created_at')->limit(10)->get();
+        return response()->json(['data' => $jobs->map(fn ($job) => $this->exportStatus($job))])->header('Cache-Control', 'private, no-store');
+    }
+
+    public function exportDownload(Request $request, string $id)
+    {
+        $merchant = app(ApiAccess::class)->merchant($request);
+        $job = \Illuminate\Support\Facades\DB::table('sales_report_exports')->where('id', $id)->where('merchant_id', $merchant->id)->where('actor_id', app(ApiAccess::class)->user($request)->id)->first();
+        abort_unless($job, 404);
+        abort_if(now()->gte($job->expires_at), 410, 'This export has expired. Request a new export.');
+        abort_unless($job->state === 'ready', 409, 'This export is not ready.');
+        $path = app(\App\Services\SalesExportQueue::class)->path($job->id);
+        abort_unless(is_file($path), 404, 'Export file is unavailable.');
+        app(BirCompliance::class)->audit('merchant.sales_report.export_downloaded', $job->id, $job->actor_id, ['merchant_id' => $merchant->id, 'sha256' => $job->sha256]);
+        return response()->download($path, 'NUERS-Sales-Report-'.$job->id.'.csv', ['Content-Type' => 'text/csv; charset=UTF-8', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff']);
+    }
+
+    private function exportStatus(object $job): array
+    {
+        return ['id' => $job->id, 'state' => now()->gte($job->expires_at) ? 'expired' : $job->state, 'records' => (int) $job->records, 'error' => $job->error, 'created_at' => $job->created_at, 'expires_at' => $job->expires_at];
     }
 }

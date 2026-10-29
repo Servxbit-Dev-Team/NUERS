@@ -1,0 +1,69 @@
+NUERS — Page loading and large-register performance audit
+28 October 2026 · Asia/Manila
+
+RESULT: DEPLOYED AND VERIFIED ON NUERS.NET
+Final release: 2026-10-28.page-performance.2
+Production runtime: PHP 8.4.27 / MariaDB 10.3.39.
+681 deployed files match the final local checksums. Maintenance mode is off.
+Source records, wallets, top-ups, API keys, profiles, verification documents and environment settings passed before/after preservation checks.
+
+CHANGES
+- 98 page components load on demand; initial main JavaScript reduced from 2,384,430 to 540,878 bytes (about 77%). Navigation remains available during lazy-page loading.
+- Transaction, reconciliation, EIS and merchant registers select bounded IDs before loading detail rows. Stable ordering and reverse-end pagination reduce deep final-page cost.
+- Reconciliation evidence is derived when source records change. Foreground lists no longer decode all historical financial payloads.
+- Revision-aware summary caches and covering indexes reduce repeat aggregation. Broad merchant sales reports avoid random index lookups when most of the table is needed.
+- Default merchant counters use narrow indexes; detailed delivery evidence and restricted team scopes retain their existing authorized query.
+- Large audit journals use scheduled full-chain verification, with checked time and honest pending/failed status in the UI.
+
+LIVE READ VERIFICATION (4,339 DOCUMENTS)
+Server-side internal probes; these exclude browser/network latency.
+- transactions: initial 186.59 ms; cached 125.19 ms; 10 returned rows.
+- reconciliation: initial 399.40 ms; cached 159.62 ms; 10 returned rows.
+- sales: initial 208.73 ms; cached 46.28 ms; 10 returned rows.
+- EIS list: 4,339 records, 10-row bounded read, 447.35 ms.
+- Both current merchant scopes were checked. Merchant document/payment totals use the existing delivery-evidence path on these accounts; optimized no-delivery counters were verified in isolated tests.
+- Reporting backlog and missing reconciliation evidence: zero.
+- Full journal check passed; production MFA remains enabled; BIR production transport remains blocked.
+- Live browser: Transactions (including page 2), Reconciliation, Summary List of Sales, EIS center, registry, wallets, dashboard and audit journal loaded.
+
+MILLION-ROW LAB
+1,000,100 synthetic reporting documents, including 1,000,000 belonging to one synthetic merchant; isolated MySQL 8.4.11, 512 MB buffer pool.
+Single-client server-side timing. First run means no matching application summary cache; database buffers were not forcibly evicted. Second run uses the same filters.
+Endpoint                                  First run     Repeat
+admin_reconciliation                       4.036 s    0.012 s
+admin_sales                                3.583 s    0.007 s
+admin_transactions_deep                    1.737 s    0.031 s
+admin_eis_center                           0.811 s    0.009 s
+merchant_dashboard                         2.169 s    0.047 s
+merchant_report                            6.936 s    0.006 s
+merchant_documents                         3.508 s    0.006 s
+merchant_payments                          7.920 s    0.006 s
+- Merchant sales last page: 5.73 ms repeated; merchant documents last page: 6.51 ms repeated; payment last page: 4.33 ms repeated.
+- Other-merchant report test returned only its own 100 records even when another merchant ID was supplied.
+- Representative request memory stayed in tens of MB; returned pages remain bounded rather than loading one million rows into PHP.
+
+VALIDATION
+- Focused regression: 71 tests / 762 assertions passed.
+- Final merchant, team-scope and tenant-boundary suites: 103 tests / 1,057 assertions passed.
+- Counter equivalence, pagination and audit integrity: 4 tests / 76 assertions passed after the follow-up.
+- Full run: 713 tests / 7,670 assertions; five PDF-renderer failures and two related risky results occurred under the restricted Chromium runtime. All three affected classes passed with the permitted renderer runtime: 28 tests / 314 assertions.
+- Frontend realtime coordination: 7 tests passed. Production build completed.
+- Main admin navigation pages and 13 merchant routes were smoke-checked using synthetic local accounts. Evidence captures are retained; empty fixture pages verify rendering, not high-volume behavior for that entity.
+
+LIMITS
+- This is not a production concurrency SLA or proof that every possible filter/detail route is instant at arbitrary scale.
+- Large uncached aggregates still take several seconds (up to about 8 seconds in the measured merchant paths). Cached results are fast; writes invalidate financial summaries before subsequent reads.
+- Broad contains searches and deep middle-page offsets can cost more. Narrow date/merchant filters remain useful.
+- Million-row EIS timing used no delivery jobs. Delivery-history joins keep the full evidence path and require a separate large-scale delivery-history benchmark before claiming the same timings.
+- Live merchant browser sign-in was not impersonated; merchant UI checks used synthetic accounts, with production read-only scope checks and tenant-security tests.
+- Existing generic operational-readiness pages remain their existing functionality. BIR connectivity, off-server DR and other infrastructure readiness were outside this performance release.
+
+RECOVERY
+Main file backup: nuers-page-performance-backup-20261028-132928
+Follow-up file backup: nuers-merchant-summary-backup-20261028-134640
+Both are private under /var/www/vhosts/nuers.net. Existing hashed browser assets were retained.
+
+EVIDENCE
+production-result.json; production-followup-result.json; final-live-checksums.json
+benchmark-consolidated-final.json; merchant-ui-checks.json; admin-local-ui-checks.json; live-ui-checks.json
+live-transactions.png; live-reconciliation.png; test and build logs in this directory.

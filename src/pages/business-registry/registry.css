@@ -16,3 +16,92 @@
 @media(max-width:1050px){.br-page:not(.br-onboarding) .ow-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 .br-avatar{overflow:hidden}.br-avatar img{width:100%;height:100%;object-fit:contain;background:white;border-radius:inherit}
+
+/* Financial portfolio: readable numbers, clear source labels and a full-width register. */
+.br-portfolio .br-layout{grid-template-columns:minmax(0,1fr)}
+.br-portfolio .br-aside{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start;margin-bottom:12px}
+.br-financial-overview{margin:14px 0 16px;color:#0f2d5b}
+.br-financial-overview>header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
+.br-financial-overview h2{font-size:17px;font-weight:650;margin:0 0 4px}
+.br-financial-overview header p,.br-financial-note{font-size:12px;line-height:1.5;color:#617da4;margin:0}
+.br-live-label{display:inline-flex;gap:6px;align-items:center;padding:5px 10px;border-radius:20px;background:#e5f8ef;color:#078054;font-size:12px;white-space:nowrap}
+.br-live-label i{width:6px;height:6px;background:#08a86d;border-radius:50%}
+.br-financial-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.br-financial-cards article{display:flex;align-items:center;gap:12px;padding:17px 15px;border:1px solid #dce8f8;border-radius:8px;background:white;min-width:0}
+.br-financial-cards article>div{min-width:0}
+.br-financial-cards h3{font-size:13px;line-height:1.4;font-weight:600;margin:0 0 5px;color:#3e5b85}
+.br-financial-cards strong{font-size:clamp(19px,1.6vw,25px);font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;display:block}
+.br-financial-cards small{display:block;font-size:12px;color:#7288a8;line-height:1.5;margin-top:5px}
+.br-financial-note{margin-top:9px}
+.br-live-label+.br-financial-note{margin:0}
+.br-portfolio .br-financial-table{min-width:1460px;width:100%;table-layout:auto}
+.br-portfolio .br-financial-table th{font-size:12px;line-height:1.5;padding:13px 12px;white-space:nowrap}
+.br-portfolio .br-financial-table td{font-size:13px;line-height:1.5;padding:18px 12px;vertical-align:top;max-width:none;height:auto}
+.br-financial-table td>strong{display:block;font-size:16px;color:#12345f;font-variant-numeric:tabular-nums;white-space:nowrap}
+.br-financial-table td>small{display:block;font-size:12px;color:#7288a8;margin-top:5px;line-height:1.5}
+.br-financial-table .br-business{min-width:240px;max-width:330px}
+.br-portfolio .br-financial-table .br-business button{max-width:none;font-size:14px;font-weight:600;white-space:normal;overflow:visible;text-overflow:clip;line-height:1.4}
+.br-financial-table .br-avatar{width:36px;height:36px;flex-basis:36px;background:#e8f1ff;color:#0056d6}
+.br-merchant-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:10px;color:#6d82a2;font-size:12px}
+.br-merchant-meta .ow-badge{text-transform:capitalize}
+.br-page .br-wallet-link{display:block;border:0;padding:0;min-height:0;background:none;font-size:17px;font-weight:700;color:#0056d6;white-space:nowrap;font-variant-numeric:tabular-nums}
+.br-wallet-state{display:inline-flex;font-size:11px;font-weight:600;padding:2px 7px;border-radius:10px;margin-top:7px;background:#eef3fa;color:#577196}
+.br-wallet-state.funded{background:#e5f8ef;color:#08784f}.br-wallet-state.low{background:#fff4d6;color:#886200}.br-wallet-state.empty{background:#ffe9ee;color:#b62947}
+.br-financial-table td>.br-attention{color:#986600}
+.br-key-label{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.br-financial-table time{display:block;min-width:135px}
+.br-financial-scroll:focus-visible{outline:2px solid #0066ff;outline-offset:2px}
+.br-dialog .br-financial-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+.br-dialog .br-financial-cards .ow-metric-icon{display:none}
+@media(min-width:1800px){.br-financial-cards{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media(max-width:850px){.br-financial-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.br-portfolio .br-aside{grid-template-columns:minmax(0,1fr)}.br-financial-cards .ow-metric-icon{display:none}}
+@media(max-width:480px){.br-financial-cards article{padding:13px 10px}.br-financial-cards strong{font-size:18px}.br-financial-overview>header{align-items:start}.br-financial-overview h2{font-size:16px}.br-dialog .br-financial-cards{grid-template-columns:1fr}}
+
+/* One clear primary action; secondary tasks share an accessible menu. */
+.br-page table .br-actions-cell{width:210px;min-width:210px;max-width:none;text-align:center;vertical-align:middle;overflow:visible}
+.br-row-actions{display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+.br-page .br-row-actions button{height:40px;min-height:40px;border:1px solid #c9daf3;border-radius:8px;box-shadow:0 1px 2px #13356606;font-size:13px;line-height:1.2;font-weight:600;flex-shrink:0;transition:background .15s,border-color .15s,box-shadow .15s}
+.br-page .br-row-actions .br-action-view{padding:0 13px;background:#f2f7ff;color:#0056d6;gap:8px}
+.br-page .br-row-actions .br-action-more{width:40px;padding:0;background:#fff;color:#375778}
+.br-page .br-row-actions button:hover:not(:disabled),.br-page .br-row-actions button[data-state="open"]{background:#e7f0ff;border-color:#80adf7;filter:none}
+.br-page .br-row-actions button:focus-visible{outline:3px solid #80adf7;outline-offset:3px;filter:none}
+.br-page .br-row-actions button:disabled{opacity:.5;cursor:wait}
+@media(min-width:1050px){
+  .br-page table .br-actions-cell{position:sticky;right:0;z-index:2;box-shadow:-8px 0 14px -12px #16365f66}
+  .br-page thead .br-actions-cell{background:#eaf2fc}
+  .br-page tbody .br-actions-cell{background:#fff}
+  .br-page tbody tr:hover .br-actions-cell{background:#f5f9ff}
+}
+@media(max-width:1049px){
+  .br-page .br-list table .br-actions-cell{position:static;right:auto;box-shadow:none}
+}
+@media(max-width:600px){
+  .br-page .br-row-actions button{height:44px;min-height:44px}
+  .br-page .br-row-actions .br-action-more{width:44px}
+}
+.br-action-menu{width:300px;max-width:calc(100vw - 24px);max-height:var(--radix-dropdown-menu-content-available-height);padding:6px;border:1px solid #dce6f4;border-radius:12px;background:#fff;color:#16365f;box-shadow:0 12px 40px #12345f26,0 2px 8px #12345f0a;overflow-y:auto;z-index:80}
+.br-action-menu .br-action-context{padding:10px 10px 12px;white-space:normal}
+.br-action-context>span{display:block;font-size:10px;line-height:1.5;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#68809f}
+.br-action-context>strong{display:block;margin-top:4px;font-size:14px;line-height:1.4;font-weight:600;overflow-wrap:anywhere;color:#12345f}
+.br-action-menu .br-action-section{padding:10px 10px 5px;font-size:11px;line-height:1.4;font-weight:600;color:#68809f}
+.br-action-menu [data-slot="dropdown-menu-separator"]{margin:3px 4px;background:#e8eef7}
+.br-action-menu [data-slot="dropdown-menu-item"]{min-height:54px;gap:12px;padding:10px;border-radius:7px;font-size:14px;line-height:1.35;font-weight:500;color:#16365f;cursor:pointer}
+.br-action-menu [data-slot="dropdown-menu-item"]>svg{height:18px;width:18px;flex-shrink:0;color:#0056d6}
+.br-action-menu [data-slot="dropdown-menu-item"] small{display:block;margin-top:3px;font-size:12px;line-height:1.35;font-weight:400;color:#6d82a2}
+.br-action-menu [data-slot="dropdown-menu-item"][data-highlighted]{background:#edf4ff;color:#0048b5;outline:0}
+.br-action-menu [data-slot="dropdown-menu-item"][data-disabled]{opacity:.45;cursor:not-allowed}
+
+/* Merchant activity is a full-width workspace inside Business Details. */
+.br-transactions-dialog{max-width:1480px!important;width:calc(100vw - 48px)!important;max-height:94dvh!important;padding:24px!important}
+.br-transactions-dialog>header{padding-right:28px}.br-transactions-dialog .ow-tabs{flex-wrap:wrap;gap:6px}
+.br-transaction-workspace{min-width:0}.br-transaction-context{display:flex;align-items:center;gap:12px;background:#f1f6ff;border:1px solid #d9e6f8;border-radius:9px;padding:16px;margin-bottom:20px;color:#12325b}
+.br-transaction-context>div{min-width:0}.br-transaction-context strong{display:block;font-size:16px;overflow-wrap:anywhere}.br-transaction-context span{display:block;font-size:13px;color:#587298;margin-top:4px}.br-transaction-context nav{display:flex;gap:6px;margin-left:auto}
+.br-dialog .br-transaction-context button[aria-pressed=true],.br-dialog .tx-tabs button[aria-pressed=true],.br-dialog .tx-primary{background:#005fff!important;color:#fff!important;border-color:#005fff!important}
+.br-dialog .tx-document{padding:0!important;min-height:0!important;border:0!important;white-space:normal;justify-content:flex-start!important;text-align:left;font-weight:650;background:transparent!important}
+.br-dialog .br-transactions-link{margin-top:-12px;margin-bottom:20px;padding:10px 14px!important;font-weight:650;background:#eff6ff!important}
+.br-dialog .tx-embedded .tx-heading h1{font-size:24px}.br-dialog .tx-embedded .tx-filter-grid{grid-template-columns:2fr 1fr 1fr 1.4fr 1.3fr}.br-dialog .tx-embedded .tx-advanced{grid-template-columns:repeat(4,minmax(0,1fr))}
+.br-dialog .tx-embedded .tx-table-scroll table{min-width:1180px}.br-dialog .tx-embedded .tx-metrics{grid-template-columns:repeat(5,minmax(0,1fr))}.br-dialog .tx-embedded .tx-metrics article{align-items:flex-start;flex-direction:column}.br-dialog .tx-embedded .tx-metrics strong{font-size:24px}.br-dialog .tx-pagination{flex-wrap:wrap}
+@media(max-width:1000px){.br-dialog .tx-embedded .tx-filter-grid,.br-dialog .tx-embedded .tx-advanced{grid-template-columns:repeat(2,minmax(0,1fr))}.br-dialog .tx-embedded .tx-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){.br-transactions-dialog{width:96vw!important;padding:15px!important}.br-transaction-context{flex-wrap:wrap}.br-transaction-context nav{margin-left:0;width:100%}.br-transaction-context nav button{flex:1}.br-dialog .tx-embedded .tx-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.br-dialog .ow-tabs>button.active{background:#005fff!important;color:#fff!important;border-color:#005fff!important}
+.br-dialog .tx-embedded .tx-table-scroll{max-height:54vh}.br-dialog .tx-embedded .tx-table-scroll thead{position:sticky;top:0;z-index:2}

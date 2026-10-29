@@ -32,7 +32,7 @@ export function MfaScreen(p: Props) {
     const link = document.createElement("a"); link.href = url; link.download = "NUERS-recovery-codes.txt"; link.click(); URL.revokeObjectURL(url);
   }
   return <main className="nmfa">
-    <header className="nmfa-top"><img src="/auth-assets/nuers-digital-logo.png" alt="NUERS — National Unified Electronic Receipt System" /><span><LockKeyhole size={15} aria-hidden="true" /> Account security</span></header>
+    <header className="nmfa-top"><img src="/brand/nuers-official-logo.png" alt="NUERS — National Unified Electronic Receipt System" /><span><LockKeyhole size={15} aria-hidden="true" /> Account security</span></header>
     <div className="nmfa-stage"><div className="nmfa-layout">
       <aside className="nmfa-story" aria-label="NUERS account protection">
         <span className="nmfa-eyebrow"><ShieldCheck size={16} aria-hidden="true" /> NUERS SECURE ACCESS</span>

@@ -1,10 +1,11 @@
+import {exportReport as openReportExport} from "@/components/reports/export-report";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Download, Send, Shield, QrCode, CheckCircle2,
   Clock, AlertTriangle, XCircle, Copy, FileText,
   History, ChevronRight, RotateCcw, Ban,
-  FileJson, FileSpreadsheet, FileCode, Loader2, Database,
+   Loader2, Database,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  DOC_TYPE_META, STATUS_META, formatAmount, exportToJSON, exportToCSV, exportToXML,
+  DOC_TYPE_META, STATUS_META, formatAmount,
   type Invoice, type InvoiceStatus,
 } from "@/lib/invoice-utils";
 import { OfficialReceipt } from "@/components/invoices/official-receipt";
@@ -170,15 +171,7 @@ export function InvoiceDetail() {
           </p>
         </div>
         <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
-          <Button variant="outline" size="sm" className="h-8 flex-1 gap-1 text-xs sm:flex-none" onClick={() => { exportToJSON(invoice); toast.success("Exported JSON"); }}>
-            <FileJson className="h-3.5 w-3.5" /> JSON
-          </Button>
-          <Button variant="outline" size="sm" className="h-8 flex-1 gap-1 text-xs sm:flex-none" onClick={() => { exportToXML(invoice); toast.success("Exported XML"); }}>
-            <FileCode className="h-3.5 w-3.5" /> XML
-          </Button>
-          <Button variant="outline" size="sm" className="h-8 flex-1 gap-1 text-xs sm:flex-none" onClick={() => { exportToCSV(invoice); toast.success("Exported CSV"); }}>
-            <FileSpreadsheet className="h-3.5 w-3.5" /> CSV
-          </Button>
+          <Button variant="outline" size="sm" onClick={()=>void openReportExport({title:'Invoice Record',scope:invoice.invoice_number+' · Saved invoice fields and line items',data:invoiceReport(invoice)})}><Download className="size-4"/>Export PDF / CSV</Button>
           <DocumentCopyActions source="invoice" id={invoice.id} number={invoice.invoice_number}/>
 
         </div>
@@ -471,10 +464,10 @@ export function InvoiceDetail() {
                 disabled: false,
               },
               {
-                title: "Export All Formats",
-                desc: "Download JSON, XML, and CSV simultaneously",
+                title: "Export Invoice Record",
+                desc: "NUERS PDF report or CSV with invoice fields and line items",
                 icon: Download, color: "text-chart-3",
-                action: () => { exportToJSON(invoice); exportToCSV(invoice); exportToXML(invoice); toast.success("Internal JSON, XML and CSV exported"); },
+                action: () => {void openReportExport({title:'Invoice Record',scope:invoice.invoice_number+' · Saved invoice fields and line items',data:invoiceReport(invoice)});},
                 disabled: false,
               },
             ].map(a => (
@@ -544,3 +537,5 @@ export function InvoiceDetail() {
     </div>
   );
 }
+
+function invoiceReport(value:unknown):unknown{if(Array.isArray(value))return value.map(invoiceReport);if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([k,v])=>typeof v==='number'&&(/_amount$|^(unit_price|line_total|withholding_tax|other_charges|amount_paid|amount_due)$/.test(k))?[k+' PHP',(v/100).toFixed(2)]:[k,invoiceReport(v)]));return value;}

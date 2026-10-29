@@ -11,7 +11,7 @@ for f in transaction_fields:
  if f['name'] in required:f['required']=True
  if f['name']=='branch_code':f['description']='Exact five-digit BIR branch code authorized by the key.'
  if f['name']=='items':f['description']='1–100 complete item lines. description, positive quantity, unit_price in PHP/pesos and supported tax treatment; server reconciles lines and gross total.'
- if f['name']=='receipt_number':f['description']='Original finalized source number; must match the next configured authorized series.'
+ if f['name']=='receipt_number':f['description']='Original seller document number, 1–50 characters; preserve leading zeros. Source capture preserves it; NUERS issuance must match the next registered sequence.'
  if f['name']=='customer_tin':f['description']='Optional supported 9/12/14-digit TIN form; field validation is not BIR verification.'
  if f['name']=='vat_rate':f['description']='Supported tax rate, 0 or 12 according to tax treatment; server rejects inconsistent taxes.'
 transaction_fields += [F('schema_version','string',True,'NUERS-ingestion-1'),F('source_event_id','string',True,'Stable source event ID, up to 120 characters.'),F('event_type','string',True,'invoice.finalized | payment.recorded. Payment evidence is not another sale.'),F('occurred_at','string',True,'Original event timestamp with explicit timezone; preserve on every retry.')]
@@ -65,7 +65,7 @@ for e in endpoints:
    properties['vat_rate']['maximum']=100
    for f in e['fields']:
     name=f['name']
-    if f['type']=='string' and name not in ['tax_type','document_type','branch_type']:properties[name]['maxLength']=255 if name in ['branch','branch_name','customer_name'] else 120 if name in ['external_reference','source_system','receipt_number'] else 80
+    if f['type']=='string' and name not in ['tax_type','document_type','branch_type']:properties[name]['maxLength']=255 if name in ['branch','branch_name','customer_name'] else 120 if name in ['external_reference','source_system'] else 80
   if e['id']=='ingest':
    properties['customer_email'].update(type=['string','null'],format='email',maxLength=254)
    properties['branch_code'].update(pattern='^[0-9]{5}$',maxLength=5)
@@ -88,3 +88,7 @@ for _path in ['/api/integrations/transactions']:
 spec={'openapi':'3.1.0','info':{'title':meta['title'],'version':meta['version'],'description':meta['description']},'servers':[{'url':'/','description':'Current NUERS deployment origin; use its actual HTTPS origin outside localhost.'}],'components':{'securitySchemes':{'BearerToken':{'type':'http','scheme':'bearer','description':'User-session token for workspace/admin routes; merchant API key may be used as Bearer only on merchant integration ingestion.'},'MerchantKeyHeader':{'type':'apiKey','in':'header','name':'X-NUERS-API-Key'}}},'paths':paths}
 Path('resources/data/developer-openapi.json').write_text(json.dumps(spec,indent=2)+'\n')
 print(f'Generated {len(endpoints)} documented operations')
+
+# Apply the current invoice/receipt fields after legacy catalog generation.
+import runpy
+runpy.run_path(str(Path(__file__).with_name('sync-invoice-document-contract.py')))

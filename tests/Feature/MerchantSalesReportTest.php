@@ -265,4 +265,65 @@ class MerchantSalesReportTest extends TestCase
         $r = $this->withToken($this->owner->api_token)->getJson($this->url())->assertOk()->assertJsonPath('count', 1)->assertJsonPath('data.0.document_id', $id);
         $this->getJson('/api/merchant/records/'.rawurlencode($r->json('data.0.id')).'?mode=documents')->assertOk()->assertJsonPath('record.record_id', $id);
     }
+
+    public function test_hundreds_of_source_receipts_use_bounded_queries_and_preserve_report_totals(): void
+    {
+        for ($n = 0; $n < 341; $n++) {
+            $this->receipt('BATCH-'.$n, '2026-10-16 04:00:00');
+        }
+        $this->invoice('BROKEN-BATCH', ['total_amount' => 113]);
+        $this->invoice('FOREIGN-BATCH', merchant: $this->otherMerchant);
+        DB::enableQueryLog();
+        DB::flushQueryLog();
+        $r = $this->withToken($this->owner->api_token)->getJson($this->url())
+            ->assertOk()->assertJsonPath('count', 341)->assertJsonPath('excluded_count', 1)
+            ->assertJsonPath('totals.gross', 3819200)->assertJsonPath('totals.vat', 409200)
+            ->assertJsonPath('pagination.total', 341)->assertJsonCount(10, 'data');
+        $queries = count(DB::getQueryLog());
+        DB::disableQueryLog();
+        $this->assertLessThan(150, $queries, 'Report queries must not grow once per receipt.');
+        $this->assertStringNotContainsString('FOREIGN-BATCH', $r->getContent());
+    }
+
+    public function test_dashboard_batches_more_than_500_receipts_without_losing_rows_or_tenant_scope(): void
+    {
+        $this->travelTo(\Carbon\CarbonImmutable::parse('2026-10-16 04:00:00', 'UTC'));
+        for ($n = 0; $n < 541; $n++) {
+            $this->receipt('DASHBOARD-'.$n, '2026-10-16 04:00:00');
+        }
+        $this->invoice('FOREIGN-DASHBOARD', merchant: $this->otherMerchant);
+        DB::enableQueryLog();
+        DB::flushQueryLog();
+        $r = $this->withToken($this->owner->api_token)->getJson('/api/merchant/overview?days=7&merchant_id='.$this->otherMerchant)
+            ->assertOk()->assertJsonPath('account.id', $this->merchant)
+            ->assertJsonPath('documents.issued', 541)->assertJsonPath('current.sales', 60592)
+            ->assertJsonPath('current.invoices', 541)->assertJsonCount(8, 'recent');
+        $queries = count(DB::getQueryLog());
+        DB::disableQueryLog();
+        $this->assertLessThan(150, $queries, 'Dashboard validation must not query each source separately.');
+        $this->assertStringNotContainsString('FOREIGN-DASHBOARD', $r->getContent());
+    }
+
+    public function test_batch_financial_validation_matches_full_inspection_and_reads_fresh_owned_items(): void
+    {
+        $id = $this->invoice();
+        $receipt = $this->receipt('BATCH-RECEIPT', '2026-10-16 04:00:00');
+        $rows = app(\App\Services\IssuedDocumentLedger::class)->query($this->merchant)->get();
+        $service = app(\App\Services\EisDocumentReadiness::class);
+        $batch = $service->financialBatch($rows, $this->merchant);
+        foreach ($rows as $row) {
+            $full = $service->inspect($row->document_source, $row->document_id);
+            $item = $batch[$row->document_source.':'.$row->document_id];
+            $this->assertSame($full['financial_validation_passed'], $item['financial_validation_passed']);
+            $this->assertSame($full['model']['items'], $item['items']);
+        }
+        DB::table('business_invoice_items')->where('invoice_id', $id)->update(['merchant_id' => $this->otherMerchant]);
+        $fresh = $service->financialBatch($rows, $this->merchant);
+        $this->assertFalse($fresh['invoice:'.$id]['financial_validation_passed']);
+        $this->assertTrue($fresh['receipt:'.$receipt]['financial_validation_passed']);
+        $foreign = $this->invoice('FOREIGN-FINANCIAL', merchant: $this->otherMerchant);
+        $foreignRows = app(\App\Services\IssuedDocumentLedger::class)->query($this->otherMerchant)->get();
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $service->financialBatch($foreignRows, $this->merchant);
+    }
 }

@@ -1,0 +1,46 @@
+{
+  "release": "2026-10-20.merchant-loading",
+  "files": {
+    "app/Services/EisDocumentReadiness.php": "26c62d315d9fa1e8574e9aa5384bb5e07eb72e20ceff3e54e73e661dff1134e4",
+    "app/Services/MerchantSalesReport.php": "d5b912c37b9502f80213978f2e2b48c6299d2487b7f0e6eae40722e500e9c4c3",
+    "app/Http/Controllers/Api/MerchantOverviewController.php": "7a0b0553cada20e7d1e3abf6d32d21dbea2d210c08b83ffa0463cba0f04acfee",
+    "src/lib/api-url.ts": "2137685a58f03148d0a4d60d0e7a70316dd5a97e2fa76596da2784d838a03cbb",
+    "src/pages/merchant/dashboard.tsx": "7f36f7f68da8e50e1dfb5a40cc1b1070c40a19a0ca7773cd7df2b485e341fc35",
+    "src/pages/merchant/sales-reports.tsx": "d48de9609f5161bd65aadd73a2bf0ce68941f73aa31421884eff060290c4f15c",
+    "public/build/manifest.json": "4ed313806be10c12c72c492c00101246d125b71c0fcea0952c3c11439a3987fb",
+    "public/build/assets/index.es-Zo-ZQ92o.js": "007a43e5d3e8cbb900acb3bbf3cc9f9fc9eeedb878272271eed5a3bcd94d54fa",
+    "public/build/assets/main-BhvkMPz7.js": "ccd5b663089b6bae61b7f0363392c13b81d6f0f3ad00b8921d1242dbf9845fb6",
+    "public/build/assets/jspdf.es.min-r7dyTGYj.js": "6ee0a8dec2db94acf7b14eeb54e2d73af2a712f3e0136394e13ca4360419e710",
+    "dist/assets/index-CADxInAJ.js": "07ea98afed9d5952ace45847f1977b2eba4be3736d67f5485f4408978ee368a8",
+    "dist/assets/jspdf.es.min-Bw6i6WnZ.js": "d90080c69555cd8d73d180ccbad33d8af7c9a27a047ec493c13403e8d8564f92",
+    "dist/assets/index.es-BZaDtnI9.js": "c13409f2d0173e5f2f44350cc198d661644c2e74229d794d711cc1ccd351da5e",
+    "dist/index.html": "bea36fc719ce480860037ece69a4c41cc5d5bb1b903e77d628ea61596dd29697",
+    "index.html": "bea36fc719ce480860037ece69a4c41cc5d5bb1b903e77d628ea61596dd29697",
+    "assets/index-CADxInAJ.js": "07ea98afed9d5952ace45847f1977b2eba4be3736d67f5485f4408978ee368a8",
+    "assets/jspdf.es.min-Bw6i6WnZ.js": "d90080c69555cd8d73d180ccbad33d8af7c9a27a047ec493c13403e8d8564f92",
+    "assets/index.es-BZaDtnI9.js": "c13409f2d0173e5f2f44350cc198d661644c2e74229d794d711cc1ccd351da5e"
+  },
+  "baseline": {
+    "app/Services/EisDocumentReadiness.php": "1370582110e13de21d069c1271ed91a0fff8541f0d8228c68bd289932da061b6",
+    "app/Services/MerchantSalesReport.php": "2bc2ba75cfad8e6ba3a897d4cd1416fd7280030c3c05b1bf96ec938e6c3fa91a",
+    "app/Http/Controllers/Api/MerchantOverviewController.php": "57e68c769b7b8c1da5686ca62b731536f8780e40c19df4047965371f14ce9b01",
+    "src/lib/api-url.ts": "b85803f3f21f46bd31cc33d6eff56654eb9de7c27ffb56578a976aa33063122b",
+    "src/pages/merchant/dashboard.tsx": "ea844215ab8d5316e36bcca0f5b9158b1befc71f6436b0e6ef3fa81bfe6c750e",
+    "src/pages/merchant/sales-reports.tsx": "81254701a1bd4228248e3b4423562b7445d1f4f3e0efe22e193c7fea5a008504",
+    "public/build/manifest.json": "6286e95158f019b3fcc9a4ea9e6d868503990d6a0d53023b1f2a5c147d1e7fce",
+    "dist/index.html": "0401569ad1988cbdbe12bf29f91186ff17e8d7c85382cd7600aef13cc524b640",
+    "index.html": "0401569ad1988cbdbe12bf29f91186ff17e8d7c85382cd7600aef13cc524b640"
+  },
+  "new_files": [
+    "public/build/assets/index.es-Zo-ZQ92o.js",
+    "public/build/assets/main-BhvkMPz7.js",
+    "public/build/assets/jspdf.es.min-r7dyTGYj.js",
+    "dist/assets/index-CADxInAJ.js",
+    "dist/assets/jspdf.es.min-Bw6i6WnZ.js",
+    "dist/assets/index.es-BZaDtnI9.js",
+    "assets/index-CADxInAJ.js",
+    "assets/jspdf.es.min-Bw6i6WnZ.js",
+    "assets/index.es-BZaDtnI9.js"
+  ],
+  "tests": "70 tests, 705 assertions; read timeout/cancellation checks; TypeScript and all production builds"
+}

@@ -1,0 +1,159 @@
+{
+  "implemented_at": "2026-10-17T06:32:13.563428+00:00",
+  "registration_steps": [
+    "Business Information",
+    "Account Setup",
+    "Document Uploads",
+    "Verification",
+    "Complete"
+  ],
+  "upload_policy": {
+    "optional_during_registration": true,
+    "warning_on_incomplete_next": true,
+    "warning_on_skip": true,
+    "dashboard_location": "/merchant/profile?tab=documents",
+    "files": {
+      "bir_cor": "BIR Form 2303",
+      "business_registration": "DTI / SEC / CDA / applicable registration",
+      "representative_id": "Owner or authorized representative government ID",
+      "representative_authority": "Applicable owner declaration or representative authority",
+      "proof_address": "Business address evidence"
+    },
+    "formats": [
+      "PDF",
+      "PNG",
+      "JPEG"
+    ],
+    "maximum_bytes_per_file": 104857600,
+    "pre_account_uploads": "Only after email verification; tied to an unconsumed proof.",
+    "staging_retention": "Unclaimed uploads expire after 24 hours; scheduled cleanup is capped at 500 rows per run.",
+    "claimed_evidence": "Encrypted private files, authenticated scoped downloads, hash integrity checks, retained replacement history.",
+    "activation": "New self-registrations remain pending until all five latest files are independently verified and the existing administrator onboarding checks/evidence pass.",
+    "legacy_accounts": "Existing active accounts are not reset or retroactively deactivated.",
+    "transport": "Authenticated, ordered 1 MiB encrypted parts with bounded retries and idempotent completion; verification proof required on every pre-account upload request.",
+    "encryption": "New files use individually authenticated encrypted frames and whole-file SHA-256/length verification. Existing encrypted files remain readable.",
+    "partial_upload_retention": "Upload sessions expire after two hours; the daily staged-document task removes expired encrypted parts and session metadata without deleting committed account documents.",
+    "administrator_review": "Private image/PDF workspace with page/zoom/rotation controls, retained version history, actor/session/hash-bound preview proof, independent checks, confirmation, reason and immutable decision/audit evidence."
+  },
+  "source_evidence": [
+    "src/pages/auth/register.tsx",
+    "src/pages/auth/register.css",
+    "src/components/registration/verification-documents.tsx",
+    "app/Services/MerchantVerificationDocuments.php",
+    "app/Http/Controllers/Api/MerchantVerificationDocumentController.php",
+    "app/Http/Controllers/Api/BusinessRegistrationController.php",
+    "app/Http/Controllers/Api/BusinessRegistryController.php",
+    "routes/api.php",
+    "routes/console.php",
+    "database/migrations/2026_10_17_000009_merchant_verification_documents.php"
+  ],
+  "tests": {
+    "backend": 260,
+    "assertions": 2713,
+    "frontend": 13,
+    "builds": [
+      "production",
+      "document renderer",
+      "static"
+    ],
+    "browser": [
+      "Fifth progress step visible",
+      "Next with no files prompts warning",
+      "Next with one selected file prompts warning",
+      "Continue with documents pending opens verification",
+      "Synthetic registration saved one claimed file in isolated QA database",
+      "Merchant Business Profile \u2192 Documents loads real checklist",
+      "Merchant upload saves as Awaiting review"
+    ]
+  },
+  "qa": "Separate SQLite database on localhost:8002; dispatch disabled and mail logged. No synthetic records or files deployed to live.",
+  "proof_images": [
+    ".local/registration-documents-20261017/skip-warning.png",
+    ".local/registration-documents-20261017/merchant-upload.png"
+  ],
+  "release_package": {
+    "sha256": "eb34c000b819b8f83d85ba72745c0addfec1b07a3e63ffa6e4678c2e73bd2b28",
+    "files": 54,
+    "bytes": 3274752
+  },
+  "source_sha256": {
+    "src/pages/auth/register.tsx": "16b1e519080518423be9557bf50c8791432b197a6ae9c09cb8554a37cb1afd7c",
+    "src/pages/auth/register.css": "27ee1acec2ebfadc8f8c90c0afb26601b76ee30edde5caa0291a14b3442b3787",
+    "src/components/registration/verification-documents.tsx": "2f59519554831bd39ce8736b59cb7fa4deaaacfa3619c801e53f221d7d19748b",
+    "app/Services/MerchantVerificationDocuments.php": "44aeab81060a8bbb1f5e37fb9010edbf7f55a25ce0dda7cd570dd3e011840ddb",
+    "app/Http/Controllers/Api/MerchantVerificationDocumentController.php": "65bb7200315b4747700a216dd8c3d0bc0cf1720f4d81eb47d0e07b3358e0c12e",
+    "app/Http/Controllers/Api/BusinessRegistrationController.php": "2b29a99c8c734f7fdcf4aae661bc651762870ba7c545a558f0e6905de7a8de17",
+    "app/Http/Controllers/Api/BusinessRegistryController.php": "9602479868fb49ad6e9191ca3e07ac3ca845200ca7ca2b8ed55ea86b13b3fbe3",
+    "routes/api.php": "9d8b664c0a9d955f60ef05a43d28eda2771663adcc4f0a4b444a2c282a18501a",
+    "routes/console.php": "c15f68c40445ac7ea055a139d68eb0d746bf2b491bdea68e16f2e7616164e2ed",
+    "database/migrations/2026_10_17_000009_merchant_verification_documents.php": "27a276756f078abb2b53846b29a5353ed5b6818e3b15fd1a136522681c80cc15"
+  },
+  "live_deployment": {
+    "verification_workflow_verified": true,
+    "verification_documents": 0,
+    "branch_registry_verified": true,
+    "registry_counts": {
+      "merchant_branches": 0,
+      "merchant_terminals": 0,
+      "merchant_branch_documents": 0,
+      "merchant_branch_events": 0
+    },
+    "php": "8.4.26",
+    "debug": false,
+    "privileged_mfa": true,
+    "pricing_correct": true,
+    "no_powered_by": true,
+    "billing_model": "per_transaction",
+    "fee_centavos": 300,
+    "minimum_transaction_centavos": 50000,
+    "storage": "unlimited",
+    "retention_years": 5,
+    "fee_below_500": 0,
+    "fee_at_500": 300,
+    "smtp_config_preserved": true,
+    "deployed": true,
+    "backup_directory": "/var/www/vhosts/nuers.net/nuers-onboarding-backup-20261017-063306",
+    "application_record_counts_preserved": true,
+    "passwords_preserved": true,
+    "environment_preserved": true,
+    "pdf_verified": true,
+    "package_sha256": "eb34c000b819b8f83d85ba72745c0addfec1b07a3e63ffa6e4678c2e73bd2b28"
+  },
+  "live_http_checks": {
+    "/register": {
+      "status": 200
+    },
+    "/assets/index-BjPhtWC2.js": {
+      "status": 200,
+      "bytes": 2318685,
+      "matches_release": true
+    },
+    "/assets/index-CHxnQa1U.css": {
+      "status": 200,
+      "bytes": 503829,
+      "matches_release": true
+    },
+    "/api/registration/options": {
+      "status": 200,
+      "document_categories": [
+        "bir_cor",
+        "business_registration",
+        "representative_id",
+        "representative_authority",
+        "proof_address"
+      ]
+    },
+    "/api/merchant/verification-documents": {
+      "status": 401
+    },
+    "/api/admin/businesses/00000000-0000-4000-8000-000000000000/verification-documents": {
+      "status": 401
+    },
+    "/.env": {
+      "status": 403
+    },
+    "/api/health": {
+      "status": 200
+    }
+  }
+}

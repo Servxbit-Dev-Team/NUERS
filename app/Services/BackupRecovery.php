@@ -100,7 +100,7 @@ class BackupRecovery
             'requests' => $requests->take($limit)->values(), 'events' => $events,
             'pending_evidence' => $all->where('status', 'pending_review')->take($limit)->values(),
             'active_legal_holds' => DB::table('document_legal_holds')->whereNull('released_at')->count(),
-            'execution' => ['automatic_backups' => false, 'live_restore' => false, 'live_failover' => false, 'description' => 'Requests and evidence are recorded here. An authorized infrastructure operator performs backup, restore and failover using the approved runbook.'],
+            'execution' => ['automatic_backups' => (bool) config('operations.backup.enabled'), 'live_restore' => false, 'live_failover' => false, 'description' => 'Requests and independently reviewed evidence are recorded here. Optional encrypted local backups require a private directory and separate recovery key provisioned by an operator. Current observations are available in Infrastructure readiness. Offsite replication and production restore/failover are not enabled by this page.'],
         ];
     }
 

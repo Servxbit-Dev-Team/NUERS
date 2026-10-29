@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-18",
+  "scope": "Statutory-benefit sales in API intake and invoice creation, merchant reports and admin transaction/document filters and exports",
+  "categories": ["regular", "senior_citizen", "pwd", "national_athlete_coach", "solo_parent"],
+  "calculation": "Integer centavos, eligible lines only, no stacked promotional discounts. Senior/PWD 20% with covered VAT exemption; national athletes/coaches 20% with VAT retained; qualified solo parents 10% with covered VAT exemption. Non-VAT sellers never remove fictitious VAT.",
+  "eligibility": "Recorded identity, evidence, covered scope and merchant confirmation required. Solo-parent benefits additionally require child age, valid SPIC, booklet and income confirmation. Application validation does not replace merchant inspection of actual eligibility evidence.",
+  "exclusions": ["Separate 5% basic-necessities and utility discount programs are not implemented", "No automatic entitlement for all products", "No real beneficiary data, billable sale or BIR transmission used for acceptance testing"],
+  "verification": {
+    "full_php_suite": {"tests": 451, "assertions": 5068, "passed": true},
+    "additional_pdf_test": {"tests": 1, "assertions": 11, "passed": true},
+    "focused_benefit_suite": {"tests": 13, "assertions": 143, "passed": true},
+    "total_unique_tests": 452,
+    "total_unique_assertions": 5079,
+    "build_all": "passed",
+    "documented_examples": "10 payloads validated against frontend and PHP calculations",
+    "visual_checks": ["Shared form for PWD, athlete/coach and solo parent", "One-page sample invoice and filtered report", "42-page developer manual, new pages 38–42 rendered and inspected"],
+    "coverage": ["Mixed VAT and non-VAT lines", "VAT-inclusive/exclusive rounding", "API retry/no duplicate fee", "Batch and supplementary receipts", "Original document/readiness reconciliation", "Eligibility rejection", "Live/Sandbox separation", "CSV/XLSX/PDF report filters", "No beneficiary IDs in bulk reports"]
+  },
+  "references": [
+    "https://ncda.gov.ph/disability-laws/implementing-rules-and-regulations-irr/revenue-regulations-no-5-2017-rules-and-regulations-implementing-republic-act-no-10754/",
+    "https://elibrary.judiciary.gov.ph/thebookshelf/showdocs/10/55830",
+    "https://legacy.senate.gov.ph/publications/STSRO/Taxbits%20June%20-%20July%202020%20%2818pages%29%200723%20Final%20with%20DG%20edits.pdf",
+    "https://bir-cdn.bir.gov.ph/local/pdf/RR%20No.%201-2023.pdf",
+    "https://bir-cdn.bir.gov.ph/BIR/pdf/RR%20No.%207-%202024.pdf"
+  ],
+  "rollout": "Private backup, checksummed allowlist, additive resumable migration, fresh read-only verification and preserved old financial/account records; standing deployment authorization"
+}

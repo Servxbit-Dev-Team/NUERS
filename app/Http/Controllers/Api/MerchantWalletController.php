@@ -216,6 +216,7 @@ class MerchantWalletController
         }if (! empty($v['kind'])) {
             $q->where('kind', $v['kind']);
         }abort_if((clone $q)->count() > 5000, 422, 'Narrow the date range to at most 5,000 entries.');
+        if ($r->has('report_limit')) \App\Services\ReportCsv::limit($r,(clone $q)->count());
         $rows = $q->orderBy('sequence')->get();
 
         return response()->streamDownload(function () use ($rows) {

@@ -35,6 +35,7 @@ class MerchantSalesReport
         }
         $sources = $q->orderByDesc('business_date')->orderBy('document_source')->orderBy('document_id')->limit(self::LIMIT + 1)->get();
         abort_if($sources->count() > self::LIMIT, 422, 'This report exceeds 2,000 source documents. Narrow the dates, branch or document filters.');
+        $financials = app(EisDocumentReadiness::class)->financialBatch($sources, (string) $merchant->id);
         $keys = $sources->pluck('document_id')->all();
         $jobs = DB::table('eis_document_outbox as o')->leftJoin('eis_delivery_jobs as j', fn ($j) => $j->on('j.outbox_id', '=', 'o.id')->on('j.merchant_id', '=', 'o.merchant_id'))
             ->where('o.merchant_id', $merchant->id)->whereIn('o.document_id', $keys)->orderByDesc('o.source_review_revision')->orderByDesc('o.prepared_at')->orderByDesc('o.id')
@@ -48,7 +49,8 @@ class MerchantSalesReport
         $reportBranches = [];
         foreach ($sources as $source) {
             $key = $source->document_source.':'.$source->document_id;
-            $branch = $this->sourceBranch($source);
+            $inspection = $financials[$key] ?? null;
+            $branch = $this->sourceBranch($source, $inspection);
             $reportBranches[$branch ?? ''] = true;
             if (($filters['branch'] ?? 'all') !== 'all' && ($filters['branch'] === 'unrecorded' ? $branch !== null : $branch !== $filters['branch'])) {
                 continue;
@@ -63,7 +65,6 @@ class MerchantSalesReport
                 continue;
             }
             $reason = null;
-            $inspection = null;
             if (! in_array($source->document_family, ['invoice', 'credit', 'debit'], true)) {
                 $reason = 'Payment / supplementary document: no additional invoice sales';
             } elseif ($source->status !== 'success') {
@@ -72,7 +73,7 @@ class MerchantSalesReport
                 $reason = 'Duplicate document identity needs source review';
             } elseif (in_array($source->document_family, ['credit', 'debit'], true) && ! $this->linkedOriginal($source, $merchant)) {
                 $reason = 'Adjustment requires a reconciled, active original invoice in this business';
-            } elseif (! ($inspection = app(EisDocumentReadiness::class)->inspect($source->document_source, $source->document_id))['financial_validation_passed']) {
+            } elseif (! ($inspection['financial_validation_passed'] ?? false)) {
                 $reason = 'Original line amounts / tax allocation do not reconcile';
             }
             $sign = $source->document_family === 'credit' ? -1 : 1;
@@ -82,7 +83,7 @@ class MerchantSalesReport
             foreach (['gross' => 'amount', 'vatable' => 'vatable_sales', 'vat' => 'vat_amount', 'zero' => 'zero_rated_sales', 'exempt' => 'vat_exempt_sales', 'net' => 'net_amount'] as $key => $field) {
                 $row[$key] = $reason ? 0 : $sign * $this->cents($source->$field);
             }
-            $row['non_vat'] = $reason ? 0 : $sign * collect($inspection['model']['items'])->where('tax_type', 'non_vat')->sum('line_total_centavos');
+            $row['non_vat'] = $reason ? 0 : $sign * collect($inspection['items'])->where('tax_type', 'non_vat')->sum('line_total_centavos');
             // Legacy rows aggregate non-VAT into exempt; new API copies persist a separate SSPT column.
             $row['exempt'] -= $row['non_vat'] - ($reason ? 0 : $sign * $this->cents($source->sspt_sales ?? 0));
             // Do not allocate unclassified taxable bases or guess VAT rates to force totals.
@@ -117,17 +118,17 @@ class MerchantSalesReport
         return $result;
     }
 
-    private function sourceBranch(object $source): ?string
+    private function sourceBranch(object $source, ?array $snapshot): ?string
     {
-        $raw = DB::table($source->document_source === 'invoice' ? 'business_invoices' : 'transaction_receipts')->where('id', $source->document_id)->where('merchant_id', $source->merchant_id)->first(['seller_branch_code', 'merchant_tin']);
-        $branch = $raw->seller_branch_code;
+        if (!$snapshot) return null;
+        $branch = $snapshot['seller_branch_code'];
         if (! $branch) {
             $evidence = app(HistoricalBranchEvidence::class)->latest($source->document_source, $source->document_id);
             if ($evidence && hash_equals($evidence->source_fingerprint, app(HistoricalBranchEvidence::class)->fingerprint($source->document_source, $source->document_id))) {
                 $branch = $evidence->branch_code;
             }
         }
-        $identity = app(SellerIdentity::class)->parse($raw->merchant_tin, $branch);
+        $identity = app(SellerIdentity::class)->parse($snapshot['merchant_tin'], $branch);
 
         return $identity['valid'] && preg_match('/^\d{5}$/', $identity['branch_code'] ?? '') ? $identity['branch_code'] : null;
     }

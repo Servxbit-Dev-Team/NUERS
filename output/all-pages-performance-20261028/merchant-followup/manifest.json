@@ -1,0 +1,16 @@
+{
+  "release": "2026-10-28.page-performance.2",
+  "purpose": "Bounded merchant summary query plans after million-row cold-cache measurements",
+  "files": {
+    "app/Services/IndexedSalesReport.php": "01442d4e223e899f57153b3c3702914de8183dd6477256e61f74884da9af1b25",
+    "app/Http/Controllers/Api/MerchantRecordsController.php": "d8c0345f7c984d06a370d9e50792e1251d7cf3ee9fce3e589759629e4c4831c7",
+    "docs/knowledge/operations-dashboards.md": "ec7bc19854c9b6cd64be81080f622c9c6ff0847a05401ef36d8aadd1208703db"
+  },
+  "baseline": {
+    "app/Services/IndexedSalesReport.php": "3e9adc2fa048b498a9cbdcc51eee6a791fb1dc2a47e7acd79bff8c86ca0d8f8d",
+    "app/Http/Controllers/Api/MerchantRecordsController.php": "3d2544fc2a5fdfc0a00aebf7094f6c07e088ca3b509962895c6580d9da0e051a",
+    "docs/knowledge/operations-dashboards.md": "fd36aa2eb09b622d04c0206e1cde1284f24c6e5a333fe4f998330a9577c8046c"
+  },
+  "new_files": [],
+  "schema_migration": false
+}

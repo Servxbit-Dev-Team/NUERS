@@ -43,6 +43,30 @@ class ApiCustomerReceiptTest extends TestCase
         return ['schema_version' => 'NUERS-ingestion-1', 'record_mode' => 'source_capture', 'source_profile_id' => $this->profile, 'source_system' => 'fixture-pos', 'source_event_id' => 'event-'.$n, 'external_reference' => 'sale-'.$n, 'event_type' => 'invoice.finalized', 'occurred_at' => now()->subMinute()->toIso8601String(), 'branch_code' => '00000', 'receipt_number' => 'TEST-'.$n, 'document_type' => 'vat_invoice', 'payment_method' => 'cash', 'gross_amount' => '112.00', 'tax_type' => 'vatable', 'vat_inclusive' => true, 'customer_email' => 'customer@example.test', 'items' => [['description' => 'Synthetic item', 'quantity' => 1, 'unit_price' => '112.00', 'tax_type' => 'vatable']]];
     }
 
+    public function test_invoice_numbers_and_registration_are_validated_before_capture_and_printed_unchanged(): void
+    {
+        foreach ([str_repeat('X',51), ' INV-001', "INV-001\n"] as $number) {
+            $bad=[...$this->event(),'receipt_number'=>$number];
+            $this->postJson('/api/integrations/transactions',$bad)->assertUnprocessable()->assertJsonValidationErrors('receipt_number');
+            $this->postJson('/api/integrations/transactions/batch',['events'=>[$bad]])->assertUnprocessable()->assertJsonValidationErrors('events.0.receipt_number');
+        }
+        $this->assertDatabaseCount('transaction_receipts',0);
+        $this->assertSame(900,(int)DB::table('merchant_wallets')->value('available_centavos'));
+        $event=[...$this->event(),'receipt_number'=>str_repeat('A',50),'customer_type'=>'business','customer_name'=>'Synthetic Buyer','customer_tin'=>'98765432100000','customer_address'=>'Synthetic registered buyer address','invoice_reference'=>'ORIGINAL-000001','document_registration'=>['system_type'=>'CAS','ac_number'=>'SYNTHETIC-AC','authority_issued_at'=>'2020-01-01','series_start'=>'SYNTHETIC-000001','series_end'=>'SYNTHETIC-999999']];
+        $event['items'][0]['unit']='piece';
+        $this->postJson('/api/integrations/transactions',$event)->assertCreated();
+        $row=DB::table('transaction_receipts')->first();
+        $dto=app(ElectronicDocumentView::class)->make('receipt',$row);
+        $this->assertSame(str_repeat('A',50),$dto['number']);
+        $this->assertSame('ORIGINAL-000001',$dto['invoice_reference']);
+        $this->assertSame('SYNTHETIC-AC',$dto['document_registration']['ac_number']);
+        $this->assertSame('piece',$dto['items'][0]['unit']);
+        $this->postJson('/api/integrations/transactions',$event)->assertOk()->assertJsonPath('duplicate',true);
+        $event['document_registration']['ac_number']='CHANGED';
+        $this->postJson('/api/integrations/transactions',$event)->assertConflict();
+        $this->assertDatabaseCount('transaction_receipts',1);
+    }
+
     public function test_one_auto_email_for_one_sale_and_identical_retries_with_current_status(): void
     {
         $this->mock(PlatformMail::class, fn ($m) => $m->shouldNotReceive('send'));
@@ -178,5 +202,50 @@ class ApiCustomerReceiptTest extends TestCase
         $openapi = json_decode(file_get_contents(resource_path('data/developer-openapi.json')), true);
         $fields = $openapi['paths']['/api/integrations/transactions']['post']['requestBody']['content']['application/json']['schema']['properties'];
         $this->assertSame(254, $fields['customer_email']['maxLength']);
+        $this->assertSame($openapi['components']['schemas']['IngestionEvent']['properties'], $fields);
+        foreach (['withholding_details', 'manual_recovery_id', 'manual_invoice_number'] as $field) $this->assertArrayHasKey($field, $fields);
     }
+
+    public function test_prepared_accreditation_gate_preserves_existing_intake_and_replays(): void
+    {
+        $event=$this->event('policy-first');
+        $r=$this->postJson('/api/integrations/transactions',$event)->assertCreated();
+        config(['bir_compliance.source_capture_accreditation_enforced'=>true]);
+        $this->postJson('/api/integrations/transactions',$event)->assertOk()->assertJsonPath('duplicate',true);
+        $this->postJson('/api/integrations/transactions',$this->event('policy-second'))->assertConflict();
+        $this->assertDatabaseCount('transaction_receipts',1);
+        $this->assertSame(600,(int)DB::table('merchant_wallets')->value('available_centavos'));
+        $this->getJson('/api/integrations/transactions/'.$r['id'])->assertOk();
+    }
+    public function test_structured_cwt_keeps_gross_and_vat_and_validates_amount(): void
+    {
+        $event=[...$this->event('cwt'),'withholding_tax'=>'1.00','withholding_basis_reference'=>'Synthetic buyer confirmation','withholding_details'=>['withholding_agent'=>true,'classification'=>'Buyer-confirmed corporate payor','atc'=>'WC160','rate'=>'1.00','base'=>'100.00','amount'=>'1.00','evidence_reference'=>'Synthetic buyer confirmation']];
+        $this->postJson('/api/integrations/transactions',$event)->assertCreated()->assertJsonPath('calculation.gross_amount',112)->assertJsonPath('calculation.vat_amount',12)->assertJsonPath('calculation.net_payable',111);
+        $event['withholding_details']['amount']='2.00';$event['source_event_id']='cwt-invalid';$event['external_reference']='cwt-invalid';$event['receipt_number']='CWT-INVALID';$this->postJson('/api/integrations/transactions',$event)->assertUnprocessable();
+        $this->assertDatabaseCount('transaction_receipts',1);
+    }
+    public function test_manual_replacement_is_atomic_scoped_and_charged_once(): void
+    {
+        $ops=app(\App\Services\ComplianceOperations::class);
+        $outage=$ops->create('receipt-test','fixture','outage',['request_id'=>(string)Str::uuid(),'title'=>'Synthetic API outage','started_at'=>now()->subHours(3)->toIso8601String(),'evidence_reference'=>'Synthetic outage evidence']);
+        $manual=$ops->create('receipt-test','fixture','manual_invoice',['request_id'=>(string)Str::uuid(),'outage_id'=>$outage['id'],'manual_number'=>'MANUAL-API-1','branch_code'=>'00000','issued_at'=>now()->subHours(2)->toIso8601String(),'amount'=>'112.00','buyer_name'=>'Synthetic Buyer','authority_reference'=>'Synthetic ATP evidence','evidence_reference'=>'Synthetic manual evidence']);
+        $event=[...$this->event('manual'),'manual_recovery_id'=>$manual['id'],'manual_invoice_number'=>'MANUAL-API-1','customer_name'=>'Synthetic Buyer'];
+        $this->postJson('/api/integrations/transactions',$event)->assertConflict();
+        $this->assertDatabaseCount('transaction_receipts',0);
+        $this->assertSame(900,(int)DB::table('merchant_wallets')->value('available_centavos'));
+        $ops->act('receipt-test',$outage['id'],'fixture',['action'=>'restore','revision'=>1,'restored_at'=>now()->subHour()->toIso8601String(),'evidence_reference'=>'Synthetic restoration evidence']);
+        $this->postJson('/api/integrations/transactions',[...$event,'occurred_at'=>now()->subHours(2)->toIso8601String()])->assertUnprocessable();
+        $this->postJson('/api/integrations/transactions',[...$event,'manual_recovery_id'=>(string)Str::uuid()])->assertNotFound();
+        $this->assertDatabaseCount('document_email_deliveries',0);
+        $r=$this->postJson('/api/integrations/transactions',$event)->assertCreated();
+        $this->postJson('/api/integrations/transactions',$event)->assertOk()->assertJsonPath('duplicate',true);
+        $this->assertDatabaseHas('merchant_compliance_records',['id'=>$manual['id'],'status'=>'reconciled','related_id'=>$r['receipt_id']]);
+        $this->postJson('/api/integrations/transactions',[...$event,'source_event_id'=>'second-manual','external_reference'=>'second-manual','receipt_number'=>'SECOND-MANUAL'])->assertConflict();
+        $this->assertDatabaseCount('transaction_receipts',1);
+        $this->assertDatabaseCount('document_email_deliveries',1);
+        $this->assertSame(600,(int)DB::table('merchant_wallets')->value('available_centavos'));
+        DB::table('merchant_api_keys')->update(['environment'=>'sandbox']);
+        $this->postJson('/api/integrations/transactions',$event)->assertUnprocessable();
+    }
+
 }

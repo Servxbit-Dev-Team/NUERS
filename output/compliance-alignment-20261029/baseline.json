@@ -1,0 +1,2878 @@
+[
+  {
+    "path": "app/Mail/RegistrationCodeMail.php",
+    "sha256": "c35f248520c608aed489e9607af2a891f8c32cc10ece3e0b42e22393df42256f"
+  },
+  {
+    "path": "app/Contracts/EisProvider.php",
+    "sha256": "91927cd9a0350398e6dba322a54caeb04ef1b68d76ae926e1c8d8e2267ab3457"
+  },
+  {
+    "path": "app/Providers/AppServiceProvider.php",
+    "sha256": "8ae8a62f5bd07e92bbff267148edc0c715360dd72c15074c182062d7216be299"
+  },
+  {
+    "path": "app/Models/TransactionReceipt.php",
+    "sha256": "657fad6b4856fa9d01cb8215983e78ff8b882c51fdb15f83af4eb7f410a1926d"
+  },
+  {
+    "path": "app/Models/User.php",
+    "sha256": "984150b49e6ecd97bd9eb36ecd597faf1c1c7b0b6362f195173f85e7aff79d4e"
+  },
+  {
+    "path": "app/Models/Merchant.php",
+    "sha256": "f7b71b2477eeecf451bfe24f640b0d5e7502157745169b1f447ae8c0306c4337"
+  },
+  {
+    "path": "app/Models/MerchantTransaction.php",
+    "sha256": "2731ac7bbfe3f4467da9db1f8fcc640419549b64b571d40a133e01479c3668a0"
+  },
+  {
+    "path": "app/Models/Profile.php",
+    "sha256": "beb1ccb8133298be6045034c2ba300902ac22450009c05fc27cde4dc0c437a6f"
+  },
+  {
+    "path": "app/Models/ClientAccount.php",
+    "sha256": "accaf1956c99acaf8301de7715db52ec06629300f3bce860b521458ba52b501b"
+  },
+  {
+    "path": "app/Models/SystemNotification.php",
+    "sha256": "bba0d8b7a1d58de4e9158941bd46eea10313bf689607524a245a7a481fef9aae"
+  },
+  {
+    "path": "app/Exceptions/InsufficientWalletBalance.php",
+    "sha256": "3a79c22760980a684ee1180277c39fe654e0e87f887923323533f5cad9c5fa0e"
+  },
+  {
+    "path": "app/Http/Middleware/ScopedThrottleRequests.php",
+    "sha256": "8410fce5beb025c82a911ce6f49228f185d32a1d4fb0216aab08e307d1cb7ef2"
+  },
+  {
+    "path": "app/Http/Middleware/ApiBoundary.php",
+    "sha256": "81148f54acd4cd21b142b479ff8e3af47334f582eca6b654b7ca0e42f2a3d31c"
+  },
+  {
+    "path": "app/Http/Middleware/SecurityHeaders.php",
+    "sha256": "a7fd317395cae1ddd98758aafb78b06741448c1bca1a8c6a45c32284eadbde60"
+  },
+  {
+    "path": "app/Http/Middleware/IntegrationApiResponse.php",
+    "sha256": "8bc3229ef1b99dc3427abf357ea5be9630e74802b1856604e061c5500da0b21a"
+  },
+  {
+    "path": "app/Http/Requests/Infrastructure/ActionRequest.php",
+    "sha256": "9919f148a91491a12c5d9b67a4dfbfe55f74fbcc81722d1770e508908e163f37"
+  },
+  {
+    "path": "app/Http/Controllers/Controller.php",
+    "sha256": "25d1c1ef8e6cc8a376553faacfba2b07d9dfaee9bdbb84f14f77517580e9deb1"
+  },
+  {
+    "path": "app/Http/Controllers/Auth/GoogleAuthController.php",
+    "sha256": "e08276132c78f2e5760880b65ee8562d2cb1a2efe900768f67974cfe9b78eaca"
+  },
+  {
+    "path": "app/Http/Controllers/Api/EisReadinessController.php",
+    "sha256": "d87d37ca6d00fba9431cf8ebb0837851204d5261336422f0efc8c87f2a0d7f63"
+  },
+  {
+    "path": "app/Http/Controllers/Api/BirWireController.php",
+    "sha256": "6f4a0a9427f24f36e62555083f8bce02f32bcf1e2209543f408221a769b54168"
+  },
+  {
+    "path": "app/Http/Controllers/Api/PtiApplicationController.php",
+    "sha256": "f57a7bccc91ba2009b452e463a10975730885ea101919a29c1eba21b073ea21a"
+  },
+  {
+    "path": "app/Http/Controllers/Api/OperationalEvidenceController.php",
+    "sha256": "1a9d8bf5e00d992614beb8cfe795599a1a22bb2f8e5676ee7410c76f12725414"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MerchantRecordsController.php",
+    "sha256": "d8c0345f7c984d06a370d9e50792e1251d7cf3ee9fce3e589759629e4c4831c7"
+  },
+  {
+    "path": "app/Http/Controllers/Api/EspComplianceController.php",
+    "sha256": "16ed1321bb5ab358f0a5a7f6591e8a056fd8a1bfc163fd36d1e5c6ecb4b9767d"
+  },
+  {
+    "path": "app/Http/Controllers/Api/SubscriptionPlanController.php",
+    "sha256": "6e35cf99b29d19b5e354f043301da8e2d5b1dd791707305ca93d1d5874f90ddb"
+  },
+  {
+    "path": "app/Http/Controllers/Api/BirCallbackController.php",
+    "sha256": "66726ad01d4bc128414635d6bc130726f67ce32533382dd2a5b0922896531eb6"
+  },
+  {
+    "path": "app/Http/Controllers/Api/SandboxRecordsController.php",
+    "sha256": "7eaf1e33fee6c71c6302c9571a58e8d14a7de931e4436f11730aecb22f742602"
+  },
+  {
+    "path": "app/Http/Controllers/Api/BusinessAccountController.php",
+    "sha256": "b8e44d10c38052ba3dacc8a7faddf662923e10d6205f218b4bf45aef34bb4c07"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MfaDeviceController.php",
+    "sha256": "1d780b6d8d042264b3e21f39dba58ef27af4e77038b29dad4fdca88a9243f2c9"
+  },
+  {
+    "path": "app/Http/Controllers/Api/TableController.php",
+    "sha256": "afc20dd739628746071da148502a608e065737cdca2e5e33347b48577cedae41"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MerchantSalesReportController.php",
+    "sha256": "3806d63ae481a7ad8a8fc5bd61e551064188b173382b1ed26db31115c692ebb7"
+  },
+  {
+    "path": "app/Http/Controllers/Api/LocationController.php",
+    "sha256": "330fcbe604d98ccef9c8139b923b97edab234783f17790ff4489447b29ff5b98"
+  },
+  {
+    "path": "app/Http/Controllers/Api/TaxpayerAuthorizationController.php",
+    "sha256": "34ffa44df8ddb40c9238b522015929c6dbb7a8d232f901f8e62b311dc0822581"
+  },
+  {
+    "path": "app/Http/Controllers/Api/BusinessRegistrationController.php",
+    "sha256": "58ed8185a2f556bc58c7f1ba2fbe80b1b048d83ac425d3cff343d0f9858fa8ef"
+  },
+  {
+    "path": "app/Http/Controllers/Api/VerificationUploadController.php",
+    "sha256": "8ad4b6d24f8352dd6e67c68a9c8b1fb34462813d5f44e972cb0a31ed0eb5e439"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MerchantBrandController.php",
+    "sha256": "f2f02eee6c803e9c69791c79886f2242074fe8f87655aaae9fb858856ab17ab4"
+  },
+  {
+    "path": "app/Http/Controllers/Api/DocumentGovernanceController.php",
+    "sha256": "4b47c9a2dce290ea808fc07996350826eb20ba646bd517310b617d0dccf6b600"
+  },
+  {
+    "path": "app/Http/Controllers/Api/DashboardController.php",
+    "sha256": "6bae6a5c9b0ec68a983796bbbe0caef154ed703b54460bc816f66ee0ca3de627"
+  },
+  {
+    "path": "app/Http/Controllers/Api/AdminAccountProfileController.php",
+    "sha256": "54a3db9aba0374603c4fe7c3644e98ee41914647152032d58c9023335233e8f1"
+  },
+  {
+    "path": "app/Http/Controllers/Api/TransactionWorkspaceController.php",
+    "sha256": "a01e1e51a4f18bcb80555243e46e2a57d56f1cfcdb5f696a6dc4e9bfe9245987"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MerchantCustomerController.php",
+    "sha256": "ec1d1fedc71b48914c915cde467e1df34c3f1ea306ec80d6e6eb05c8228927e2"
+  },
+  {
+    "path": "app/Http/Controllers/Api/OperationsReportController.php",
+    "sha256": "0505c2b9ecad9f1f6ad05c2b29eda4d6079e32be9a6c64f92c1c0443d0c8cdfa"
+  },
+  {
+    "path": "app/Http/Controllers/Api/AuthController.php",
+    "sha256": "4c996127ceac2bd9e45673244c1cb906da61a5883951e82ffcf63e9acc25cf44"
+  },
+  {
+    "path": "app/Http/Controllers/Api/EnterpriseDashboardController.php",
+    "sha256": "f1237898e7bf397c76833d7589b43d43b52e4b00c72bb9a875fbc1d5fd993aa5"
+  },
+  {
+    "path": "app/Http/Controllers/Api/RdoController.php",
+    "sha256": "5689af1c8e26eccc186d5c81e95aa3e0b933a7e5e6b52d4b733cbd8b27f55363"
+  },
+  {
+    "path": "app/Http/Controllers/Api/AccountSecurityController.php",
+    "sha256": "df220ac2b11f5f96eae386567eb9f5517cfce94ec47399a7a95d9f2bcdd23834"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MailConfigurationController.php",
+    "sha256": "45871abc412fe580a81b6f49f4872f5e94b3684162361ac8b3a3886ac81187b0"
+  },
+  {
+    "path": "app/Http/Controllers/Api/SubmissionAttemptsController.php",
+    "sha256": "f993c16558ebc2927ed04219b9f6223ca9a2f66384e1b3d9c3afdb816f3b8a1d"
+  },
+  {
+    "path": "app/Http/Controllers/Api/DashboardRevisionController.php",
+    "sha256": "dea0016b7270e64a987fc6aeae1ebf502db1135e3fe56d68eebb5e7941318d8f"
+  },
+  {
+    "path": "app/Http/Controllers/Api/LiveMonitoringController.php",
+    "sha256": "234ddcf9e086147716b15dea9ff470d8ac4b719ac2ddfcdce875179558009f44"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MerchantTeamController.php",
+    "sha256": "87dd5e5515fdc37b5314fb30cc111150edb0300b45741167f226fb55eedbc4ba"
+  },
+  {
+    "path": "app/Http/Controllers/Api/TenantPortabilityController.php",
+    "sha256": "8acae0053ade08e8c084235a8e2f3bb9c7e5f4a2c87f9064581b587ccb276f6d"
+  },
+  {
+    "path": "app/Http/Controllers/Api/BusinessProfileChangeController.php",
+    "sha256": "8755c83312010950a41d4004791c2d2c1a6eb700c46e4633d188cc0722acdaac"
+  },
+  {
+    "path": "app/Http/Controllers/Api/ClientProfileController.php",
+    "sha256": "edbb8c2a8ff48275ea34fc4b2a9759d2476fc13d84f1a7ca957d1ae9f214e646"
+  },
+  {
+    "path": "app/Http/Controllers/Api/AdminMerchantConnectionController.php",
+    "sha256": "8df886bb7561ae5fd89308b79f7d1c0e7a1758a3500d19cc861864f6ff9b0faf"
+  },
+  {
+    "path": "app/Http/Controllers/Api/CitizenApprovalController.php",
+    "sha256": "24d4b1b7e67306076ea46222d55445dd68f08b38fc49ed91562e7b231cb2978e"
+  },
+  {
+    "path": "app/Http/Controllers/Api/ServerManagementController.php",
+    "sha256": "cdc6c37341b2c959908eb017dfab3d4dd0837ad0af8b673434e1eb1fe48a6716"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MerchantBranchController.php",
+    "sha256": "64cd3304ad7ab68842655913745814b6534b69f589e74cd2e281696cb1c2778b"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MerchantWalletController.php",
+    "sha256": "e617c95b3c76b76fae1603b885fdd0c10fd212507f3acf2fbb3f5c665b9a492e"
+  },
+  {
+    "path": "app/Http/Controllers/Api/RdoMappingController.php",
+    "sha256": "14ed1284bcb8ba1ffc4a68d68d1fd6341340d4065484e1634563f253dcf5d494"
+  },
+  {
+    "path": "app/Http/Controllers/Api/BusinessRegistryController.php",
+    "sha256": "81c1ad330c6f85907ddd74f9ca08e1f4f8d73d0080da0dce02673e35bc40257e"
+  },
+  {
+    "path": "app/Http/Controllers/Api/EisController.php",
+    "sha256": "41f65228fe5ccae6c7c3238687eae6244d1caa6cb5c84d85d9ab853008e48a6c"
+  },
+  {
+    "path": "app/Http/Controllers/Api/InvoiceCenterController.php",
+    "sha256": "6abc2442d33da6207625d1dd0e72a87ab0e690ac05908e7b484ebf8b531b871f"
+  },
+  {
+    "path": "app/Http/Controllers/Api/TransactionController.php",
+    "sha256": "5e7c4881054aa721705d691593d27e3ac15e68a049afeabce1a76bb6ff640ffc"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MerchantTransactionController.php",
+    "sha256": "664a6189172ddf27a5163338a07a5b72fcb4eeda5536d6d5dd46038a20d9c8a8"
+  },
+  {
+    "path": "app/Http/Controllers/Api/TaxIntelligenceController.php",
+    "sha256": "42cadb1f5c04c38960cd1376abd1f3b0b5839e054e0eb52bfbddd78f1e2dbb35"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MfaController.php",
+    "sha256": "c6e05ed6267218f3d7b89254263740f56028d144a9d8183e6671fc2e30cb3ed9"
+  },
+  {
+    "path": "app/Http/Controllers/Api/EisTransmissionCenterController.php",
+    "sha256": "db9e6a9272b04d29169a109a1a3d5267ccc8a4f3a2eb51f0f212fb23345a369a"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MerchantBusinessProfileController.php",
+    "sha256": "e50a4ce5a4acd7f6f21199abefdf48359a5dde3ef2e1308e9fb8ece22388a261"
+  },
+  {
+    "path": "app/Http/Controllers/Api/BusinessInvoiceController.php",
+    "sha256": "16fbc38be1bcb0d4db1a05f0a573513773902428ffad9ffdaf7768428f8fe029"
+  },
+  {
+    "path": "app/Http/Controllers/Api/AdminBusinessWalletController.php",
+    "sha256": "2a2ae66ab9dc57d1b6c923f31203ee2ede90a5807215b6a22d69e9fd90050ca1"
+  },
+  {
+    "path": "app/Http/Controllers/Api/BusinessReviewNotificationController.php",
+    "sha256": "c915cf4595dfdd8f5c1f7ee888dae2fbc911b0756958728db2d208b518cf47a4"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MerchantWebhookController.php",
+    "sha256": "8274c2b397af54dd465eb527630d9a7f2f30e4f63e715a73ef6cd94910839795"
+  },
+  {
+    "path": "app/Http/Controllers/Api/ReceiptVerificationController.php",
+    "sha256": "5da0e88ecdc8a4f5c6f50411d5d27cfff10f23cef4436831aa600c56937ade30"
+  },
+  {
+    "path": "app/Http/Controllers/Api/IntegrationWorkspaceController.php",
+    "sha256": "579f5aafc4de6b11dc36ded091b77573e2e3211c78ba95640872560901c9d5d8"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MerchantInvoiceSettingsController.php",
+    "sha256": "837c89ebb661294fe06bee9e3509ff0ea29414a27822d26cc7181f7d30887cbb"
+  },
+  {
+    "path": "app/Http/Controllers/Api/IntegrationTransactionController.php",
+    "sha256": "276140f7426a9d19d34476561bdb1dce54c71212098581480c0c9cf77a28481a"
+  },
+  {
+    "path": "app/Http/Controllers/Api/IntegrationSourceProfileController.php",
+    "sha256": "756788980609c248c9786321501dd838e5ff5db82d888da71d8280711b19f5b1"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MerchantTaxCenterController.php",
+    "sha256": "cfe25b44615931d52a4a1278cd84b433d27457dbdc6d1fd32599f1f5fad272c4"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MerchantOverviewController.php",
+    "sha256": "aaa355e4dce816439d5d774fd8e0fbefdd3f50ef2ac2808d2aa79a1d2d0033d8"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MerchantReceiptController.php",
+    "sha256": "9e039bb3c1e05656bf01f65c18a936983767fcd0c8b21d83e1cddb231f650c43"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MerchantVerificationDocumentController.php",
+    "sha256": "da50b0bb286afa971e99e59852e0831f29a8dae07bccd0fbbb3cb3b99dc0c893"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MerchantExpenseController.php",
+    "sha256": "173e6300568331ebf10b6256aa2e4dc13cb396d1897a0e25bbce9a4392e1d922"
+  },
+  {
+    "path": "app/Http/Controllers/Api/DocumentCopyController.php",
+    "sha256": "9d0ffab76a929700f086781c1281bfab2c3d674f881b12e678428af7a020b5c4"
+  },
+  {
+    "path": "app/Http/Controllers/Api/SupportChatController.php",
+    "sha256": "3c9f712038ee759e19c9b0ac6a0b5f35bd89bc3989f3430bcdaa376d085be81b"
+  },
+  {
+    "path": "app/Http/Controllers/Api/DeveloperSandboxController.php",
+    "sha256": "c6fa819cda587185353f74395f906e8a21799ed9e86c51cc9f1eb3a77f8eef55"
+  },
+  {
+    "path": "app/Http/Controllers/Api/MerchantApiKeyController.php",
+    "sha256": "d241aa518229be652da5b99f2c38590c7751864a990c2e5b2c9412b042f1e1c6"
+  },
+  {
+    "path": "app/Http/Controllers/Api/BackupRecoveryController.php",
+    "sha256": "1dd991229e36167f9954cead063afdde39c5398eaa0112f8771da50c1b6336fb"
+  },
+  {
+    "path": "app/Services/Totp.php",
+    "sha256": "3320480a7fece5564c628e16a1963ef22dc135a5aa4867a28d19dda592773faa"
+  },
+  {
+    "path": "app/Services/TransactionPricing.php",
+    "sha256": "77883395aded1e41ec65b23143cc42876a3c88fefa809e9f7d91b46641ac9798"
+  },
+  {
+    "path": "app/Services/ApiCustomerReceipt.php",
+    "sha256": "5aaecd8b0208eae3058e1eeb961e303486ad81583ae8478c1948a43cc6bce5f4"
+  },
+  {
+    "path": "app/Services/InvoiceCalculator.php",
+    "sha256": "f766a628326da930d143a2ca8b84544fe80353e02628700fa617c6e2ef9aeb96"
+  },
+  {
+    "path": "app/Services/TransactionReportExport.php",
+    "sha256": "70d6cb7bc068c16723d61874676e9db6c98e8a46eea89f8dcb8291740e48e151"
+  },
+  {
+    "path": "app/Services/ReconciliationEvidence.php",
+    "sha256": "3bc14fd55d04a6bc515bb3680b82479bd6220c6a905c6231faa0831ed72123c6"
+  },
+  {
+    "path": "app/Services/SandboxTransactions.php",
+    "sha256": "a7e238fcea04bceb5daabb5f0924e71dfd727e50443f1a2e64b41334a9b9e550"
+  },
+  {
+    "path": "app/Services/AtomicQuota.php",
+    "sha256": "de9f02fb4ec5470d80b999efd2d49502b07193a5348caa36d439426084a9c94d"
+  },
+  {
+    "path": "app/Services/MerchantWallet.php",
+    "sha256": "6cd354c0f535a8a3beb471ad56f54ffae933ad330ef1cad1367027655f6a66d2"
+  },
+  {
+    "path": "app/Services/LedgerProjection.php",
+    "sha256": "ac9715b977061c380fc7abe7287ae596ae39f3ae39429744ad14833ef39c6578"
+  },
+  {
+    "path": "app/Services/MfaDevices.php",
+    "sha256": "e4303d0b7d50957098f9ac62e1504f101928bb1ab0a1583e41eb2df2c30320f4"
+  },
+  {
+    "path": "app/Services/AdminMerchantConnections.php",
+    "sha256": "4985c762c6a1cbc696dec3ec619e2bc5e85fae4cbe34e4da9b1bd013564bbf71"
+  },
+  {
+    "path": "app/Services/ElectronicDocumentView.php",
+    "sha256": "cb43b4f998b4d4326aeb141fad23bf081cfdb2c91160fc6de07090dd5c442a24"
+  },
+  {
+    "path": "app/Services/StatutorySales.php",
+    "sha256": "c23d64744fa8c07b3b65d338d271d3a1ff608f75502b086498a42ea867a84ebd"
+  },
+  {
+    "path": "app/Services/DeviceSession.php",
+    "sha256": "1f26a628a5657a8693af48d559fb00d4ffedf03b16b98e9f84f3b932cfec72fb"
+  },
+  {
+    "path": "app/Services/MfaSession.php",
+    "sha256": "98b83996c468f69ff152a7e6b54a2c4e7fbf72ff47ae322e7ebf9844b1a23ac9"
+  },
+  {
+    "path": "app/Services/MerchantWebhookTransport.php",
+    "sha256": "6205531b87e0818a7d4d19ca5903369e753fb3a513dcf68f83c3e39d15614e22"
+  },
+  {
+    "path": "app/Services/MerchantVerificationDocuments.php",
+    "sha256": "a2a0831251691e8f760e8193c87ade8fd41b387363583826c694b37e6c037130"
+  },
+  {
+    "path": "app/Services/PlatformNotifications.php",
+    "sha256": "24a5ad5a1dfeac250d62966043c14473216cb7c75a210b46da1d1f1a59bbf33e"
+  },
+  {
+    "path": "app/Services/AdminFinancialSummary.php",
+    "sha256": "3a08c239e7abffa3f48669ffda2312ab8637d532bcb4735384c81c606bbcd2c8"
+  },
+  {
+    "path": "app/Services/MerchantApiOnboarding.php",
+    "sha256": "aa616b19eebbc6ef6b2249d66fd448c99f62dc842145c566a6beb1814031a4d7"
+  },
+  {
+    "path": "app/Services/ReportingSnapshotCache.php",
+    "sha256": "15b4a46ab01d6a85a942bc9c6fb46201d79a9641a9f5fe1a3ad8376e80484917"
+  },
+  {
+    "path": "app/Services/LocalRecoveryBackup.php",
+    "sha256": "db38b2bec4904dfd77b2b854dd97f44e962b13e6d6ae420f310f5900615c1475"
+  },
+  {
+    "path": "app/Services/RegistrationIndustry.php",
+    "sha256": "3f025e70efe348fca8acd47357978467f196b96e7d722f03551bf39cc695b5f9"
+  },
+  {
+    "path": "app/Services/SellerIdentity.php",
+    "sha256": "af6266e5ea50553ab91759b566b3f112ced4d5bc91438bd9f8744f18a4055230"
+  },
+  {
+    "path": "app/Services/HistoricalBranchEvidence.php",
+    "sha256": "8c01c31329f24d653d7ea80002e70250cd64638dac5d25514d1f26a4ccad0090"
+  },
+  {
+    "path": "app/Services/MerchantSalesReport.php",
+    "sha256": "d5b912c37b9502f80213978f2e2b48c6299d2487b7f0e6eae40722e500e9c4c3"
+  },
+  {
+    "path": "app/Services/RecoveryArchive.php",
+    "sha256": "dd35df84b10b4875b8e8a0a851d36c5669b4f96455a1dc59eadf9794e22e173c"
+  },
+  {
+    "path": "app/Services/IntegrationSourceProfile.php",
+    "sha256": "7d09809e0b3d5b2a2bef926b4b75f23d803f8a59ee2f565385f3f1d5b8e9ae6d"
+  },
+  {
+    "path": "app/Services/OperationsSalesQuery.php",
+    "sha256": "68eb40fe66d67edd34cba21d041258c9cb1aaa4334d9e15d04bcd0c6b5746886"
+  },
+  {
+    "path": "app/Services/SalesExportQueue.php",
+    "sha256": "ccee05e1b342bcfc391d8da4351d18ff11778be94f42cbf6dc6d09913cfb7aec"
+  },
+  {
+    "path": "app/Services/TransactionTransmissionQuery.php",
+    "sha256": "6e0fa46511c7c94a74db5b442ef049f9bfd3ee9bfeabdafb42dc907dc8fa7819"
+  },
+  {
+    "path": "app/Services/PtiApplications.php",
+    "sha256": "80fa05ea2a9d67aa393ea11ff7c6a7a79d384b388b8d1143ebdaf7ec2380e928"
+  },
+  {
+    "path": "app/Services/OperationsSalesEvidence.php",
+    "sha256": "75b78c7f1b458c274ae470e0ebdabe3a35338979c4729b4be7d5c81e418abe7b"
+  },
+  {
+    "path": "app/Services/MerchantInvoiceSettings.php",
+    "sha256": "9f8ce869657d48431f644c86891eced119a7a1e2ff5c3ee2a1b0bb907aa6a0e7"
+  },
+  {
+    "path": "app/Services/BackupRecovery.php",
+    "sha256": "04f986d433de0ad312e426c3b3a9d919c624bfc1dced2db822d8ebc3d4665ab7"
+  },
+  {
+    "path": "app/Services/PrivateDocumentStream.php",
+    "sha256": "033dab76697e06b7e4414656158196b8365e1e605a513160f46da828f261f747"
+  },
+  {
+    "path": "app/Services/RegistrationVerification.php",
+    "sha256": "1f5b020331f2922dce1b2c5067eab06b478c7d64c755490b175f9bf36252abce"
+  },
+  {
+    "path": "app/Services/TenantPortability.php",
+    "sha256": "08b4bad62c37be65e49d90731bdb85d2f24e606e21b23e812b6fb08ad5356db1"
+  },
+  {
+    "path": "app/Services/DocumentPdf.php",
+    "sha256": "e3bbd2928d9e8a242904cf447ec457ec802708722d75c70a0a670d569be91e45"
+  },
+  {
+    "path": "app/Services/ReportCsv.php",
+    "sha256": "b463a18204d4dd85e33f8360b2577cd42fd00333f7511a3d2f43aa7bfeaf10df"
+  },
+  {
+    "path": "app/Services/MerchantBranches.php",
+    "sha256": "0ad47f296e4218275d893786e5532dae1b34f392f9129dd7f9abe583b1262845"
+  },
+  {
+    "path": "app/Services/IntegrationStatus.php",
+    "sha256": "eb670693abb29e7a2a1a99f89a1e2c577b5bb1e618f4c108bf09d200ab3d8f6e"
+  },
+  {
+    "path": "app/Services/ReportPagination.php",
+    "sha256": "ebfd1069ef72ea245dd1f6446de4da6000d3f270933c9fc60b6679c2b8e7053d"
+  },
+  {
+    "path": "app/Services/RegistrationAddress.php",
+    "sha256": "7620034a358398778fd3eee8829e6b5cc21c26b271bab01b68a93e86a72f073b"
+  },
+  {
+    "path": "app/Services/ApiAccess.php",
+    "sha256": "d2f9df15a9e05a0cc55c17a30c0e44208673e1275df4d97be51db3703937a8c9"
+  },
+  {
+    "path": "app/Services/BirCompliance.php",
+    "sha256": "f091ac9d17538da8ee5d85fd36c5c4ed145de7aece062b5ea0060da2d2033b4b"
+  },
+  {
+    "path": "app/Services/InvoiceSequence.php",
+    "sha256": "ecd5926c5c37add534b71eff25ce9d577ec54dcd13aed26b28251cd08ed2980e"
+  },
+  {
+    "path": "app/Services/IndexedSalesReport.php",
+    "sha256": "01442d4e223e899f57153b3c3702914de8183dd6477256e61f74884da9af1b25"
+  },
+  {
+    "path": "app/Services/MerchantWebhooks.php",
+    "sha256": "7c02bc8829085f83860c7cae1932316613c9a3c1be741e464a0d7f08be4b2053"
+  },
+  {
+    "path": "app/Services/EisTransmissionCenter.php",
+    "sha256": "deb8690dd0737a636307c16b69f6bd543bb7b0ea2d7360aae8d62ef6ed0bd347"
+  },
+  {
+    "path": "app/Services/SafeImage.php",
+    "sha256": "8ae68b3054f0ab5f2877551350cb899222f08e2f195f896f97859df15775483b"
+  },
+  {
+    "path": "app/Services/TransactionPdfQueue.php",
+    "sha256": "6ea78cceb8fd0a713c4b3de3ddd86d4194d0422de8aa1f794bc51de15bbc275e"
+  },
+  {
+    "path": "app/Services/EisReportingPolicy.php",
+    "sha256": "539af19a1c2a5200f931135788f97df02efacee652d936b96e2f562c60823c10"
+  },
+  {
+    "path": "app/Services/SignedWebhook.php",
+    "sha256": "d27ea57d491653d116ba50641872df798e342833b7832aa000f939e0fd4b92ff"
+  },
+  {
+    "path": "app/Services/TaxpayerAuthority.php",
+    "sha256": "7a04a74b0e8a4aa7e2a87b03b4805b08aa407ac6704b0b91f9af0d59a248566a"
+  },
+  {
+    "path": "app/Services/ExpenseCreditEvidence.php",
+    "sha256": "48d9042cc06e3e8610bdbc2c0cd070221f52e78c99ad4aa0218ad345afd4d868"
+  },
+  {
+    "path": "app/Services/EisDelivery.php",
+    "sha256": "cab6856bdbd7b730cbd3f5382ca849a0405f096610c70317e9253fb146331f55"
+  },
+  {
+    "path": "app/Services/RegistryMerchantOverview.php",
+    "sha256": "7ab6752fee0298c750b1abe9762080c48fb63b7fc1db3ee8b46d64c4bade207b"
+  },
+  {
+    "path": "app/Services/IssuedDocumentLedger.php",
+    "sha256": "334d0736e2484efea6ab848f24395c1d208f8ceaac9a660615ecf81caf42cce3"
+  },
+  {
+    "path": "app/Services/IndexedMerchantOverview.php",
+    "sha256": "bdcce26e983dcaed7106a59c86962bdb6ccb1e01c3d67a1210f209e7b0b1d3fe"
+  },
+  {
+    "path": "app/Services/OperationsHealth.php",
+    "sha256": "c19e5bc02889d3bd8df8a71c8adf9af4e274e9e6cd0d27cf4618794ad7917b50"
+  },
+  {
+    "path": "app/Services/SubmissionAttempts.php",
+    "sha256": "f1ba25dcbf0f9443d00c940ec3edbc61129d2cafd8111a95f3deb073c26bdd06"
+  },
+  {
+    "path": "app/Services/ReportingTime.php",
+    "sha256": "47536f94ccb48c2f5a4b41aefd120a3addf4e5775ac512a701a1931a6c486c9b"
+  },
+  {
+    "path": "app/Services/ReconciliationQuery.php",
+    "sha256": "bf54f8f15b6bde7cd3dc31eb7de41542f5ab786f3bb6a96deb2b4babfd315126"
+  },
+  {
+    "path": "app/Services/NotificationEvents.php",
+    "sha256": "5b98e9a744ddc3b31b2cf652ce35d299d72b381fd96a5609bf99178151a69ce3"
+  },
+  {
+    "path": "app/Services/SalesReportExport.php",
+    "sha256": "06849482a6d8f7f94dd2744b2e93a924a9398f13a169fe36373b90a0fc57d488"
+  },
+  {
+    "path": "app/Services/MerchantApiContext.php",
+    "sha256": "89d0ceaf305c50f5002d75f7ad514a11473be675131641e612ccd848be54f042"
+  },
+  {
+    "path": "app/Services/MerchantCustomers.php",
+    "sha256": "4eb02cde64e10bbf25ba5f251a40d9613a5faa207276c29079181f0be1e9d715"
+  },
+  {
+    "path": "app/Services/BusinessReviewNotifications.php",
+    "sha256": "e2faa290bc8eb9181e4cebe858bb037b92acb7fa199bd88e04eb9968e971cda4"
+  },
+  {
+    "path": "app/Services/SubmissionEvidence.php",
+    "sha256": "8c0f93c13d85ec90f4fca9d7c95800ca7b8badcb32b7476941b516ab1934fa03"
+  },
+  {
+    "path": "app/Services/MerchantTeamAccess.php",
+    "sha256": "a3e8c8d277686ac864fd280f7490603e3a9a4b2753dca0d4d2f54ce4e5174846"
+  },
+  {
+    "path": "app/Services/DashboardRevision.php",
+    "sha256": "92105f487c1a1ee256fa8571de34ba2a99e958dc38561ebef175cca91f3710b8"
+  },
+  {
+    "path": "app/Services/WebhookDestination.php",
+    "sha256": "119d2f0b513d9ecbbc076d8f67e34f2354937254bc823407e7d964e13fc6635c"
+  },
+  {
+    "path": "app/Services/PlatformMail.php",
+    "sha256": "51961611d7f4feb9c3cd408df65e47ab68d963da6b7df21a7ee57ce553843457"
+  },
+  {
+    "path": "app/Services/MerchantSystemIntegration.php",
+    "sha256": "6dcffe99c3226ddd98e55c0a4fd9e86caab64af37704930aab8a9114b27f69f9"
+  },
+  {
+    "path": "app/Services/ManualDiscounts.php",
+    "sha256": "4a86e69aa7a49f47348cc578b39cac1a164b09ea28fce5f917bc911352bbf2bf"
+  },
+  {
+    "path": "app/Services/BusinessProfileChanges.php",
+    "sha256": "46151d8a5b40a7907877f6ffa2e9e59d184dc1ce6214c12a186d865c9c42f7a0"
+  },
+  {
+    "path": "app/Services/IntegrationContract.php",
+    "sha256": "eafbdf865288e00b0ff8dd8abc4f0814306f3e946e7e14f22724309037eba893"
+  },
+  {
+    "path": "app/Services/EisDocumentReadiness.php",
+    "sha256": "058d6d55fbf8af25614e4b04a0661313e31b37837dcca35ebdf32e2235aae948"
+  },
+  {
+    "path": "app/Services/AuditIntegritySnapshot.php",
+    "sha256": "ff6213719b8a2637c6a533f9b78623736adf537e899f12557913231ebe18453f"
+  },
+  {
+    "path": "app/Services/Eis/ResultVerifier.php",
+    "sha256": "60d62b253a7fcdc8b6bc6672781516b5579c6f3fd706f54f6d7039e7eaee57b7"
+  },
+  {
+    "path": "app/Services/Eis/Protocol.php",
+    "sha256": "0a9687ead4ef21313c0f64f0519847d73f577517824412ce9dd7c3c520c8ae8c"
+  },
+  {
+    "path": "app/Services/Eis/WireClient.php",
+    "sha256": "dbbbd0486d39558132e902041a8af972b5b990159cb2b950b7dfb095e8bb6bc4"
+  },
+  {
+    "path": "app/Services/Eis/WireProjection.php",
+    "sha256": "fa68ed071645a38c711f58b7b9118f05c4bdd0aaf7f403a5c343a75daa6d6047"
+  },
+  {
+    "path": "app/Services/Eis/BlockedProvider.php",
+    "sha256": "f72b1df0035a13719d016a313c3635e343a2bafdb1c4cb518a6a7956af76d692"
+  },
+  {
+    "path": "app/Services/Eis/WireBatches.php",
+    "sha256": "78db8bd22587786d2eb540ba0b4eae813eeac4cbe65f354295752ff0a15c4240"
+  },
+  {
+    "path": "app/Services/Eis/InvoiceMapper.php",
+    "sha256": "fe71ef33dcccb48610820a44f9bf31a1330b587d0d81a0390bae6c5b0aceb2a7"
+  },
+  {
+    "path": "app/Services/Infrastructure/MtlsController.php",
+    "sha256": "3905213d750dd99e70607540cbae531e89f0db70e17486d3a30ab38804bd23f4"
+  },
+  {
+    "path": "app/Services/Infrastructure/Telemetry.php",
+    "sha256": "08e37bf1042439996b591c27c4424a1305cbc8726dcd2e6be6c97f27dc02c445"
+  },
+  {
+    "path": "app/Services/Infrastructure/Catalog.php",
+    "sha256": "10c40cc08964896105011a6a7507ef6ecc556fdf43063335c22dd57cdb28cdbe"
+  },
+  {
+    "path": "app/Services/Infrastructure/Audit.php",
+    "sha256": "353990c9f0b6de3779f450e87dd714dfd2d681d30f1e77196a9caa02f9232698"
+  },
+  {
+    "path": "app/Services/Infrastructure/ActionWorkflow.php",
+    "sha256": "2440dd44f15b82e744782208ce5ecb7ef8d3c74a3a34299ebcd4c49849284d59"
+  },
+  {
+    "path": "app/Services/Infrastructure/Preflight.php",
+    "sha256": "6ffa3d368e75d2e765313ff0163c326886405e1ed35fcb935d9e309ad2e88d9c"
+  },
+  {
+    "path": "app/Services/Infrastructure/ControllerGateway.php",
+    "sha256": "49b8805adc1faa88afadd1c2adc1cc70214313eb9af2aee141b87deda1c7f63a"
+  },
+  {
+    "path": "app/Console/Commands/RefreshLedgerProjection.php",
+    "sha256": "c91c00967c4c5b0ad3dd36d1c1a24755b6ebb234acac4760ec67e1f6cf28f944"
+  },
+  {
+    "path": "app/Console/Commands/DeliverMerchantWebhooks.php",
+    "sha256": "c858ea594a86bd9bfb0c4db1477526b0fdbf8404d1dc83a3cadb587d3c85e741"
+  },
+  {
+    "path": "app/Console/Commands/BuildSalesExport.php",
+    "sha256": "78c2e4b9316b6be568069639f08af123af037e2a3fe62f40d76847810cc5641b"
+  },
+  {
+    "path": "app/Console/Commands/PrepareVerifiedApiConnections.php",
+    "sha256": "242355a1fc7a05857a5840036f8927a3a70353add38badc8e9f87bcdd34dc3eb"
+  },
+  {
+    "path": "database/migrations/2026_10_15_000010_add_business_registry_workflows.php",
+    "sha256": "d410c99772503489172d1d7b3fe4a77d12a5315ef57697dd1ae8a75f135ad0a9"
+  },
+  {
+    "path": "database/migrations/2026_10_21_000001_index_operations_sales_evidence.php",
+    "sha256": "cbfc182b6208956d4ef80af0e0ff60e964e60dcabab5f3f120d603eb10c51efc"
+  },
+  {
+    "path": "database/migrations/2026_10_28_000003_create_bir_eis_wire_transport.php",
+    "sha256": "e09df25a7ccd8e929bc8e7f1975001c89eb305950ea11782bd467110a7103186"
+  },
+  {
+    "path": "database/migrations/2026_06_02_000003_create_dashboard_data_tables.php",
+    "sha256": "43e35d160dbfffbf895426d458b874bbd793708281d30404226bbeeb2e8d4136"
+  },
+  {
+    "path": "database/migrations/2026_10_20_000001_create_server_management.php",
+    "sha256": "e3732adc3ce4afa7fb552cfac91882977b849397082e94abb3d021713a2f92b8"
+  },
+  {
+    "path": "database/migrations/2026_10_28_000001_index_reconciliation_evidence.php",
+    "sha256": "a81ae17d1432287804bc0332cfd0c8f469b0f45e81b6b39506d02ba9a849e31f"
+  },
+  {
+    "path": "database/migrations/2026_06_02_000018_add_bir_document_templates_to_ledgers.php",
+    "sha256": "d3c6b6fa19285175c3598a5e1966fe31c49618b79d58d19ad59911ce183259c2"
+  },
+  {
+    "path": "database/migrations/2026_10_15_000002_add_rmc110_compliance_controls.php",
+    "sha256": "6af30072082049c985f1a104cbd38cebd8f7d454969af1a1d0ae29b78e7645cd"
+  },
+  {
+    "path": "database/migrations/2026_10_15_000003_snapshot_invoice_issuance_authority.php",
+    "sha256": "2d3a835c9223af092508a11b43de2b48c49b8428c645e79baaad5872a204296d"
+  },
+  {
+    "path": "database/migrations/2026_10_18_000005_create_verification_upload_sessions.php",
+    "sha256": "9deef38d86e1d48c0bd198455ea01653752cb2c712a01b861da10054aa269acf"
+  },
+  {
+    "path": "database/migrations/2026_10_15_000011_create_registration_rdo_mappings.php",
+    "sha256": "ba778f57622daee9ace1ac908298673630adf2f46839fa0353d1e6536998e52f"
+  },
+  {
+    "path": "database/migrations/2026_10_17_000001_document_email_and_smtp.php",
+    "sha256": "c4562d55f736c9d9c7eaf8d49309839cfdb6c6c5eaab154dc335dceaa40665de"
+  },
+  {
+    "path": "database/migrations/2026_06_02_000014_create_business_invoices_tables.php",
+    "sha256": "9365e78b780e279695c730fb49b53586bd25954ab0c0211bfd50095bcd0ce6d8"
+  },
+  {
+    "path": "database/migrations/2026_06_02_000012_create_merchant_expenses_table.php",
+    "sha256": "6df0a0de3768b9405650456280166fc274bb7d191141aaeef274db3c3f86371f"
+  },
+  {
+    "path": "database/migrations/2026_10_18_000002_create_merchant_business_profiles.php",
+    "sha256": "43b0993ee1a966aed1bc76b25898fbb0ad395c05661e08dbac6c927e33653cb6"
+  },
+  {
+    "path": "database/migrations/2026_10_17_000003_backup_recovery_governance.php",
+    "sha256": "7a374a8b044f2c5f26703da2118e26ab997526149730c6127a8bf812b6049c35"
+  },
+  {
+    "path": "database/migrations/2026_10_16_000002_version_internal_eis_preparations.php",
+    "sha256": "1a3dd48e0a7d43fa0aa665922f712d8279339ebcb0cd53c5a21b03648d15c8be"
+  },
+  {
+    "path": "database/migrations/2026_10_19_000003_separate_invoice_branding_logo.php",
+    "sha256": "cee8f4f805290d02fa7d487bdd7558797293b6c515c74ffb5f4edf52d9fa16d5"
+  },
+  {
+    "path": "database/migrations/0001_01_01_000000_create_users_table.php",
+    "sha256": "272e0ba15f8d5384e615d3b2991cd9236c7f747c1d8143b676487f29c5f1407d"
+  },
+  {
+    "path": "database/migrations/2026_06_03_000001_fix_tax_graph_edges_index_lengths.php",
+    "sha256": "3b59e7f657a72560b9b307a1cfe048472c5153916f641b4121feb5a6329ead77"
+  },
+  {
+    "path": "database/migrations/2026_10_20_000006_eis_preparation_batches.php",
+    "sha256": "abecd18fc38058acd02f121f0f83e93e2c706c14f098f7edb8ada71c34967bfe"
+  },
+  {
+    "path": "database/migrations/2026_06_02_000007_create_tax_intelligence_tables.php",
+    "sha256": "6764ceddf58b4079dbf93b5d71682fe2a5dd6f6e49e80f5d1f129724956f5121"
+  },
+  {
+    "path": "database/migrations/2026_10_15_000005_create_business_registration_records.php",
+    "sha256": "1de0d70b29681e8fb379932e696c02c75c917ea1ccf24566c16701653c006df6"
+  },
+  {
+    "path": "database/migrations/2026_10_19_000001_create_account_mfa_devices.php",
+    "sha256": "15533682a8d16bd9664f2426d509a2cbf6fdafb910414e98776d20f8c585d26d"
+  },
+  {
+    "path": "database/migrations/2026_10_15_000009_create_reconciliation_reviews.php",
+    "sha256": "5b4eee31830634c68b6fcbe65ba19d0a3285b7e7bd6bbe2307f6c29398b1a32c"
+  },
+  {
+    "path": "database/migrations/2026_10_17_000011_merchant_team_access.php",
+    "sha256": "9f6d3d7befe259368b160d3ae4c834bcf5fa3c201321658ea0ab17eb3fbac66a"
+  },
+  {
+    "path": "database/migrations/2026_10_15_000015_add_device_session_binding.php",
+    "sha256": "8ecbb690025a6a9520d43e7e1e2a248ad6734c9c0f1e3f17c198365d467e4a11"
+  },
+  {
+    "path": "database/migrations/2026_10_18_000013_default_transaction_minimum_zero.php",
+    "sha256": "7b696ff2aac07cc22102010a464b22da4be50506a52e152289347cae10cea218"
+  },
+  {
+    "path": "database/migrations/2026_10_17_000008_merchant_branch_registry.php",
+    "sha256": "dfe3260f41d847fb6e6f0651611b8941ef0cda626f4caead0bdda5f90b9e6cc4"
+  },
+  {
+    "path": "database/migrations/0001_01_01_000001_create_cache_table.php",
+    "sha256": "2ca8398390ecef8eaf72aeac7fefce67f7de631b6f2ec7b7081c8db8953215dc"
+  },
+  {
+    "path": "database/migrations/2026_10_15_000006_add_registration_address_details.php",
+    "sha256": "2807240ef17a1cd0a57fb175923ea5171a01c01c0cbf5406fefb4e8d5592229b"
+  },
+  {
+    "path": "database/migrations/2026_10_20_000005_submission_outcomes.php",
+    "sha256": "3d30213707f58fb2a8d4bc427ace8fdad0f1898dc31bf9d890988124868153b9"
+  },
+  {
+    "path": "database/migrations/2026_10_17_000005_customer_invoice_matching.php",
+    "sha256": "40705b6fe89ef71df5f12c75df8dd67c3e3cfbe0be9ea23b883237ec6ba747f3"
+  },
+  {
+    "path": "database/migrations/2026_06_02_000002_create_enterprise_nuers_tables.php",
+    "sha256": "8bc52bdbbc5a5b2276829fee2472f407d31013bbd947651d1efefaf57b6c6f32"
+  },
+  {
+    "path": "database/migrations/2026_10_17_000010_merchant_wallets.php",
+    "sha256": "2483728813e37474ebbe8b338b618c5671ebea301718ad330dabc6c8b2043df4"
+  },
+  {
+    "path": "database/migrations/2026_06_02_000009_create_system_health_checks_table.php",
+    "sha256": "067d4c5e55f314a5e6be670c6c2cdf90ab81ca0cd05085e27325433f4724378f"
+  },
+  {
+    "path": "database/migrations/2026_10_15_000008_create_support_chat_tables.php",
+    "sha256": "c97f0a0ff37c2ac85c10a2464e86a0f59759cfe8a6d28d9f191eca6be8b224c2"
+  },
+  {
+    "path": "database/migrations/2026_10_17_000002_platform_notifications.php",
+    "sha256": "11bcc62f814a80bc3385ba1dd11b5d0778c1e0ce4cf20ff56efab713d814e914"
+  },
+  {
+    "path": "database/migrations/2026_10_18_000001_fix_registration_verification_deadline.php",
+    "sha256": "2924753032f95f1c20f0c4d9312809931a0ce7271182528d15d8043a6bc6de74"
+  },
+  {
+    "path": "database/migrations/2026_06_02_000015_create_business_api_integration_tables.php",
+    "sha256": "732eb573ec1497b287435a17f787e49b9b65ca9f34f05bffe67f8c3547e11567"
+  },
+  {
+    "path": "database/migrations/2026_10_16_000005_durable_ingestion_and_operations.php",
+    "sha256": "3b108a285e88a5c1ed2b598ff74c56232dfb482f83a3e3a00c72e50138be6ee3"
+  },
+  {
+    "path": "database/migrations/2026_10_19_000002_add_api_receipt_customer_email.php",
+    "sha256": "a7d9f984de867c0efd35caae6d40de55e68af82b38c121143fe6938d038c67eb"
+  },
+  {
+    "path": "database/migrations/2026_10_18_000012_add_statutory_sales.php",
+    "sha256": "f6c08d19623b20eb5e8e09da9425fe893ed726530da7c85279f581a8bef15589"
+  },
+  {
+    "path": "database/migrations/0001_01_01_000002_create_jobs_table.php",
+    "sha256": "7c9c712adf4091c87bf2612f4d0dccdfa1df4501553e4ac068b83d7bd5462fa5"
+  },
+  {
+    "path": "database/migrations/2026_06_02_000006_add_super_admin_enterprise_dashboard_items.php",
+    "sha256": "6282500a972b8c10e22f68139555251351532ee8ba5bf4002de867cb0d791296"
+  },
+  {
+    "path": "database/migrations/2026_06_03_000002_add_api_token_to_users_table.php",
+    "sha256": "ac335011702032cbf663f3fb679e2708b45b8430709ecb8ff494ec331da87ceb"
+  },
+  {
+    "path": "database/migrations/2026_10_20_000002_create_operations_observations.php",
+    "sha256": "a75761767a0528ced8b65668d83f7a8737a17914bf94d5b0292768d273851dda"
+  },
+  {
+    "path": "database/migrations/2026_10_18_000009_add_api_sandbox_and_pricing_threshold.php",
+    "sha256": "dcb49c00419a78152cf31bb09d2ef85c17cb5618982e4a26c0978823457ac28d"
+  },
+  {
+    "path": "database/migrations/2026_10_15_000014_import_existing_integration_metadata.php",
+    "sha256": "6bd0264deb3d704a9a0bdd9c7e081dde99c9e7043b1104fee064c0e4bede7218"
+  },
+  {
+    "path": "database/migrations/2026_10_15_000001_add_google_id_to_users_table.php",
+    "sha256": "bb78e26b5a169ce7bf8f7b2d8cb5a78122752d7eca6be69400c94373067ed324"
+  },
+  {
+    "path": "database/migrations/2026_06_02_000013_add_rdo_branch_to_transaction_records.php",
+    "sha256": "40522142f0cd45599d14b53934aaa033f36336db0acf4cd832690a97457c2ced"
+  },
+  {
+    "path": "database/migrations/2026_10_17_000004_merchant_customers.php",
+    "sha256": "b6dd8e29a37ab2345474241e3343f4c7293680e3a25b2ab4c5c313d3e108bdb7"
+  },
+  {
+    "path": "database/migrations/2026_10_16_000003_add_historical_branch_evidence.php",
+    "sha256": "123182569cae93a11cacc5613062955556d9a75a8cda85432b170dd28aacbb46"
+  },
+  {
+    "path": "database/migrations/2026_10_15_000004_create_website_subscription_plans.php",
+    "sha256": "1362ea27282e84897b6d56e082b6437a8fcc1da1c3b864f9337d4213c2e044f1"
+  },
+  {
+    "path": "database/migrations/2026_10_18_000004_harden_source_ingestion.php",
+    "sha256": "10bb00d969b2863477b880025c4c4f1f4eb0c9d8d4e267f195adecdb7cb942c2"
+  },
+  {
+    "path": "database/migrations/2026_10_18_000011_create_merchant_webhook_delivery.php",
+    "sha256": "d8c8d384283636fedc5bd4a19971c61914b01b64ea5b714decd58c64736dc2cd"
+  },
+  {
+    "path": "database/migrations/2026_10_17_000009_merchant_verification_documents.php",
+    "sha256": "27a276756f078abb2b53846b29a5353ed5b6818e3b15fd1a136522681c80cc15"
+  },
+  {
+    "path": "database/migrations/2026_10_18_000006_create_business_review_notifications.php",
+    "sha256": "56a587ced844a66b4105d5868648e2748ebf78bc19e9e76bb93cf62ee93b9514"
+  },
+  {
+    "path": "database/migrations/2026_10_16_000001_prepare_eis_document_readiness.php",
+    "sha256": "2af8a7195dae2ce98a26bf0c81e38812944af723320692298895ac55998f510b"
+  },
+  {
+    "path": "database/migrations/2026_06_02_000008_create_rdo_offices_table.php",
+    "sha256": "8b38a0e1984ea7f884c5d72a71de58285d9e37f63ec59dfa24af2427c36d98c4"
+  },
+  {
+    "path": "database/migrations/2026_10_16_000004_secure_sessions_and_governance.php",
+    "sha256": "23dcdb2250d9b117d380c25a2756a11acacdf01d8cb289a4ed3efb9562856c7d"
+  },
+  {
+    "path": "database/migrations/2026_10_15_000013_create_integration_workspace.php",
+    "sha256": "ed6777c3c8118c4e0860a2de3bbd986aef5a8356a4e6f5ef0ecc41adc308b738"
+  },
+  {
+    "path": "database/migrations/2026_10_17_000012_admin_account_profiles.php",
+    "sha256": "e37d96785196881ebc79d11c0cb4b45d2811e96afeb45c345875e4404a74be01"
+  },
+  {
+    "path": "database/migrations/2026_06_02_000010_create_bir_eis_readiness_tables.php",
+    "sha256": "42ff642bb1dcb4ebed13ba435a937676995032951eeaf372fef14444bd3f399c"
+  },
+  {
+    "path": "database/migrations/2026_10_18_000008_create_merchant_invoice_settings.php",
+    "sha256": "96da518e42a669733ac686f58862100698c694c3ab5766b0c2c4f6d34d7641f8"
+  },
+  {
+    "path": "database/migrations/2026_06_02_000005_add_registration_address_to_merchants.php",
+    "sha256": "3a370bb210b95147587d24bd75c6474b892addd05f45c00b8b2f1fe80d32a099"
+  },
+  {
+    "path": "database/migrations/2026_10_18_000003_create_merchant_wallet_adjustments.php",
+    "sha256": "289bac1e30f3d1b567393aa50476862245dd0c4afaa2d65c4c35b3c0c61ca20f"
+  },
+  {
+    "path": "database/migrations/2026_06_02_000004_add_client_tin_to_profiles.php",
+    "sha256": "dbef45066aafd6e7962be139a63cfdd7f4b785d8fd993b91ba3c74851b222f8a"
+  },
+  {
+    "path": "database/migrations/2026_10_15_000007_add_registration_industry_details.php",
+    "sha256": "db34755b1dffec9cd66eafe92efaa1c4fc0e455ae6b7ea9f66de94be6b7f9038"
+  },
+  {
+    "path": "database/migrations/2026_06_02_000016_add_api_branch_identity_to_business_integrations.php",
+    "sha256": "cfdd4e8b1b01e5149c2599f8d529b3e34efcbedd4bb0862fa11d70665aa43a60"
+  },
+  {
+    "path": "database/migrations/2026_10_28_000002_create_pti_applications.php",
+    "sha256": "5ccc5f699005702bccfdf49c6e9f3c526803de6a81d6db52243ccb2caccac08a"
+  },
+  {
+    "path": "database/migrations/2026_06_02_000001_create_nuers_tables.php",
+    "sha256": "df0bbd9c458b40b331a9a27fb93bcc1d907492e9fa9fbad35911095801ec74f3"
+  },
+  {
+    "path": "database/migrations/2026_06_02_000017_add_logo_url_to_merchants.php",
+    "sha256": "282e334c19294124f38bb07a05c39f8b8472aa185ea218befac8a5d00e4a846f"
+  },
+  {
+    "path": "database/migrations/2026_06_03_000018_add_profile_photo_url_to_profiles.php",
+    "sha256": "40467f5d39decf33603eea8596b1f4042235166cd26a801ef80cb0267ae53825"
+  },
+  {
+    "path": "database/migrations/2026_10_16_000007_scope_expenses_to_original_source.php",
+    "sha256": "b9e8eb094506d684cbacd2df8927f3bdbf513ef3aec486830ab7c59989449b94"
+  },
+  {
+    "path": "database/migrations/2026_10_20_000003_create_ledger_read_model.php",
+    "sha256": "d316de959649fe585575db1f2c288569938e077fbfe2fc051c1f90bbc89176e2"
+  },
+  {
+    "path": "database/migrations/2026_10_18_000010_add_account_connection_profiles.php",
+    "sha256": "6d1eaa0f30ac7416cbe497d3cfcdfd0f2b6bc8a47e66d602b15f0da45014743a"
+  },
+  {
+    "path": "database/migrations/2026_10_15_000012_create_taxpayer_authorizations.php",
+    "sha256": "908ae293de9e546006941f0c170e5a31b7194cc60e1daba7b814ec347b150f56"
+  },
+  {
+    "path": "database/migrations/2026_10_17_000007_single_transaction_pricing.php",
+    "sha256": "b6db8121f20193c4e8b6cd7051b1a7818ebbe5817ea6a3fc4a17cf56b263a5db"
+  },
+  {
+    "path": "database/migrations/2026_10_18_000007_add_structured_branch_address.php",
+    "sha256": "fe2330fea3fa3d8f6b120808ade4ee26afaefa8adbc1b678d4a4a9e42c4cc941"
+  },
+  {
+    "path": "database/migrations/2026_10_16_000006_signed_webhook_outbox.php",
+    "sha256": "315a63a121c76a2240de5b2af781f4a461bbc8c995eaabbf74d914cf9f14c781"
+  },
+  {
+    "path": "config/auth.php",
+    "sha256": "c7e204e9785c9f596d66fb884b493f658f2327f157646bdb4088efd6b3a7773f"
+  },
+  {
+    "path": "config/app.php",
+    "sha256": "8bd6a7628d2b83071156c0116e4a1092c291b2be1e76643174db715efaea8a7a"
+  },
+  {
+    "path": "config/mail.php",
+    "sha256": "d8e9573e9353b7f4b401f24eb37f2988fabbf5d715fb95eab759e3d9ddcaedab"
+  },
+  {
+    "path": "config/services.php",
+    "sha256": "65b08621160db3e0ba58864503e1e7f69f3f13bfdfcdec46989338df3f52338c"
+  },
+  {
+    "path": "config/database.php",
+    "sha256": "06759b7b36b8641e9025fe03dd728970c4cb02d5b58ff709cbb0649987b4bfc2"
+  },
+  {
+    "path": "config/cache.php",
+    "sha256": "b8bcf382283330b94c0a602ff06452de819041ea709e28eea5065d51d1d7d085"
+  },
+  {
+    "path": "config/session.php",
+    "sha256": "f2e75e189021597e29940c0859c00c3088ec591e403768fff5143c5687a80f59"
+  },
+  {
+    "path": "config/queue.php",
+    "sha256": "6101774da7c8b79af46d0028f2b8b31a484c3f7eda10b76e5b27b6093ad364a4"
+  },
+  {
+    "path": "config/trusted_proxies.php",
+    "sha256": "7a766f35cdd9401c67998f0518558d12a217339479e57015ea9f70493e2d7c99"
+  },
+  {
+    "path": "config/document_pdf.php",
+    "sha256": "c066905ed90f65197b067e69a83cc9d4daee39a8dc03a3e39a62601ac0995c39"
+  },
+  {
+    "path": "config/bir_eis.php",
+    "sha256": "cbdaa2973784aa2dcdee0de85f1aca9429a81ff6f872526d73be5a57a4b4d596"
+  },
+  {
+    "path": "config/notifications.php",
+    "sha256": "eee0fcfd6c1614a831936ea880220d206b1f1b38351f2627bdda990d8ca669dc"
+  },
+  {
+    "path": "config/operations.php",
+    "sha256": "df7c65c6de77ae7a5f36ac16de3a3e0d1992960021eef6974978de0d1d170d05"
+  },
+  {
+    "path": "config/infrastructure.php",
+    "sha256": "fa6248a3a719ccf3caba9b1cd9ba7e0de658d49dd8208e772f072688fc0fcd24"
+  },
+  {
+    "path": "config/bir_compliance.php",
+    "sha256": "6a3eda7f3c98f73592529d2311ee7c6ab484b37b450823ea469438b9a3ea1c9f"
+  },
+  {
+    "path": "config/security.php",
+    "sha256": "e0eb7ef6790150cc64adc26870b468254a8d7fb63096af982f4b610d2e0f2c3f"
+  },
+  {
+    "path": "config/cors.php",
+    "sha256": "99c7dd463518bd7a73eceef80fbdd5fa8152dcde046d2a28dea6bc1303354f8b"
+  },
+  {
+    "path": "config/logging.php",
+    "sha256": "299ec1ba5b5a803c8e20f666ae7628e442e856cc2ff7ac9e2adb17b97e8ad63b"
+  },
+  {
+    "path": "config/filesystems.php",
+    "sha256": "9b0fa646d2132a79b58d4f99db962578a94349b732c42743d1b35ffb63619c05"
+  },
+  {
+    "path": "routes/operations-console.php",
+    "sha256": "c6684466fd0c96198afb27fcd0a7b85687005b60e6516e0f467cdd67e0d55ed6"
+  },
+  {
+    "path": "routes/console.php",
+    "sha256": "3f7690d9fd597ec5bbfba72685c260805cd1fbe46f1ec598101987ebe57a45dd"
+  },
+  {
+    "path": "routes/web.php",
+    "sha256": "2adb19ddaa5310b6e0ab7ca31ff93d811887765d107c95ce439d5ed8ff588993"
+  },
+  {
+    "path": "routes/infrastructure.php",
+    "sha256": "e17c70ba14dbd8928320661fe3c90c339299b37730fe0cd3b238099acfd3a9b0"
+  },
+  {
+    "path": "routes/api.php",
+    "sha256": "0f46953a33422557191d7ed6d80345380dd68d4899af8ae24fc735a74455f30a"
+  },
+  {
+    "path": "routes/infrastructure-console.php",
+    "sha256": "bd1afd76b77e11f1b09fe7281025d644fad4f1c505cf30831af95ef3cc7b9ad1"
+  },
+  {
+    "path": "src/typography.css",
+    "sha256": "7897ce3f92e4582a1cf88118eac9b3154f59ffe7da0963999b8f4e7b8af75008"
+  },
+  {
+    "path": "src/App.tsx",
+    "sha256": "ee19491ee5d0fe414ee86b94b912126ee720a1aa6944630fab0a5ef8d83fbe89"
+  },
+  {
+    "path": "src/main.tsx",
+    "sha256": "b5a094795e03f2d6efb0311e6b5eb12a0764d2c88815b6a6c67c46b10b304dbc"
+  },
+  {
+    "path": "src/index.css",
+    "sha256": "0c839dd08d2782c4c3a8489fa66875bd1cc66e3232f87b1a00069c015c1a69e5"
+  },
+  {
+    "path": "src/components/theme-provider.tsx",
+    "sha256": "7e9140cbb4471cbcf20f9e6348406a0a9f5f00689982f6f6fae7a63f44d063e3"
+  },
+  {
+    "path": "src/components/page-boundary.tsx",
+    "sha256": "330115b95d04cc5b98e6c5bfe58fc587de42eb96458a74287c702108f6fc0232"
+  },
+  {
+    "path": "src/components/mode-toggle.tsx",
+    "sha256": "e29f750e7de8b42cd3d53d24b879cbf31f0dfbaf0f9e400c5a46b31900b57874"
+  },
+  {
+    "path": "src/components/ui/aspect-ratio.tsx",
+    "sha256": "3ce0684d13f8572abbd3c46fc0beb613ad2d0821ab978480f8576c9a394f03d5"
+  },
+  {
+    "path": "src/components/ui/alert-dialog.tsx",
+    "sha256": "160251f86b7cffcd8a1e65073abebe6e573cbcb66ea6f8ceae8611d47ce064cb"
+  },
+  {
+    "path": "src/components/ui/pagination.tsx",
+    "sha256": "374ad135c3d4ff3ec080a0009cd9745cdd0e12faa89d2b0e86074f11e5127fd1"
+  },
+  {
+    "path": "src/components/ui/direction.tsx",
+    "sha256": "cf4e22f59e0c253b9249835ae11a9d755558a9d02a86316f41ff29dbd6d62406"
+  },
+  {
+    "path": "src/components/ui/tabs.tsx",
+    "sha256": "3145f1ab7d7f7894c9ae3ecf7eb4958efe2ef9df23b13493b393147c161caf78"
+  },
+  {
+    "path": "src/components/ui/button-group.tsx",
+    "sha256": "784c89d8ee683e1bc972ae69e6ea8225a7f63abe22aa1b5fc3423ae8a2a399c0"
+  },
+  {
+    "path": "src/components/ui/card.tsx",
+    "sha256": "c48dd3b96be90a7066f1aebf294f0af9d00ebcdc367d5d4aca55429ade570c1c"
+  },
+  {
+    "path": "src/components/ui/slider.tsx",
+    "sha256": "4f4019262b92381acbe7ffac17d4b0493ddd1a4da7d3d9dd8f5d12b350378813"
+  },
+  {
+    "path": "src/components/ui/input-group.tsx",
+    "sha256": "69e54b2d28472ad2c26af0552d9bf718a137464373d593082046ac2d5b347503"
+  },
+  {
+    "path": "src/components/ui/popover.tsx",
+    "sha256": "d871124f5e867a64f4e3da98f290cd3517660a01b458c42831a8171fb74eff3f"
+  },
+  {
+    "path": "src/components/ui/progress.tsx",
+    "sha256": "3b6024d4df68a7a5818d366f2da015767cb0b6da11658caed721c52e12c9e95d"
+  },
+  {
+    "path": "src/components/ui/input-otp.tsx",
+    "sha256": "161946daa89f0eda2575b9271c0494e35807c4ffb55598a49f67160c17fec299"
+  },
+  {
+    "path": "src/components/ui/chart.tsx",
+    "sha256": "84b423d5fd7e645c3c259d8cde84765dcc4e185450dcb3494a39a20f935bf5c7"
+  },
+  {
+    "path": "src/components/ui/hover-card.tsx",
+    "sha256": "a5c05424464c8d3dc2cea0c3c6021c74d15b94a1a86e1d2f6824603892385620"
+  },
+  {
+    "path": "src/components/ui/sheet.tsx",
+    "sha256": "2c763752bf9dda1c53857be62a3506da4fc00651a5676fdad9f6fc0d10fde851"
+  },
+  {
+    "path": "src/components/ui/field.tsx",
+    "sha256": "ba67d76f017ac059fc86cf8c344e0b2991c4322d3619e125498c19b87f6eefbd"
+  },
+  {
+    "path": "src/components/ui/scroll-area.tsx",
+    "sha256": "8bd9d986b2844c9a87de825c6de4787b6739b36c3dc9a05ccf3eb107160e4043"
+  },
+  {
+    "path": "src/components/ui/resizable.tsx",
+    "sha256": "b1bb260a4dcd86f948be89f28fd437286216f39fefd78b9f650a318f9bb7362a"
+  },
+  {
+    "path": "src/components/ui/label.tsx",
+    "sha256": "a9e5ce00e4809f1f6804d0e48de09bf364bddc424947c25d2a276c2fc6514c50"
+  },
+  {
+    "path": "src/components/ui/sonner.tsx",
+    "sha256": "13ccc9b0fe4248e622f83a1d3b2f0566b72b5e04162d7d0c8db8945ecc71b55f"
+  },
+  {
+    "path": "src/components/ui/navigation-menu.tsx",
+    "sha256": "889d358a77de88e9cb6f39ea4895ea4c76eaf01d731b74e44f1c41e97a78a044"
+  },
+  {
+    "path": "src/components/ui/accordion.tsx",
+    "sha256": "9c01f8d794065ebc8bc9ba81feb525c022b1c168fa3120bd2c81bbf6a9a1be95"
+  },
+  {
+    "path": "src/components/ui/drawer.tsx",
+    "sha256": "cb6eaf58eb0757ca91af284e5d925b89a42ad7eb19cb3f44c575a3487aa9350f"
+  },
+  {
+    "path": "src/components/ui/empty.tsx",
+    "sha256": "ae95bdcf367a076ae02e7925f14522a148798f72d9651749c6d55497dba584c0"
+  },
+  {
+    "path": "src/components/ui/tooltip.tsx",
+    "sha256": "bdabbb2ea5a5d2d2c34573d7698fae93257bc86e15ef0a101968b3149f8c67f1"
+  },
+  {
+    "path": "src/components/ui/alert.tsx",
+    "sha256": "2cc59b5f7bda91c1670884b1bf46bfc8a2a6f226cef184f5762acc037188885b"
+  },
+  {
+    "path": "src/components/ui/switch.tsx",
+    "sha256": "bbab76afa61681c85d39e0323a85d893383bbc0a0e14a72169b6b3ea420a54a7"
+  },
+  {
+    "path": "src/components/ui/calendar.tsx",
+    "sha256": "9070b90788d02dac8b4fa98e0a50c99886e6bea5748ca58ba9cb8cb210c60e3e"
+  },
+  {
+    "path": "src/components/ui/native-select.tsx",
+    "sha256": "85d80227416d9a4d0d851027a59eeb30d2cc28a7a4596dcb423904db7a93ca14"
+  },
+  {
+    "path": "src/components/ui/breadcrumb.tsx",
+    "sha256": "d4c0831bba2212e778248f54a6ace6ef378df8bba4616d1abf27787a31eabae5"
+  },
+  {
+    "path": "src/components/ui/radio-group.tsx",
+    "sha256": "fe5ce39636d0818c2bf9c4eebddff893d1225fa2c81b5fa4bb8cbb39a8c913ce"
+  },
+  {
+    "path": "src/components/ui/command.tsx",
+    "sha256": "361193df1e3d64a9e9b5048f045264782fcb387aab3f00f2b805fdcbf538b16a"
+  },
+  {
+    "path": "src/components/ui/item.tsx",
+    "sha256": "6e2144d6d87142dbbe56d568810bf546318c8aa661447ebb0d76ebbf382cb45f"
+  },
+  {
+    "path": "src/components/ui/toggle-group.tsx",
+    "sha256": "d9f7d2e76656b6ffb64f414d99b6b4950ef1f584f5ba58e89ad1ed6c96f823f3"
+  },
+  {
+    "path": "src/components/ui/avatar.tsx",
+    "sha256": "58a846bf1617b94b9681921db9b8461d0145f311424663d11678a06b6153cb34"
+  },
+  {
+    "path": "src/components/ui/menubar.tsx",
+    "sha256": "196ee99e178886faa3b6e5b563f61bd31b5ff1a7da2b6c06ac124c3e462a172e"
+  },
+  {
+    "path": "src/components/ui/kbd.tsx",
+    "sha256": "6088c3a5432338b1719c17e9b5d0e1fa74fd1f66060f248fc88909d33a82cd13"
+  },
+  {
+    "path": "src/components/ui/dialog.tsx",
+    "sha256": "1eef94a2bb44fb1a1f132c9538eacca61cb9555e085ee285e5f23d108a931fb0"
+  },
+  {
+    "path": "src/components/ui/badge.tsx",
+    "sha256": "46a0de5224f6a5d5d63d45246534288518dce888f031064bff925bbc7fe6ad97"
+  },
+  {
+    "path": "src/components/ui/sidebar.tsx",
+    "sha256": "94ee7e33bfe42e2907c6d67d58f27be96225190c6f92b5de06951103d4f11684"
+  },
+  {
+    "path": "src/components/ui/table.tsx",
+    "sha256": "cf65cec1e11b263e994c08f14714cacc32ed88e3c7354da56824a6b4579b945f"
+  },
+  {
+    "path": "src/components/ui/separator.tsx",
+    "sha256": "6da346505c8629a4668420d2a5ca48891383bbe0b0ceb14163537c671879427e"
+  },
+  {
+    "path": "src/components/ui/button.tsx",
+    "sha256": "cc36af0f8b5019c33cc039fbf03bb952a513072b15b55b53c592b78af3e5f4c4"
+  },
+  {
+    "path": "src/components/ui/toggle.tsx",
+    "sha256": "53c2809dbd3f6d81d67e4b365a4c440056423e26d3ff518bc61f6c50f4447162"
+  },
+  {
+    "path": "src/components/ui/checkbox.tsx",
+    "sha256": "b23ab9d4deeedf2ac8f512c368361ede681aa383437ef48563a6f9b7dbe95f27"
+  },
+  {
+    "path": "src/components/ui/spinner.tsx",
+    "sha256": "3e6e6e8d37fb4069f8e43e55318f8db06fbc36e6c8be0096da3c9337c1c798b9"
+  },
+  {
+    "path": "src/components/ui/collapsible.tsx",
+    "sha256": "eb4ee2a9ddb3c566c509753a79e4f4c9425d9f8474d55f61f8c8694928b6a509"
+  },
+  {
+    "path": "src/components/ui/dropdown-menu.tsx",
+    "sha256": "98f0dcdae38225b73734aceeb9213dd751fea2c72ea520df31003cd133deac8a"
+  },
+  {
+    "path": "src/components/ui/select.tsx",
+    "sha256": "0b796a108a4eb5ba52d9ad938b7aea36dc56ae66c703a6d0a23dbc24f96daff3"
+  },
+  {
+    "path": "src/components/ui/textarea.tsx",
+    "sha256": "253cdeb487c73beaaccdf47fc163e36e7d5b7ae6ddf09a4f64998a109a112979"
+  },
+  {
+    "path": "src/components/ui/input.tsx",
+    "sha256": "8c4612a7c41319ac5049daa3b34b080f9784b6245c17780eb87c127e58e473db"
+  },
+  {
+    "path": "src/components/ui/skeleton.tsx",
+    "sha256": "ba48dd5be5a6a1378bd4e011028654b5bf419f1e7d20ee4b9f8330c1264e7239"
+  },
+  {
+    "path": "src/components/ui/context-menu.tsx",
+    "sha256": "2cf1fcf59df0649a3e2a126d1df2f639145f6b6bf5689ee54af1f40ab1245017"
+  },
+  {
+    "path": "src/components/ui/form.tsx",
+    "sha256": "de21906156a99540e26b5a47bb3ca7cf43f300d74d44d69ee1a97dfea78c67a2"
+  },
+  {
+    "path": "src/components/ui/carousel.tsx",
+    "sha256": "10c5388b66d98f0c555dad2e5b89b9bc846fbc1a3de101ee8b98abc305ec2c51"
+  },
+  {
+    "path": "src/components/registration/document-review.css",
+    "sha256": "1d93f0e316aa9362517b6e2eec3436288465a3c3beb10efafc6cf82049efa265"
+  },
+  {
+    "path": "src/components/registration/verification-documents.tsx",
+    "sha256": "cc2a7e4bd1527cbd614076cd27c05fb49fbf20a77dd8c332f99113c399b6677f"
+  },
+  {
+    "path": "src/components/registration/industry-picker.tsx",
+    "sha256": "df4d07c24104c497a69b3fcad8fbd2ce66b134984981c00afc290f5c42973a36"
+  },
+  {
+    "path": "src/components/registration/document-review.tsx",
+    "sha256": "86bf1825b6b27eaaf606667d8255f526b449acdd1b1b33e9246e7426f66d6205"
+  },
+  {
+    "path": "src/components/registration/verification-documents.css",
+    "sha256": "8ec2d4de5da5ac64ee89118a3275d0af34d2984d5f439e52f8584965e3591efa"
+  },
+  {
+    "path": "src/components/registration/review-text-field.tsx",
+    "sha256": "f859df5a15b2c3105b71b82fb266ba62602e2ebae0b4ac1beb6511aeb21eccf9"
+  },
+  {
+    "path": "src/components/registration/review-presets.ts",
+    "sha256": "4c5a038134a70b11c7243dc80c0116e413ef81b496831e57c1ac6ecba9020ffc"
+  },
+  {
+    "path": "src/components/registration/searchable-select.tsx",
+    "sha256": "5ddbf304f3fa3ae2d27b0d293cdde0cb33b85d14e2a38b893618fd7cfe96cd0c"
+  },
+  {
+    "path": "src/components/registration/document-types.ts",
+    "sha256": "ebb0e2b322327dc8ca4ce65981b033ed6966bca8e856171bd38bf87b0cd3e04c"
+  },
+  {
+    "path": "src/components/registration/business-address.tsx",
+    "sha256": "61fc200e45a1cf6cd0030ddd6e2a7a4a6a0c475e493eb48b01c36339d45e9ea2"
+  },
+  {
+    "path": "src/components/registration/review-text-field.css",
+    "sha256": "bcf9871053eaf0ffd6692ff45afc37fadb64f130612cbf168e60a846c31d893b"
+  },
+  {
+    "path": "src/components/registration/document-canvas.tsx",
+    "sha256": "e9589229b478683d81a12f3e078e02b6ac0558e10c7c73ba1079e52289c3a6d7"
+  },
+  {
+    "path": "src/components/documentation/document-downloads.tsx",
+    "sha256": "e5d6dfa81ba368601c8d8ce01087cca8911eb1f010226974114e10d3928f3d47"
+  },
+  {
+    "path": "src/components/documentation/document-downloads.css",
+    "sha256": "6a20d4fab464df6930277de328f8792d138efc5ec7ac48f0969a0d6a2e22b0cb"
+  },
+  {
+    "path": "src/components/branding/powered-by-logo.tsx",
+    "sha256": "3755858974ca187453c92dbd022f08a48bef75da151e3a26c9df19853fcc936c"
+  },
+  {
+    "path": "src/components/enterprise/enterprise-dashboard.tsx",
+    "sha256": "c3ccecb53a9497ab6cfe1a2e5c93b9bf4d709fb547d86f9149861e3500d06c13"
+  },
+  {
+    "path": "src/components/enterprise/enterprise-shell.tsx",
+    "sha256": "649bad6d38daa46528ef37b6bf9c990ba6378970b2f995808f7eb3a800f9d99f"
+  },
+  {
+    "path": "src/components/enterprise/enterprise.css",
+    "sha256": "29e1f6307a9749071d24f5670b5b6f64da0b85d922e6d279123e5277918f0d87"
+  },
+  {
+    "path": "src/components/enterprise/software-identity.tsx",
+    "sha256": "7216a4c8b993c850a42e83fe8d59b03c7ad93b152d2937dbf9b3c8832d7350a7"
+  },
+  {
+    "path": "src/components/invoices/bir-document-preview.tsx",
+    "sha256": "9b7f8e9cf7e4b05a304090584da74d7e7408f06bdad179b41cfa91495608da61"
+  },
+  {
+    "path": "src/components/invoices/invoice-customer-picker.tsx",
+    "sha256": "9ff006edd2c1c17e9e2e205c89ab190744a27242824e6e0e50244aaedf83338d"
+  },
+  {
+    "path": "src/components/invoices/electronic-document.css",
+    "sha256": "c6d04328acf1369bfbf66d4f5c2d8da8427274332288cb45268eb8bd6c080ba2"
+  },
+  {
+    "path": "src/components/invoices/sales-benefit-form.tsx",
+    "sha256": "176150654f372c37f9efe6b3b24c9262098b8a19c57c97d4c3769dd126992375"
+  },
+  {
+    "path": "src/components/invoices/document-copy-actions.tsx",
+    "sha256": "a0e662cb4a27538feb9dd57be11e787d10c446a86cea5e2e2a02357cf9c69453"
+  },
+  {
+    "path": "src/components/invoices/eis-readiness-panel.tsx",
+    "sha256": "c5166acdef3774d0645f6751c835c8e342163339184c7b5d1582a672f233add6"
+  },
+  {
+    "path": "src/components/invoices/export-documents.tsx",
+    "sha256": "a045145e77f20d7a37272044189dd2d8f1ad9e79678536cc6908cd86f7348d3a"
+  },
+  {
+    "path": "src/components/invoices/official-receipt.tsx",
+    "sha256": "84baa758bd254bc1eb2a23a793a55e5f8fef6954f39b70b383762b67a72c9cb0"
+  },
+  {
+    "path": "src/components/admin/registry-row-actions.tsx",
+    "sha256": "7a3180acd5d6bdab818330e728ae6fd91837190f34ef37b5f164701aa48f5b4a"
+  },
+  {
+    "path": "src/components/admin/submission-attempts.tsx",
+    "sha256": "9abee5ca598ff275a12eb43b776c507b07418498b2138bd63450ddcd95af3dba"
+  },
+  {
+    "path": "src/components/admin/business-review-email.tsx",
+    "sha256": "4cafef54774a38d9602fd9e746a1399cc962f58231997461880a61c8bf270ceb"
+  },
+  {
+    "path": "src/components/admin/bir-wire.css",
+    "sha256": "0decd2ce1c8504a3e0442858a1096be4acb4aae18dfd8010c037ed0f576a2adc"
+  },
+  {
+    "path": "src/components/admin/integration-source-profiles.tsx",
+    "sha256": "51913d2596721d836fdc6bd2e50fe61bc04dd6fa1163ea6bca579b3ee4511e30"
+  },
+  {
+    "path": "src/components/admin/business-review-email.css",
+    "sha256": "2adc99e9a2e1736b955abee34cf5aeecb300dd9e1023ec74cc64f1aa546d3600"
+  },
+  {
+    "path": "src/components/admin/bir-wire.tsx",
+    "sha256": "6820857207b5e4f60c87b6971c9f83c2be12f4613f1456f38eeb5b506368d117"
+  },
+  {
+    "path": "src/components/admin/submission-attempts.css",
+    "sha256": "0121028543c656f837e98f9aad9c24b30ca8406ef05d4ae489d097c9002735f7"
+  },
+  {
+    "path": "src/components/admin/financial-summary.css",
+    "sha256": "389240a84b2026411a2bd8ae0b84d772a6d1fcafc132995423ee393bcaa60adf"
+  },
+  {
+    "path": "src/components/admin/registry-financial-overview.tsx",
+    "sha256": "fc5ed3767cb7bf65821d00a4027fb2375e79676b1991f515d1a6d9d70ac6a1d7"
+  },
+  {
+    "path": "src/components/admin/business-wallet.tsx",
+    "sha256": "615f3518ed3e3d339554d7fe070d7d5c87a02cffad39da916a354b8563481949"
+  },
+  {
+    "path": "src/components/admin/merchant-connections.tsx",
+    "sha256": "5f677bb3228cf2f532d9f09c03328c0cb53421346c916caa731a6bc2aec76fb2"
+  },
+  {
+    "path": "src/components/admin/merchant-connections.css",
+    "sha256": "8137da0b2f05bfe5088f616401339f5c3632a91a00491c4c0a7a83461c2379e7"
+  },
+  {
+    "path": "src/components/admin/registry-transactions.tsx",
+    "sha256": "7177d3743e5acbc6347cb5d2490f49edea8af3cd3f5faba4e5cdc5b1338009e0"
+  },
+  {
+    "path": "src/components/admin/financial-summary.tsx",
+    "sha256": "aa58f8fa05cce960e13540eeb77ecfc1b5dc99e29801a10aa8b01e211ae239e1"
+  },
+  {
+    "path": "src/components/admin/transaction-evidence.tsx",
+    "sha256": "2d811e370851c95b6496c91ccabe2c75be7fccb59dbe68948868619890c30914"
+  },
+  {
+    "path": "src/components/admin/business-wallet.css",
+    "sha256": "a36284195fea9be05569f23ec57c3af24737c69c37fcd5f9300819c30b443266"
+  },
+  {
+    "path": "src/components/subscriptions/pricing.tsx",
+    "sha256": "b1db340b06267d82c3dcec5e3800fc2e3c271a91b2cf0f91ddcf7b4acd11c92a"
+  },
+  {
+    "path": "src/components/layouts/auth-shell.tsx",
+    "sha256": "7db00dfc8b965f2e50a90a5e7276e27054b78827438e712c13573a20f2cffe5a"
+  },
+  {
+    "path": "src/components/layouts/dashboard-layout.tsx",
+    "sha256": "2194a80860380ef64b5c6b77524ca7ada714a62bcf2f0bd574513bc05b160cb1"
+  },
+  {
+    "path": "src/components/support/chat.css",
+    "sha256": "536350d2aa2860c3c836c2f398527101f1fdd3345c9d885c608a59a85f7fa449"
+  },
+  {
+    "path": "src/components/support/chat.tsx",
+    "sha256": "ea844e2036b6215f792f760e07df66b3c039397d6352067c97311ea7e5030fb1"
+  },
+  {
+    "path": "src/components/reports/export-report.css",
+    "sha256": "178065a5eddef0ae9fe2992aab5fa55885d5292e42411804fac96825a826bf79"
+  },
+  {
+    "path": "src/components/reports/export-report.tsx",
+    "sha256": "c49fb040877e4a7c81dca4f1b9c10f168f6d09c654113b555cc5b5b0b767cb1f"
+  },
+  {
+    "path": "src/components/merchant/business-profile-image.tsx",
+    "sha256": "6bac6bd53afa9170a58720245bee74ebc5ec56dbcb027281e6f3ab8a5c916a35"
+  },
+  {
+    "path": "src/components/merchant/webhook-panel.css",
+    "sha256": "579c5b3a5e44c6d7b5898e57b604f856cab847bb846a09d4ad09a1c719271ebd"
+  },
+  {
+    "path": "src/components/merchant/environment-records.css",
+    "sha256": "ed8be6dc8aee83f3f5da8dd181a1dbc273d82223dc7dc5b35bbe458f9a5660e8"
+  },
+  {
+    "path": "src/components/merchant/integration-receipt-guide.tsx",
+    "sha256": "0bcc4a628fa92ceae9cc8413d299e0b2cd39e2a7a0311f2c7eac064e797f982c"
+  },
+  {
+    "path": "src/components/merchant/business-profile-image.css",
+    "sha256": "172a8fb226484477783fe5cd6f0bd8c48390e3ca867dc96af93217cc9ce6db0b"
+  },
+  {
+    "path": "src/components/merchant/webhook-panel.tsx",
+    "sha256": "723f55511df7b0cd77af3392391b79d03944da0229639c5f4bfafaed9ad82983"
+  },
+  {
+    "path": "src/components/merchant/environment-records.tsx",
+    "sha256": "0ffc0c3c3fd5f05d479cc7c7d4f69d8cef9c1e36b27ae81d54434dca7379a742"
+  },
+  {
+    "path": "src/components/merchant/records-workspace.tsx",
+    "sha256": "e18354cdfa1ad6985d231586f7f69c7adfa04cd084ea13bbf8a04b4b78bdd16c"
+  },
+  {
+    "path": "src/components/merchant/profile-changes.tsx",
+    "sha256": "b87795cbf71d4519cc003f4fbeba06452dde14bfc5fae93ffca3c46298441b8e"
+  },
+  {
+    "path": "src/components/merchant/mfa-devices.css",
+    "sha256": "d437fc44da81ab9ccc214928fc4ae5772c3a746c3b5c69e96a01a82aa18f8c19"
+  },
+  {
+    "path": "src/components/merchant/source-profile-panel.tsx",
+    "sha256": "d37cdee92ca2fa479cb3c098a3ac14dbe8a4ab042efef2c55bbe3ff6de9cd8f5"
+  },
+  {
+    "path": "src/components/merchant/source-profile-panel.css",
+    "sha256": "2a3559067f248c75a78c8ae881b0c701955796aac47c451f4e52b085a9064d56"
+  },
+  {
+    "path": "src/components/merchant/mfa-devices.tsx",
+    "sha256": "d5627690fe496196046cb376dde3f39a9cce093b800fab30d7581b2e89c061db"
+  },
+  {
+    "path": "src/components/merchant/client-queue.tsx",
+    "sha256": "2ccd25f0aa501ff55bb4b8e9bf5b44d24b674e3b8204195879ffd4cf5dbd2ba4"
+  },
+  {
+    "path": "src/components/merchant/records-workspace.css",
+    "sha256": "52e7fe289072d6e6d2b2ba3366dd51e3980ae4f62ff016c9fc3b758d8b1781a0"
+  },
+  {
+    "path": "src/components/merchant/profile-changes.css",
+    "sha256": "61c3bde09d1c2df469abfe2974810833913ce19b6dbdcc6fe4c9a871633b8f59"
+  },
+  {
+    "path": "src/hooks/.gitkeep",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "src/hooks/use-mobile.ts",
+    "sha256": "ad0936f84f1df79d3697bfbff9c18f8ad58431c1cbaf2359c6a853b0fcc9f28b"
+  },
+  {
+    "path": "src/lib/api-url.ts",
+    "sha256": "223ae3e7ea62c0941737f74fe891e4fc2ccbe5cc05113a134d2e5e303e10adc8"
+  },
+  {
+    "path": "src/lib/eis-api.ts",
+    "sha256": "90995ce4747b1738c987dac558b9e795a79b2545d126d5461e9d91d591c46cc8"
+  },
+  {
+    "path": "src/lib/auth.tsx",
+    "sha256": "d6f6c2c3a2c953be7bc7e321c25d009d8639532ac770f65ccc87fb5d05e2423a"
+  },
+  {
+    "path": "src/lib/merchant-expenses-data.ts",
+    "sha256": "57fc560092a9b9a319e56f6a3f126685f48c36ef3bf705cf5966a2ee644b2668"
+  },
+  {
+    "path": "src/lib/transaction-export.ts",
+    "sha256": "02888419f0f0623a31f5f0afc89f0c975e0fe6a7da2356dd22e1d2bea5c57117"
+  },
+  {
+    "path": "src/lib/verification-upload.ts",
+    "sha256": "3da40da9232922ceaeac2e5368a74aacfd9558e76d30b5457ad238e1105921f8"
+  },
+  {
+    "path": "src/lib/statutory-sales.ts",
+    "sha256": "1ea1120b639733d06e15b7eb7fcd4823da3a6caa7370d3e5cc2717798a3e2628"
+  },
+  {
+    "path": "src/lib/merchant-invoice-settings.ts",
+    "sha256": "3bd26a426922abac2077be925768259f24a3297b8795a9a5ea95f7d279302c4e"
+  },
+  {
+    "path": "src/lib/document-pdf.ts",
+    "sha256": "7de3a7c2efc21d113d7cf423781c70815bbdf56ff3597d86db4c6abe733374b2"
+  },
+  {
+    "path": "src/lib/tin.ts",
+    "sha256": "0eb72ff1983fb331832819b6abe7c7511bbbf45f0912ced69e4477f4859beb4e"
+  },
+  {
+    "path": "src/lib/utils.ts",
+    "sha256": "7c8c3dfc0cdd370d44932828eb067ef771c8fe7996693221d5d4b90af6d54f2d"
+  },
+  {
+    "path": "src/lib/rdo-data.ts",
+    "sha256": "c82675abd1430fba37f3c219c4604d2538d9c4d0ec001580631e1b4df501d213"
+  },
+  {
+    "path": "src/lib/report-pdf.ts",
+    "sha256": "ed1ac7f438878deef6847843786af804ad661a00d97c2eb7fdf0b7c56395c060"
+  },
+  {
+    "path": "src/lib/tax-intelligence-data.ts",
+    "sha256": "3725584523a325ea0f3ff66e58b087d42d802d5e84470fafe866970c8ed6512c"
+  },
+  {
+    "path": "src/lib/merchant-access.ts",
+    "sha256": "56e8f7750026616799fd5303ae97bd92de71b2bf94e477d456b1a7bfc96d60b5"
+  },
+  {
+    "path": "src/lib/registration-verification.ts",
+    "sha256": "8cf80a14b5af614e324e28d7e4dbcef718565bcf7f0f9a3066c3754b003db4e5"
+  },
+  {
+    "path": "src/lib/dashboard-data.ts",
+    "sha256": "56beb888c6cf93cd998cbada6306feda32ef1c745053b596051efb3f086b2a0a"
+  },
+  {
+    "path": "src/lib/support-visibility.ts",
+    "sha256": "88f7a583aa4be307183fdc9831acd7621ba608784c8ff5bde0ddbcec72034640"
+  },
+  {
+    "path": "src/lib/invoice-utils.ts",
+    "sha256": "d28ae55545aada15d32b2337bdf4722023d63cb67803da48e25fd05c4fc7b4aa"
+  },
+  {
+    "path": "src/lib/session-store.ts",
+    "sha256": "4e7b87cff738f333e46ae427dd934265c4a0157396fcb412b6d0d742299474eb"
+  },
+  {
+    "path": "src/lib/receipt-pdf.ts",
+    "sha256": "202fa14bfa21c204126a19e785477d2357619cfd3ca1895324275945efebe7d8"
+  },
+  {
+    "path": "src/lib/realtime-coordinator.ts",
+    "sha256": "c5f9af4206967f2fae3cbcb0b01433c88a7d0626f1291f10decde4e0a2af4eac"
+  },
+  {
+    "path": "src/lib/report-data.ts",
+    "sha256": "2635a9e2cdd9a9ec638662a22d9deff6071ae2f670377492890710023aced0ee"
+  },
+  {
+    "path": "src/lib/use-realtime-refresh.ts",
+    "sha256": "9531e49bff95ac07c275b00bdc06e7a09b2d8f2b84599f3628ce5f5667d774f2"
+  },
+  {
+    "path": "src/lib/document-presentation.ts",
+    "sha256": "07e65026d2eb4c1530fdb493359d897e378646efd31baa01de579dc93a283f23"
+  },
+  {
+    "path": "src/lib/supabase.ts",
+    "sha256": "17d5be46b90d42f3e103ed2b9ddefea9ad8180bc08670156f1d71eb057fa28d6"
+  },
+  {
+    "path": "src/lib/rate-limit.ts",
+    "sha256": "e70afe2296065f4aba7bf67a0592707f7028351edfdce16918732820b31ea92a"
+  },
+  {
+    "path": "src/lib/integrations/offline-outbox.ts",
+    "sha256": "f5c27ac89932325a636ded73182e9b374722f757168ce85071ad10a5c6435d71"
+  },
+  {
+    "path": "src/lib/integrations/merchant-guide.ts",
+    "sha256": "2a6d7562f1b18392b331e0e99c6be86be2a6dfef2e898b78e7b86411642f1589"
+  },
+  {
+    "path": "src/pages/landing/index.tsx",
+    "sha256": "4c6cae8c7e35b763ab19952db45c623dee4d78fb4986793803d872125d9e5f2c"
+  },
+  {
+    "path": "src/pages/landing/live-ticker.tsx",
+    "sha256": "36e91cf84ec8f02a0ba9297d13d11af70aaa5422778691596bf43faf9578f7d2"
+  },
+  {
+    "path": "src/pages/landing/website.css",
+    "sha256": "543b0169a43e716fb346d71ede680e2041d0fa569546a1dcfda76752723937cb"
+  },
+  {
+    "path": "src/pages/landing/hero-stats.tsx",
+    "sha256": "40a86968de79e5b943fadf6be3b40a3d0892fc600387787ab4e272738a0214fd"
+  },
+  {
+    "path": "src/pages/archive/center.tsx",
+    "sha256": "26c7d31598831dbe414f2a78c9e1a76c7f6b8a6077cf1307f96ea2c2bd6f0d94"
+  },
+  {
+    "path": "src/pages/invoices/center.tsx",
+    "sha256": "94f66c63199f58d846401f05a7cfbc659acbcf4be7236d6d4ded228ad3925089"
+  },
+  {
+    "path": "src/pages/invoices/invoices.css",
+    "sha256": "6ab684429701f1b49dfed6914c57f6214aba707616727c62cd1def31f0c9c49f"
+  },
+  {
+    "path": "src/pages/bir/rdo-management.tsx",
+    "sha256": "3eaf6a7772f5fbe67b4895b1a2faec0e2d180626b355784669cf41511450773c"
+  },
+  {
+    "path": "src/pages/bir/dashboard.tsx",
+    "sha256": "16a63ccfec867741e7de285414dbceae98c44eb56ce748ec6d1d46685e7fe055"
+  },
+  {
+    "path": "src/pages/accreditation/esp.tsx",
+    "sha256": "167d2505f5fabe05bb66de5986b1eec290d2c5f37299b9fca2531da6c8e00f72"
+  },
+  {
+    "path": "src/pages/auth/register.css",
+    "sha256": "eddf52a00f27bb22bdd36cafdd9ca3ad59842af0c48401c046a438f18a8f6926"
+  },
+  {
+    "path": "src/pages/auth/account-security.tsx",
+    "sha256": "0f47014fc5269f460d337df44a1c849ecaed7a37c2f4e6326dc4eed626265438"
+  },
+  {
+    "path": "src/pages/auth/mfa.tsx",
+    "sha256": "1e668cdbb96d2b938f28780fcb1263cc1be170f537f396563b1fbbdd3d15d63d"
+  },
+  {
+    "path": "src/pages/auth/login.tsx",
+    "sha256": "a275512cdf8d9bbc69855d15e0008011cb614f6dac1ef88afa3af29fe402b62a"
+  },
+  {
+    "path": "src/pages/auth/client-register.tsx",
+    "sha256": "09db0057a6a10f150729df443b4083b0ddad3216b5aba41b5a84f3815c15854a"
+  },
+  {
+    "path": "src/pages/auth/mfa.css",
+    "sha256": "1348164f16572688094f904efc5f5a573274c058f491ab3e2c16dd5a2c53aba2"
+  },
+  {
+    "path": "src/pages/auth/login.css",
+    "sha256": "b79995e313f5352d961aa9bf44dc85975ffa907b35f572b4ca1c7bc1609e5b6c"
+  },
+  {
+    "path": "src/pages/auth/register.tsx",
+    "sha256": "efa8512464fd775b9c4778f87d0ff2f481c61fe30161007da3aac844c1f52bc6"
+  },
+  {
+    "path": "src/pages/auth/account-security.css",
+    "sha256": "9a5138d2fde1839777e36c7f88a1237dfa46370c97bd684d0971835396f05844"
+  },
+  {
+    "path": "src/pages/auth/mfa-screen.tsx",
+    "sha256": "cd3dfc672dbd8f63e9aa073ddf3fe763d67e61dd32ac1f87c713fab224dcecf5"
+  },
+  {
+    "path": "src/pages/taxpayer/businesses.tsx",
+    "sha256": "6c87de387275601561f32a749b6816ea9504118814ae1038d115cbfd8bbb8b3d"
+  },
+  {
+    "path": "src/pages/taxpayer/dashboard.tsx",
+    "sha256": "6a79dfb08e2d8b677aa0ecd9e8a4b244d82a4c678004b693392f295e8521c36d"
+  },
+  {
+    "path": "src/pages/taxpayer/verification.tsx",
+    "sha256": "90f1da15927720f31454edb2638bc253574855ffd93195c902cccd63dd9a6403"
+  },
+  {
+    "path": "src/pages/taxpayer/registry.tsx",
+    "sha256": "6a58f847e0ba3e4f5589e9028a9c628964d8fa58efe36840271e4cd7c1dd7d2b"
+  },
+  {
+    "path": "src/pages/taxpayer/users.tsx",
+    "sha256": "175b247464a394fef5803187689cf5bf80c23bf31637b7b2f8918a9f627908f4"
+  },
+  {
+    "path": "src/pages/taxpayer/portal.tsx",
+    "sha256": "e4f8f3d9be972a07d61a06c82954243de01116fcc267cf0211e4f7e53bc4f0bd"
+  },
+  {
+    "path": "src/pages/soc/dashboard.tsx",
+    "sha256": "04e54ba00204fc8e40c67feb612055bbcc2d1b3a0cad785caa2f7d0abcd6a812"
+  },
+  {
+    "path": "src/pages/soc/operations.tsx",
+    "sha256": "8d9f3625fc4d8283566d8ff2fb73b50af9355973f21e6dd92d244dd97299cc1d"
+  },
+  {
+    "path": "src/pages/bcdr/dashboard.tsx",
+    "sha256": "171c9b6ac1f8655cdd8d96aff5b319f0cca587baaee11d87e12285259cc49dab"
+  },
+  {
+    "path": "src/pages/bcdr/dashboard.css",
+    "sha256": "305dddb7cd9e92b186f00ae1ecddc7edf4796ec94cbc8d12eb4137aab37495d9"
+  },
+  {
+    "path": "src/pages/bcdr/center.tsx",
+    "sha256": "8a2af37d3193fbad031663b1b25fb8be27535eafd7d9c5cf95c50e27cda2cd73"
+  },
+  {
+    "path": "src/pages/platform/architecture.tsx",
+    "sha256": "9ea24f4d24b04a8611b8bef5d0c8f40cee6974db1c9310f98234dbea6045783b"
+  },
+  {
+    "path": "src/pages/authorizations/index.tsx",
+    "sha256": "c9f7e6823158e949844f332d48994a169f28858021fa57e557f7e4e33f3db342"
+  },
+  {
+    "path": "src/pages/authorizations/applications.css",
+    "sha256": "918d1d4248fb49326cd1dd567367c0c2e33aef0476405228b2ab8c92dfc3d368"
+  },
+  {
+    "path": "src/pages/authorizations/permits.css",
+    "sha256": "34ab228499783584c290978415131f82d6481a18c0653fa4a6f314b4666a89d4"
+  },
+  {
+    "path": "src/pages/authorizations/applications.tsx",
+    "sha256": "fd1cc55cdcb454156e4a0b918115f1dd97bfa1a9842825f0982e23bec3997cff"
+  },
+  {
+    "path": "src/pages/admin/reports.tsx",
+    "sha256": "7bf929b2e51ede94dec098ac3680161ecb5148feef715d3e5b2f5c58a4eb0365"
+  },
+  {
+    "path": "src/pages/admin/support-inbox.tsx",
+    "sha256": "78afa28801ef48b1b6d3ecd6fff1e642c655f037e39524e88f7c88b297cacdc6"
+  },
+  {
+    "path": "src/pages/admin/tax-filings.tsx",
+    "sha256": "edd9c9d73a619965e8b3d20bed74f439b2f09cbaa363358ba5efbc3854135763"
+  },
+  {
+    "path": "src/pages/admin/dashboard.tsx",
+    "sha256": "60092279ab53657518c742ad9a1fa14dc377da8dc7dc7fc8c32850ecb651518d"
+  },
+  {
+    "path": "src/pages/admin/transactions.tsx",
+    "sha256": "6b729bbec3df7fa9397314596134d6ef832c431f30774fbd2306e59374f8fddd"
+  },
+  {
+    "path": "src/pages/admin/compliance.tsx",
+    "sha256": "7c21fbcb1b806d7ccc17f5d16c1eb33f7832054a8731a2036b21726f298a4412"
+  },
+  {
+    "path": "src/pages/admin/subscription-plans.tsx",
+    "sha256": "9126d2884f1169b0c47e6bb7e6d9d086cf81957e828b7fc801b1b3be0636661b"
+  },
+  {
+    "path": "src/pages/admin/audit.tsx",
+    "sha256": "8232d50f0384a10f74205836bb33d0b46ce3cd184ca1ff6025b92af71f17d059"
+  },
+  {
+    "path": "src/pages/admin/merchants.tsx",
+    "sha256": "d329428542ceea6f14fe62715add7e42dc281d22eecde06ceb0c05726f0ac212"
+  },
+  {
+    "path": "src/pages/admin/support-inbox.css",
+    "sha256": "379556b7c24727d877e4ab9f310ca8d33c004958c54a9b1ad0d362b04b79a316"
+  },
+  {
+    "path": "src/pages/admin/notifications.tsx",
+    "sha256": "1d869606f61acef88ffe1666c4a1b297b288c53b828b7863d8dc798bc86d10a2"
+  },
+  {
+    "path": "src/pages/admin/users.tsx",
+    "sha256": "8baf312e03de5237fc31e660271e40603e703668ef951efb51be640a2f7b7295"
+  },
+  {
+    "path": "src/pages/admin/account-profile.css",
+    "sha256": "541e7c23249f85a3b9baed71419c7b5bfeadaf9ae982a98c37769dc3bc0bada2"
+  },
+  {
+    "path": "src/pages/admin/account-profile.tsx",
+    "sha256": "ba15e861618b12f11b70abaacb656bfcde83df4dcc6cefc2f15203c3493ff5cb"
+  },
+  {
+    "path": "src/pages/admin/fraud.tsx",
+    "sha256": "ff8752cbaf592d70cf0ca5fa30162eecbf8782398180aa7684d33fad11c68988"
+  },
+  {
+    "path": "src/pages/admin/client-accounts.tsx",
+    "sha256": "47fb43494c68840d036ac9ce181cc83447efa91e6d5f1d2cf61ef5862a390c4b"
+  },
+  {
+    "path": "src/pages/certificates/management.tsx",
+    "sha256": "0ff1d2418d1f7d33afb687dabd6ace2c2cdf8b77e036cd67201114a2be2351e7"
+  },
+  {
+    "path": "src/pages/citizen/approval.tsx",
+    "sha256": "aee8e9c3c085df3f5928cd10c6d20db9f88ae62d10a2cdf55aba5dd4c9c01ca2"
+  },
+  {
+    "path": "src/pages/compliance/center.tsx",
+    "sha256": "46a8b0690eb29f1fa6c01227e2d385a2603f09ecda06bd72663c7092092904bb"
+  },
+  {
+    "path": "src/pages/operations/bir-transmission-center.css",
+    "sha256": "48c422272948721486b4053e85ce0fcdaa4eeb082520fdd68fcf990e23c6f1b5"
+  },
+  {
+    "path": "src/pages/operations/storage-monitor.tsx",
+    "sha256": "8d46867ffc94bb70174ae1ae69a26eb99fb3f7a629e5b6cb7735d7d26393bda0"
+  },
+  {
+    "path": "src/pages/operations/transaction-filters.ts",
+    "sha256": "3169e7529c928c02190e8795dbb31813bcaca8609453fcd3686c112138857f40"
+  },
+  {
+    "path": "src/pages/operations/transactions.tsx",
+    "sha256": "400840771d05070635b14a0318c131ef56affbcdfa1b79fdd3a7437145558586"
+  },
+  {
+    "path": "src/pages/operations/readiness.tsx",
+    "sha256": "8f88a12118ffd61c49c89a588a5233aae1fe92927eda02d71c176d5965112f3b"
+  },
+  {
+    "path": "src/pages/operations/transactions.css",
+    "sha256": "e3e2f5b40f8b8ae0201816d939a3551ab76112e6c47c73754c0ed5650b40afde"
+  },
+  {
+    "path": "src/pages/operations/bir-transmission-center.tsx",
+    "sha256": "22681efe73e99ad29e4aad0c9d82b89b83ac71d9968ae5cab5077d701796d32a"
+  },
+  {
+    "path": "src/pages/operations/workspace.tsx",
+    "sha256": "bfa8c8a238de93c9653f632683b51411aa075ba6918f00ed55216cdb0d6187c3"
+  },
+  {
+    "path": "src/pages/operations/routes.tsx",
+    "sha256": "94663d41bffdb8947fa729a32cf6dd171def1edef6f69553d2c04cf43beeedb0"
+  },
+  {
+    "path": "src/pages/operations/workspace.css",
+    "sha256": "a630112e349a0eae53545aca2d959a359a678853e16383c9682adfdca2feffa3"
+  },
+  {
+    "path": "src/pages/eis/hub.tsx",
+    "sha256": "faaf7defad8cfd60d3d31fbda8536b60d9369f476d0ac58cb00d5cf2ca6b9ff1"
+  },
+  {
+    "path": "src/pages/integrations/index.tsx",
+    "sha256": "02d0389ae19e10289f926719cc24dc3e938f2e0b525063e5bd8322c09d32e7e7"
+  },
+  {
+    "path": "src/pages/integrations/integrations.css",
+    "sha256": "f4df281b60d4a9c3aaea90d059866e9e6b0fbc852dc094b2cb902e6fd9554362"
+  },
+  {
+    "path": "src/pages/integrations/legacy.tsx",
+    "sha256": "78c4de36bae833977e6596ece12eabfadc1b4db19264348aff403d0f96b8d5de"
+  },
+  {
+    "path": "src/pages/verification/portal.tsx",
+    "sha256": "d6b1a431b1e0fa43207d8466bd018f6c93c7f543e2aeae546cc8b07999318d58"
+  },
+  {
+    "path": "src/pages/system/configuration.css",
+    "sha256": "fc4989f303190fa5417ca65c83be3f5f7cd0bc6d7b06419cd6f1cbe38d17e952"
+  },
+  {
+    "path": "src/pages/system/configuration.tsx",
+    "sha256": "38a46d4901e5e88aae3d6153f5a817c05556e7d55ed453e03a20a1c223b75d3f"
+  },
+  {
+    "path": "src/pages/system/notification-operations.tsx",
+    "sha256": "6aec12a21c66eb2edcbcb6c12a6f66cf18adcc67d4df89631d4048345fc00b2a"
+  },
+  {
+    "path": "src/pages/system/admin.tsx",
+    "sha256": "1301fc5dc4725ca07283bdf9a740b9b1e15db319f30f35b2a29c449b69d62576"
+  },
+  {
+    "path": "src/pages/super-admin/dashboard.tsx",
+    "sha256": "6642812ad6e3e2efde319fa466fe5a4018aabf2e7299f55a34818c2ed03f03c1"
+  },
+  {
+    "path": "src/pages/audit/log.tsx",
+    "sha256": "95b0f5e021995d6af54395069bf9812abd740f4372d0c72283d04d2d88cd99b6"
+  },
+  {
+    "path": "src/pages/ai/assistant.tsx",
+    "sha256": "db4aee2cde11cdede412e7ca73a2bcfff93e1b1156c916fdd426dec65a1ce09a"
+  },
+  {
+    "path": "src/pages/tax-intelligence/center.tsx",
+    "sha256": "95b298f2de6e0566ec407a0669e159ff10a528f286814c7fee80e02592e9721f"
+  },
+  {
+    "path": "src/pages/api/webhooks.tsx",
+    "sha256": "d63948a6491c1659743101e1717889d56340252de4dd0182386c9a845a93b533"
+  },
+  {
+    "path": "src/pages/api/keys.tsx",
+    "sha256": "8f5317ae6a69efa86dcf6cdb0292ae24454260fdffc8bb1bac1798a9840e8336"
+  },
+  {
+    "path": "src/pages/api/eis-transmissions.tsx",
+    "sha256": "b3e4ef4b5e4b510ee74336c9a913dfbb19cbbb2f0a88290eea0e7183a4e59da8"
+  },
+  {
+    "path": "src/pages/api/eis-errors.tsx",
+    "sha256": "b9e05547ad6d426cdb625a05cbd699d480c0c4cbb8e88f5496af2aa6435fda3a"
+  },
+  {
+    "path": "src/pages/api/sdks.tsx",
+    "sha256": "ecb4d319bbb22db4db1753585365d89bc2a47d88f54ff54bae5754f7dec61908"
+  },
+  {
+    "path": "src/pages/api/monitoring.tsx",
+    "sha256": "713c8a427e41d03dd24b34815a50f62c2ff553861035e1af207fc947612e4de9"
+  },
+  {
+    "path": "src/pages/api/eis-performance.tsx",
+    "sha256": "c406bce6d58e73e31bd1598fb1f59f3001cc39ef5b88023b917e8b1d22bbbe05"
+  },
+  {
+    "path": "src/pages/api/docs.tsx",
+    "sha256": "ea3686cfcfc4e63fe46f4431b946dca138bc4eeeed5d556ce48af5282b1215f8"
+  },
+  {
+    "path": "src/pages/api/sandbox.tsx",
+    "sha256": "0dc21c7a61a35b7f8081f326ec3048653185a94ff8406e29aa23f3a0f2d01926"
+  },
+  {
+    "path": "src/pages/api/portal.tsx",
+    "sha256": "6c53489dd8b5517dec497d9cfa78d5fecd06f9adef763f96a6e5609a3311cda4"
+  },
+  {
+    "path": "src/pages/api/guides.tsx",
+    "sha256": "ff0ccf26d86328124d119549e3c7dd1f694d9b8e920eff51b1ff0ac7f56f4f6c"
+  },
+  {
+    "path": "src/pages/api/eis-gateway.tsx",
+    "sha256": "05856530f7cc4f320557c1e87ae21cf64ab5894f93d0c33418b7cd493c66fd9d"
+  },
+  {
+    "path": "src/pages/consumer/portal.tsx",
+    "sha256": "7239b49537c29f4b156b1178dfeef1b28e65cd22f7335a954a6b0905afda5fe9"
+  },
+  {
+    "path": "src/pages/monitoring/transmissions.tsx",
+    "sha256": "15394de0aabd51a4da6b90fe93dea0f2cfade3897262bdd268f1d37fc3397204"
+  },
+  {
+    "path": "src/pages/monitoring/monitoring.css",
+    "sha256": "4e3cc8c2f705862d70d06d04408a5dd53b77d4883b4ae8f1823aa66135b7fcd9"
+  },
+  {
+    "path": "src/pages/infrastructure/types.ts",
+    "sha256": "7740c37d880e2780a57fbc9a0c5a698efb9184b3b5ec8e42d17e6b2041ecd693"
+  },
+  {
+    "path": "src/pages/infrastructure/components.tsx",
+    "sha256": "68ed35c5306b1593df7c5e80f70e28b5c3334a2e56e2512f731987fe7396f871"
+  },
+  {
+    "path": "src/pages/infrastructure/server-management.tsx",
+    "sha256": "83f33cb23f6621d89d3eb1aefd0a19f2114bfb3acfa1996d9ce98d57c389b391"
+  },
+  {
+    "path": "src/pages/infrastructure/dialogs.tsx",
+    "sha256": "12a11c41983302cdbe25b0b9403092e6110e16f5fa1ddbb1f898c31d67844b7e"
+  },
+  {
+    "path": "src/pages/infrastructure/server-management.css",
+    "sha256": "334b572eff5abe55da05db44acaac44b0971aaffa5a5b5e34e6c22ba486b359f"
+  },
+  {
+    "path": "src/pages/legal/policy.tsx",
+    "sha256": "c645ba13b01230303f20ab33d667375dfb4b81ea2d1ad48a0ee3a725589d9a05"
+  },
+  {
+    "path": "src/pages/legal/policy.css",
+    "sha256": "b218258a465a4a294a7f1727646399a48cd52aff44f9f927d27d7294318348eb"
+  },
+  {
+    "path": "src/pages/engine/index.tsx",
+    "sha256": "16ea7e25adc219289424c0bee2fa75a1bd20723cf211cc8f40ea45bf0ced0bbb"
+  },
+  {
+    "path": "src/pages/client/dashboard.tsx",
+    "sha256": "5f46d597290a7cfb04b13ed03d1480bdd59b6793dd128e2faaf34d6972342897"
+  },
+  {
+    "path": "src/pages/business-registry/index.tsx",
+    "sha256": "a027f97603ea3691d1ed4401fca25866c6c124af742166c16f441642579ad358"
+  },
+  {
+    "path": "src/pages/business-registry/registry.css",
+    "sha256": "da93b714d1f5b09d815d597681ba7b7a90d701c0379b17d906ac06ff28d3b13d"
+  },
+  {
+    "path": "src/pages/business-registry/activation.tsx",
+    "sha256": "71e046be3beab6c804ce1cc8e6bd9e23e26c78d3c3030e8f7d28a6d0c712902b"
+  },
+  {
+    "path": "src/pages/business-registry/rdo-mappings.tsx",
+    "sha256": "8e2c6aec10d5ba1836c0da952fe6b9ea54847ef472749b6cc1cf1331b72ab34d"
+  },
+  {
+    "path": "src/pages/rdo/portal.tsx",
+    "sha256": "45790c0f35def31a2fa9a99499be351e85b41b5f91e1fd4a58cf139726c390ea"
+  },
+  {
+    "path": "src/pages/notifications/center.tsx",
+    "sha256": "a08d965ae8647f74bbc69e89167a35c4a74efa0d6a051c07adde8d18c8e23fa1"
+  },
+  {
+    "path": "src/pages/analytics/center.tsx",
+    "sha256": "7b1cfc7b79ab86f817ee525f2e9ca6b56fcddb3be2e4c894b23761ba1f37270a"
+  },
+  {
+    "path": "src/pages/merchant/wallet.tsx",
+    "sha256": "959fa65d1fb8ec7e7f4c87543ca925518afa4b8b40aed309bb8e17439c9543a3"
+  },
+  {
+    "path": "src/pages/merchant/dashboard.tsx",
+    "sha256": "6702f1f431ff9655beccd747fa567a355b98b8f86469cc57351ed49f6518f60c"
+  },
+  {
+    "path": "src/pages/merchant/sales-reports.css",
+    "sha256": "79bcab214ccdc5d395b037763716151acd257cccc8633bb624ee97f8f46125ee"
+  },
+  {
+    "path": "src/pages/merchant/merchant-dashboard.css",
+    "sha256": "7d1933230e6078af6192732d97ebc9ad56bb39cdf393ba842dc8d85087e66fa9"
+  },
+  {
+    "path": "src/pages/merchant/invoice-bulk.tsx",
+    "sha256": "22c17d810c6525dc2796b2ae940e4e59a2a717dcf99ea5a22e1312dee7536591"
+  },
+  {
+    "path": "src/pages/merchant/invoice-detail.tsx",
+    "sha256": "c119c806ba126d2608ac597d0f6240282535415a17c7794567e021c6bb1c56c1"
+  },
+  {
+    "path": "src/pages/merchant/sales-reports.tsx",
+    "sha256": "044345bdd390930a3e1bba20b52e1ae0a6418186ebaaf4d3055cdcf85cf49391"
+  },
+  {
+    "path": "src/pages/merchant/invoice-settings.css",
+    "sha256": "115e175478691833dd12731d832731062c3113d028e2f4c75d5d2014825fcbdd"
+  },
+  {
+    "path": "src/pages/merchant/wallet.css",
+    "sha256": "5cd0703fc5b89952fed2a9e159f413cd2a30a6c2b5337bae14efdb29b78930be"
+  },
+  {
+    "path": "src/pages/merchant/business-profile.css",
+    "sha256": "5dadeb72059903d8bafe3f7ccea8f324f47d5c6daada91848338c67194b504a2"
+  },
+  {
+    "path": "src/pages/merchant/invoice-recurring.tsx",
+    "sha256": "066a0e8475a507260bda78810fbe6d0cda032e11eec150a107cf69e86afdf885"
+  },
+  {
+    "path": "src/pages/merchant/notifications.tsx",
+    "sha256": "634f342a2e436e8c35317517630b067522bb6b59ffc25ce74434923c713b562f"
+  },
+  {
+    "path": "src/pages/merchant/customers.css",
+    "sha256": "20bf5e4595da8bf9a520ac74afd4236a5f9f6a3275001153df20049b26fdf8cd"
+  },
+  {
+    "path": "src/pages/merchant/security.css",
+    "sha256": "2f9c8f9a81606f4bdacac150088b2e2492479538a90e2865d905102bd96f90fe"
+  },
+  {
+    "path": "src/pages/merchant/branches.css",
+    "sha256": "a294b88465d280c731b63d5c6f41658807906c1cb9a99d738bc23d09b2fda1a0"
+  },
+  {
+    "path": "src/pages/merchant/profile.tsx",
+    "sha256": "e70b74171ee60ecb10c23b11340f0f92c1631867139be344d1086bfa48a4a1e3"
+  },
+  {
+    "path": "src/pages/merchant/users.tsx",
+    "sha256": "a0c67b9948b60ef8f878af720d976c9c5e39358cd5741ae75e49669ea94d42ad"
+  },
+  {
+    "path": "src/pages/merchant/vat-reports.tsx",
+    "sha256": "82efa74aef94cc39a49e353e5c962deec2525f20fd63ba7f63d1fd440d9e39c1"
+  },
+  {
+    "path": "src/pages/merchant/receipts.tsx",
+    "sha256": "b3aa1397e585247e4a504102e852833f50bb3ea74b5e33edeb76c0449ad1d3e1"
+  },
+  {
+    "path": "src/pages/merchant/billing.tsx",
+    "sha256": "d6b498a365d7017d0b90879cb60b506fcbb12116c9db13cd6b3338a608b02fc0"
+  },
+  {
+    "path": "src/pages/merchant/users.css",
+    "sha256": "a2a6ecf4113e72983a0fac8b7226725ced98006f39620035987ca075e2a3cb1c"
+  },
+  {
+    "path": "src/pages/merchant/api-integration.css",
+    "sha256": "1b710bcb387987f3307b8c209082ed7aa1772ba6847f5dd2c5d7cc747c195134"
+  },
+  {
+    "path": "src/pages/merchant/pos-settings.tsx",
+    "sha256": "92fb54b06f8362847b28dabd1eb05d0549d4c0332f03c55a1e134694015ae2eb"
+  },
+  {
+    "path": "src/pages/merchant/expenses.tsx",
+    "sha256": "d20c6c74a7560e61986ce4ff0e6f86f9fa1b6955c1f4cea9afec0578dfeac5a3"
+  },
+  {
+    "path": "src/pages/merchant/invoice-create.tsx",
+    "sha256": "6843f384e8ff797b4d3dc98a9eaa4aa315a16a9606e8b2afaa927814f1289de4"
+  },
+  {
+    "path": "src/pages/merchant/api-keys.tsx",
+    "sha256": "856343be5d9834d96efe90e8d02a1fdc5a6e280a476bb06795432f5aed009026"
+  },
+  {
+    "path": "src/pages/merchant/security.tsx",
+    "sha256": "1c6ab95d3dc216743c10031f76219e6cd6fe6241f140d5f9ee465dc6735b8cf7"
+  },
+  {
+    "path": "src/pages/merchant/branches.tsx",
+    "sha256": "ab95c6091ba051f2871dd0846ae135eea1f1fbd84988591f3bbde20c94715384"
+  },
+  {
+    "path": "src/pages/merchant/customers.tsx",
+    "sha256": "7cf03191958ddf43251d2f72dd1fbf6d6d15b98d94e70aed9bb9aa164065c853"
+  },
+  {
+    "path": "src/pages/merchant/invoices.tsx",
+    "sha256": "c1f5bc1e1f199a320f0a3ff92e12987c65babcee8610abbf9f74bfdbf4b8d3cd"
+  },
+  {
+    "path": "src/pages/executive/analytics.tsx",
+    "sha256": "c77d325574860c16e957c3100745a34c0ef23a912b3201219081a2d0c0baca3f"
+  },
+  {
+    "path": "src/pages/developers/shared.tsx",
+    "sha256": "1c41eef275860c04c3cf4bb574c57064d4ef3608f1d1c9de30666c2179fe2e23"
+  },
+  {
+    "path": "src/pages/developers/developers.css",
+    "sha256": "90dc97199f2a82e1a12a2fa788b52fbc558a3a30365af72481c31a7fb265f2b6"
+  },
+  {
+    "path": "src/pages/developers/overview.tsx",
+    "sha256": "2fcb3b635b5e25e2c403c08932974007eadc661c95e82f9f9f27a25075fbd8f2"
+  },
+  {
+    "path": "src/pages/developers/docs.tsx",
+    "sha256": "1ae79b6c2da58ab75fc7113710096ed2eb6b6f61f0c6570e8a2435d68601dfe1"
+  },
+  {
+    "path": "src/pages/developers/sandbox.tsx",
+    "sha256": "90311ffef752a70358526c5450cf045c450c9cb44d22bd674831e438deaa9198"
+  },
+  {
+    "path": "tests/TestCase.php",
+    "sha256": "850b99a5094ff61e8cb0e674c3c94ae47fcdd4966ebb5f7e36f19600134328cf"
+  },
+  {
+    "path": "tests/Unit/ExampleTest.php",
+    "sha256": "ffacae5c1a2a44c809420af5b3b404910da1b12167d58764dac6d10b8ba8cfaf"
+  },
+  {
+    "path": "tests/Unit/BirProtocolTest.php",
+    "sha256": "a82b2c97a40b2502be65a30d1ad8a01209103963d5db934a2305ef7779db4fa4"
+  },
+  {
+    "path": "tests/frontend/realtime-coordinator.test.ts",
+    "sha256": "dd0379d41b0adbfc4c733513f9ab0bbc37fc5addbc9faf374a3d915ebe43a805"
+  },
+  {
+    "path": "tests/js/registration-verification.test.mjs",
+    "sha256": "a64d50906e3dc7687f2e7659d1a4bd112a475d86ddb720155601bf0771a720ed"
+  },
+  {
+    "path": "tests/js/support-visibility.test.mjs",
+    "sha256": "a27fc3c6c1dfb5f68d5467825e12ad7064176c9cba4f95c904615cfb477653f3"
+  },
+  {
+    "path": "tests/js/nuers-transaction-status.test.mjs",
+    "sha256": "0ce3a1c6a569112406de584e785c7254bbd01cff4d5e0320969a1eb246d23600"
+  },
+  {
+    "path": "tests/js/rate-limit.test.mjs",
+    "sha256": "3c0f3e641ca78739d8066d5dba247f3da7920fa885bd5848a676252939df0a1b"
+  },
+  {
+    "path": "tests/js/document-renderer.test.mjs",
+    "sha256": "c8bd67642853d5818443a06872cb5029b567aaa950106dbc50f504e72c9214d4"
+  },
+  {
+    "path": "tests/js/offline-outbox.test.mjs",
+    "sha256": "ff73683fa60aa03788ac6103623e9af8ed4aae34855b297e28e1c27498839bf4"
+  },
+  {
+    "path": "tests/js/document-presentation.test.mjs",
+    "sha256": "a2623bac0eda9eb4af2ed06be8e44c8f33678cb55a801cfb7711850ed9f70222"
+  },
+  {
+    "path": "tests/Support/server-management-ui.cjs",
+    "sha256": "d06b5e02a7b69590c0aef38fc90ac8265b5e535462f18afff77b8ad330292937"
+  },
+  {
+    "path": "tests/Support/prepare-server-management-preview.php",
+    "sha256": "b2e644dacef5a8bdee29130c3facc842b328576edd14ff4ea08099757c79ccbc"
+  },
+  {
+    "path": "tests/Support/FakeInfrastructureController.php",
+    "sha256": "ed0d9930d1ef0b6c584599a934e884807ce329d604f5f0993eb8f82deb65892f"
+  },
+  {
+    "path": "tests/Support/storage-recovery-lab.php",
+    "sha256": "80b7a3ce7e4d9f03387430731315b15a45184985470e144c92119e57959143fd"
+  },
+  {
+    "path": "tests/Support/admin-security-ui.cjs",
+    "sha256": "d16fc323115ea774e6e015699640bf225be8b8e861216164a62127d572cb6f82"
+  },
+  {
+    "path": "tests/Support/storage-operations-ui.cjs",
+    "sha256": "998eccf07451b0254df80abd1998f77412301202ef2da2dcb288ed1f149b0023"
+  },
+  {
+    "path": "tests/Feature/IndexedMerchantTeamTest.php",
+    "sha256": "f9d33c9192678f1c0af032a750b7eb509b2fcee8606449eb244e9d30a8db9f33"
+  },
+  {
+    "path": "tests/Feature/IndexedRegistryTransactionActivityTest.php",
+    "sha256": "5b99b4681330790e91f270275ae126b53bfbbd128a4e583d9c8417a6b6a5b0b7"
+  },
+  {
+    "path": "tests/Feature/BirWireTransportTest.php",
+    "sha256": "689b9ebbe11d43e00c9ce98dea4010b2043e30329e22df3ee44a6fe67b1baeb5"
+  },
+  {
+    "path": "tests/Feature/TenantBoundaryAuditTest.php",
+    "sha256": "66028017d6cd853578810598a5e9d4d229e6c0b1157b76dbefa6c17b58118d58"
+  },
+  {
+    "path": "tests/Feature/BrandedRateLimitPageTest.php",
+    "sha256": "cda193aa812bb0bab24c86c58078a7958e1d09d8f70b1c3cb808b56c6e9078ec"
+  },
+  {
+    "path": "tests/Feature/SecurityRemediationTest.php",
+    "sha256": "8472a96435f2b8a8df5bb73b46c6e7462cb1b77c97b42162a3345b4ce8604261"
+  },
+  {
+    "path": "tests/Feature/ApiCustomerReceiptTest.php",
+    "sha256": "13889eeb06ea4fe5e2e882d205fbfd389daeb43bdcc067de3e367dbebc5652bc"
+  },
+  {
+    "path": "tests/Feature/AdminBusinessWalletTest.php",
+    "sha256": "f23d8e8f0e94e9cfe2f681b7ae68fc8b529cae94921d6ac048fc79044f222e00"
+  },
+  {
+    "path": "tests/Feature/ApiEnvironmentIsolationTest.php",
+    "sha256": "a5a797ab37714a17433f86fb24972a7eb06041a679076695fcf90f4cbd5413c6"
+  },
+  {
+    "path": "tests/Feature/MerchantInvoiceSettingsTest.php",
+    "sha256": "9fb55606b83d71bbf795e5e948becce98f00021c9c1575458eb0ca70b0651b35"
+  },
+  {
+    "path": "tests/Feature/IndexedTransactionReportTest.php",
+    "sha256": "55532c31c95609807083fd8179f3e2621ccfb14ff13e9a2edd6d6ca435d6e9e5"
+  },
+  {
+    "path": "tests/Feature/ApiProductionSecurityTest.php",
+    "sha256": "f0caff49e66f6f5f4326b1140165d69c9018c9329b983b10cb94ae59dab41e90"
+  },
+  {
+    "path": "tests/Feature/EnterpriseDashboardTest.php",
+    "sha256": "2e8c8a018f222c75132e04215f34f44a3a538876b2d1f6624311ec75258ced8f"
+  },
+  {
+    "path": "tests/Feature/BusinessProfileChangeTest.php",
+    "sha256": "a91ef1482580d2517d0aa4443831232bc7eeee2ae7ce35581e5a36126c68b3c9"
+  },
+  {
+    "path": "tests/Feature/WebhookSecurityTest.php",
+    "sha256": "cc585261bb701e3989b4591cc90c3a3e5bc7840a121888ce464616d86685723a"
+  },
+  {
+    "path": "tests/Feature/RmcComplianceTest.php",
+    "sha256": "dbcdda2941870f93a43168108d2827b713e3d8991fdb29d979320ed65bd53a1b"
+  },
+  {
+    "path": "tests/Feature/ExampleTest.php",
+    "sha256": "aaa4a192fb4aa96d4e81eda06a29968da3d9a73b71026b87a67297e66dd985b8"
+  },
+  {
+    "path": "tests/Feature/MerchantVerificationDocumentTest.php",
+    "sha256": "99f0ade91de0c861980c2a90891ff8c0257bf763de181b01a926c11dbc4e9356"
+  },
+  {
+    "path": "tests/Feature/BusinessRegistryTest.php",
+    "sha256": "d77cf685df5ac7a592a05bd5187330fe43ecaa9f3bbd718f79eddb2d21732318"
+  },
+  {
+    "path": "tests/Feature/ManualDiscountTest.php",
+    "sha256": "90977a5c83540e2434752b8021b638f327b1ecc3f9ba82febffd6ed94f1f4f3d"
+  },
+  {
+    "path": "tests/Feature/MerchantTeamTest.php",
+    "sha256": "e9fae43cea298ebeef0ad755f5e3aaaeeb8c118f0f612eb7f147948ad62fd94c"
+  },
+  {
+    "path": "tests/Feature/IndexedEisTransmissionCenterTest.php",
+    "sha256": "ba960443b0414d819a2f96a22503bb357b20b679493a32e022db12f96c863219"
+  },
+  {
+    "path": "tests/Feature/AdminAccountProfileTest.php",
+    "sha256": "e505faeffcb6d940ef05867ee98062058d08f48b78f2eef78b2f1807d510418f"
+  },
+  {
+    "path": "tests/Feature/StatutorySalesTest.php",
+    "sha256": "cb2f14a84bae140a1a37fa1cc71ced0edb78a77c84f61af66d1be11a34cf7e5d"
+  },
+  {
+    "path": "tests/Feature/MerchantWebhookTest.php",
+    "sha256": "5c4f6436693bb6767503fd9edb14755daa84b1875c4bf5404793c841ed77abec"
+  },
+  {
+    "path": "tests/Feature/PublicDocumentationAssetsTest.php",
+    "sha256": "63bcb0608f2068e4d9ec79365b07c9caeb6565b334950a19f2ce5b98ad589c31"
+  },
+  {
+    "path": "tests/Feature/InfrastructureGatewayTest.php",
+    "sha256": "c06fa945970e90a6882a432bc760c3a289777cc38f868162bcfd0389fb9c2729"
+  },
+  {
+    "path": "tests/Feature/MerchantBranchRegistryTest.php",
+    "sha256": "8a36f70bf8e18619f17b683c145098519d51753ec211ceaa4529d8ad3b5f58d3"
+  },
+  {
+    "path": "tests/Feature/BackupRecoveryTest.php",
+    "sha256": "682f794d46008560aa325d7095f1aca4b0461efc5ebc07f47f0b9bab7a489b40"
+  },
+  {
+    "path": "tests/Feature/DashboardRevisionTest.php",
+    "sha256": "a03421654364ed439aa6ee2b5e0a966b189f372a275a3096a2d52740f46bc7cf"
+  },
+  {
+    "path": "tests/Feature/BusinessRegistrationTest.php",
+    "sha256": "b44b8d40da214d3a46cb566b6d7a44b7e416eabf996507fb36deadc1acf523ab"
+  },
+  {
+    "path": "tests/Feature/TransactionReportTest.php",
+    "sha256": "6c35fae79db6e5623d1e76f6686816b33b299e5cb15456e2337052c429c6a0f0"
+  },
+  {
+    "path": "tests/Feature/IndexedInvoiceCenterAndSubscriptionsTest.php",
+    "sha256": "119769a70e7ed9a22b283474166e3011e01fce38568f3ecff913e00d43de81ea"
+  },
+  {
+    "path": "tests/Feature/DurableWorkflowTest.php",
+    "sha256": "4c9e799994184c6e5d23d3e00277c0fe5cdc622cfe91e9589cc5f75a2d1d1324"
+  },
+  {
+    "path": "tests/Feature/SystemReportExportTest.php",
+    "sha256": "8b2c50bb4ae16f2656bef9d75f91c9e644bd4c82c8692af7916e0fd7dec1c6d0"
+  },
+  {
+    "path": "tests/Feature/IndexedMerchantSalesReportTest.php",
+    "sha256": "98c3e4f54a47102e899d6c4acee290ce281215d09ee69cc290a1eb07ede26415"
+  },
+  {
+    "path": "tests/Feature/WebhookReceiverExampleTest.php",
+    "sha256": "2338591d6af06c62fde127a703cd9c6dadc6dd8a692ea3deb4ff9736eb1407c7"
+  },
+  {
+    "path": "tests/Feature/MerchantBusinessProfileTest.php",
+    "sha256": "39b06ff75c02b2ccc6c51e7848d90d2b1a61ed2f06736caab5208a98112ba662"
+  },
+  {
+    "path": "tests/Feature/DeviceSessionTest.php",
+    "sha256": "2217d0d70ad3c2ac2d1f9c7281f1cb5645258df49d47f88fcbcb3f003fc8e092"
+  },
+  {
+    "path": "tests/Feature/OperationsWorkspaceTest.php",
+    "sha256": "50e432eff1bf960d37dce91dcafd1bab1ce351467fd3ae14ad60e3839fb73f02"
+  },
+  {
+    "path": "tests/Feature/MerchantCustomerTest.php",
+    "sha256": "9390e146d0049b7361c6ecf4c242ebe0c775c38ab43c5ca1dfb43b63c5d56649"
+  },
+  {
+    "path": "tests/Feature/EisTransmissionCenterTest.php",
+    "sha256": "c153941760b1d810dc675ff9e7c086f2c8f8c24bf7ee4dc0d83bb37cfdbdcf77"
+  },
+  {
+    "path": "tests/Feature/AdminFinancialSummaryTest.php",
+    "sha256": "567e5398869cf800b0dc23020e1fe9041cded1685792e37e5612e668c13aa669"
+  },
+  {
+    "path": "tests/Feature/IndexedSalesReadinessAlignmentTest.php",
+    "sha256": "14b3e394c705576e3b8cd331445b491b77e3dd7a8c5aeb21b673803cc458d85e"
+  },
+  {
+    "path": "tests/Feature/InvoiceCenterAndSubscriptionsTest.php",
+    "sha256": "43384c52a74c9ce57a937b09ea7711a3c844a556b9e23665dd2087c6159d19e9"
+  },
+  {
+    "path": "tests/Feature/MerchantApiIntegrationTest.php",
+    "sha256": "b569e832c0ad92a13f0c9ac56b8253024a1558563965d67d3a4816ddb97e4a16"
+  },
+  {
+    "path": "tests/Feature/RegistryTransactionActivityTest.php",
+    "sha256": "d037b2498add06cc20415cb6056a18f7e8bbe4a91df6deb143d2619613c2009f"
+  },
+  {
+    "path": "tests/Feature/IndexedOperationsWorkspaceTest.php",
+    "sha256": "6ce7ae96a3f09c0224d2af77612d0333d8ae2e07285664942b3d42be2df47566"
+  },
+  {
+    "path": "tests/Feature/SessionPersistenceTest.php",
+    "sha256": "1403164d9785c8ae55e78d8c5dab3e422909502cda285e927beecb0964574d6a"
+  },
+  {
+    "path": "tests/Feature/MerchantSalesReportTest.php",
+    "sha256": "c59243a28d8ebc44043c3f1e62cc5d779901e2f1a3f8af4fb3e55076e867166e"
+  },
+  {
+    "path": "tests/Feature/MerchantAccountSecurityTest.php",
+    "sha256": "636e255a996b394f1bdfedfd663d6ce4fb2deb40e55ec319880509b437d2d74a"
+  },
+  {
+    "path": "tests/Feature/EisReadinessAlignmentTest.php",
+    "sha256": "7fb8750aeb5113f1b84de68d7b9804f4cec2486f3d73a55265e48c72433c66aa"
+  },
+  {
+    "path": "tests/Feature/OperationsSalesPerformanceTest.php",
+    "sha256": "a79b9bf73f9a4bbed5b1ece11592c5e6fd4e161b47695f68a2bc992285bbda46"
+  },
+  {
+    "path": "tests/Feature/StorageOperationsTest.php",
+    "sha256": "421dcef77f372e2025c7bb8a0cc02dee4fa312d727c7c27db50404f39b0452f7"
+  },
+  {
+    "path": "tests/Feature/PlatformNotificationsTest.php",
+    "sha256": "f2487b786bc4b25aa147c05b130e459aa9e4967c5a49c922605dfb508c4cb1e6"
+  },
+  {
+    "path": "tests/Feature/GoogleAuthTest.php",
+    "sha256": "439cc992428176f34d4acd2be4f94e80c79bf60f74298cc644f7696ba29cbb82"
+  },
+  {
+    "path": "tests/Feature/MfaDevicesTest.php",
+    "sha256": "63d313a4b381d69c6e668980d28a0b8ea0c30dd568c8d8ae204c2f9e1306da72"
+  },
+  {
+    "path": "tests/Feature/DocumentPdfRuntimeTest.php",
+    "sha256": "3298be45b0c3b9526ee90464d56cedb03bdb0722bcd8755bc4978b2c4a5201c1"
+  },
+  {
+    "path": "tests/Feature/ServerManagementTest.php",
+    "sha256": "cf7a22fe7bdd642e4f86b84b99cbf1f96a41322ffb4b87f3a823e2175fc4b685"
+  },
+  {
+    "path": "tests/Feature/DeveloperPortalTest.php",
+    "sha256": "b86b1a0a1558ff8bdd8eeddadd5dd2f81c917fa286ab08be7b97176c4e6d14bc"
+  },
+  {
+    "path": "tests/Feature/SupportChatTest.php",
+    "sha256": "c8082c54c425375e6035c239deabe8f6c5b0b99ed54da20ff2a7f1a9c3d8fc2f"
+  },
+  {
+    "path": "tests/Feature/LedgerProjectionTest.php",
+    "sha256": "b1eaa1c41aaaf33b053864897424206e62c5fc87d8401a16a2cb9742422e36c2"
+  },
+  {
+    "path": "tests/Feature/PageLoadingPerformanceTest.php",
+    "sha256": "cb2c14cdaf4b199fe1a91fcde0bff55be5c9d1c9468f1c229b856c6be945d3d6"
+  },
+  {
+    "path": "tests/Feature/AdminMerchantConnectionsTest.php",
+    "sha256": "57c5fdda6ed03a19e10c4a222dbba703421da1d48f28d4f048b9f7b1597587f4"
+  },
+  {
+    "path": "tests/Feature/DocumentCopyMailTest.php",
+    "sha256": "942cb4c59cd3890e71659e86080bb3efd18ecd35f01f03a62b90bb079cf356bd"
+  },
+  {
+    "path": "tests/Feature/FormRateLimitTest.php",
+    "sha256": "55ba21301c5d6a6b4f3d9eec0829ee8a08d49fdeb96ca91297b36afc28458f97"
+  },
+  {
+    "path": "tests/Feature/SalesExportQueueTest.php",
+    "sha256": "93ce4275423fee6513915b310ced0131ab149d06c1450fda3105fa3b821a88e1"
+  },
+  {
+    "path": "tests/Feature/SubmissionAttemptsTest.php",
+    "sha256": "72e5e1b0debf42a9b8b35d2815a5cfccf14296ae183e63d5f5aa5f1e9432118c"
+  },
+  {
+    "path": "tests/Feature/TaxpayerWorkspaceTest.php",
+    "sha256": "d6dd14e9326bc54d43ecd8ac74dfd13455d521bf2bff2e1214c5cd1cae999b07"
+  },
+  {
+    "path": "tests/Feature/BusinessReviewNotificationTest.php",
+    "sha256": "db7b164908f35361c96a7600bb61fa2e99335a0b8d327cd700df9a91b26b2d02"
+  },
+  {
+    "path": "tests/Feature/PtiApplicationsTest.php",
+    "sha256": "e421e8f6e79dff080d9e732e0d1c9985b6e46e6a081f45e6e5f46386875ddd4e"
+  },
+  {
+    "path": "tests/Feature/RegistryMerchantOverviewTest.php",
+    "sha256": "1f9c74f440e93546b9d82b8da396f07abf6b3962ae63d137cf693dcd68e99fd6"
+  },
+  {
+    "path": "tests/Feature/MerchantWalletTest.php",
+    "sha256": "d1913b1a3f4a17907ff971c82518bffd1851907d70bbc54fe4b6267019607a36"
+  },
+  {
+    "path": "docs/knowledge/website-design-and-pricing.md",
+    "sha256": "25ecfc0e1d294a1d6930c17904f4258093bd9258247841e9d0466becbc809c4e"
+  },
+  {
+    "path": "docs/knowledge/admin-transaction-reports.md",
+    "sha256": "28dd09f20596288fae56d250ad849cecd9752a3eda8fad9e69831d11ddad7706"
+  },
+  {
+    "path": "docs/knowledge/pti-application-workflow.md",
+    "sha256": "2d72a8b2e8e5425b1ce4caad941d567f7c0384bcdc5b3b7314ccf0864536f9fe"
+  },
+  {
+    "path": "docs/knowledge/developer-portal.md",
+    "sha256": "826bd581eb0d465955204843db176fb533199bc621ad75a509c1399308f85522"
+  },
+  {
+    "path": "docs/knowledge/operations-dashboards.md",
+    "sha256": "ec7bc19854c9b6cd64be81080f622c9c6ff0847a05401ef36d8aadd1208703db"
+  },
+  {
+    "path": "docs/knowledge/report-exports.md",
+    "sha256": "6de37359259ad3a9b5f5f36daa29371995561fd4734b63aee1ee45cbf7057d15"
+  },
+  {
+    "path": "docs/knowledge/bir-transmission-center.md",
+    "sha256": "b4c8714a8c638c87fcfaeb8be20832c58a632bf36c6652835d3d5fd61c163a25"
+  },
+  {
+    "path": "docs/knowledge/permits-integrations-and-sessions.md",
+    "sha256": "2729f02997c610b3ae6066e2c5413a4790cd6a0bdab51806f9b29f95aab7c3d8"
+  },
+  {
+    "path": "docs/knowledge/esp-accreditation-development-baseline.md",
+    "sha256": "e1216af5292e949e7e44418963c2671d1e8e025fd741abff834f95865e31053c"
+  },
+  {
+    "path": "docs/knowledge/transactions-bir-eis-audit-2026-10-16.md",
+    "sha256": "d30becb409c981e07a217ef699d2e9944e828523b812195f1f435e368a3367b3"
+  },
+  {
+    "path": "docs/knowledge/admin-business-wallet.md",
+    "sha256": "82498d99431447a6685be6f72024ad8dc39fa16cf2878f64e9bec2e842f9cc44"
+  },
+  {
+    "path": "docs/knowledge/registration-design-and-workflow.md",
+    "sha256": "089d641f6e34ec4b9137c0c0d7e8e2131e7dba41ac71cfe09ae94d4cdc613e0f"
+  },
+  {
+    "path": "docs/knowledge/legal-industries-and-support.md",
+    "sha256": "2c7cb9d2b37e3e586e697fc37aa8be905ca1e28693b550e767c5a62bcee8a262"
+  },
+  {
+    "path": "docs/knowledge/failed-submissions-and-rate-limits.md",
+    "sha256": "c12b8d49736dab4533c09e464a597a823d4f74d49cabc1de8c37cfee29335cc1"
+  },
+  {
+    "path": "docs/knowledge/admin-dashboard-security-reaudit-2026-10-20.md",
+    "sha256": "40da9356ce13cbb71463638abf34f62e29cdde152454095a520fc76af574af4d"
+  },
+  {
+    "path": "docs/knowledge/README.md",
+    "sha256": "15195f2493a3dcf954a8cd105c7a5a466db2ea836b09c08a472b0227467a93c3"
+  },
+  {
+    "path": "docs/knowledge/bir-eis-credential-readiness.md",
+    "sha256": "a55ab68ab73e0b689187dddfc0b2eec79221064aa306c3d4a6f05e6e776d4b1c"
+  },
+  {
+    "path": "docs/knowledge/functional-specification-v1.1-review.md",
+    "sha256": "08a4f018b63416388e90b550a6de172cb19ffc725bb8166f7da6200797750279"
+  },
+  {
+    "path": "docs/knowledge/storage-operations-reaudit-2026-10-20.md",
+    "sha256": "3e2b2b12ef2843d79248f994391188ef60324198d56c948db1321bb76abe2ae4"
+  },
+  {
+    "path": "docs/knowledge/document-alignment-audit-2026-10-16.md",
+    "sha256": "aa163553e742403fb8b51899cae0c502f4f47f1701f72782eb2bb3a4db9ce163"
+  },
+  {
+    "path": "docs/knowledge/eis-readiness-remediation-and-reaudit-2026-10-16.md",
+    "sha256": "0f063d45d069480f3aaa5b48d37aa5c208ae569331955dcfab9f45b276fc7b92"
+  },
+  {
+    "path": "docs/knowledge/system-specification-v2-audit-2026-10-15.md",
+    "sha256": "ddd9bc9eae124478ce38dbcb94dc8e8b6cb029f6d16054f0c9847fdbf9e0699d"
+  },
+  {
+    "path": "docs/knowledge/mfa-login-session.md",
+    "sha256": "b8b0fa9ffcd8a0a0277a5258ee012b751a1a959a3741c6b4344137778d219f70"
+  },
+  {
+    "path": "docs/knowledge/business-registry-and-onboarding.md",
+    "sha256": "8ddc0329884875ce5f91c55974e2d6b46c6ce76b42bee410088a2e45a5079a36"
+  },
+  {
+    "path": "docs/knowledge/sources/NUERS_Detailed_Illustrated_Functional_Specification_v1_1.pdf",
+    "sha256": "7199c97e9c58285576b6be99d8af73900a1813dd437acc9bafb1cd67bd71553c"
+  },
+  {
+    "path": "docs/knowledge/sources/NUERS_Functional_Specification_v1_1.extracted.txt",
+    "sha256": "98cbc75187989d9b67480bc7b2a67e9a8e541fd0c9663e3e7be5ffeca3055289"
+  },
+  {
+    "path": "docs/knowledge/sources/NUERS_EIS_Complete_System_Documentation.extracted.txt",
+    "sha256": "94c540670773d93e2bf77dee89c10bb052249dbec400085ed92fe11f1eccce4f"
+  },
+  {
+    "path": "docs/knowledge/sources/ESP_Accreditation10132026.extracted.txt",
+    "sha256": "38378c6a84ae1b76f1f581bde6a6dc35cd938b2abae18eccf659e110183e58f8"
+  },
+  {
+    "path": "docs/knowledge/sources/BSP_PSIC_Annex_D2A_Cir1197_2024.xlsx",
+    "sha256": "36261d189fca30f1794f418b57d381887624d8b0d2efd5ce4b8c07bfce34d316"
+  },
+  {
+    "path": "docs/knowledge/sources/ESP_Accreditation10132026.pptx",
+    "sha256": "006efc37f60b2117c46617d3f41e69aba98bd84c7d472ecdad1522274f84dc9a"
+  },
+  {
+    "path": "docs/knowledge/sources/NUERS_EIS_Complete_System_Documentation.pdf",
+    "sha256": "f3b9309d63b314622ee548008c58d4d22c61a024810278828be7b8cdc82af7c6"
+  }
+]

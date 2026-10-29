@@ -1,0 +1,32 @@
+{
+    "engine": "8.4.11",
+    "records": 1000100,
+    "results": [
+        {
+            "case": "admin_sales",
+            "run": 1,
+            "http": 200,
+            "ms": 3583.49,
+            "peak_mb": 28,
+            "bytes": 27171,
+            "queries": 30,
+            "db_ms": 3541.88,
+            "reported_count": 1000100,
+            "gross_centavos": null,
+            "error": null
+        },
+        {
+            "case": "admin_sales",
+            "run": 2,
+            "http": 200,
+            "ms": 6.73,
+            "peak_mb": 28,
+            "bytes": 27171,
+            "queries": 20,
+            "db_ms": 3.74,
+            "reported_count": 1000100,
+            "gross_centavos": null,
+            "error": null
+        }
+    ]
+}

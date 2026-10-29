@@ -45,13 +45,17 @@ class BusinessAccountController extends Controller
 
     public function lookupByTin(Request $request): JsonResponse
     {
-        abort_unless($this->userFromRequest($request), 401, 'Authenticated NUERS session is required.');
+        $access = app(\App\Services\ApiAccess::class);
+        $user = $access->require($request);
 
         $tin = $this->normalizeTin((string) $request->query('tin', ''));
 
         abort_if(strlen($tin) < 9, 422, 'Enter at least 9 TIN digits.');
 
-        $merchant = DB::table('merchants')
+        // A known TIN is a search term, never a grant to another tenant's registry.
+        $query = in_array($request->attributes->get('api_role'), ['admin', 'super_admin', 'bir'], true)
+            ? DB::table('merchants') : $access->merchants($user);
+        $merchant = $query
             ->whereRaw($this->normalizedTinSql('tin').' = ?', [$tin])
             ->first();
 
@@ -68,7 +72,7 @@ class BusinessAccountController extends Controller
             ->whereRaw($this->normalizedTinSql('tin').' = ?', [$tin])
             ->first();
 
-        abort_unless($profile, 404, 'No registered NUERS account was found for this TIN.');
+        abort_unless($profile, 404, 'No account available within your authorized scope for this TIN.');
 
         return response()->json([
             'data' => [
