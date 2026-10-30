@@ -38,7 +38,9 @@ class ReconciliationQuery
             default => null,
         };
         foreach (['exception', 'review_status'] as $key) {
-            if (!empty($filters[$key]) && $filters[$key] !== 'all') $q->where($key, $filters[$key]);
+            if (!empty($filters[$key]) && $filters[$key] !== 'all') {
+                $q->where($key, $filters[$key]);
+            }
         }
         return $q;
     }
@@ -47,19 +49,26 @@ class ReconciliationQuery
     {
         unset($filters['page'], $filters['per_page'], $filters['sort'], $filters['format']);
         $reviewVersion = DB::table('reconciliation_reviews')->selectRaw('COUNT(*) as count,COALESCE(SUM(revision),0) as revision,MAX(updated_at) as updated_at')->first();
-        return app(ReportingSnapshotCache::class)->remember('reconciliation-v1', 'authorized-admins',
-            [...$filters, 'reviews' => (array) $reviewVersion, 'today' => now()->toDateString()], function () use ($all, $filters) {
+        return app(ReportingSnapshotCache::class)->remember(
+            'reconciliation-v1',
+            'authorized-admins',
+            [...$filters, 'reviews' => (array) $reviewVersion, 'today' => now()->toDateString()],
+            function () use ($all, $filters) {
                 $exception = self::EXCEPTIONS;
-                $stats = (clone $all)->selectRaw("COUNT(*) as total,COALESCE(SUM(amount),0) as sales,
+                $stats = (clone $all)->selectRaw(
+                    "COUNT(*) as total,COALESCE(SUM(amount),0) as sales,
                     COALESCE(SUM(vat_amount),0) as vat,COALESCE(SUM(vatable_sales),0) as taxable,COALESCE(AVG(amount),0) as average,
                     COALESCE(SUM(CASE WHEN exception='Matched' THEN 1 ELSE 0 END),0) as matched,
                     COALESCE(SUM(CASE WHEN $exception THEN 1 ELSE 0 END),0) as exceptions,
                     COALESCE(SUM(CASE WHEN exception='For Review' THEN 1 ELSE 0 END),0) as review,
                     COALESCE(SUM(CASE WHEN review_status='resolved' THEN 1 ELSE 0 END),0) as resolved,
                     COALESCE(SUM(CASE WHEN review_status='resolved' AND reviewed_at>=? AND reviewed_at<? THEN 1 ELSE 0 END),0) as reconciled_today",
-                    [now()->startOfDay(), now()->addDay()->startOfDay()])->first();
+                    [now()->startOfDay(), now()->addDay()->startOfDay()]
+                )->first();
                 $summary = (array) $stats;
-                foreach ($summary as $key => $value) $summary[$key] = in_array($key, ['sales', 'vat', 'taxable', 'average']) ? round($value, 2) : (int) $value;
+                foreach ($summary as $key => $value) {
+                    $summary[$key] = in_array($key, ['sales', 'vat', 'taxable', 'average']) ? round($value, 2) : (int) $value;
+                }
                 $summary += ['excluded_count' => 0, 'excluded_amount' => 0];
                 $trend = (clone $all)->selectRaw("SUBSTR(created_at,1,10) as date,SUM(amount) as amount,
                     SUM(CASE WHEN exception='Matched' THEN 1 ELSE 0 END) as matched,
@@ -78,6 +87,7 @@ class ReconciliationQuery
                 $top = (clone $all)->selectRaw('business as label,SUM(amount) as amount')->groupBy('business')->orderByDesc('amount')->limit(5)->get();
                 return ['summary' => $summary, 'total' => empty(array_filter(array_intersect_key($filters, array_flip(['review','exception','review_status'])), fn ($v) => $v && $v !== 'all')) ? $summary['total'] : $this->filtered($all, $filters)->count(), 'trend' => $trend, 'groups' => $groups,
                     'breakdown' => $breakdown, 'statuses' => $statuses, 'top_businesses' => $top];
-            });
+            }
+        );
     }
 }

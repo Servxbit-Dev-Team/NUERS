@@ -26,7 +26,8 @@ class LedgerProjectionTest extends TestCase
     {
         $projection = app(LedgerProjection::class);
         $projection->enqueueAll();
-        while ($projection->refresh()) {}
+        while ($projection->refresh()) {
+        }
         $projection->activate();
     }
 
@@ -117,15 +118,17 @@ class LedgerProjectionTest extends TestCase
         $this->activate();
         $cache = app(\App\Services\ReportingSnapshotCache::class);
         $calls = 0;
-        $compute = function () use (&$calls) { return ++$calls; };
+        $compute = function () use (&$calls) {
+            return ++$calls;
+        };
         $this->assertSame(1, $cache->remember('test', 'm1', [], $compute));
         $this->assertSame(1, $cache->remember('test', 'm1', [], $compute));
         $this->assertSame(2, $cache->remember('test', 'm2', [], $compute));
-        DB::table('transaction_receipts')->where('id','a')->update(['status'=>'voided']);
+        DB::table('transaction_receipts')->where('id', 'a')->update(['status' => 'voided']);
         app(LedgerProjection::class)->catchUp();
         $this->assertSame(3, $cache->remember('test', 'm1', [], $compute));
         // Exercise the same coalesced metadata marker produced by the installed metadata triggers.
-        DB::table('ledger_dirty_documents')->insert(['source'=>'metadata','document_id'=>'report-status']);
+        DB::table('ledger_dirty_documents')->insert(['source' => 'metadata','document_id' => 'report-status']);
         app(LedgerProjection::class)->catchUp();
         $this->assertSame(4, $cache->remember('test', 'm1', [], $compute));
         $this->assertEquals(1, DB::table('ledger_documents')->count());

@@ -312,7 +312,7 @@ class BirWireController extends Controller
                 $records[] = ['outbox_id' => $fixtureId, 'source' => 'fixture', 'source_id' => $fixtureId, 'tax_class' => (string) $class, 'invoice_uid' => $d['EisUniqueId'], 'document_number' => $d['CompInvoiceId'], 'source_hash' => hash('sha256', Protocol::json($model)), 'reporting_identity' => hash('sha256', $fixtureId.$class)];
             }
 
-            return response()->json($batches->save($p,array_values($mapped),$records,$r->request_id,(string) $u->id));
+            return response()->json($batches->save($p, array_values($mapped), $records, $r->request_id, (string) $u->id));
         }, 3);
     }
 }

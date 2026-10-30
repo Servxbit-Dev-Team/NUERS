@@ -22,7 +22,7 @@ use Illuminate\Validation\ValidationException;
 
 class BusinessRegistryController extends Controller
 {
-    const CSV = ['business_name', 'tin', 'owner_name', 'email', 'phone', 'business_type', 'sector', 'address', 'city', 'region', 'rdo_code', 'vat_registered', 'bir_registration_date'];
+    public const CSV = ['business_name', 'tin', 'owner_name', 'email', 'phone', 'business_type', 'sector', 'address', 'city', 'region', 'rdo_code', 'vat_registered', 'bir_registration_date'];
 
     private function actor(Request $r, bool $write = false)
     {
@@ -127,10 +127,14 @@ class BusinessRegistryController extends Controller
     {
         [$q, $v] = $this->query($r);
         foreach (['stage', 'application_type'] as $field) {
-            if (($v[$field] ?? 'all') !== 'all') $q->whereRaw($this->metadata($field).' = ?', [$v[$field]]);
+            if (($v[$field] ?? 'all') !== 'all') {
+                $q->whereRaw($this->metadata($field).' = ?', [$v[$field]]);
+            }
         }
         $eis = "COALESCE((SELECT CASE WHEN ei.environment<>'production' THEN 'certification' WHEN ei.status IN ('error','failed','rejected') THEN 'error' ELSE 'pending' END FROM eis_integrations ei WHERE ei.merchant_id=m.id ORDER BY ei.updated_at DESC,ei.id DESC LIMIT 1),'not_connected')";
-        if (($v['eis'] ?? 'all') !== 'all') $q->whereRaw("$eis = ?", [$v['eis']]);
+        if (($v['eis'] ?? 'all') !== 'all') {
+            $q->whereRaw("$eis = ?", [$v['eis']]);
+        }
         return [$q, $v, $eis];
     }
 
@@ -266,9 +270,15 @@ class BusinessRegistryController extends Controller
             [$v,$meta] = $this->validated($r->all(), $id);
             $meta = array_replace(json_decode($old->registry_details ?? '{}', true) ?: [], $meta);
             DB::table('merchants')->where('id', $id)->update($v + ['registry_revision' => $old->registry_revision + 1, 'registry_details' => json_encode($meta), 'updated_at' => now()]);
-            $identityChanged=false;
-            foreach(['business_name','tin','vat_registered','address','rdo_code','branch_count'] as $field) if(array_key_exists($field,$v) && (string)($v[$field] ?? '')!==(string)($old->$field ?? '')) $identityChanged=true;
-            if($identityChanged) DB::table('eis_integrations')->where('merchant_id',$id)->update(['pti_status'=>'pending','ptt_status'=>'pending','certification_status'=>'pending','updated_at'=>now()]);
+            $identityChanged = false;
+            foreach (['business_name','tin','vat_registered','address','rdo_code','branch_count'] as $field) {
+                if (array_key_exists($field, $v) && (string)($v[$field] ?? '') !== (string)($old->$field ?? '')) {
+                    $identityChanged = true;
+                }
+            }
+            if ($identityChanged) {
+                DB::table('eis_integrations')->where('merchant_id', $id)->update(['pti_status' => 'pending','ptt_status' => 'pending','certification_status' => 'pending','updated_at' => now()]);
+            }
             $this->audit('updated', $id, $u, ['reason' => $r->input('reason'), 'before' => array_intersect_key((array) $old, $v), 'after' => $v]);
 
             return response()->json(['business' => $this->present(DB::table('merchants')->where('id', $id)->first())]);
@@ -304,7 +314,9 @@ class BusinessRegistryController extends Controller
             DB::table('merchants')->where('id', $id)->update(['status' => $status, 'registry_details' => json_encode($meta), 'registry_revision' => $v['revision'] + 1, 'updated_at' => now()]);
             if ($status === 'active') {
                 app(\App\Services\MerchantApiOnboarding::class)->prepare(
-                    DB::table('merchants')->where('id', $id)->first(), (string) $u->id, true
+                    DB::table('merchants')->where('id', $id)->first(),
+                    (string) $u->id,
+                    true
                 );
             }
             if (in_array($status, ['suspended', 'inactive']) && $m->merchant_account_id) {
@@ -332,7 +344,9 @@ class BusinessRegistryController extends Controller
         $u = $this->actor($r);
         [$q, $v] = $this->filteredQuery($r);
         $total = (clone $q)->count();
-        if ($r->has('report_limit')) \App\Services\ReportCsv::limit($r,$total);
+        if ($r->has('report_limit')) {
+            \App\Services\ReportCsv::limit($r, $total);
+        }
         abort_if($total > 10000, 422, 'Narrow the registry filters to at most 10,000 merchants per export.');
         $canFinancial = in_array(DB::table('profiles')->where('id', $u->id)->value('role'), ['admin', 'super_admin'])
             && app(\App\Services\RegistryMerchantOverview::class)->available();
@@ -352,9 +366,11 @@ class BusinessRegistryController extends Controller
                 foreach ($merchants as $merchant) {
                     $row = $this->present($merchant, false);
                     $cells = array_map(fn ($k) => $this->cell($row[$k] ?? ''), $keys);
-                    if ($canFinancial) foreach ($financialKeys as $key) {
-                        $value = $financial[$merchant->id][$key] ?? '';
-                        $cells[] = str_ends_with($key, '_centavos') ? number_format((int) $value / 100, 2, '.', '') : $value;
+                    if ($canFinancial) {
+                        foreach ($financialKeys as $key) {
+                            $value = $financial[$merchant->id][$key] ?? '';
+                            $cells[] = str_ends_with($key, '_centavos') ? number_format((int) $value / 100, 2, '.', '') : $value;
+                        }
                     }
                     fputcsv($f, $cells);
                 }
@@ -492,7 +508,7 @@ class BusinessRegistryController extends Controller
             DB::table('business_registry_requests')->where('purpose', 'invitation')->where('merchant_id', $id)->whereNull('completed_at')->update(['revoked_at' => now()]);
             $token = Str::random(64);
             DB::table('business_registry_requests')->insert(['id' => $r->input('request_id'), 'actor_id' => $u->id, 'purpose' => 'invitation', 'merchant_id' => $id, 'request_hash' => hash('sha256', $m->email), 'token_hash' => hash('sha256', $token), 'payload' => Crypt::encryptString(json_encode(['token' => $token, 'email' => $m->email])), 'expires_at' => now()->addHours(48), 'created_at' => now(), 'updated_at' => now()]);
-            app(\App\Services\PlatformNotifications::class)->queue($m->email,'business.invitation',(string)$r->input('request_id'),'Set up your NUERS business account','You have been invited to set up your NUERS business account. Use the secure link within 48 hours. This link works once. If you were not expecting this invitation, contact NUERS support.',action:app(\App\Services\PlatformNotifications::class)->url('activate-business').'#token='.$token,expires:now()->addHours(48),context:['invitation_id'=>$r->input('request_id')]);
+            app(\App\Services\PlatformNotifications::class)->queue($m->email, 'business.invitation', (string)$r->input('request_id'), 'Set up your NUERS business account', 'You have been invited to set up your NUERS business account. Use the secure link within 48 hours. This link works once. If you were not expecting this invitation, contact NUERS support.', action:app(\App\Services\PlatformNotifications::class)->url('activate-business').'#token='.$token, expires:now()->addHours(48), context:['invitation_id' => $r->input('request_id')]);
             $this->audit('invitation.created', $id, $u, ['reason' => $r->input('reason'), 'expires_at' => now()->addHours(48)->toIso8601String()]);
 
             return response()->json(['url' => url('/activate-business').'#token='.$token, 'expires_at' => now()->addHours(48)->toIso8601String()]);

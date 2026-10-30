@@ -40,7 +40,7 @@ class ClientProfileController extends Controller
             'mobile' => ['nullable', 'string', 'max:80'],
         ]);
 
-        $oldContact = DB::table('profiles')->where('id',$user->id)->value('email');
+        $oldContact = DB::table('profiles')->where('id', $user->id)->value('email');
         $now = now();
         $profileUpdates = [
             'full_name' => $validated['full_name'],
@@ -77,7 +77,9 @@ class ClientProfileController extends Controller
             ]);
         }
 
-        if ($oldContact !== ($validated['email'] ?: $user->email)) app(\App\Services\PlatformNotifications::class)->user($user->id,'security.contact.changed',(string)\Illuminate\Support\Str::uuid(),'Profile contact email changed','The contact email on your NUERS profile was changed. Your sign-in email has not changed. If this was unexpected, contact NUERS support.','security');
+        if ($oldContact !== ($validated['email'] ?: $user->email)) {
+            app(\App\Services\PlatformNotifications::class)->user($user->id, 'security.contact.changed', (string)\Illuminate\Support\Str::uuid(), 'Profile contact email changed', 'The contact email on your NUERS profile was changed. Your sign-in email has not changed. If this was unexpected, contact NUERS support.', 'security');
+        }
 
         return response()->json([
             'data' => $this->clientPayload($user, $request),

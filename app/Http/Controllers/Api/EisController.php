@@ -118,7 +118,9 @@ class EisController extends Controller
         app(BirCompliance::class)->administrativeUser($request);
         $query = $this->transmissionQuery();
         $request->validate(['merchant' => 'nullable|string|max:80', 'search' => 'nullable|string|max:160']);
-        if ($request->filled('merchant') && $request->input('merchant') !== 'all') $query->where('t.merchant_id', $request->input('merchant'));
+        if ($request->filled('merchant') && $request->input('merchant') !== 'all') {
+            $query->where('t.merchant_id', $request->input('merchant'));
+        }
 
         if ($request->filled('status') && $request->string('status')->value() !== 'all') {
             $query->where('t.status', $request->string('status')->value());
@@ -212,8 +214,8 @@ class EisController extends Controller
 
         return response()->json([
             'status' => empty($result['errors']) ? 'valid' : 'invalid',
-            'validation_scope'=>'local_preflight_only',
-            'official_schema_verified'=>false,
+            'validation_scope' => 'local_preflight_only',
+            'official_schema_verified' => false,
             'errors' => $result['errors'],
             'warnings' => $result['warnings'],
             'invoice_count' => $this->payloadInvoiceCount($payload),

@@ -1,20 +1,168 @@
-export type ReviewPreset={label:string;value:string};
-export const evidencePresets:ReviewPreset[]=[
- {label:'NUERS document review records',value:'NUERS verification-document checklist and independent review history.'},
- {label:'BIR Certificate of Registration copy',value:'BIR Certificate of Registration (Form 2303) copy uploaded in the NUERS checklist; document review only.'},
- {label:'DTI / SEC / CDA registration copy',value:'Business registration certificate copy in NUERS (DTI, SEC or CDA, as applicable).'},
- {label:'Representative identity and authority',value:'Authorized representative ID and supporting proof of authority in the NUERS document checklist.'},
- {label:'Registered business address evidence',value:'Uploaded proof of registered business address and the recorded independent review decision.'},
- {label:'Completed onboarding checklist',value:'Completed NUERS onboarding checklist, verified document versions and recorded reviewer notes.'},
+export type ReviewPreset = { label: string; value: string };
+export const evidencePresets: ReviewPreset[] = [
+  {
+    label: "NUERS document review records",
+    value: "NUERS verification-document checklist and independent review history.",
+  },
+  {
+    label: "BIR Certificate of Registration copy",
+    value:
+      "BIR Certificate of Registration (Form 2303) copy uploaded in the NUERS checklist; document review only.",
+  },
+  {
+    label: "DTI / SEC / CDA registration copy",
+    value: "Business registration certificate copy in NUERS (DTI, SEC or CDA, as applicable).",
+  },
+  {
+    label: "Representative identity and authority",
+    value:
+      "Authorized representative ID and supporting proof of authority in the NUERS document checklist.",
+  },
+  {
+    label: "Registered business address evidence",
+    value:
+      "Uploaded proof of registered business address and the recorded independent review decision.",
+  },
+  {
+    label: "Completed onboarding checklist",
+    value:
+      "Completed NUERS onboarding checklist, verified document versions and recorded reviewer notes.",
+  },
 ];
-export function accountDecisionPresets(status:string,stage:string):ReviewPreset[]{
- if(status==='suspended')return [{label:'Suspend pending review',value:'NUERS account access is suspended pending an independent review of the recorded compliance concerns.'}];
- if(status==='inactive'||stage==='rejected')return [{label:'Required evidence is incomplete',value:'Required onboarding evidence remains incomplete or inconsistent; account activation cannot be approved.'},{label:'Account inactive following review',value:'NUERS account access remains inactive following the recorded application review decision.'}];
- if(status==='active'||stage==='onboarded')return [{label:'Approve account activation',value:'All required documents and onboarding checks were independently reviewed; approve NUERS account activation.'},{label:'Confirm completed onboarding',value:'The required verification documents, representative authority and contact checks are complete; onboarding is approved.'}];
- return [{label:'Request corrected documents',value:'Additional or corrected verification documents are required before NUERS account activation.'},{label:'Continue document evaluation',value:'The application remains pending while the current verification documents are independently reviewed.'},{label:'Await representative authority',value:'Further evidence of the authorized representative’s identity or authority is required before approval.'},{label:'Review registered business details',value:'The submitted business information requires clarification against the uploaded registration documents.'}];
+export function accountDecisionPresets(status: string, stage: string): ReviewPreset[] {
+  if (status === "suspended")
+    return [
+      {
+        label: "Suspend pending review",
+        value:
+          "NUERS account access is suspended pending an independent review of the recorded compliance concerns.",
+      },
+    ];
+  if (status === "inactive" || stage === "rejected")
+    return [
+      {
+        label: "Required evidence is incomplete",
+        value:
+          "Required onboarding evidence remains incomplete or inconsistent; account activation cannot be approved.",
+      },
+      {
+        label: "Account inactive following review",
+        value:
+          "NUERS account access remains inactive following the recorded application review decision.",
+      },
+    ];
+  if (status === "active" || stage === "onboarded")
+    return [
+      {
+        label: "Approve account activation",
+        value:
+          "All required documents and onboarding checks were independently reviewed; approve NUERS account activation.",
+      },
+      {
+        label: "Confirm completed onboarding",
+        value:
+          "The required verification documents, representative authority and contact checks are complete; onboarding is approved.",
+      },
+    ];
+  return [
+    {
+      label: "Request corrected documents",
+      value:
+        "Additional or corrected verification documents are required before NUERS account activation.",
+    },
+    {
+      label: "Continue document evaluation",
+      value:
+        "The application remains pending while the current verification documents are independently reviewed.",
+    },
+    {
+      label: "Await representative authority",
+      value:
+        "Further evidence of the authorized representative’s identity or authority is required before approval.",
+    },
+    {
+      label: "Review registered business details",
+      value:
+        "The submitted business information requires clarification against the uploaded registration documents.",
+    },
+  ];
 }
-export function documentDecisionPresets(decision:string,kind:string):ReviewPreset[]{
- if(decision==='verified')return [{label:'Readable, complete and matching details',value:'The current document is readable, complete and matches the registered business or authorized representative.'},{label:'All relevant pages independently reviewed',value:'All relevant pages were independently reviewed and meet this verification requirement.'},...(kind==='representative_id'||kind==='representative_authority'?[{label:'Representative identity / authority confirmed',value:'The uploaded evidence adequately supports the representative identity or authority required for this application.'}]:[])];
- const specific:Record<string,ReviewPreset>={bir_cor:{label:'Upload the complete Form 2303',value:'Upload a complete, readable BIR Certificate of Registration (Form 2303) matching the registered business details.'},business_registration:{label:'Upload the correct registration certificate',value:'Upload the applicable DTI, SEC or CDA business registration certificate with all relevant pages visible.'},representative_id:{label:'Upload a valid representative ID',value:'Upload a clear, valid government-issued ID of the owner or authorized representative with all required sides visible.'},representative_authority:{label:'Upload signed proof of authority',value:'Upload a signed owner declaration, authorization letter, board resolution or secretary’s certificate appropriate to this business.'},proof_address:{label:'Upload registered address evidence',value:'Upload a recent utility bill, lease or equivalent proof showing the registered business address.'}};
- return [...(specific[kind]?[specific[kind]]:[]),{label:'Image is blurred or unreadable',value:'The image is blurred or unreadable. Upload a clear, complete scan or photo of the original document.'},{label:'Pages or sides are missing',value:'Required pages or sides are missing. Upload the complete document with all relevant information visible.'},{label:'Business details do not match',value:'The business or representative details do not match the application. Provide matching evidence or request a registered-profile correction.'},{label:'Wrong document category',value:'The uploaded file does not satisfy this document category. Upload the correct supporting document for this requirement.'},{label:'Document validity needs clarification',value:'The document appears expired or its validity cannot be established. Upload current evidence or provide the required clarification.'}];
+export function documentDecisionPresets(decision: string, kind: string): ReviewPreset[] {
+  if (decision === "verified")
+    return [
+      {
+        label: "Readable, complete and matching details",
+        value:
+          "The current document is readable, complete and matches the registered business or authorized representative.",
+      },
+      {
+        label: "All relevant pages independently reviewed",
+        value:
+          "All relevant pages were independently reviewed and meet this verification requirement.",
+      },
+      ...(kind === "representative_id" || kind === "representative_authority"
+        ? [
+            {
+              label: "Representative identity / authority confirmed",
+              value:
+                "The uploaded evidence adequately supports the representative identity or authority required for this application.",
+            },
+          ]
+        : []),
+    ];
+  const specific: Record<string, ReviewPreset> = {
+    bir_cor: {
+      label: "Upload the complete Form 2303",
+      value:
+        "Upload a complete, readable BIR Certificate of Registration (Form 2303) matching the registered business details.",
+    },
+    business_registration: {
+      label: "Upload the correct registration certificate",
+      value:
+        "Upload the applicable DTI, SEC or CDA business registration certificate with all relevant pages visible.",
+    },
+    representative_id: {
+      label: "Upload a valid representative ID",
+      value:
+        "Upload a clear, valid government-issued ID of the owner or authorized representative with all required sides visible.",
+    },
+    representative_authority: {
+      label: "Upload signed proof of authority",
+      value:
+        "Upload a signed owner declaration, authorization letter, board resolution or secretary’s certificate appropriate to this business.",
+    },
+    proof_address: {
+      label: "Upload registered address evidence",
+      value:
+        "Upload a recent utility bill, lease or equivalent proof showing the registered business address.",
+    },
+  };
+  return [
+    ...(specific[kind] ? [specific[kind]] : []),
+    {
+      label: "Image is blurred or unreadable",
+      value:
+        "The image is blurred or unreadable. Upload a clear, complete scan or photo of the original document.",
+    },
+    {
+      label: "Pages or sides are missing",
+      value:
+        "Required pages or sides are missing. Upload the complete document with all relevant information visible.",
+    },
+    {
+      label: "Business details do not match",
+      value:
+        "The business or representative details do not match the application. Provide matching evidence or request a registered-profile correction.",
+    },
+    {
+      label: "Wrong document category",
+      value:
+        "The uploaded file does not satisfy this document category. Upload the correct supporting document for this requirement.",
+    },
+    {
+      label: "Document validity needs clarification",
+      value:
+        "The document appears expired or its validity cannot be established. Upload current evidence or provide the required clarification.",
+    },
+  ];
 }

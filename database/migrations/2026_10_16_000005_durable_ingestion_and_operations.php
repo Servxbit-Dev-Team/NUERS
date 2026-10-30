@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     public function up(): void
     {
         Schema::table('business_invoices', fn (Blueprint $t) => $t->boolean('prices_include_vat')->nullable());
@@ -128,7 +127,7 @@ return new class extends Migration
             $t->timestamp('reviewed_at')->nullable();
             $t->timestamps();
         });
-        Schema::table('merchant_api_request_logs', fn (Blueprint $t) => $t->index(['merchant_api_key_id', 'created_at'],'key_requests_time'));
+        Schema::table('merchant_api_request_logs', fn (Blueprint $t) => $t->index(['merchant_api_key_id', 'created_at'], 'key_requests_time'));
     }
 
     public function down(): void

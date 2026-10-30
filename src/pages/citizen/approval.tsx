@@ -20,7 +20,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { apiFetch, publicAssetUrl, readJsonResponse } from "@/lib/api-url";
 import { cn } from "@/lib/utils";
 
@@ -68,41 +74,47 @@ const emptySummary: CitizenApprovalSummary = {
   rejected: 0,
 };
 
-const statusMeta: Record<string, { label: string; icon: typeof CheckCircle2; className: string }> = {
-  active: {
-    label: "Active",
-    icon: CheckCircle2,
-    className: "border-success/30 bg-success/10 text-success",
-  },
-  pending: {
-    label: "Pending",
-    icon: Clock3,
-    className: "border-warning/30 bg-warning/10 text-warning-foreground",
-  },
-  under_review: {
-    label: "Under Review",
-    icon: ShieldCheck,
-    className: "border-primary/30 bg-primary/10 text-primary",
-  },
-  rejected: {
-    label: "Rejected",
-    icon: XCircle,
-    className: "border-destructive/30 bg-destructive/10 text-destructive",
-  },
-};
+const statusMeta: Record<string, { label: string; icon: typeof CheckCircle2; className: string }> =
+  {
+    active: {
+      label: "Active",
+      icon: CheckCircle2,
+      className: "border-success/30 bg-success/10 text-success",
+    },
+    pending: {
+      label: "Pending",
+      icon: Clock3,
+      className: "border-warning/30 bg-warning/10 text-warning-foreground",
+    },
+    under_review: {
+      label: "Under Review",
+      icon: ShieldCheck,
+      className: "border-primary/30 bg-primary/10 text-primary",
+    },
+    rejected: {
+      label: "Rejected",
+      icon: XCircle,
+      className: "border-destructive/30 bg-destructive/10 text-destructive",
+    },
+  };
 
 function statusLabel(value: string) {
-  return statusMeta[value]?.label ?? value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+  return (
+    statusMeta[value]?.label ??
+    value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
+  );
 }
 
 function initialsFor(value?: string | null) {
-  return (value || "CA")
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase() || "CA";
+  return (
+    (value || "CA")
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "CA"
+  );
 }
 
 function dateLabel(value?: string | null) {
@@ -160,10 +172,16 @@ export function CitizenApprovalPage({ scope }: { scope: "bir" | "super-admin" })
       if (search.trim()) params.set("search", search.trim());
       if (status !== "all") params.set("status", status);
 
-      const response = await apiFetch(`/api/citizen-approvals${params.toString() ? `?${params}` : ""}`, {
-        cache: "no-store",
-      });
-      const payload = await readJsonResponse<CitizenApprovalPayload>(response, "Unable to load citizen approvals.");
+      const response = await apiFetch(
+        `/api/citizen-approvals${params.toString() ? `?${params}` : ""}`,
+        {
+          cache: "no-store",
+        },
+      );
+      const payload = await readJsonResponse<CitizenApprovalPayload>(
+        response,
+        "Unable to load citizen approvals.",
+      );
 
       if (ticket !== sequence.current) return;
       setRows(payload.data ?? []);
@@ -172,7 +190,10 @@ export function CitizenApprovalPage({ scope }: { scope: "bir" | "super-admin" })
       if (ticket !== sequence.current) return;
       setError(err instanceof Error ? err.message : "Unable to load citizen approvals.");
     } finally {
-      if (ticket === sequence.current) { setLoading(false); setRefreshing(false); }
+      if (ticket === sequence.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }
 
@@ -181,10 +202,16 @@ export function CitizenApprovalPage({ scope }: { scope: "bir" | "super-admin" })
       loadApprovals();
     }, 250);
 
-    return () => { window.clearTimeout(timeoutId); ++sequence.current; };
+    return () => {
+      window.clearTimeout(timeoutId);
+      ++sequence.current;
+    };
   }, [search, status]);
 
-  async function updateStatus(row: CitizenApprovalRow, nextStatus: "active" | "under_review" | "rejected") {
+  async function updateStatus(
+    row: CitizenApprovalRow,
+    nextStatus: "active" | "under_review" | "rejected",
+  ) {
     setSavingId(row.id);
 
     try {
@@ -192,7 +219,10 @@ export function CitizenApprovalPage({ scope }: { scope: "bir" | "super-admin" })
         method: "PATCH",
         body: JSON.stringify({ status: nextStatus }),
       });
-      const payload = await readJsonResponse<CitizenApprovalUpdatePayload>(response, "Unable to update citizen account.");
+      const payload = await readJsonResponse<CitizenApprovalUpdatePayload>(
+        response,
+        "Unable to update citizen account.",
+      );
       const nextRow = payload.data;
 
       setRows((current) => current.map((item) => (item.id === row.id ? nextRow : item)));
@@ -220,10 +250,17 @@ export function CitizenApprovalPage({ scope }: { scope: "bir" | "super-admin" })
             </Badge>
           </div>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Review citizen client accounts before TIN barcode access, receipt matching, and taxpayer notifications become active.
+            Review citizen client accounts before TIN barcode access, receipt matching, and taxpayer
+            notifications become active.
           </p>
         </div>
-        <Button variant="outline" size="sm" className="gap-2 text-xs" onClick={() => loadApprovals({ quiet: true })} disabled={loading || refreshing}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 text-xs"
+          onClick={() => loadApprovals({ quiet: true })}
+          disabled={loading || refreshing}
+        >
           <RefreshCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
           Refresh Queue
         </Button>
@@ -231,10 +268,30 @@ export function CitizenApprovalPage({ scope }: { scope: "bir" | "super-admin" })
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: "Total Citizens", value: summary.total, icon: UserCheck, className: "text-foreground" },
-          { label: "Pending Review", value: summary.pending, icon: Clock3, className: "text-warning" },
-          { label: "Active Accounts", value: summary.active, icon: CheckCircle2, className: "text-success" },
-          { label: "Rejected", value: summary.rejected, icon: XCircle, className: "text-destructive" },
+          {
+            label: "Total Citizens",
+            value: summary.total,
+            icon: UserCheck,
+            className: "text-foreground",
+          },
+          {
+            label: "Pending Review",
+            value: summary.pending,
+            icon: Clock3,
+            className: "text-warning",
+          },
+          {
+            label: "Active Accounts",
+            value: summary.active,
+            icon: CheckCircle2,
+            className: "text-success",
+          },
+          {
+            label: "Rejected",
+            value: summary.rejected,
+            icon: XCircle,
+            className: "text-destructive",
+          },
         ].map((item) => {
           const Icon = item.icon;
           return (
@@ -244,7 +301,9 @@ export function CitizenApprovalPage({ scope }: { scope: "bir" | "super-admin" })
                   <p className="text-xs text-muted-foreground">{item.label}</p>
                   <Icon className={cn("h-4 w-4", item.className)} />
                 </div>
-                <p className={cn("mt-2 text-2xl font-bold tabular-nums", item.className)}>{item.value.toLocaleString("en-PH")}</p>
+                <p className={cn("mt-2 text-2xl font-bold tabular-nums", item.className)}>
+                  {item.value.toLocaleString("en-PH")}
+                </p>
               </CardContent>
             </Card>
           );
@@ -256,7 +315,10 @@ export function CitizenApprovalPage({ scope }: { scope: "bir" | "super-admin" })
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div>
               <CardTitle className="text-sm">Citizen Account Queue</CardTitle>
-              <p className="text-xs text-muted-foreground">{reviewRows.length} account{reviewRows.length === 1 ? "" : "s"} currently require reviewer action.</p>
+              <p className="text-xs text-muted-foreground">
+                {reviewRows.length} account{reviewRows.length === 1 ? "" : "s"} currently require
+                reviewer action.
+              </p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
               <div className="relative sm:w-80">
@@ -291,12 +353,16 @@ export function CitizenApprovalPage({ scope }: { scope: "bir" | "super-admin" })
           )}
 
           {loading ? (
-            <div className="rounded-lg border p-8 text-center text-sm text-muted-foreground">Loading citizen approval queue...</div>
+            <div className="rounded-lg border p-8 text-center text-sm text-muted-foreground">
+              Loading citizen approval queue...
+            </div>
           ) : rows.length === 0 ? (
             <div className="rounded-lg border p-8 text-center">
               <AlertCircle className="mx-auto h-8 w-8 text-muted-foreground" />
               <p className="mt-3 text-sm font-medium text-foreground">No citizen accounts found</p>
-              <p className="mt-1 text-xs text-muted-foreground">Try another status filter or search term.</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Try another status filter or search term.
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -305,16 +371,26 @@ export function CitizenApprovalPage({ scope }: { scope: "bir" | "super-admin" })
                   <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
                     <div className="flex min-w-0 flex-1 gap-3">
                       <Avatar className="h-11 w-11 rounded-xl border bg-primary text-primary-foreground">
-                        {row.profile_photo_url && <AvatarImage src={publicAssetUrl(row.profile_photo_url)} alt={`${row.full_name} profile`} className="object-cover" />}
+                        {row.profile_photo_url && (
+                          <AvatarImage
+                            src={publicAssetUrl(row.profile_photo_url)}
+                            alt={`${row.full_name} profile`}
+                            className="object-cover"
+                          />
+                        )}
                         <AvatarFallback className="rounded-xl bg-primary text-xs font-bold text-primary-foreground">
                           {initialsFor(row.full_name)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="truncate text-sm font-semibold text-foreground">{row.full_name}</p>
+                          <p className="truncate text-sm font-semibold text-foreground">
+                            {row.full_name}
+                          </p>
                           <CitizenStatusBadge status={row.status} />
-                          <Badge variant="outline" className="text-[10px] capitalize">{row.account_type}</Badge>
+                          <Badge variant="outline" className="text-[10px] capitalize">
+                            {row.account_type}
+                          </Badge>
                         </div>
                         <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                           <span className="font-mono">{row.account_number}</span>
@@ -338,7 +414,8 @@ export function CitizenApprovalPage({ scope }: { scope: "bir" | "super-admin" })
                           )}
                         </div>
                         <p className="mt-2 text-[10px] text-muted-foreground">
-                          Submitted {dateLabel(row.created_at)} · Last updated {dateLabel(row.updated_at)}
+                          Submitted {dateLabel(row.created_at)} · Last updated{" "}
+                          {dateLabel(row.updated_at)}
                         </p>
                       </div>
                     </div>

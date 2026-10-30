@@ -7,6 +7,11 @@ export function LegacyIntegration() {
   const { profile, loading } = useAuth();
   if (loading) return <p role="status">Checking integration access…</p>;
   if (profile?.role === "merchant") return <Navigate to="/merchant/api-keys" replace />;
-  if (["admin", "super_admin", "bir"].includes(profile?.role ?? "")) return <IntegrationWorkspace />;
-  return <p role="alert">Integration administration requires an authorized business or administrator account.</p>;
+  if (["admin", "super_admin", "bir"].includes(profile?.role ?? ""))
+    return <IntegrationWorkspace />;
+  return (
+    <p role="alert">
+      Integration administration requires an authorized business or administrator account.
+    </p>
+  );
 }

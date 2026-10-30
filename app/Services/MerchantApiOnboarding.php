@@ -21,14 +21,18 @@ class MerchantApiOnboarding
             $q = DB::table('merchant_branches')->where('merchant_id', $merchant->id);
             if ($identity['branch_code']) {
                 $existing = (clone $q)->where('bir_branch_code', $identity['branch_code'])->first();
-                if ($existing && $existing->status !== 'active') return null;
+                if ($existing && $existing->status !== 'active') {
+                    return null;
+                }
             } elseif ((clone $q)->where('branch_type', 'main')->where('status', 'active')->whereNotNull('bir_branch_code')->count() !== 1) {
                 return null; // A base TIN alone cannot identify a registered establishment.
             }
             $branch = app(MerchantApiContext::class)->resolve($merchant, $actor);
         }
         $snapshot = $this->snapshot($merchant, $branch->bir_branch_code);
-        if (! $snapshot) return null;
+        if (! $snapshot) {
+            return null;
+        }
         // Stable per business/location, including across key rotation and Live/Sandbox credentials.
         $system = 'owned-'.substr(hash('sha256', $merchant->id.'|'.$branch->bir_branch_code), 0, 24);
         $hash = app(IntegrationContract::class)->canonicalHash($snapshot);
@@ -42,10 +46,14 @@ class MerchantApiOnboarding
             $request = Uuid::uuid5(Uuid::NAMESPACE_URL, 'nuers:account-connection:replacement:'.$old->id)->toString();
             $old = DB::table('integration_source_profiles')->where('request_id', $request)->first();
         }
-        if ($old) return $old;
+        if ($old) {
+            return $old;
+        }
         $previous = DB::table('integration_source_profiles')->where('merchant_id', $merchant->id)
             ->where('branch_code', $branch->bir_branch_code)->where('profile_kind', 'account_connection')->exists();
-        if ($previous && ! $accountReview && ! $replaces) return null; // Changed identity requires a new account review.
+        if ($previous && ! $accountReview && ! $replaces) {
+            return null;
+        } // Changed identity requires a new account review.
         $id = (string) Str::uuid();
         DB::table('integration_source_profiles')->insert([
             ...$snapshot, 'id' => $id, 'source_system' => $system, 'profile_kind' => 'account_connection',
@@ -67,7 +75,9 @@ class MerchantApiOnboarding
     private function snapshot(object $merchant, string $branch): ?array
     {
         $identity = app(SellerIdentity::class)->parse($merchant->tin, $branch);
-        if (! $identity['valid']) return null;
+        if (! $identity['valid']) {
+            return null;
+        }
         return ['merchant_id' => (string) $merchant->id, 'branch_code' => $branch,
             'seller_name' => (string) $merchant->business_name, 'seller_tin' => (string) $merchant->tin,
             'seller_address' => (string) $merchant->address, 'vat_registered' => (bool) $merchant->vat_registered];

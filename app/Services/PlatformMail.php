@@ -40,7 +40,9 @@ class PlatformMail
             // The transport mailbox remains provider-authorized; the public identity is always NUERS.
             $message->from($settings['from_address'], 'NUERS')->to($recipient)->subject('NUERS | '.$subject);
             $message->getSymfonyMessage()->text($body.($actionUrl ? "\n\nOpen NUERS: ".$actionUrl : '')."\n\nNUERS — National Unified Electronic Receipt System\nDigital Transactions. A Stronger Philippines.");
-            if ($pdf !== null) $message->attachData($pdf, $filename, ['mime' => 'application/pdf']);
+            if ($pdf !== null) {
+                $message->attachData($pdf, $filename, ['mime' => 'application/pdf']);
+            }
         });
     }
 }

@@ -15,19 +15,16 @@ import {
   Wifi,
   XCircle,
 } from "lucide-react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Line,
-  LineChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -46,30 +43,64 @@ const chartConfig: ChartConfig = {
 };
 
 const statusMeta: Record<string, { label: string; className: string; icon: ElementType }> = {
-  production_ready: { label: "Production Ready", className: "bg-success/15 text-success border-success/30", icon: CheckCircle2 },
-  certification_pending: { label: "Certification Pending", className: "bg-warning/15 text-warning-foreground border-warning/30", icon: Clock },
-  production_blocked: { label: "Production Blocked", className: "bg-destructive/15 text-destructive border-destructive/30", icon: XCircle },
+  production_ready: {
+    label: "Production Ready",
+    className: "bg-success/15 text-success border-success/30",
+    icon: CheckCircle2,
+  },
+  certification_pending: {
+    label: "Certification Pending",
+    className: "bg-warning/15 text-warning-foreground border-warning/30",
+    icon: Clock,
+  },
+  production_blocked: {
+    label: "Production Blocked",
+    className: "bg-destructive/15 text-destructive border-destructive/30",
+    icon: XCircle,
+  },
 };
 
 function CheckBadge({ status }: { status: EisReadinessCheck["status"] }) {
-  if (status === "ready") return <Badge className="bg-success/15 text-success border-success/30">Ready</Badge>;
-  if (status === "warning") return <Badge className="bg-warning/15 text-warning-foreground border-warning/30">Warning</Badge>;
-  if (status === "blocked") return <Badge className="bg-destructive/15 text-destructive border-destructive/30">Blocked</Badge>;
+  if (status === "ready")
+    return <Badge className="bg-success/15 text-success border-success/30">Ready</Badge>;
+  if (status === "warning")
+    return (
+      <Badge className="bg-warning/15 text-warning-foreground border-warning/30">Warning</Badge>
+    );
+  if (status === "blocked")
+    return (
+      <Badge className="bg-destructive/15 text-destructive border-destructive/30">Blocked</Badge>
+    );
   return <Badge variant="secondary">Pending</Badge>;
 }
 
 function ServiceBadge({ status }: { status: string }) {
-  if (status === "operational") return <Badge className="bg-success/15 text-success border-success/30">Operational</Badge>;
-  if (status === "pending_credentials") return <Badge className="bg-warning/15 text-warning-foreground border-warning/30">Pending Credentials</Badge>;
-  if (status === "degraded") return <Badge className="bg-warning/15 text-warning-foreground border-warning/30">Degraded</Badge>;
+  if (status === "operational")
+    return <Badge className="bg-success/15 text-success border-success/30">Operational</Badge>;
+  if (status === "pending_credentials")
+    return (
+      <Badge className="bg-warning/15 text-warning-foreground border-warning/30">
+        Pending Credentials
+      </Badge>
+    );
+  if (status === "degraded")
+    return (
+      <Badge className="bg-warning/15 text-warning-foreground border-warning/30">Degraded</Badge>
+    );
   return <Badge variant="secondary">{status.replaceAll("_", " ")}</Badge>;
 }
 
 function TransmissionBadge({ status }: { status: EisTransmission["status"] }) {
-  if (status === "acknowledged" || status === "recovered") return <Badge className="bg-success/15 text-success border-success/30">{status}</Badge>;
-  if (status === "failed" || status === "rejected") return <Badge className="bg-destructive/15 text-destructive border-destructive/30">{status}</Badge>;
+  if (status === "acknowledged" || status === "recovered")
+    return <Badge className="bg-success/15 text-success border-success/30">{status}</Badge>;
+  if (status === "failed" || status === "rejected")
+    return (
+      <Badge className="bg-destructive/15 text-destructive border-destructive/30">{status}</Badge>
+    );
   if (status === "duplicate") return <Badge variant="secondary">duplicate</Badge>;
-  return <Badge className="bg-warning/15 text-warning-foreground border-warning/30">{status}</Badge>;
+  return (
+    <Badge className="bg-warning/15 text-warning-foreground border-warning/30">{status}</Badge>
+  );
 }
 
 function EmptyChart() {
@@ -108,7 +139,11 @@ export function EisHub() {
   }, []);
 
   const blockers = useMemo(
-    () => data?.checks.filter((check) => check.status === "blocked" || (check.severity === "critical" && check.status !== "ready")) ?? [],
+    () =>
+      data?.checks.filter(
+        (check) =>
+          check.status === "blocked" || (check.severity === "critical" && check.status !== "ready"),
+      ) ?? [],
     [data],
   );
 
@@ -117,7 +152,9 @@ export function EisHub() {
       <div className="space-y-5">
         <Skeleton className="h-24 w-full" />
         <div className="grid gap-4 md:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-32" />)}
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={index} className="h-32" />
+          ))}
         </div>
         <Skeleton className="h-96 w-full" />
       </div>
@@ -142,11 +179,18 @@ export function EisHub() {
             </Badge>
           </div>
           <p className="max-w-4xl text-sm text-muted-foreground">
-            Certification, encrypted JSON payload validation, transmission queueing, duplicate prevention, retry governance, and audit controls for BIR EIS integration.
+            Certification, encrypted JSON payload validation, transmission queueing, duplicate
+            prevention, retry governance, and audit controls for BIR EIS integration.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" className="gap-2" onClick={() => load(false)} disabled={refreshing}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => load(false)}
+            disabled={refreshing}
+          >
             <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
             Refresh
           </Button>
@@ -179,14 +223,18 @@ export function EisHub() {
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold">{readiness?.score ?? 0}%</p>
-                <p className="text-xs text-muted-foreground">{readiness?.critical_blockers ?? 0} critical blockers</p>
+                <p className="text-xs text-muted-foreground">
+                  {readiness?.critical_blockers ?? 0} critical blockers
+                </p>
               </div>
             </div>
             <Progress value={readiness?.score ?? 0} className="h-2" />
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-md border p-3">
                 <p className="text-xs uppercase text-muted-foreground">Environment</p>
-                <p className="font-semibold capitalize">{data?.integration?.environment ?? "certification"}</p>
+                <p className="font-semibold capitalize">
+                  {data?.integration?.environment ?? "certification"}
+                </p>
               </div>
               <div className="rounded-md border p-3">
                 <p className="text-xs uppercase text-muted-foreground">Deadline SLA</p>
@@ -194,7 +242,9 @@ export function EisHub() {
               </div>
               <div className="rounded-md border p-3">
                 <p className="text-xs uppercase text-muted-foreground">Credentials</p>
-                <p className="font-semibold">{data?.integration?.credentials_present ? "Registered" : "Not registered"}</p>
+                <p className="font-semibold">
+                  {data?.integration?.credentials_present ? "Registered" : "Not registered"}
+                </p>
               </div>
             </div>
           </div>
@@ -232,7 +282,11 @@ export function EisHub() {
                   <p className="mt-1 text-2xl font-bold">{kpi.value}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{kpi.subtext}</p>
                 </div>
-                {kpi.key === "production_gate" ? <KeyRound className="h-5 w-5 text-warning" /> : <Database className="h-5 w-5 text-primary" />}
+                {kpi.key === "production_gate" ? (
+                  <KeyRound className="h-5 w-5 text-warning" />
+                ) : (
+                  <Database className="h-5 w-5 text-primary" />
+                )}
               </div>
             </CardContent>
           </Card>
@@ -256,12 +310,32 @@ export function EisHub() {
                     <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Line isAnimationActive={false} dataKey="submitted" stroke="var(--chart-1)" strokeWidth={2} dot={false} />
-                    <Line isAnimationActive={false} dataKey="acknowledged" stroke="var(--chart-4)" strokeWidth={2} dot={false} />
-                    <Line isAnimationActive={false} dataKey="failed" stroke="var(--chart-5)" strokeWidth={2} dot={false} />
+                    <Line
+                      isAnimationActive={false}
+                      dataKey="submitted"
+                      stroke="var(--chart-1)"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Line
+                      isAnimationActive={false}
+                      dataKey="acknowledged"
+                      stroke="var(--chart-4)"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Line
+                      isAnimationActive={false}
+                      dataKey="failed"
+                      stroke="var(--chart-5)"
+                      strokeWidth={2}
+                      dot={false}
+                    />
                   </LineChart>
                 </ChartContainer>
-              ) : <EmptyChart />}
+              ) : (
+                <EmptyChart />
+              )}
             </div>
             <div className="h-64">
               {weekly.length ? (
@@ -271,12 +345,29 @@ export function EisHub() {
                     <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar isAnimationActive={false} dataKey="submitted" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
-                    <Bar isAnimationActive={false} dataKey="acknowledged" fill="var(--chart-4)" radius={[4, 4, 0, 0]} />
-                    <Bar isAnimationActive={false} dataKey="failed" fill="var(--chart-5)" radius={[4, 4, 0, 0]} />
+                    <Bar
+                      isAnimationActive={false}
+                      dataKey="submitted"
+                      fill="var(--chart-1)"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      isAnimationActive={false}
+                      dataKey="acknowledged"
+                      fill="var(--chart-4)"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      isAnimationActive={false}
+                      dataKey="failed"
+                      fill="var(--chart-5)"
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 </ChartContainer>
-              ) : <EmptyChart />}
+              ) : (
+                <EmptyChart />
+              )}
             </div>
           </CardContent>
         </Card>
@@ -290,11 +381,16 @@ export function EisHub() {
           </CardHeader>
           <CardContent className="space-y-3">
             {data?.services.map((service: EisServiceHealth) => (
-              <div key={service.id} className="flex items-center justify-between gap-3 rounded-md border p-3">
+              <div
+                key={service.id}
+                className="flex items-center justify-between gap-3 rounded-md border p-3"
+              >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold">{service.service_name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {service.latency_ms === null ? "No live BIR latency until credentials are present" : `${service.latency_ms}ms latency`}
+                    {service.latency_ms === null
+                      ? "No live BIR latency until credentials are present"
+                      : `${service.latency_ms}ms latency`}
                   </p>
                 </div>
                 <ServiceBadge status={service.status} />
@@ -332,10 +428,14 @@ export function EisHub() {
                     </td>
                     <td className="max-w-md py-3 pr-3 text-muted-foreground">{check.name}</td>
                     <td className="py-3 pr-3 capitalize">{check.severity}</td>
-                    <td className="py-3 pr-3"><CheckBadge status={check.status} /></td>
+                    <td className="py-3 pr-3">
+                      <CheckBadge status={check.status} />
+                    </td>
                     <td className="max-w-lg py-3 text-xs text-muted-foreground">
                       <p>{check.evidence}</p>
-                      {check.status !== "ready" && <p className="mt-1 font-medium text-foreground">{check.remediation}</p>}
+                      {check.status !== "ready" && (
+                        <p className="mt-1 font-medium text-foreground">{check.remediation}</p>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -353,12 +453,36 @@ export function EisHub() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              <div className="flex justify-between gap-3"><span className="text-muted-foreground">Endpoint</span><span className="text-right font-medium">{data?.integration?.endpoint_base_url}</span></div>
-              <div className="flex justify-between gap-3"><span className="text-muted-foreground">API Version</span><span className="font-medium">{data?.integration?.api_version}</span></div>
-              <div className="flex justify-between gap-3"><span className="text-muted-foreground">JSON Schema</span><span className="font-medium">{data?.integration?.json_schema_version}</span></div>
-              <div className="flex justify-between gap-3"><span className="text-muted-foreground">Encryption</span><span className="text-right font-medium">{data?.integration?.encryption_mode}</span></div>
-              <div className="flex justify-between gap-3"><span className="text-muted-foreground">EIS CERT</span><span className="font-medium">{data?.integration?.eis_certificate_number ?? "Not registered"}</span></div>
-              <div className="flex justify-between gap-3"><span className="text-muted-foreground">PTT</span><span className="font-medium">{data?.integration?.permit_to_transmit_number ?? "Not registered"}</span></div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Endpoint</span>
+                <span className="text-right font-medium">
+                  {data?.integration?.endpoint_base_url}
+                </span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">API Version</span>
+                <span className="font-medium">{data?.integration?.api_version}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">JSON Schema</span>
+                <span className="font-medium">{data?.integration?.json_schema_version}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Encryption</span>
+                <span className="text-right font-medium">{data?.integration?.encryption_mode}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">EIS CERT</span>
+                <span className="font-medium">
+                  {data?.integration?.eis_certificate_number ?? "Not registered"}
+                </span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">PTT</span>
+                <span className="font-medium">
+                  {data?.integration?.permit_to_transmit_number ?? "Not registered"}
+                </span>
+              </div>
             </CardContent>
           </Card>
 
@@ -367,17 +491,25 @@ export function EisHub() {
               <CardTitle className="text-base">Recent Database Transmissions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {data?.recent_transmissions.length ? data.recent_transmissions.map((tx) => (
-                <div key={tx.id} className="rounded-md border p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="truncate font-mono text-xs font-semibold">{tx.id}</p>
-                    <TransmissionBadge status={tx.status} />
+              {data?.recent_transmissions.length ? (
+                data.recent_transmissions.map((tx) => (
+                  <div key={tx.id} className="rounded-md border p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate font-mono text-xs font-semibold">{tx.id}</p>
+                      <TransmissionBadge status={tx.status} />
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {tx.merchant_name ?? "Certification payload"} • {tx.invoice_count} document(s)
+                    </p>
+                    <p className="mt-1 truncate font-mono text-[11px] text-muted-foreground">
+                      {tx.payload_hash}
+                    </p>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">{tx.merchant_name ?? "Certification payload"} • {tx.invoice_count} document(s)</p>
-                  <p className="mt-1 truncate font-mono text-[11px] text-muted-foreground">{tx.payload_hash}</p>
-                </div>
-              )) : (
-                <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">No EIS transmissions have been queued yet.</p>
+                ))
+              ) : (
+                <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
+                  No EIS transmissions have been queued yet.
+                </p>
               )}
             </CardContent>
           </Card>

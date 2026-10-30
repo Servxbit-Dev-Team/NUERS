@@ -189,8 +189,8 @@ class MerchantBranchRegistryTest extends TestCase
     {
         $b = $this->create(['status' => 'inactive']);
         DB::table('eis_integrations')->insert(['id' => (string) Str::uuid(), 'merchant_id' => $this->merchant, 'branch_code' => '00001', 'environment' => 'production', 'created_at' => now(), 'updated_at' => now()]);
-        $i = app(BirCompliance::class)->integration($this->merchant,'00001','production');
-        $this->assertContains('The registered branch is operationally inactive.',app(BirCompliance::class)->gate($i,false)['blockers']);
+        $i = app(BirCompliance::class)->integration($this->merchant, '00001', 'production');
+        $this->assertContains('The registered branch is operationally inactive.', app(BirCompliance::class)->gate($i, false)['blockers']);
     }
     private function structuredAddress(array $changes = []): array
     {
@@ -209,7 +209,10 @@ class MerchantBranchRegistryTest extends TestCase
         $this->assertDatabaseCount('merchant_branches', 1);
         $this->assertDatabaseCount('merchant_branch_events', 1);
         $id = $r->json('data.id');
-        $v = $payload; unset($v['request_id']); $v['revision'] = 1; $v['structured_address']['street_address'] = 'Updated Synthetic Branch Street';
+        $v = $payload;
+        unset($v['request_id']);
+        $v['revision'] = 1;
+        $v['structured_address']['street_address'] = 'Updated Synthetic Branch Street';
         $this->putJson('/api/merchant/branches/'.$id, $v)->assertOk()->assertJsonPath('data.structured_address.street_address', 'Updated Synthetic Branch Street')->assertJsonPath('data.review_status', 'draft')->assertJsonPath('data.revision', 2);
     }
 
@@ -228,7 +231,9 @@ class MerchantBranchRegistryTest extends TestCase
 
     public function test_business_address_autofill_is_tenant_scoped_and_ignores_outdated_location_snapshots(): void
     {
-        $a = $this->structuredAddress(); $service = app(\App\Services\RegistrationAddress::class); $canonical = $service->validate($a);
+        $a = $this->structuredAddress();
+        $service = app(\App\Services\RegistrationAddress::class);
+        $canonical = $service->validate($a);
         DB::table('merchants')->where('id', $this->merchant)->update(['address' => $canonical['address'], 'city' => 'City of Caloocan', 'region' => 'National Capital Region (NCR)', 'rdo_code' => '027', 'registry_details' => json_encode(['address' => $canonical['details']])]);
         DB::table('merchants')->where('id', $this->foreign)->update(['address' => 'Foreign private business address']);
         $this->withToken($this->owner->api_token)->getJson('/api/merchant/branches')->assertOk()->assertJsonPath('merchant.registered_address.city_code', '1380100000')->assertJsonPath('merchant.registered_address.street_address', 'Synthetic Makabud Street')->assertJsonMissing(['address' => 'Foreign private business address']);
@@ -260,9 +265,12 @@ class MerchantBranchRegistryTest extends TestCase
     {
         $payload = $this->body(['structured_address' => $this->structuredAddress(), 'rdo_code' => '027']);
         $r = $this->withToken($this->owner->api_token)->postJson('/api/merchant/branches', $payload)->assertCreated();
-        $id = $r->json('data.id'); $details = json_decode(DB::table('merchant_branches')->where('id', $id)->value('address_details'), true); ksort($details);
+        $id = $r->json('data.id');
+        $details = json_decode(DB::table('merchant_branches')->where('id', $id)->value('address_details'), true);
+        ksort($details);
         DB::table('merchant_branches')->where('id', $id)->update(['review_status' => 'verified', 'address_details' => json_encode($details, JSON_PRETTY_PRINT)]);
-        unset($payload['request_id']); $payload['revision'] = 1;
+        unset($payload['request_id']);
+        $payload['revision'] = 1;
         $this->putJson('/api/merchant/branches/'.$id, $payload)->assertOk()->assertJsonPath('data.review_status', 'verified');
     }
 

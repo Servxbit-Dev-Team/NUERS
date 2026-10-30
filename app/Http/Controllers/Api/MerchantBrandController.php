@@ -50,7 +50,9 @@ class MerchantBrandController extends Controller
                     $pending = DB::table('business_registry_requests')->where('merchant_id', $fresh->id)->where('purpose', 'profile_change')->whereNull('completed_at')->lockForUpdate()->get();
                     foreach ($pending as $row) {
                         $payload = json_decode(Crypt::decryptString($row->payload), true, flags: JSON_THROW_ON_ERROR);
-                        if (array_keys($payload['changes'] ?? []) !== ['logo_url']) continue;
+                        if (array_keys($payload['changes'] ?? []) !== ['logo_url']) {
+                            continue;
+                        }
                         $payload['status'] = 'withdrawn';
                         $payload['review_reason'] = 'Replaced by an immediate owner profile image update.';
                         DB::table('business_registry_requests')->where('id', $row->id)->update(['payload' => Crypt::encryptString(json_encode($payload, JSON_THROW_ON_ERROR)), 'completed_at' => now(), 'revoked_at' => now(), 'updated_at' => now()]);
@@ -61,7 +63,9 @@ class MerchantBrandController extends Controller
                 return response()->json(['logo' => $url, 'merchant_id' => $fresh->id, 'pending_approval' => false])->header('Cache-Control', 'private, no-store');
             });
         } catch (\Throwable $error) {
-            if ($name && is_file($directory.'/'.$name)) unlink($directory.'/'.$name);
+            if ($name && is_file($directory.'/'.$name)) {
+                unlink($directory.'/'.$name);
+            }
             throw $error;
         }
     }

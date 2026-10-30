@@ -209,7 +209,9 @@ class MerchantCustomerController
         $m = $this->merchant($r);
         $v = $this->filter($r);
         $q = $this->query($m->id, $v);
-        if ($r->has('report_limit')) \App\Services\ReportCsv::limit($r,(clone $q)->count());
+        if ($r->has('report_limit')) {
+            \App\Services\ReportCsv::limit($r, (clone $q)->count());
+        }
         abort_if((clone $q)->count() > 10000, 422, 'Narrow the filters to export at most 10,000 customers.');
         app(BirCompliance::class)->audit('customer.exported', $m->id, (string) $r->attributes->get('api_actor')->id, ['filtered_count' => (clone $q)->count()]);
 

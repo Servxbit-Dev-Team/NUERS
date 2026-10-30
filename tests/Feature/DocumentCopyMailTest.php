@@ -16,10 +16,14 @@ class DocumentCopyMailTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        config(['notifications.dispatch_enabled'=>true]);
-        config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:', 'app.timezone' => 'UTC', 'security.enforce_privileged_mfa' => false]); DB::purge('sqlite');
-        foreach (glob(database_path('migrations/*.php')) as $file) (require $file)->up();
-        $this->owner = $this->actor('merchant'); $this->admin = $this->actor('super_admin');
+        config(['notifications.dispatch_enabled' => true]);
+        config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:', 'app.timezone' => 'UTC', 'security.enforce_privileged_mfa' => false]);
+        DB::purge('sqlite');
+        foreach (glob(database_path('migrations/*.php')) as $file) {
+            (require $file)->up();
+        }
+        $this->owner = $this->actor('merchant');
+        $this->admin = $this->actor('super_admin');
         DB::table('merchants')->insert(['id' => 'm', 'business_name' => 'QA seller', 'tin' => '123456789', 'merchant_account_id' => $this->owner->id, 'status' => 'active']);
         DB::table('merchants')->insert(['id' => 'foreign', 'business_name' => 'Other seller', 'tin' => '987654321']);
         foreach (['issued', 'draft', 'foreign'] as $id) {
@@ -28,9 +32,24 @@ class DocumentCopyMailTest extends TestCase
             DB::table('business_invoice_items')->insert(['id' => 'item-'.$id, 'invoice_id' => $id, 'merchant_id' => $id === 'foreign' ? 'foreign' : 'm', 'description' => 'Recorded exempt service', 'quantity' => 1, 'unit_price' => 1000, 'line_total' => 1000, 'tax_type' => 'vat_exempt']);
         }
     }
-    private function actor(string $role): User { $u = User::factory()->create(['api_token' => Str::random(64)]); DB::table('profiles')->insert(['id' => $u->id, 'role' => $role, 'email' => $u->email]); return $u; }
-    private function settings(int $revision = 0): array { return ['revision' => $revision, 'host' => 'smtp.example.com', 'port' => 587, 'encryption' => 'starttls', 'username' => 'smtp-user', 'password' => 'secret-app-password', 'from_address' => 'receipts@example.com', 'from_name' => 'NUERS QA', 'enabled' => false]; }
-    private function configured(): void { $v = $this->settings(); unset($v['revision']); $v['enabled'] = true; $hash = app(PlatformMail::class)->connectionHash($v); DB::table('platform_mail_settings')->insert(['id' => 1, 'encrypted_settings' => Crypt::encryptString(json_encode($v)), 'revision' => 1, 'connection_hash' => $hash, 'tested_hash' => $hash, 'updated_by' => $this->admin->id, 'created_at' => now(), 'updated_at' => now()]); }
+    private function actor(string $role): User
+    {
+        $u = User::factory()->create(['api_token' => Str::random(64)]);
+        DB::table('profiles')->insert(['id' => $u->id, 'role' => $role, 'email' => $u->email]);
+        return $u;
+    }
+    private function settings(int $revision = 0): array
+    {
+        return ['revision' => $revision, 'host' => 'smtp.example.com', 'port' => 587, 'encryption' => 'starttls', 'username' => 'smtp-user', 'password' => 'secret-app-password', 'from_address' => 'receipts@example.com', 'from_name' => 'NUERS QA', 'enabled' => false];
+    }
+    private function configured(): void
+    {
+        $v = $this->settings();
+        unset($v['revision']);
+        $v['enabled'] = true;
+        $hash = app(PlatformMail::class)->connectionHash($v);
+        DB::table('platform_mail_settings')->insert(['id' => 1, 'encrypted_settings' => Crypt::encryptString(json_encode($v)), 'revision' => 1, 'connection_hash' => $hash, 'tested_hash' => $hash, 'updated_by' => $this->admin->id, 'created_at' => now(), 'updated_at' => now()]);
+    }
 
     public function test_authentication_tenant_and_admin_boundaries(): void
     {
@@ -50,13 +69,17 @@ class DocumentCopyMailTest extends TestCase
         $this->assertStringNotContainsString('secret-app-password', json_encode(DB::table('eis_audit_events')->get()));
         $this->putJson('/api/admin/configuration/smtp', $this->settings())->assertConflict();
         $this->putJson('/api/admin/configuration/smtp', array_replace($this->settings(1), ['password' => null, 'enabled' => true]))->assertUnprocessable();
-        foreach (['127.0.0.1', 'localhost', 'mail.internal', 'smtp.example.com/path'] as $host) $this->putJson('/api/admin/configuration/smtp', array_replace($this->settings(1), ['host' => $host]))->assertUnprocessable();
+        foreach (['127.0.0.1', 'localhost', 'mail.internal', 'smtp.example.com/path'] as $host) {
+            $this->putJson('/api/admin/configuration/smtp', array_replace($this->settings(1), ['host' => $host]))->assertUnprocessable();
+        }
         $this->putJson('/api/admin/configuration/smtp', array_replace($this->settings(1), ['port' => 80]))->assertUnprocessable();
         $this->assertTrue(app(BirCompliance::class)->auditIntegrity());
     }
     public function test_successful_test_is_required_before_enabling_and_credential_changes_invalidate_it(): void
     {
-        $mail = Mockery::mock(PlatformMail::class)->makePartial(); $mail->shouldReceive('send')->once()->withArgs(fn ($settings, $to, $subject, $body) => $to === 'test@example.test' && $settings['password'] === 'secret-app-password'); $this->app->instance(PlatformMail::class, $mail);
+        $mail = Mockery::mock(PlatformMail::class)->makePartial();
+        $mail->shouldReceive('send')->once()->withArgs(fn ($settings, $to, $subject, $body) => $to === 'test@example.test' && $settings['password'] === 'secret-app-password');
+        $this->app->instance(PlatformMail::class, $mail);
         $this->withToken($this->admin->api_token)->putJson('/api/admin/configuration/smtp', $this->settings())->assertOk();
         $this->postJson('/api/admin/configuration/smtp/test', ['email' => 'test@example.test', 'revision' => 1])->assertOk();
         $this->putJson('/api/admin/configuration/smtp', array_replace($this->settings(1), ['password' => null, 'enabled' => true]))->assertOk()->assertJsonPath('tested', true)->assertJsonPath('smtp.enabled', true);
@@ -65,7 +88,9 @@ class DocumentCopyMailTest extends TestCase
     }
     public function test_failed_test_does_not_expose_provider_secrets_or_enable_mail(): void
     {
-        $mail = Mockery::mock(PlatformMail::class)->makePartial(); $mail->shouldReceive('send')->once()->andThrow(new \RuntimeException('secret-app-password confidential server reply')); $this->app->instance(PlatformMail::class, $mail);
+        $mail = Mockery::mock(PlatformMail::class)->makePartial();
+        $mail->shouldReceive('send')->once()->andThrow(new \RuntimeException('secret-app-password confidential server reply'));
+        $this->app->instance(PlatformMail::class, $mail);
         $this->withToken($this->admin->api_token)->putJson('/api/admin/configuration/smtp', $this->settings())->assertOk();
         $response = $this->postJson('/api/admin/configuration/smtp/test', ['email' => 'test@example.test', 'revision' => 1])->assertUnprocessable();
         $this->assertStringNotContainsString('secret-app-password', $response->getContent());
@@ -87,17 +112,22 @@ class DocumentCopyMailTest extends TestCase
     }
     public function test_email_attaches_server_pdf_and_idempotency_preserves_originals(): void
     {
-        $this->configured(); $before = (array) DB::table('business_invoices')->where('id', 'issued')->first();
-        $mail = Mockery::mock(PlatformMail::class)->makePartial(); $mail->shouldReceive('send')->once()->withArgs(fn ($settings, $to, $subject, $body, $pdf, $filename) => $to === 'new-customer@example.test' && str_starts_with($pdf, '%PDF-') && $filename === 'QA-issued.pdf'); $this->app->instance(PlatformMail::class, $mail);
+        $this->configured();
+        $before = (array) DB::table('business_invoices')->where('id', 'issued')->first();
+        $mail = Mockery::mock(PlatformMail::class)->makePartial();
+        $mail->shouldReceive('send')->once()->withArgs(fn ($settings, $to, $subject, $body, $pdf, $filename) => $to === 'new-customer@example.test' && str_starts_with($pdf, '%PDF-') && $filename === 'QA-issued.pdf');
+        $this->app->instance(PlatformMail::class, $mail);
         $body = ['email' => 'new-customer@example.test', 'request_id' => (string) Str::uuid()];
         $this->withToken($this->owner->api_token)->postJson('/api/document-copies/invoice/issued/email', $body)->assertAccepted()->assertJsonPath('state', 'queued');
-        $this->postJson('/api/document-copies/invoice/issued/email', array_replace($body,['request_id'=>(string)Str::uuid()]))->assertAccepted();
+        $this->postJson('/api/document-copies/invoice/issued/email', array_replace($body, ['request_id' => (string)Str::uuid()]))->assertAccepted();
         $this->assertSame(1, DB::table('document_email_deliveries')->count());
         app(\App\Services\PlatformNotifications::class)->runOne();
         $this->postJson('/api/document-copies/invoice/issued/email', $body)->assertOk();
         $this->postJson('/api/document-copies/invoice/issued/email', array_replace($body, ['email' => 'other@example.test']))->assertConflict();
         $this->assertSame(1, DB::table('document_email_deliveries')->count());
-        $delivery = DB::table('document_email_deliveries')->first(); $this->assertSame($body['email'], Crypt::decryptString($delivery->encrypted_recipient)); $this->assertSame(64, strlen($delivery->pdf_hash));
+        $delivery = DB::table('document_email_deliveries')->first();
+        $this->assertSame($body['email'], Crypt::decryptString($delivery->encrypted_recipient));
+        $this->assertSame(64, strlen($delivery->pdf_hash));
         $this->getJson('/api/document-copies/invoice/issued')->assertOk()->assertJsonPath('email', 'buyer@example.test')->assertJsonPath('history.0.state', 'smtp_accepted');
         $this->assertSame($before, (array) DB::table('business_invoices')->where('id', 'issued')->first());
         $this->assertTrue(app(BirCompliance::class)->auditIntegrity());
@@ -107,7 +137,10 @@ class DocumentCopyMailTest extends TestCase
         $this->withToken($this->owner->api_token)->postJson('/api/document-copies/invoice/issued/email', ['email' => 'bad-email', 'request_id' => Str::uuid()])->assertUnprocessable();
         $this->postJson('/api/document-copies/invoice/draft/email', ['email' => 'a@example.test', 'request_id' => Str::uuid()])->assertConflict();
         $this->postJson('/api/document-copies/invoice/issued/email', ['email' => 'a@example.test', 'request_id' => Str::uuid()])->assertStatus(503);
-        $this->configured(); $mail = Mockery::mock(PlatformMail::class)->makePartial(); $mail->shouldReceive('send')->once()->andThrow(new \RuntimeException('SMTP timeout secret')); $this->app->instance(PlatformMail::class, $mail);
+        $this->configured();
+        $mail = Mockery::mock(PlatformMail::class)->makePartial();
+        $mail->shouldReceive('send')->once()->andThrow(new \RuntimeException('SMTP timeout secret'));
+        $this->app->instance(PlatformMail::class, $mail);
         $body = ['email' => 'a@example.test', 'request_id' => (string) Str::uuid()];
         $this->postJson('/api/document-copies/invoice/issued/email', $body)->assertAccepted()->assertJsonPath('state', 'queued');
         app(\App\Services\PlatformNotifications::class)->runOne();

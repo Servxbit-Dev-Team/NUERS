@@ -1,7 +1,25 @@
 import {
-  Activity, Brain, Building2, CheckCircle2, Code, CreditCard, Database,
-  FileText, Fingerprint, Globe, Key, Landmark, Layers, Lock, Network,
-  QrCode, Receipt, Server, ShieldCheck, Users, Wallet,
+  Activity,
+  Brain,
+  Building2,
+  CheckCircle2,
+  Code,
+  CreditCard,
+  Database,
+  FileText,
+  Fingerprint,
+  Globe,
+  Key,
+  Landmark,
+  Layers,
+  Lock,
+  Network,
+  QrCode,
+  Receipt,
+  Server,
+  ShieldCheck,
+  Users,
+  Wallet,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,37 +27,145 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 
 const portals = [
-  { name: "Super Admin", audience: "NUERS platform operators", modules: "System, users, RBAC, APIs, security, transaction fees, gateways", icon: Server },
-  { name: "BIR Dashboard", audience: "BIR personnel and regulators", modules: "Revenue, compliance, audit, verification, reports, forecasts", icon: Landmark },
-  { name: "Business Account Dashboard", audience: "Businesses and institutions", modules: "EOR issuance, POS, branches, settlements, reports, compliance", icon: Building2 },
-  { name: "Client Dashboard", audience: "Citizens, taxpayers, students, patients", modules: "Wallet, payments, receipts, notifications, verification", icon: Users },
+  {
+    name: "Super Admin",
+    audience: "NUERS platform operators",
+    modules: "System, users, RBAC, APIs, security, transaction fees, gateways",
+    icon: Server,
+  },
+  {
+    name: "BIR Dashboard",
+    audience: "BIR personnel and regulators",
+    modules: "Revenue, compliance, audit, verification, reports, forecasts",
+    icon: Landmark,
+  },
+  {
+    name: "Business Account Dashboard",
+    audience: "Businesses and institutions",
+    modules: "EOR issuance, POS, branches, settlements, reports, compliance",
+    icon: Building2,
+  },
+  {
+    name: "Client Dashboard",
+    audience: "Citizens, taxpayers, students, patients",
+    modules: "Wallet, payments, receipts, notifications, verification",
+    icon: Users,
+  },
 ];
 
 const permissions = [
-  { permission: "Manage platform configuration", superAdmin: true, bir: false, merchant: false, client: false },
-  { permission: "Manage users and RBAC policies", superAdmin: true, bir: false, merchant: false, client: false },
-  { permission: "Monitor national collections", superAdmin: true, bir: true, merchant: false, client: false },
-  { permission: "Review audit trails and fraud cases", superAdmin: true, bir: true, merchant: false, client: false },
-  { permission: "Issue electronic official receipts", superAdmin: false, bir: false, merchant: true, client: false },
-  { permission: "Manage POS and payment integrations", superAdmin: true, bir: false, merchant: true, client: false },
-  { permission: "Pay fees and manage wallet", superAdmin: false, bir: false, merchant: false, client: true },
-  { permission: "Verify public receipts", superAdmin: true, bir: true, merchant: true, client: true },
+  {
+    permission: "Manage platform configuration",
+    superAdmin: true,
+    bir: false,
+    merchant: false,
+    client: false,
+  },
+  {
+    permission: "Manage users and RBAC policies",
+    superAdmin: true,
+    bir: false,
+    merchant: false,
+    client: false,
+  },
+  {
+    permission: "Monitor national collections",
+    superAdmin: true,
+    bir: true,
+    merchant: false,
+    client: false,
+  },
+  {
+    permission: "Review audit trails and fraud cases",
+    superAdmin: true,
+    bir: true,
+    merchant: false,
+    client: false,
+  },
+  {
+    permission: "Issue electronic official receipts",
+    superAdmin: false,
+    bir: false,
+    merchant: true,
+    client: false,
+  },
+  {
+    permission: "Manage POS and payment integrations",
+    superAdmin: true,
+    bir: false,
+    merchant: true,
+    client: false,
+  },
+  {
+    permission: "Pay fees and manage wallet",
+    superAdmin: false,
+    bir: false,
+    merchant: false,
+    client: true,
+  },
+  {
+    permission: "Verify public receipts",
+    superAdmin: true,
+    bir: true,
+    merchant: true,
+    client: true,
+  },
 ];
 
 const schemaGroups = [
-  { name: "Identity and Access", tables: "users, profiles, roles, permissions, role_permissions, bir_accounts, client_accounts", icon: Fingerprint },
-  { name: "Revenue and Receipts", tables: "Business account registry, transactions, receipt records, receipt verifications", icon: Receipt },
-  { name: "Payments and Settlement", tables: "payment_gateways, settlement_batches, subscriptions", icon: Wallet },
-  { name: "Security and Audit", tables: "audit_events, fraud_signals, ai_insights, notifications", icon: ShieldCheck },
-  { name: "Integrations", tables: "api_clients, API scopes, webhook events, gateway health metadata", icon: Code },
+  {
+    name: "Identity and Access",
+    tables: "users, profiles, roles, permissions, role_permissions, bir_accounts, client_accounts",
+    icon: Fingerprint,
+  },
+  {
+    name: "Revenue and Receipts",
+    tables: "Business account registry, transactions, receipt records, receipt verifications",
+    icon: Receipt,
+  },
+  {
+    name: "Payments and Settlement",
+    tables: "payment_gateways, settlement_batches, subscriptions",
+    icon: Wallet,
+  },
+  {
+    name: "Security and Audit",
+    tables: "audit_events, fraud_signals, ai_insights, notifications",
+    icon: ShieldCheck,
+  },
+  {
+    name: "Integrations",
+    tables: "api_clients, API scopes, webhook events, gateway health metadata",
+    icon: Code,
+  },
 ];
 
 const apiLayers = [
-  { layer: "Authentication", contract: "JWT bearer token, OAuth2-ready clients, MFA challenge metadata", icon: Key },
-  { layer: "Receipt API", contract: "Issue EOR, cancel workflow, reprint, QR payload, digital signature", icon: QrCode },
-  { layer: "Collection API", contract: "Government, business account, school, hospital, utility, and regulatory payments", icon: CreditCard },
-  { layer: "Compliance API", contract: "Filing status, scorecards, audit cases, exception reports", icon: FileText },
-  { layer: "Analytics API", contract: "Revenue forecasting, anomaly detection, risk scoring, dashboards", icon: Brain },
+  {
+    layer: "Authentication",
+    contract: "JWT bearer token, OAuth2-ready clients, MFA challenge metadata",
+    icon: Key,
+  },
+  {
+    layer: "Receipt API",
+    contract: "Issue EOR, cancel workflow, reprint, QR payload, digital signature",
+    icon: QrCode,
+  },
+  {
+    layer: "Collection API",
+    contract: "Government, business account, school, hospital, utility, and regulatory payments",
+    icon: CreditCard,
+  },
+  {
+    layer: "Compliance API",
+    contract: "Filing status, scorecards, audit cases, exception reports",
+    icon: FileText,
+  },
+  {
+    layer: "Analytics API",
+    contract: "Revenue forecasting, anomaly detection, risk scoring, dashboards",
+    icon: Brain,
+  },
 ];
 
 const flows = [
@@ -52,9 +178,11 @@ const flows = [
 ];
 
 function PermissionMark({ enabled }: { enabled: boolean }) {
-  return enabled
-    ? <CheckCircle2 className="mx-auto h-4 w-4 text-success" />
-    : <span className="mx-auto block h-1.5 w-1.5 rounded-full bg-muted-foreground/30" />;
+  return enabled ? (
+    <CheckCircle2 className="mx-auto h-4 w-4 text-success" />
+  ) : (
+    <span className="mx-auto block h-1.5 w-1.5 rounded-full bg-muted-foreground/30" />
+  );
 }
 
 export function PlatformArchitecture() {
@@ -66,9 +194,9 @@ export function PlatformArchitecture() {
         </Badge>
         <h1 className="mt-3 text-2xl font-bold text-foreground">NUERS Enterprise Blueprint</h1>
         <p className="mt-1 max-w-4xl text-sm leading-6 text-muted-foreground">
-          The current Laravel and MySQL implementation now presents the full enterprise operating model:
-          four portals, RBAC, receipt verification, payment processing, auditability, security controls,
-          AI analytics, and national-scale reporting surfaces.
+          The current Laravel and MySQL implementation now presents the full enterprise operating
+          model: four portals, RBAC, receipt verification, payment processing, auditability,
+          security controls, AI analytics, and national-scale reporting surfaces.
         </p>
       </div>
 
@@ -91,7 +219,9 @@ export function PlatformArchitecture() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm">Roles and Permissions Matrix</CardTitle>
-          <p className="text-xs text-muted-foreground">Role-Based Access Control for Super Admin, BIR, Business Account, and Client portals.</p>
+          <p className="text-xs text-muted-foreground">
+            Role-Based Access Control for Super Admin, BIR, Business Account, and Client portals.
+          </p>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -109,10 +239,18 @@ export function PlatformArchitecture() {
                 {permissions.map((row) => (
                   <tr key={row.permission} className="border-b last:border-0">
                     <td className="py-3 text-xs font-medium text-foreground">{row.permission}</td>
-                    <td className="py-3 text-center"><PermissionMark enabled={row.superAdmin} /></td>
-                    <td className="py-3 text-center"><PermissionMark enabled={row.bir} /></td>
-                    <td className="py-3 text-center"><PermissionMark enabled={row.merchant} /></td>
-                    <td className="py-3 text-center"><PermissionMark enabled={row.client} /></td>
+                    <td className="py-3 text-center">
+                      <PermissionMark enabled={row.superAdmin} />
+                    </td>
+                    <td className="py-3 text-center">
+                      <PermissionMark enabled={row.bir} />
+                    </td>
+                    <td className="py-3 text-center">
+                      <PermissionMark enabled={row.merchant} />
+                    </td>
+                    <td className="py-3 text-center">
+                      <PermissionMark enabled={row.client} />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -125,7 +263,9 @@ export function PlatformArchitecture() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">Database Schema Groups</CardTitle>
-            <p className="text-xs text-muted-foreground">Tables added for enterprise identity, payments, audit, AI, and verification.</p>
+            <p className="text-xs text-muted-foreground">
+              Tables added for enterprise identity, payments, audit, AI, and verification.
+            </p>
           </CardHeader>
           <CardContent className="space-y-3">
             {schemaGroups.map((group) => (
@@ -147,7 +287,9 @@ export function PlatformArchitecture() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">API Architecture</CardTitle>
-            <p className="text-xs text-muted-foreground">Service contracts for scalable nationwide integrations.</p>
+            <p className="text-xs text-muted-foreground">
+              Service contracts for scalable nationwide integrations.
+            </p>
           </CardHeader>
           <CardContent className="space-y-3">
             {apiLayers.map((layer, index) => (
@@ -159,7 +301,9 @@ export function PlatformArchitecture() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium text-foreground">{layer.layer}</p>
-                      <Badge variant="outline" className="text-[10px]">v{index + 1}</Badge>
+                      <Badge variant="outline" className="text-[10px]">
+                        v{index + 1}
+                      </Badge>
                     </div>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">{layer.contract}</p>
                   </div>
@@ -174,7 +318,9 @@ export function PlatformArchitecture() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">Complete UI/UX Flow Map</CardTitle>
-            <p className="text-xs text-muted-foreground">Operational journey from onboarding through audit and verification.</p>
+            <p className="text-xs text-muted-foreground">
+              Operational journey from onboarding through audit and verification.
+            </p>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -212,8 +358,17 @@ export function PlatformArchitecture() {
             ))}
             <Separator />
             <div className="flex flex-wrap gap-2">
-              {["Docker ready", "Kubernetes ready", "Redis queue ready", "S3 storage ready", "OAuth2 ready", "AI scoring ready"].map((tag) => (
-                <Badge key={tag} variant="outline" className="text-[10px]">{tag}</Badge>
+              {[
+                "Docker ready",
+                "Kubernetes ready",
+                "Redis queue ready",
+                "S3 storage ready",
+                "OAuth2 ready",
+                "AI scoring ready",
+              ].map((tag) => (
+                <Badge key={tag} variant="outline" className="text-[10px]">
+                  {tag}
+                </Badge>
               ))}
             </div>
           </CardContent>

@@ -30,9 +30,9 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($response->getStatusCode() === 429 && ! request()->is('api/*') && ! request()->expectsJson()) {
                 $headers = $response->headers->all();
                 unset($headers['content-type'], $headers['content-length']);
-                return response()->view('errors.429', ['retryAfter' => $response->headers->get('Retry-After')], 429, $headers)
+                $response = response()->view('errors.429', ['retryAfter' => $response->headers->get('Retry-After')], 429, $headers)
                     ->header('Cache-Control', 'private, no-store');
             }
-            return $response;
+            return SecurityHeaders::apply(request(), $response);
         });
     })->create();

@@ -19,7 +19,7 @@ class IntegrationWorkspaceController extends Controller
             abort_unless(in_array(DB::table('profiles')->where('id', $u->id)->value('role'), ['admin', 'super_admin']), 403);
         }
 
-return $u;
+        return $u;
     }
 
     private function lock()
@@ -58,7 +58,7 @@ return $u;
             $q->where('l.method', $r->method);
         }
 
-return $q;
+        return $q;
     }
 
     private function redact($log)
@@ -209,7 +209,8 @@ return $q;
         $u = $this->actor($r, true);
         $v = $r->validate(['connection_id' => 'required|exists:integration_connections,id', 'revision' => 'required|integer|min:0', 'url' => 'required|url:https|max:500', 'events' => 'required|array|min:1|max:4', 'events.*' => 'required|in:invoice.issued,transmission.acknowledged,transmission.failed,permit.expiring', 'status' => 'required|in:disabled,configured', 'secret' => 'nullable|string|min:32|max:4096', 'evidence' => 'required|string|min:10|max:3000', 'reason' => 'required|string|min:10|max:2000']);
         $this->https($v['url']);
-        $urlParts=parse_url($v['url']);abort_if(isset($urlParts['user']) || isset($urlParts['pass']) || isset($urlParts['fragment']) || (isset($urlParts['port']) && $urlParts['port']!==443),422,'Webhook URLs cannot contain credentials, fragments or non-443 ports.');
+        $urlParts = parse_url($v['url']);
+        abort_if(isset($urlParts['user']) || isset($urlParts['pass']) || isset($urlParts['fragment']) || (isset($urlParts['port']) && $urlParts['port'] !== 443), 422, 'Webhook URLs cannot contain credentials, fragments or non-443 ports.');
 
         return DB::transaction(function () use ($v, $u, $id) {
             $this->lock();
@@ -251,22 +252,24 @@ return $q;
     {
         $u = $this->actor($r);
         $r->validate(['search' => 'nullable|string|max:255', 'from' => 'nullable|date_format:Y-m-d', 'to' => 'nullable|date_format:Y-m-d|after_or_equal:from']);
-        if ($r->has('report_limit')) \App\Services\ReportCsv::limit($r,$this->logQuery($r)->count());
+        if ($r->has('report_limit')) {
+            \App\Services\ReportCsv::limit($r, $this->logQuery($r)->count());
+        }
         $rows = $this->logQuery($r)->orderByDesc('l.created_at')->get()->map(fn ($x) => $this->redact($x));
         app(BirCompliance::class)->audit('integration.logs_exported', null, $u->id, ['count' => $rows->count()]);
 
         return response()->streamDownload(function () use ($rows) {
-            $f = fopen('php://output','w');
-            fwrite($f,"\xEF\xBB\xBF");
+            $f = fopen('php://output', 'w');
+            fwrite($f, "\xEF\xBB\xBF");
             $header = ['created_at', 'endpoint', 'method', 'status_code', 'latency_ms', 'environment', 'merchant_name', 'error_code', 'error_message'];
-            fputcsv($f,$header);
+            fputcsv($f, $header);
             foreach ($rows as $x) {
-                fputcsv($f,array_map(function ($k) use ($x) {
+                fputcsv($f, array_map(function ($k) use ($x) {
                     $v = $x->$k ?? '';
 
-                    return preg_match('/^\s*[=+@\-]/u',(string) $v) ? "'".$v : $v;
-                },$header));
+                    return preg_match('/^\s*[=+@\-]/u', (string) $v) ? "'".$v : $v;
+                }, $header));
             }fclose($f);
-        },'NUERS-api-request-logs.csv',['Content-Type' => 'text/csv; charset=UTF-8']);
+        }, 'NUERS-api-request-logs.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 }

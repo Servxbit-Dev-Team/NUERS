@@ -18,7 +18,9 @@ class PrepareVerifiedApiConnections extends Command
             foreach ($merchants as $m) {
                 $ok = DB::transaction(function () use ($m) {
                     $merchant = DB::table('merchants')->where('id', $m->id)->lockForUpdate()->first();
-                    if (! $merchant || $merchant->status !== 'active') return false;
+                    if (! $merchant || $merchant->status !== 'active') {
+                        return false;
+                    }
                     $profile = app(MerchantApiOnboarding::class)->prepare($merchant, 'system:verified-api-setup');
                     return $profile && $profile->status === 'active' && app(MerchantApiOnboarding::class)->matches($profile, $merchant);
                 }, 3);

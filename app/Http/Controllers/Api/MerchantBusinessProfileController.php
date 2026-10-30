@@ -7,7 +7,6 @@ use App\Services\ApiAccess;
 use App\Services\BirCompliance;
 use App\Services\MerchantSystemIntegration;
 use App\Services\MerchantVerificationDocuments;
-use App\Services\PlatformNotifications;
 use App\Services\RegistrationIndustry;
 use App\Services\TaxpayerAuthority;
 use Carbon\CarbonImmutable;
@@ -88,7 +87,7 @@ class MerchantBusinessProfileController extends Controller
     {
         $m = $this->merchant($r);
         abort_if(array_diff(array_keys($r->all()), ['revision','registry_revision','phone','website','details']), 422, 'Only Contact Number, Website and Business Description can be saved directly. Request administrator approval for other fields.');
-        $v = $r->validate(['revision'=>'required|integer|min:0','registry_revision'=>'required|integer|min:1','details'=>'required|array:business_description','details.business_description'=>'nullable|string|max:500','phone'=>['nullable','string','max:32','regex:/^\+?[0-9 ()-]{7,32}$/'],'website'=>'nullable|url:http,https|max:255']);
+        $v = $r->validate(['revision' => 'required|integer|min:0','registry_revision' => 'required|integer|min:1','details' => 'required|array:business_description','details.business_description' => 'nullable|string|max:500','phone' => ['nullable','string','max:32','regex:/^\+?[0-9 ()-]{7,32}$/'],'website' => 'nullable|url:http,https|max:255']);
         if (! empty($v['website'])) {
             abort_if(parse_url($v['website'], PHP_URL_USER) !== null || parse_url($v['website'], PHP_URL_PASS) !== null, 422, 'Website URLs must not include credentials.');
         }

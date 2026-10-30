@@ -1,58 +1,775 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
-import { FileCheck2, Plus, RefreshCw, Download, X, ShieldCheck, ArrowRight } from 'lucide-react';
-import { apiJson, apiFetch } from '@/lib/api-url';
-import { useRealtimeRefresh } from '@/lib/use-realtime-refresh';
-import './operations.css';
+import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
+import { FileCheck2, Plus, RefreshCw, Download, X, ShieldCheck, ArrowRight } from "lucide-react";
+import { apiJson, apiFetch } from "@/lib/api-url";
+import { useRealtimeRefresh } from "@/lib/use-realtime-refresh";
+import "./operations.css";
 
-type Kind='outage'|'manual_invoice'|'cwt_memo'|'service_fee';
-type RecordRow={id:string;merchant_id:string;business_name:string;tin:string;kind:Kind;reference:string;status:string;business_date:string;amount_centavos:number;revision:number;details:Record<string,any>};
-type Data={data:RecordRow[];total:number;page:number;last_page:number;is_admin:boolean;can_bill:boolean;merchant_id:string|null;readiness:{source_intake_enforced:boolean;service_issuer_configured:boolean;official_issuance:string;transmission:string}};
-type Field={key:string;label:string;type?:string;help?:string;options?:[string,string][]};
-const names:Record<Kind,string>={outage:'Outage register',manual_invoice:'Manual invoice recovery',cwt_memo:'CWT adjustment memos',service_fee:'NUERS service invoices'};
-const money=(n:number)=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP'}).format(n/100);
-const wording=(x:string)=>x.replaceAll('_',' ');
-const today=()=>new Date(Date.now()+8*3600000).toISOString().slice(0,10);
-const fields:Record<Kind,Field[]>={
- outage:[{key:'title',label:'Incident title'},{key:'started_at',label:'Outage started (local time)',type:'datetime-local'},{key:'evidence_reference',label:'Incident / evidence reference',help:'Identify the incident record and supporting evidence.'}],
- manual_invoice:[{key:'outage_id',label:'Recorded outage',options:[]},{key:'manual_number',label:'Original manual invoice number'},{key:'branch_code',label:'Registered branch code',help:'Five digits; main office is 00000.'},{key:'issued_at',label:'Manual invoice issued (local time)',type:'datetime-local'},{key:'amount',label:'Gross invoice amount (PHP)',type:'number'},{key:'buyer_name',label:'Buyer name exactly as shown'},{key:'authority_reference',label:'Manual invoice authority / ATP reference'},{key:'evidence_reference',label:'Retained manual invoice evidence'}],
- cwt_memo:[{key:'source',label:'Original document source',options:[['receipt','Captured ERP / POS invoice'],['invoice','NUERS invoice']]},{key:'document_id',label:'Original invoice',options:[]},{key:'classification',label:'Buyer withholding-agent classification'},{key:'atc',label:'Alphanumeric Tax Code (ATC)',help:'Buyer/payor provides the applicable ATC, for example WC160.'},{key:'rate',label:'CWT rate (%)',type:'number'},{key:'base',label:'CWT tax base (PHP)',type:'number'},{key:'amount',label:'Correct CWT amount (PHP)',type:'number'},{key:'evidence_reference',label:'Buyer / payor confirmation reference'},{key:'reason',label:'Reason for CWT correction'}],
- service_fee:[{key:'from',label:'Billing period from',type:'date'},{key:'to',label:'Billing period to',type:'date'},{key:'reason',label:'Billing review reference / reason',help:'Only unbilled posted fees are included. No additional wallet deduction.'}]
+type Kind = "outage" | "manual_invoice" | "cwt_memo" | "service_fee";
+type RecordRow = {
+  id: string;
+  merchant_id: string;
+  business_name: string;
+  tin: string;
+  kind: Kind;
+  reference: string;
+  status: string;
+  business_date: string;
+  amount_centavos: number;
+  revision: number;
+  details: Record<string, any>;
 };
-function flatten(value:any,prefix=''):Array<[string,string]>{return value&&typeof value==='object'?Object.entries(value).flatMap(([k,v])=>flatten(v,prefix?`${prefix}.${k}`:k)):[[prefix,value===null?'—':typeof value==='boolean'?(value?'Yes':'No'):String(value)]];}
-export function ComplianceOperationsPage(){
- const [data,setData]=useState<Data>();const [kind,setKind]=useState<Kind>('outage');const [filter,setFilter]=useState({merchant_id:'',status:'',from:'',to:''});const [page,setPage]=useState(1);const [error,setError]=useState('');const [notice,setNotice]=useState('');const [busy,setBusy]=useState(false);const [loading,setLoading]=useState(false);const [selected,setSelected]=useState<RecordRow|null>(null);const [modal,setModal]=useState('');const [form,setForm]=useState<Record<string,string>>({});const [requestId,setRequestId]=useState('');const [businesses,setBusinesses]=useState<Array<{id:string;business_name:string;tin:string}>>([]);const [merchantSearch,setMerchantSearch]=useState('');const [options,setOptions]=useState<[string,string][]>([]);const [documentSearch,setDocumentSearch]=useState('');
- const query=useCallback(()=>new URLSearchParams(Object.fromEntries(Object.entries({...filter,kind,page:String(page)}).filter(([,v])=>v))),[filter,kind,page]);
- const load=useCallback(async()=>{setLoading(true);try{setData(await apiJson('/api/compliance-operations?'+query()));setError('')}catch(e){setError((e as Error).message)}finally{setLoading(false)}},[query]);
- useEffect(()=>{void load()},[load]);
- useRealtimeRefresh(load,!modal&&!busy&&!loading);
- useEffect(()=>{let active=true;const t=setTimeout(()=>apiJson('/api/compliance-operations/businesses?search='+encodeURIComponent(merchantSearch)).then(r=>{if(active)setBusinesses(r.data)}).catch(e=>{if(active)setError(e.message)}),250);return()=>{active=false;clearTimeout(t)}},[merchantSearch]);
- async function openCreate(){setModal('create');setSelected(null);setRequestId(crypto.randomUUID());setForm({merchant_id:filter.merchant_id,branch_code:'00000',source:'receipt',from:today(),to:today()});setOptions([]);setError('');if(kind==='manual_invoice')await outages(filter.merchant_id)}
- async function outages(merchant:string){try{const q=new URLSearchParams({kind:'outage'});if(merchant)q.set('merchant_id',merchant);const r=await apiJson('/api/compliance-operations?'+q);setOptions(r.data.map((x:RecordRow)=>[x.id,`${x.reference} · ${x.details.title} · ${x.status}`]));}catch(e){setError((e as Error).message)}}
- async function findDocuments(){try{const q=new URLSearchParams({source:form.source||'receipt',search:documentSearch});if(data?.is_admin)q.set('merchant_id',form.merchant_id||selected?.merchant_id||filter.merchant_id);const r=await apiJson('/api/compliance-operations/documents?'+q);setOptions(r.data.map((x:any)=>[x.id,`${x.number} · ${x.buyer_name||'Walk-in'} · ${money(Math.round(Number(x.amount)*100))}`]));}catch(e){setError((e as Error).message)}}
- async function save(e:FormEvent){e.preventDefault();setBusy(true);setError('');try{let payload:any={...form};for(const k of ['started_at','issued_at','restored_at'])if(payload[k])payload[k]=new Date(payload[k]).toISOString();
- if(modal==='create'){if(!data?.is_admin)delete payload.merchant_id;if(kind==='cwt_memo'){payload={...payload,withholding:{withholding_agent:true,...Object.fromEntries(['classification','atc','rate','base','amount','evidence_reference'].map(k=>[k,form[k]]))}};}payload.kind=kind;payload.request_id=requestId;await apiJson('/api/compliance-operations',{method:'POST',body:JSON.stringify(payload)})}
- else if(selected){await apiJson(`/api/compliance-operations/${selected.id}/actions`,{method:'POST',body:JSON.stringify({...payload,action:modal,revision:selected.revision})})}
- setModal('');setSelected(null);setNotice('Record saved. Original invoices and posted wallet entries are preserved.');await load();
- }catch(e){setError((e as Error).message)}finally{setBusy(false)}}
- async function download(format:'pdf'|'csv',record?:RecordRow){setBusy(true);try{const q=record?new URLSearchParams({id:record.id}):query();q.set('format',format);const r=await apiFetch('/api/compliance-operations/export?'+q);if(!r.ok){const x=await r.json();throw Error(x.message||'Export failed')}const url=URL.createObjectURL(await r.blob());const a=document.createElement('a');a.href=url;a.download=`NUERS-${record?.reference||'Compliance-Records'}.${format}`;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000)}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
- const statusOptions:Record<Kind,string[]>={outage:['open','restored'],manual_invoice:['awaiting_replacement','reconciled'],cwt_memo:['draft','issued','cancelled'],service_fee:['draft','issued','cancelled']};
- const editable=modal==='create'?fields[kind]:modal==='restore'?[{key:'restored_at',label:'Restored at (local time)',type:'datetime-local'},{key:'evidence_reference',label:'Restoration verification evidence'}]:modal==='link'?[{key:'source',label:'Replacement source',options:[['receipt','Captured ERP / POS invoice'],['invoice','NUERS invoice']]},{key:'document_id',label:'Replacement invoice',options:[]}]:modal==='cancel'?[{key:'reason',label:'Cancellation reason'}]:[];
- return <main className="co-workspace"><header className="co-heading"><div><span>NUERS · Compliance & financial controls</span><h1><FileCheck2/>Compliance Operations</h1><p>Manage documented recovery, buyer withholding adjustments and platform service invoices.</p></div><button onClick={()=>void load()} disabled={loading}><RefreshCw size={16}/>Refresh</button></header>
- {error&&<div role="alert" className="co-alert">{error}</div>}{notice&&<div role="status" className="co-notice">{notice}</div>}
- <section className="co-readiness"><ShieldCheck/><div><strong>Live ERP intake: {data?.readiness.source_intake_enforced?'accreditation enforcement enabled':'available · accreditation enforcement prepared'}</strong><p>{data?.readiness.official_issuance} {data?.readiness.transmission}</p></div><Link to={data?.is_admin?'/accreditation':'/merchant/pti-applications'}>Review readiness<ArrowRight size={16}/></Link></section>
- <nav className="co-tabs" aria-label="Compliance record type">{Object.entries(names).map(([k,n])=><button key={k} className={kind===k?'active':''} onClick={()=>{setKind(k as Kind);setFilter({...filter,status:''});setPage(1);setSelected(null)}}>{n}</button>)}</nav>
- <section className="co-panel"><div className="co-toolbar"><div><h2>{names[kind]}</h2><p>{kind==='outage'?'Record outages, verify restoration and track replacement deadlines.':kind==='manual_invoice'?'Retain authorized manual invoices and link each to exactly one replacement.':kind==='cwt_memo'?'Buyer-confirmed withholding adjustments preserve the original invoice, sales and VAT.':'Prepare billing from posted wallet fees. Issuance needs a registered NUERS billing entity and verified authority.'}</p></div>{(kind!=='service_fee'||data?.can_bill)&&<button className="primary" onClick={()=>void openCreate()}><Plus size={16}/>{kind==='service_fee'?'Prepare fee statement':kind==='cwt_memo'?'Prepare CWT memo':'Add record'}</button>}</div>
- {kind==='service_fee'&&!data?.readiness.service_issuer_configured&&<p className="co-warning">Billing entity setup is pending. Statements can be prepared and reviewed; an official service invoice cannot be issued until the registered issuer and authority are configured.</p>}
- <div className="co-filters">{data?.is_admin&&<><label>Find merchant<input value={merchantSearch} onChange={e=>setMerchantSearch(e.target.value)} placeholder="Business name / TIN"/></label><label>Merchant<select value={filter.merchant_id} onChange={e=>{setFilter({...filter,merchant_id:e.target.value});setPage(1)}}><option value="">All merchants</option>{businesses.map(b=><option key={b.id} value={b.id}>{b.business_name} · {b.tin}</option>)}</select></label></>}<label>Status<select value={filter.status} onChange={e=>{setFilter({...filter,status:e.target.value});setPage(1)}}><option value="">All statuses</option>{statusOptions[kind].map(s=><option key={s}>{s}</option>)}</select></label>{(['from','to'] as const).map(k=><label key={k}>{k==='from'?'From':'To'}<input type="date" value={filter[k]} onChange={e=>{setFilter({...filter,[k]:e.target.value});setPage(1)}}/></label>)}<button onClick={()=>{setFilter({merchant_id:'',status:'',from:'',to:''});setPage(1)}}>Reset</button></div>
- <div className="co-toolbar"><span>{data?.total??0} matching records · Live · PHP</span><div className="co-buttons"><button disabled={busy} onClick={()=>void download('pdf')}><Download size={15}/>PDF</button><button disabled={busy} onClick={()=>void download('csv')}>CSV</button></div></div>
- <div className="co-table"><table><thead><tr><th>Reference / merchant</th><th>Business date</th><th>Status</th><th>Amount / adjustment</th><th>Action</th></tr></thead><tbody>{data?.data.map(r=><tr key={r.id}><td><strong>{r.reference}</strong><small>{r.business_name} · {r.tin}</small></td><td>{r.business_date}</td><td><span className={'co-badge '+r.status}>{wording(r.status)}</span></td><td>{r.kind==='outage'?'—':money(r.amount_centavos)}</td><td><button onClick={()=>{setSelected(r);setModal('details');setError('')}}>View details</button></td></tr>)}{!data?.data.length&&<tr><td colSpan={5} className="co-empty">{loading?'Loading records…':'No records match these filters.'}</td></tr>}</tbody></table></div><div className="co-pagination"><span>20 records per page</span><button disabled={page<=1||loading} onClick={()=>setPage(page-1)}>Previous</button><span>{data?.page||1} / {data?.last_page||1}</span><button disabled={page>=(data?.last_page||1)||loading} onClick={()=>setPage(page+1)}>Next</button></div></section>
- {modal&&<div className="co-backdrop"><section className="co-dialog" role="dialog" aria-modal="true" aria-labelledby="co-dialog-title"><header><div><h2 id="co-dialog-title">{modal==='create'?names[kind]:modal==='details'?selected?.reference:wording(modal)+' record'}</h2><p>{selected?.business_name||'Retain supporting evidence for every entry.'}</p></div><button aria-label="Close dialog" disabled={busy} onClick={()=>setModal('')}><X size={20}/></button></header>{error&&<div role="alert" className="co-alert">{error}</div>}
- {modal==='details'&&selected?<><p><span className="co-badge">{wording(selected.status)}</span> · Revision {selected.revision} · {selected.id}</p><dl className="co-detail">{flatten(selected.details).map(([k,v])=><div key={k}><dt>{wording(k).replaceAll('.',' · ')}</dt><dd>{k.endsWith('centavos')?money(Number(v)):v}</dd></div>)}</dl><div className="co-buttons"><button onClick={()=>void download('pdf',selected)} disabled={busy}>Download PDF</button>{selected.kind==='outage'&&selected.status==='open'&&<button onClick={()=>{setForm({});setModal('restore')}}>Record restoration</button>}{selected.kind==='manual_invoice'&&selected.status==='awaiting_replacement'&&<button onClick={()=>{setForm({source:'receipt',merchant_id:selected.merchant_id});setOptions([]);setModal('link')}}>Link replacement</button>}{selected.status==='draft'&&(selected.kind!=='service_fee'||data?.can_bill)&&<><button className="primary" onClick={()=>{setForm({});setModal('issue')}}>Review & issue</button><button onClick={()=>{setForm({});setModal('cancel')}}>Cancel draft</button></>}</div></>:<form onSubmit={save}>{modal==='create'&&data?.is_admin&&<label>Registered merchant<select required value={form.merchant_id||''} onChange={e=>{setForm({...form,merchant_id:e.target.value,document_id:'',outage_id:''});setOptions([]);if(kind==='manual_invoice')void outages(e.target.value)}}><option value="">Select merchant</option>{businesses.map(b=><option value={b.id} key={b.id}>{b.business_name} · {b.tin}</option>)}</select></label>}
- {(kind==='cwt_memo'&&modal==='create'||modal==='link')&&<div className="co-search"><label>Find invoice by number prefix<input value={documentSearch} onChange={e=>setDocumentSearch(e.target.value)} placeholder="At least two characters"/></label><button type="button" disabled={documentSearch.length<2} onClick={()=>void findDocuments()}>Find invoice</button></div>}
- <div className="co-form-grid">{(editable as Field[]).map(f=><label key={f.key}>{f.label}{f.options?<select required value={form[f.key]||''} onChange={e=>{setForm({...form,[f.key]:e.target.value,...(f.key==='source'?{document_id:''}:{})});if(f.key==='source')setOptions([])}}><option value="">Select…</option>{(f.key==='document_id'||f.key==='outage_id'?options:f.options).map(([v,n])=><option key={v} value={v}>{n}</option>)}</select>:<input required maxLength={f.key==='atc'?5:2000} type={f.type||'text'} min={f.type==='number'?0:undefined} step={f.type==='number'?'0.01':undefined} value={form[f.key]||''} onChange={e=>setForm({...form,[f.key]:e.target.value})}/>}<small>{f.help}</small></label>)}</div>
- {kind==='cwt_memo'&&modal==='create'&&<label className="co-confirm"><input type="checkbox" required/>The buyer/payor confirmed the withholding classification, ATC, rate and amount. This adjustment does not change sales or VAT.</label>}
- {modal==='issue'&&<p className="co-warning">Issuance reserves an official document number and locks this record. Verified accreditation, PTI and an active registered series must pass. An original invoice or wallet debit will not be modified.</p>}
- <div className="co-buttons"><button type="button" disabled={busy} onClick={()=>setModal('')}>Cancel</button><button className="primary" disabled={busy}>{busy?'Saving…':modal==='issue'?'Confirm issuance':'Save record'}</button></div></form>}</section></div>}
- </main>
+type Data = {
+  data: RecordRow[];
+  total: number;
+  page: number;
+  last_page: number;
+  is_admin: boolean;
+  can_bill: boolean;
+  merchant_id: string | null;
+  readiness: {
+    source_intake_enforced: boolean;
+    service_issuer_configured: boolean;
+    official_issuance: string;
+    transmission: string;
+  };
+};
+type Field = {
+  key: string;
+  label: string;
+  type?: string;
+  help?: string;
+  options?: [string, string][];
+};
+const names: Record<Kind, string> = {
+  outage: "Outage register",
+  manual_invoice: "Manual invoice recovery",
+  cwt_memo: "CWT adjustment memos",
+  service_fee: "NUERS service invoices",
+};
+const money = (n: number) =>
+  new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(n / 100);
+const wording = (x: string) => x.replaceAll("_", " ");
+const today = () => new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
+const fields: Record<Kind, Field[]> = {
+  outage: [
+    { key: "title", label: "Incident title" },
+    { key: "started_at", label: "Outage started (local time)", type: "datetime-local" },
+    {
+      key: "evidence_reference",
+      label: "Incident / evidence reference",
+      help: "Identify the incident record and supporting evidence.",
+    },
+  ],
+  manual_invoice: [
+    { key: "outage_id", label: "Recorded outage", options: [] },
+    { key: "manual_number", label: "Original manual invoice number" },
+    {
+      key: "branch_code",
+      label: "Registered branch code",
+      help: "Five digits; main office is 00000.",
+    },
+    { key: "issued_at", label: "Manual invoice issued (local time)", type: "datetime-local" },
+    { key: "amount", label: "Gross invoice amount (PHP)", type: "number" },
+    { key: "buyer_name", label: "Buyer name exactly as shown" },
+    { key: "authority_reference", label: "Manual invoice authority / ATP reference" },
+    { key: "evidence_reference", label: "Retained manual invoice evidence" },
+  ],
+  cwt_memo: [
+    {
+      key: "source",
+      label: "Original document source",
+      options: [
+        ["receipt", "Captured ERP / POS invoice"],
+        ["invoice", "NUERS invoice"],
+      ],
+    },
+    { key: "document_id", label: "Original invoice", options: [] },
+    { key: "classification", label: "Buyer withholding-agent classification" },
+    {
+      key: "atc",
+      label: "Alphanumeric Tax Code (ATC)",
+      help: "Buyer/payor provides the applicable ATC, for example WC160.",
+    },
+    { key: "rate", label: "CWT rate (%)", type: "number" },
+    { key: "base", label: "CWT tax base (PHP)", type: "number" },
+    { key: "amount", label: "Correct CWT amount (PHP)", type: "number" },
+    { key: "evidence_reference", label: "Buyer / payor confirmation reference" },
+    { key: "reason", label: "Reason for CWT correction" },
+  ],
+  service_fee: [
+    { key: "from", label: "Billing period from", type: "date" },
+    { key: "to", label: "Billing period to", type: "date" },
+    {
+      key: "reason",
+      label: "Billing review reference / reason",
+      help: "Only unbilled posted fees are included. No additional wallet deduction.",
+    },
+  ],
+};
+function flatten(value: any, prefix = ""): Array<[string, string]> {
+  return value && typeof value === "object"
+    ? Object.entries(value).flatMap(([k, v]) => flatten(v, prefix ? `${prefix}.${k}` : k))
+    : [
+        [
+          prefix,
+          value === null
+            ? "—"
+            : typeof value === "boolean"
+              ? value
+                ? "Yes"
+                : "No"
+              : String(value),
+        ],
+      ];
+}
+export function ComplianceOperationsPage() {
+  const [data, setData] = useState<Data>();
+  const [kind, setKind] = useState<Kind>("outage");
+  const [filter, setFilter] = useState({ merchant_id: "", status: "", from: "", to: "" });
+  const [page, setPage] = useState(1);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [selected, setSelected] = useState<RecordRow | null>(null);
+  const [modal, setModal] = useState("");
+  const [form, setForm] = useState<Record<string, string>>({});
+  const [requestId, setRequestId] = useState("");
+  const [businesses, setBusinesses] = useState<
+    Array<{ id: string; business_name: string; tin: string }>
+  >([]);
+  const [merchantSearch, setMerchantSearch] = useState("");
+  const [options, setOptions] = useState<[string, string][]>([]);
+  const [documentSearch, setDocumentSearch] = useState("");
+  const query = useCallback(
+    () =>
+      new URLSearchParams(
+        Object.fromEntries(
+          Object.entries({ ...filter, kind, page: String(page) }).filter(([, v]) => v),
+        ),
+      ),
+    [filter, kind, page],
+  );
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      setData(await apiJson("/api/compliance-operations?" + query()));
+      setError("");
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, [query]);
+  useEffect(() => {
+    void load();
+  }, [load]);
+  useRealtimeRefresh(load, !modal && !busy && !loading);
+  useEffect(() => {
+    let active = true;
+    const t = setTimeout(
+      () =>
+        apiJson(
+          "/api/compliance-operations/businesses?search=" + encodeURIComponent(merchantSearch),
+        )
+          .then((r) => {
+            if (active) setBusinesses(r.data);
+          })
+          .catch((e) => {
+            if (active) setError(e.message);
+          }),
+      250,
+    );
+    return () => {
+      active = false;
+      clearTimeout(t);
+    };
+  }, [merchantSearch]);
+  async function openCreate() {
+    setModal("create");
+    setSelected(null);
+    setRequestId(crypto.randomUUID());
+    setForm({
+      merchant_id: filter.merchant_id,
+      branch_code: "00000",
+      source: "receipt",
+      from: today(),
+      to: today(),
+    });
+    setOptions([]);
+    setError("");
+    if (kind === "manual_invoice") await outages(filter.merchant_id);
+  }
+  async function outages(merchant: string) {
+    try {
+      const q = new URLSearchParams({ kind: "outage" });
+      if (merchant) q.set("merchant_id", merchant);
+      const r = await apiJson("/api/compliance-operations?" + q);
+      setOptions(
+        r.data.map((x: RecordRow) => [x.id, `${x.reference} · ${x.details.title} · ${x.status}`]),
+      );
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+  async function findDocuments() {
+    try {
+      const q = new URLSearchParams({ source: form.source || "receipt", search: documentSearch });
+      if (data?.is_admin)
+        q.set("merchant_id", form.merchant_id || selected?.merchant_id || filter.merchant_id);
+      const r = await apiJson("/api/compliance-operations/documents?" + q);
+      setOptions(
+        r.data.map((x: any) => [
+          x.id,
+          `${x.number} · ${x.buyer_name || "Walk-in"} · ${money(Math.round(Number(x.amount) * 100))}`,
+        ]),
+      );
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+  async function save(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      let payload: any = { ...form };
+      for (const k of ["started_at", "issued_at", "restored_at"])
+        if (payload[k]) payload[k] = new Date(payload[k]).toISOString();
+      if (modal === "create") {
+        if (!data?.is_admin) delete payload.merchant_id;
+        if (kind === "cwt_memo") {
+          payload = {
+            ...payload,
+            withholding: {
+              withholding_agent: true,
+              ...Object.fromEntries(
+                ["classification", "atc", "rate", "base", "amount", "evidence_reference"].map(
+                  (k) => [k, form[k]],
+                ),
+              ),
+            },
+          };
+        }
+        payload.kind = kind;
+        payload.request_id = requestId;
+        await apiJson("/api/compliance-operations", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+      } else if (selected) {
+        await apiJson(`/api/compliance-operations/${selected.id}/actions`, {
+          method: "POST",
+          body: JSON.stringify({ ...payload, action: modal, revision: selected.revision }),
+        });
+      }
+      setModal("");
+      setSelected(null);
+      setNotice("Record saved. Original invoices and posted wallet entries are preserved.");
+      await load();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function download(format: "pdf" | "csv", record?: RecordRow) {
+    setBusy(true);
+    try {
+      const q = record ? new URLSearchParams({ id: record.id }) : query();
+      q.set("format", format);
+      const r = await apiFetch("/api/compliance-operations/export?" + q);
+      if (!r.ok) {
+        const x = await r.json();
+        throw Error(x.message || "Export failed");
+      }
+      const url = URL.createObjectURL(await r.blob());
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `NUERS-${record?.reference || "Compliance-Records"}.${format}`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  const statusOptions: Record<Kind, string[]> = {
+    outage: ["open", "restored"],
+    manual_invoice: ["awaiting_replacement", "reconciled"],
+    cwt_memo: ["draft", "issued", "cancelled"],
+    service_fee: ["draft", "issued", "cancelled"],
+  };
+  const editable =
+    modal === "create"
+      ? fields[kind]
+      : modal === "restore"
+        ? [
+            { key: "restored_at", label: "Restored at (local time)", type: "datetime-local" },
+            { key: "evidence_reference", label: "Restoration verification evidence" },
+          ]
+        : modal === "link"
+          ? [
+              {
+                key: "source",
+                label: "Replacement source",
+                options: [
+                  ["receipt", "Captured ERP / POS invoice"],
+                  ["invoice", "NUERS invoice"],
+                ],
+              },
+              { key: "document_id", label: "Replacement invoice", options: [] },
+            ]
+          : modal === "cancel"
+            ? [{ key: "reason", label: "Cancellation reason" }]
+            : [];
+  return (
+    <main className="co-workspace">
+      <header className="co-heading">
+        <div>
+          <span>NUERS · Compliance & financial controls</span>
+          <h1>
+            <FileCheck2 />
+            Compliance Operations
+          </h1>
+          <p>
+            Manage documented recovery, buyer withholding adjustments and platform service invoices.
+          </p>
+        </div>
+        <button onClick={() => void load()} disabled={loading}>
+          <RefreshCw size={16} />
+          Refresh
+        </button>
+      </header>
+      {error && (
+        <div role="alert" className="co-alert">
+          {error}
+        </div>
+      )}
+      {notice && (
+        <div role="status" className="co-notice">
+          {notice}
+        </div>
+      )}
+      <section className="co-readiness">
+        <ShieldCheck />
+        <div>
+          <strong>
+            Live ERP intake:{" "}
+            {data?.readiness.source_intake_enforced
+              ? "accreditation enforcement enabled"
+              : "available · accreditation enforcement prepared"}
+          </strong>
+          <p>
+            {data?.readiness.official_issuance} {data?.readiness.transmission}
+          </p>
+        </div>
+        <Link to={data?.is_admin ? "/accreditation" : "/merchant/pti-applications"}>
+          Review readiness
+          <ArrowRight size={16} />
+        </Link>
+      </section>
+      <nav className="co-tabs" aria-label="Compliance record type">
+        {Object.entries(names).map(([k, n]) => (
+          <button
+            key={k}
+            className={kind === k ? "active" : ""}
+            onClick={() => {
+              setKind(k as Kind);
+              setFilter({ ...filter, status: "" });
+              setPage(1);
+              setSelected(null);
+            }}
+          >
+            {n}
+          </button>
+        ))}
+      </nav>
+      <section className="co-panel">
+        <div className="co-toolbar">
+          <div>
+            <h2>{names[kind]}</h2>
+            <p>
+              {kind === "outage"
+                ? "Record outages, verify restoration and track replacement deadlines."
+                : kind === "manual_invoice"
+                  ? "Retain authorized manual invoices and link each to exactly one replacement."
+                  : kind === "cwt_memo"
+                    ? "Buyer-confirmed withholding adjustments preserve the original invoice, sales and VAT."
+                    : "Prepare billing from posted wallet fees. Issuance needs a registered NUERS billing entity and verified authority."}
+            </p>
+          </div>
+          {(kind !== "service_fee" || data?.can_bill) && (
+            <button className="primary" onClick={() => void openCreate()}>
+              <Plus size={16} />
+              {kind === "service_fee"
+                ? "Prepare fee statement"
+                : kind === "cwt_memo"
+                  ? "Prepare CWT memo"
+                  : "Add record"}
+            </button>
+          )}
+        </div>
+        {kind === "service_fee" && !data?.readiness.service_issuer_configured && (
+          <p className="co-warning">
+            Billing entity setup is pending. Statements can be prepared and reviewed; an official
+            service invoice cannot be issued until the registered issuer and authority are
+            configured.
+          </p>
+        )}
+        <div className="co-filters">
+          {data?.is_admin && (
+            <>
+              <label>
+                Find merchant
+                <input
+                  value={merchantSearch}
+                  onChange={(e) => setMerchantSearch(e.target.value)}
+                  placeholder="Business name / TIN"
+                />
+              </label>
+              <label>
+                Merchant
+                <select
+                  value={filter.merchant_id}
+                  onChange={(e) => {
+                    setFilter({ ...filter, merchant_id: e.target.value });
+                    setPage(1);
+                  }}
+                >
+                  <option value="">All merchants</option>
+                  {businesses.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.business_name} · {b.tin}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </>
+          )}
+          <label>
+            Status
+            <select
+              value={filter.status}
+              onChange={(e) => {
+                setFilter({ ...filter, status: e.target.value });
+                setPage(1);
+              }}
+            >
+              <option value="">All statuses</option>
+              {statusOptions[kind].map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
+          </label>
+          {(["from", "to"] as const).map((k) => (
+            <label key={k}>
+              {k === "from" ? "From" : "To"}
+              <input
+                type="date"
+                value={filter[k]}
+                onChange={(e) => {
+                  setFilter({ ...filter, [k]: e.target.value });
+                  setPage(1);
+                }}
+              />
+            </label>
+          ))}
+          <button
+            onClick={() => {
+              setFilter({ merchant_id: "", status: "", from: "", to: "" });
+              setPage(1);
+            }}
+          >
+            Reset
+          </button>
+        </div>
+        <div className="co-toolbar">
+          <span>{data?.total ?? 0} matching records · Live · PHP</span>
+          <div className="co-buttons">
+            <button disabled={busy} onClick={() => void download("pdf")}>
+              <Download size={15} />
+              PDF
+            </button>
+            <button disabled={busy} onClick={() => void download("csv")}>
+              CSV
+            </button>
+          </div>
+        </div>
+        <div className="co-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Reference / merchant</th>
+                <th>Business date</th>
+                <th>Status</th>
+                <th>Amount / adjustment</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data?.data.map((r) => (
+                <tr key={r.id}>
+                  <td>
+                    <strong>{r.reference}</strong>
+                    <small>
+                      {r.business_name} · {r.tin}
+                    </small>
+                  </td>
+                  <td>{r.business_date}</td>
+                  <td>
+                    <span className={"co-badge " + r.status}>{wording(r.status)}</span>
+                  </td>
+                  <td>{r.kind === "outage" ? "—" : money(r.amount_centavos)}</td>
+                  <td>
+                    <button
+                      onClick={() => {
+                        setSelected(r);
+                        setModal("details");
+                        setError("");
+                      }}
+                    >
+                      View details
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {!data?.data.length && (
+                <tr>
+                  <td colSpan={5} className="co-empty">
+                    {loading ? "Loading records…" : "No records match these filters."}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="co-pagination">
+          <span>20 records per page</span>
+          <button disabled={page <= 1 || loading} onClick={() => setPage(page - 1)}>
+            Previous
+          </button>
+          <span>
+            {data?.page || 1} / {data?.last_page || 1}
+          </span>
+          <button
+            disabled={page >= (data?.last_page || 1) || loading}
+            onClick={() => setPage(page + 1)}
+          >
+            Next
+          </button>
+        </div>
+      </section>
+      {modal && (
+        <div className="co-backdrop">
+          <section
+            className="co-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="co-dialog-title"
+          >
+            <header>
+              <div>
+                <h2 id="co-dialog-title">
+                  {modal === "create"
+                    ? names[kind]
+                    : modal === "details"
+                      ? selected?.reference
+                      : wording(modal) + " record"}
+                </h2>
+                <p>{selected?.business_name || "Retain supporting evidence for every entry."}</p>
+              </div>
+              <button aria-label="Close dialog" disabled={busy} onClick={() => setModal("")}>
+                <X size={20} />
+              </button>
+            </header>
+            {error && (
+              <div role="alert" className="co-alert">
+                {error}
+              </div>
+            )}
+            {modal === "details" && selected ? (
+              <>
+                <p>
+                  <span className="co-badge">{wording(selected.status)}</span> · Revision{" "}
+                  {selected.revision} · {selected.id}
+                </p>
+                <dl className="co-detail">
+                  {flatten(selected.details).map(([k, v]) => (
+                    <div key={k}>
+                      <dt>{wording(k).replaceAll(".", " · ")}</dt>
+                      <dd>{k.endsWith("centavos") ? money(Number(v)) : v}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <div className="co-buttons">
+                  <button onClick={() => void download("pdf", selected)} disabled={busy}>
+                    Download PDF
+                  </button>
+                  {selected.kind === "outage" && selected.status === "open" && (
+                    <button
+                      onClick={() => {
+                        setForm({});
+                        setModal("restore");
+                      }}
+                    >
+                      Record restoration
+                    </button>
+                  )}
+                  {selected.kind === "manual_invoice" &&
+                    selected.status === "awaiting_replacement" && (
+                      <button
+                        onClick={() => {
+                          setForm({ source: "receipt", merchant_id: selected.merchant_id });
+                          setOptions([]);
+                          setModal("link");
+                        }}
+                      >
+                        Link replacement
+                      </button>
+                    )}
+                  {selected.status === "draft" &&
+                    (selected.kind !== "service_fee" || data?.can_bill) && (
+                      <>
+                        <button
+                          className="primary"
+                          onClick={() => {
+                            setForm({});
+                            setModal("issue");
+                          }}
+                        >
+                          Review & issue
+                        </button>
+                        <button
+                          onClick={() => {
+                            setForm({});
+                            setModal("cancel");
+                          }}
+                        >
+                          Cancel draft
+                        </button>
+                      </>
+                    )}
+                </div>
+              </>
+            ) : (
+              <form onSubmit={save}>
+                {modal === "create" && data?.is_admin && (
+                  <label>
+                    Registered merchant
+                    <select
+                      required
+                      value={form.merchant_id || ""}
+                      onChange={(e) => {
+                        setForm({
+                          ...form,
+                          merchant_id: e.target.value,
+                          document_id: "",
+                          outage_id: "",
+                        });
+                        setOptions([]);
+                        if (kind === "manual_invoice") void outages(e.target.value);
+                      }}
+                    >
+                      <option value="">Select merchant</option>
+                      {businesses.map((b) => (
+                        <option value={b.id} key={b.id}>
+                          {b.business_name} · {b.tin}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                {((kind === "cwt_memo" && modal === "create") || modal === "link") && (
+                  <div className="co-search">
+                    <label>
+                      Find invoice by number prefix
+                      <input
+                        value={documentSearch}
+                        onChange={(e) => setDocumentSearch(e.target.value)}
+                        placeholder="At least two characters"
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      disabled={documentSearch.length < 2}
+                      onClick={() => void findDocuments()}
+                    >
+                      Find invoice
+                    </button>
+                  </div>
+                )}
+                <div className="co-form-grid">
+                  {(editable as Field[]).map((f) => (
+                    <label key={f.key}>
+                      {f.label}
+                      {f.options ? (
+                        <select
+                          required
+                          value={form[f.key] || ""}
+                          onChange={(e) => {
+                            setForm({
+                              ...form,
+                              [f.key]: e.target.value,
+                              ...(f.key === "source" ? { document_id: "" } : {}),
+                            });
+                            if (f.key === "source") setOptions([]);
+                          }}
+                        >
+                          <option value="">Select…</option>
+                          {(f.key === "document_id" || f.key === "outage_id"
+                            ? options
+                            : f.options
+                          ).map(([v, n]) => (
+                            <option key={v} value={v}>
+                              {n}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          required
+                          maxLength={f.key === "atc" ? 5 : 2000}
+                          type={f.type || "text"}
+                          min={f.type === "number" ? 0 : undefined}
+                          step={f.type === "number" ? "0.01" : undefined}
+                          value={form[f.key] || ""}
+                          onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                        />
+                      )}
+                      <small>{f.help}</small>
+                    </label>
+                  ))}
+                </div>
+                {kind === "cwt_memo" && modal === "create" && (
+                  <label className="co-confirm">
+                    <input type="checkbox" required />
+                    The buyer/payor confirmed the withholding classification, ATC, rate and amount.
+                    This adjustment does not change sales or VAT.
+                  </label>
+                )}
+                {modal === "issue" && (
+                  <p className="co-warning">
+                    Issuance reserves an official document number and locks this record. Verified
+                    accreditation, PTI and an active registered series must pass. An original
+                    invoice or wallet debit will not be modified.
+                  </p>
+                )}
+                <div className="co-buttons">
+                  <button type="button" disabled={busy} onClick={() => setModal("")}>
+                    Cancel
+                  </button>
+                  <button className="primary" disabled={busy}>
+                    {busy ? "Saving…" : modal === "issue" ? "Confirm issuance" : "Save record"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </section>
+        </div>
+      )}
+    </main>
+  );
 }

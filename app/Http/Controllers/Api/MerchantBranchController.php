@@ -46,7 +46,7 @@ class MerchantBranchController
             $q->where(fn ($x) => $x->where('name', 'like', $s)->orWhere('code', 'like', $s)->orWhere('address', 'like', $s)->orWhere('bir_branch_code', 'like', $s)->orWhere('rdo_code', 'like', $s));
         }
 
-return $q;
+        return $q;
     }
 
     private function terminalQuery(string $merchant, array $v)
@@ -66,7 +66,7 @@ return $q;
             $v['activity'] === 'recent' ? $q->whereExists($predicate) : $q->whereNotExists($predicate);
         }
 
-return $q;
+        return $q;
     }
 
     public function index(Request $r)
@@ -118,7 +118,10 @@ return $q;
             $a['rdo_code'] = $a['rdo_code'] ?? $v['rdo_code'] ?? $resolved['rdo']['rdo_code'] ?? '';
             abort_unless($a['rdo_code'] !== '', 422, 'Confirm the registered RDO for this branch address.');
             $canonical = $address->validate($a);
-            $v['address'] = $canonical['address']; $v['city'] = $canonical['details']['city']['name']; $v['region'] = $canonical['details']['region']['name']; $v['rdo_code'] = $a['rdo_code'];
+            $v['address'] = $canonical['address'];
+            $v['city'] = $canonical['details']['city']['name'];
+            $v['region'] = $canonical['details']['region']['name'];
+            $v['rdo_code'] = $a['rdo_code'];
             $v['address_details'] = json_encode($canonical['details'], JSON_THROW_ON_ERROR);
             // Hash the validated canonical snapshot, not client-provided derived labels.
             unset($v['structured_address']);
@@ -336,18 +339,20 @@ return $q;
         $v = $this->filters($r);
         $terminal = $r->query('registry') === 'terminals';
         $q = $terminal ? $this->terminalQuery($m->id, $v) : $this->branches($m->id, $v);
-        if ($r->has('report_limit')) \App\Services\ReportCsv::limit($r,(clone $q)->count());
-        abort_if((clone $q)->count() > 5000,422,'Narrow the export filters to 5,000 records or fewer.');
+        if ($r->has('report_limit')) {
+            \App\Services\ReportCsv::limit($r, (clone $q)->count());
+        }
+        abort_if((clone $q)->count() > 5000, 422, 'Narrow the export filters to 5,000 records or fewer.');
         $name = $terminal ? 'terminals' : 'branches';
 
-        return response()->streamDownload(function () use ($q,$terminal) {
-            $f = fopen('php://output','w');
-            fwrite($f,"\xEF\xBB\xBF");
-            fputcsv($f,$terminal ? ['Terminal code', 'Identifier', 'Name', 'Branch ID', 'POS type', 'Operational status'] : ['Branch code', 'Name', 'BIR branch code', 'Address', 'City', 'Region', 'RDO', 'Type', 'Operational status', 'NUERS review'],',','"','');
+        return response()->streamDownload(function () use ($q, $terminal) {
+            $f = fopen('php://output', 'w');
+            fwrite($f, "\xEF\xBB\xBF");
+            fputcsv($f, $terminal ? ['Terminal code', 'Identifier', 'Name', 'Branch ID', 'POS type', 'Operational status'] : ['Branch code', 'Name', 'BIR branch code', 'Address', 'City', 'Region', 'RDO', 'Type', 'Operational status', 'NUERS review'], ',', '"', '');
             foreach ($q->orderBy('id')->cursor() as $r) {
                 $values = $terminal ? [$r->code, $r->identifier, $r->name, $r->branch_id, $r->pos_type, $r->status] : [$r->code, $r->name, $r->bir_branch_code, $r->address, $r->city, $r->region, $r->rdo_code, $r->branch_type, $r->status, $r->review_status];
-                fputcsv($f,array_map(fn ($s) => preg_match('/^[=+@\-\t\r\n]/u',(string) $s) ? "'".$s : (string) $s,$values),',','"','');
+                fputcsv($f, array_map(fn ($s) => preg_match('/^[=+@\-\t\r\n]/u', (string) $s) ? "'".$s : (string) $s, $values), ',', '"', '');
             }fclose($f);
-        },'NUERS-'.$name.'.csv',['Content-Type' => 'text/csv; charset=UTF-8', 'Cache-Control' => 'private, no-store']);
+        }, 'NUERS-'.$name.'.csv', ['Content-Type' => 'text/csv; charset=UTF-8', 'Cache-Control' => 'private, no-store']);
     }
 }

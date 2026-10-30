@@ -11,7 +11,9 @@ class ReconciliationEvidence
     public function payload(?object $payload): array
     {
         $out = ['payload_comparison' => 'No readable linked payload'];
-        if (!$payload) return $out;
+        if (!$payload) {
+            return $out;
+        }
         try {
             $body = json_decode($payload->payload, true, 512, JSON_THROW_ON_ERROR);
             $raw = isset($body['encrypted']) ? Crypt::decryptString($body['encrypted']) : $payload->payload;

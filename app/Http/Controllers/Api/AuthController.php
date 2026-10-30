@@ -22,7 +22,9 @@ class AuthController extends Controller
     public function session(Request $request): JsonResponse
     {
         $user = $this->userFromRequest($request);
-        if ($user) $user = app(DeviceSession::class)->renew($user, $request);
+        if ($user) {
+            $user = app(DeviceSession::class)->renew($user, $request);
+        }
 
         return response()->json([
             'session' => $user ? $this->sessionPayload($user) : null,
@@ -40,7 +42,9 @@ class AuthController extends Controller
         $user = User::where('email', $credentials['email'])->first();
 
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
-            if($user) app(\App\Services\PlatformNotifications::class)->failedSignIn($user);
+            if ($user) {
+                app(\App\Services\PlatformNotifications::class)->failedSignIn($user);
+            }
             throw ValidationException::withMessages([
                 'email' => ['Invalid email or password.'],
             ]);
@@ -64,7 +68,7 @@ class AuthController extends Controller
             Profile::create(['id' => $user->id, 'email' => $user->email, 'role' => $meta['role'] ?? 'client', 'full_name' => $meta['full_name'] ?? '', 'organization' => $meta['organization'] ?? '', 'tin' => null, 'tin_bound_at' => null]);
             DB::table('client_accounts')->insert(['id' => (string) Str::uuid(), 'user_id' => $user->id, 'account_number' => 'CL-'.Str::upper((string) Str::ulid()), 'full_name' => $meta['full_name'] ?? $user->email, 'email' => $user->email, 'mobile' => $meta['phone'] ?? null, 'account_type' => 'citizen', 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()]);
             app(\App\Services\PlatformNotifications::class)->verification($user);
-            app(\App\Services\PlatformNotifications::class)->user($user->id,'account.created',(string)$user->id,'Welcome to NUERS','Your citizen account has been created and is pending review. Sign in to complete your profile and review account requirements.');
+            app(\App\Services\PlatformNotifications::class)->user($user->id, 'account.created', (string)$user->id, 'Welcome to NUERS', 'Your citizen account has been created and is pending review. Sign in to complete your profile and review account requirements.');
             $user = app(DeviceSession::class)->issue($user, $request);
 
             return response()->json(['session' => $this->sessionPayload($user), 'user' => $this->userPayload($user)], 201)->header('Cache-Control', 'private, no-store');

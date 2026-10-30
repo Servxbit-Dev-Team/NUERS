@@ -209,8 +209,8 @@ class WireBatches
 
             return ['id' => $b->id, 'state' => $result['state']];
         } catch (\Throwable $e) {
-            $sent = (bool) DB::table('bir_eis_batches')->where('id',$b->id)->value('submitted_at');
-            DB::table('bir_eis_batches')->where('id',$b->id)->where('lease_token',$lease)->update(['state' => $sent ? 'uncertain' : 'prepared', 'lease_token' => null, 'lease_until' => null, 'available_at' => now()->addMinutes(2), 'last_error' => $sent ? 'Outcome needs inquiry. Review configuration and the preserved Submit ID; do not resubmit.' : 'Authentication or envelope preparation failed before invoice submission. Verify credentials and review this unsent batch.', 'updated_at' => now()]);
+            $sent = (bool) DB::table('bir_eis_batches')->where('id', $b->id)->value('submitted_at');
+            DB::table('bir_eis_batches')->where('id', $b->id)->where('lease_token', $lease)->update(['state' => $sent ? 'uncertain' : 'prepared', 'lease_token' => null, 'lease_until' => null, 'available_at' => now()->addMinutes(2), 'last_error' => $sent ? 'Outcome needs inquiry. Review configuration and the preserved Submit ID; do not resubmit.' : 'Authentication or envelope preparation failed before invoice submission. Verify credentials and review this unsent batch.', 'updated_at' => now()]);
 
             return ['id' => $b->id, 'state' => $sent ? 'uncertain' : 'prepared'];
         }

@@ -28,10 +28,12 @@ class InvoiceSequence
         abort_if($expected !== null && $expected !== $number, 409, 'Source document number does not match the next authorized sequence. Reconcile the source series before retrying.');
         $collision = DB::query()->fromSub(app(IssuedDocumentLedger::class)->normalizedCandidates($merchant), 'issued_identity')
             ->where('merchant_id', $merchant)->where('seller_branch_key', $branch)
-            ->where('document_family', match ($family) { 'payment' => 'receipt', 'credit_memo' => 'credit', 'debit_memo' => 'debit', default => 'invoice' })
+            ->where('document_family', match ($family) {
+                'payment' => 'receipt', 'credit_memo' => 'credit', 'debit_memo' => 'debit', default => 'invoice'
+            })
             ->where('document_number_key', strtoupper($number))->exists();
         // Even voided documents retain their identity. Never skip a collision or reset a series.
-        abort_if($collision || DB::table('business_invoices')->where('merchant_id',$merchant)->where('invoice_number',$number)->exists(), 409, 'The next authorized number already exists. Reconcile the series; issued numbers cannot be reused.');
+        abort_if($collision || DB::table('business_invoices')->where('merchant_id', $merchant)->where('invoice_number', $number)->exists(), 409, 'The next authorized number already exists. Reconcile the series; issued numbers cannot be reused.');
         DB::table('invoice_series')->where('id', $s->id)->update(['last_number' => $next, 'updated_at' => now()]);
 
         return ['number' => $number, 'series_id' => $s->id, 'authority_reference' => $s->authority_reference, 'document_registration' => $registration];

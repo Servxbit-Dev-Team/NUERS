@@ -24,8 +24,10 @@ class DocumentPdf
             $render->setTimeout(config('document_pdf.timeout_seconds'));
             $render->run();
             abort_unless($render->isSuccessful(), 503, 'The invoice preview renderer is unavailable.');
-            $html = $directory.'/preview.html'; $output = $directory.'/copy.pdf';
-            file_put_contents($html, $render->getOutput()); chmod($html, 0600);
+            $html = $directory.'/preview.html';
+            $output = $directory.'/copy.pdf';
+            file_put_contents($html, $render->getOutput());
+            chmod($html, 0600);
             // A separate ephemeral browser profile never touches the user's browser session.
             // Keep Chromium's sandbox enabled; the HTML embeds only vetted local assets and blocks network content.
             $print = new Process([$chrome, '--headless=new', '--no-first-run', '--no-default-browser-check', '--disable-extensions', '--disable-background-networking', '--disable-component-update', '--disable-sync', '--no-proxy-server', '--host-resolver-rules=MAP * ~NOTFOUND',
@@ -53,10 +55,13 @@ class DocumentPdf
         $directory = storage_path('app/private/pdf-'.Str::uuid());
         File::makeDirectory($directory, 0700, true);
         try {
-            $html = $directory.'/report.html'; $output = $directory.'/report.pdf';
-            file_put_contents($html, $markup); chmod($html, 0600);
+            $html = $directory.'/report.html';
+            $output = $directory.'/report.pdf';
+            file_put_contents($html, $markup);
+            chmod($html, 0600);
             $print = new Process([$this->chrome(), '--headless=new', '--no-first-run', '--no-default-browser-check', '--disable-extensions', '--disable-background-networking', '--disable-component-update', '--disable-sync', '--no-proxy-server', '--host-resolver-rules=MAP * ~NOTFOUND', '--user-data-dir='.$directory.'/profile', '--no-pdf-header-footer', '--print-to-pdf='.$output, 'file://'.$html], base_path(), $this->environment($directory));
-            $print->setTimeout(config('document_pdf.timeout_seconds')); $print->run();
+            $print->setTimeout(config('document_pdf.timeout_seconds'));
+            $print->run();
             abort_unless($print->isSuccessful() && is_file($output), 503, 'The sales report PDF renderer is unavailable.');
             $pdf = file_get_contents($output);
             abort_unless(str_starts_with($pdf, '%PDF-'), 503, 'The sales report PDF could not be generated.');
@@ -66,14 +71,20 @@ class DocumentPdf
         } catch (ProcessSignaledException $e) {
             $this->recordRuntimeFailure($e);
             abort(503, 'The report PDF renderer could not start. Please contact your administrator.');
-        } finally { File::deleteDirectory($directory); }
+        } finally {
+            File::deleteDirectory($directory);
+        }
     }
 
     private function chrome(): string
     {
         $configured = config('document_pdf.chrome_binary');
         $candidates = $configured ? [$configured] : (PHP_OS_FAMILY === 'Darwin' ? ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'] : ['/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome', '/opt/google/chrome/chrome']);
-        foreach ($candidates as $candidate) if (is_file($candidate) && is_executable($candidate)) return $candidate;
+        foreach ($candidates as $candidate) {
+            if (is_file($candidate) && is_executable($candidate)) {
+                return $candidate;
+            }
+        }
         abort(503, 'Configure NUERS_PDF_CHROME with the installed Chrome or Chromium executable to render the invoice preview PDF.');
     }
 
@@ -83,7 +94,9 @@ class DocumentPdf
         $environment = array_fill_keys(array_keys(array_merge(getenv(), $_ENV, $_SERVER)), false);
         foreach (['PATH', 'TMPDIR', 'LANG', 'LC_ALL', 'TZ', 'SystemRoot', 'WINDIR'] as $key) {
             $value = getenv($key);
-            if ($value !== false) $environment[$key] = $value;
+            if ($value !== false) {
+                $environment[$key] = $value;
+            }
         }
         // Native macOS Chrome helpers expect the signed-in user's home. Its
         // browser profile remains isolated by --user-data-dir in every render.
@@ -108,8 +121,8 @@ class DocumentPdf
         $lines = preg_split('/\R/', $e->getProcess()->getErrorOutput());
         $diagnostic = array_values(array_filter($lines, fn ($line) => preg_match('/FATAL|crashpad|sandbox|Permission denied|not permitted/i', $line)));
         logger()->error('Document PDF runtime failed', [
-            'signal'=>$e->getProcess()->getTermSignal(),
-            'diagnostic'=>mb_substr(implode("\n", $diagnostic), 0, 1600),
+            'signal' => $e->getProcess()->getTermSignal(),
+            'diagnostic' => mb_substr(implode("\n", $diagnostic), 0, 1600),
         ]);
     }
     public function filename(array $document): string

@@ -29,9 +29,14 @@ class AuditIntegritySnapshot
     {
         // Small installations still get an immediate complete check, bounded at
         // 1,000 events. Larger journals never scan the chain in a page request.
-        if (!DB::table('eis_audit_events')->orderBy('id')->offset(1000)->limit(1)->exists()) $result = $this->verify();
-        else $result = Cache::get($this->key());
-        if (!$result) return ['integrity' => null, 'state' => 'pending', 'checked_at' => null, 'through_id' => null];
+        if (!DB::table('eis_audit_events')->orderBy('id')->offset(1000)->limit(1)->exists()) {
+            $result = $this->verify();
+        } else {
+            $result = Cache::get($this->key());
+        }
+        if (!$result) {
+            return ['integrity' => null, 'state' => 'pending', 'checked_at' => null, 'through_id' => null];
+        }
         $sameHead = $result['head'] === DB::table('eis_audit_head')->where('id', 1)->value('last_hash');
         $fresh = \Carbon\CarbonImmutable::parse($result['checked_at'])->gte(now()->subMinutes(10));
         return ['integrity' => !$result['valid'] ? false : ($sameHead && $fresh ? true : null),

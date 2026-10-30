@@ -1,8 +1,0 @@
-{
-  "version": "website-typography-20261029",
-  "files": [
-    "src/pages/landing/index.tsx",
-    "src/pages/landing/readability.css"
-  ],
-  "assets": []
-}

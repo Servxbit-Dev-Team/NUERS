@@ -257,8 +257,8 @@ class BackupRecoveryTest extends TestCase
         $failed['result'] = 'failed';
         $failed['recovered_at'] = now()->subMinutes(20)->toIso8601String();
         $failed['checks']['audit_integrity'] = false;
-        $row = $this->create('drill',$failed);
+        $row = $this->create('drill', $failed);
         $this->review($row)->assertOk();
-        $this->getJson('/api/admin/backups')->assertOk()->assertJsonPath('stats.measurement_current',false)->assertJsonPath('snapshots.0.restore_verified',false);
+        $this->getJson('/api/admin/backups')->assertOk()->assertJsonPath('stats.measurement_current', false)->assertJsonPath('snapshots.0.restore_verified', false);
     }
 }

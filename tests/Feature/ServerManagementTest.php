@@ -37,7 +37,7 @@ class ServerManagementTest extends TestCase
         DB::purge('sqlite');
         $this->artisan('migrate:fresh', ['--force' => true])->assertSuccessful();
         $this->owner = $this->account('super_admin');
-        $this->gateway = new FakeInfrastructureController;
+        $this->gateway = new FakeInfrastructureController();
         $this->app->instance(ControllerGateway::class, $this->gateway);
     }
 

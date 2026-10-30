@@ -94,7 +94,7 @@ class SignedWebhook
         if ($attempts >= 8 && $state !== 'delivered') {
             $state = 'dead_letter';
         }
-        DB::table('webhook_deliveries')->where('id', $d->id)->where('lease_token', $d->lease_token)->update(['state' => $state, 'attempts' => $attempts, 'last_http_status' => $status, 'last_error' => $error, 'available_at' => now()->addSeconds(min(3600,2 ** $attempts) + random_int(1,30)), 'lease_token' => null, 'lease_until' => null, 'updated_at' => now()]);
+        DB::table('webhook_deliveries')->where('id', $d->id)->where('lease_token', $d->lease_token)->update(['state' => $state, 'attempts' => $attempts, 'last_http_status' => $status, 'last_error' => $error, 'available_at' => now()->addSeconds(min(3600, 2 ** $attempts) + random_int(1, 30)), 'lease_token' => null, 'lease_until' => null, 'updated_at' => now()]);
 
         return $state;
     }

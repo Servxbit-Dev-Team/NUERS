@@ -10,6 +10,6 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
         // General fixtures test their domain policies. MFA enforcement has separate explicit negative tests.
-        config(['security.enforce_privileged_mfa'=>false]);
+        config(['security.enforce_privileged_mfa' => false]);
     }
 }

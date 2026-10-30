@@ -1,4 +1,7 @@
-export type EisReadinessStatus = "production_ready" | "certification_pending" | "production_blocked";
+export type EisReadinessStatus =
+  | "production_ready"
+  | "certification_pending"
+  | "production_blocked";
 export type EisTransmissionStatus =
   | "queued"
   | "submitting"
@@ -180,7 +183,9 @@ export function validateEisPayload(payload: string | Record<string, unknown>) {
   }).then(async (response) => {
     const contentType = response.headers.get("Content-Type") ?? "";
     if (!contentType.toLowerCase().includes("application/json")) {
-      throw new Error("API endpoint returned HTML instead of JSON. Check the live API deployment path.");
+      throw new Error(
+        "API endpoint returned HTML instead of JSON. Check the live API deployment path.",
+      );
     }
 
     const result = await response.json().catch(() => ({}));
@@ -197,16 +202,22 @@ export function submitEisTransmission(input: {
   environment: string;
   api_version: string;
 }) {
-  return api<{ message: string; transmission: EisTransmission; validation: EisValidationResult }>("/api/bir-eis/transmissions", {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
+  return api<{ message: string; transmission: EisTransmission; validation: EisValidationResult }>(
+    "/api/bir-eis/transmissions",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    },
+  );
 }
 
 export function retryEisTransmission(id: string) {
-  return api<{ message: string; transmission: EisTransmission }>(`/api/bir-eis/transmissions/${id}/retry`, {
-    method: "POST",
-    body: JSON.stringify({}),
-  });
+  return api<{ message: string; transmission: EisTransmission }>(
+    `/api/bir-eis/transmissions/${id}/retry`,
+    {
+      method: "POST",
+      body: JSON.stringify({}),
+    },
+  );
 }
 import { apiFetch, readJsonResponse } from "@/lib/api-url";

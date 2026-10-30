@@ -101,8 +101,8 @@ class BusinessRegistryTest extends TestCase
         $p['status'] = 'suspended';
         $this->postJson($url, $p)->assertOk()->assertJsonPath('business.status', 'suspended');
         $this->assertNull(DB::table('users')->where('id', $owner->id)->value('api_token'));
-        $login=$this->postJson('/api/auth/login', ['email' => $owner->email, 'password' => 'OwnerPassword123'])->assertOk();
-        $this->withToken($login->json('session.access_token'))->withHeaders(['X-NUERS-Device'=>$login->json('session.device_id')??'fixture-device'])->postJson('/api/merchant/expenses',[])->assertForbidden();
+        $login = $this->postJson('/api/auth/login', ['email' => $owner->email, 'password' => 'OwnerPassword123'])->assertOk();
+        $this->withToken($login->json('session.access_token'))->withHeaders(['X-NUERS-Device' => $login->json('session.device_id') ?? 'fixture-device'])->postJson('/api/merchant/expenses', [])->assertForbidden();
     }
 
     private function csv(array $rows): string
@@ -198,6 +198,6 @@ class BusinessRegistryTest extends TestCase
         }
         DB::table('rdo_offices')->insert(['id' => 'legacy-office', 'rdo_code' => '021', 'rdo_name' => 'Legacy San Fernando', 'region' => 'Region III', 'status' => 'active']);
         $this->getJson('/api/admin/rdo-mappings')->assertOk()->assertJsonCount(124, 'offices')->assertJsonPath('legacy_offices.0.rdo_code', '021');
-        $this->getJson('/api/business-registry/tin?tin=ABC123456789000')->assertOk()->assertJsonPath('format_valid',false);
+        $this->getJson('/api/business-registry/tin?tin=ABC123456789000')->assertOk()->assertJsonPath('format_valid', false);
     }
 }

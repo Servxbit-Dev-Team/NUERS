@@ -24,7 +24,7 @@ class MerchantApiIntegrationTest extends TestCase
         DB::table('profiles')->insert(['id' => $this->owner->id, 'email' => $this->owner->email, 'role' => 'merchant']);
         $this->merchant = (string) Str::uuid();
         DB::table('merchants')->insert(['id' => $this->merchant, 'business_name' => 'Synthetic API Seller', 'tin' => '123456789000', 'address' => 'Synthetic registered address', 'vat_registered' => false, 'merchant_account_id' => $this->owner->id, 'status' => 'active']);
-        DB::table('merchant_branches')->insert(['id'=>(string)Str::uuid(),'merchant_id'=>$this->merchant,'code'=>'SYNTHETIC','bir_branch_code'=>'00000','name'=>'Synthetic branch','address'=>'Synthetic address','city'=>'Synthetic city','region'=>'Synthetic region','rdo_code'=>'001','branch_type'=>'main','status'=>'active','contact_encrypted'=>Crypt::encryptString('{}'),'request_id'=>(string)Str::uuid(),'request_hash'=>str_repeat('a',64)]);
+        DB::table('merchant_branches')->insert(['id' => (string)Str::uuid(),'merchant_id' => $this->merchant,'code' => 'SYNTHETIC','bir_branch_code' => '00000','name' => 'Synthetic branch','address' => 'Synthetic address','city' => 'Synthetic city','region' => 'Synthetic region','rdo_code' => '001','branch_type' => 'main','status' => 'active','contact_encrypted' => Crypt::encryptString('{}'),'request_id' => (string)Str::uuid(),'request_hash' => str_repeat('a', 64)]);
         $this->withToken($this->owner->api_token);
     }
 
@@ -84,7 +84,7 @@ class MerchantApiIntegrationTest extends TestCase
     {
         $this->freshMfa();
         DB::table('merchant_branches')->where('merchant_id', $this->merchant)->delete();
-        DB::table('merchants')->where('id', $this->merchant)->update(['tin'=>null]);
+        DB::table('merchants')->where('id', $this->merchant)->update(['tin' => null]);
         $this->postJson('/api/merchant/api-keys', ['name' => 'ERP'])->assertUnprocessable();
         DB::table('merchants')->where('id', $this->merchant)->update(['tin' => '123456789']);
         $this->postJson('/api/merchant/api-keys', ['name' => 'ERP'])->assertUnprocessable();
@@ -196,127 +196,133 @@ class MerchantApiIntegrationTest extends TestCase
 
     private function ownedEvent(array $connection, string $reference = 'OWNED-1', string $gross = '100.00'): array
     {
-        return $connection + ['source_event_id'=>$reference,'external_reference'=>$reference,'event_type'=>'invoice.finalized',
-            'occurred_at'=>now()->toIso8601String(),'receipt_number'=>$reference,'document_type'=>'non_vat_invoice',
-            'payment_method'=>'cash','gross_amount'=>$gross,'tax_type'=>'non_vat','vat_inclusive'=>true,
-            'items'=>[['description'=>'Synthetic owned system item','quantity'=>1,'unit_price'=>$gross,'tax_type'=>'non_vat']]];
+        return $connection + ['source_event_id' => $reference,'external_reference' => $reference,'event_type' => 'invoice.finalized',
+            'occurred_at' => now()->toIso8601String(),'receipt_number' => $reference,'document_type' => 'non_vat_invoice',
+            'payment_method' => 'cash','gross_amount' => $gross,'tax_type' => 'non_vat','vat_inclusive' => true,
+            'items' => [['description' => 'Synthetic owned system item','quantity' => 1,'unit_price' => $gross,'tax_type' => 'non_vat']]];
     }
 
     public function test_verified_account_gets_automatic_connection_with_key_and_rotations_keep_mapping(): void
     {
         $this->freshMfa();
-        $a=$this->postJson('/api/merchant/api-keys',['name'=>'Owned ERP'])->assertCreated();
-        $connection=$a->json('connection');
-        $this->assertSame('source_capture',$connection['record_mode']);
-        $this->assertDatabaseHas('integration_source_profiles',['id'=>$connection['source_profile_id'],'profile_kind'=>'account_connection','merchant_id'=>$this->merchant,'status'=>'active']);
-        $this->assertDatabaseCount('merchant_terminals',0);
-        $b=$this->postJson('/api/merchant/api-keys',['name'=>'ERP rotation'])->assertCreated();
-        $this->assertSame($connection,$b->json('connection'));
-        $this->assertNotSame($a->json('key.plain_key'),$b->json('key.plain_key'));
-        $this->assertDatabaseCount('integration_source_profiles',1);
-        $this->getJson('/api/merchant/api-keys')->assertOk()->assertJsonPath('source_profiles.0.profile_kind','account_connection');
-        $this->assertDatabaseCount('merchant_transactions',0);
+        $a = $this->postJson('/api/merchant/api-keys', ['name' => 'Owned ERP'])->assertCreated();
+        $connection = $a->json('connection');
+        $this->assertSame('source_capture', $connection['record_mode']);
+        $this->assertDatabaseHas('integration_source_profiles', ['id' => $connection['source_profile_id'],'profile_kind' => 'account_connection','merchant_id' => $this->merchant,'status' => 'active']);
+        $this->assertDatabaseCount('merchant_terminals', 0);
+        $b = $this->postJson('/api/merchant/api-keys', ['name' => 'ERP rotation'])->assertCreated();
+        $this->assertSame($connection, $b->json('connection'));
+        $this->assertNotSame($a->json('key.plain_key'), $b->json('key.plain_key'));
+        $this->assertDatabaseCount('integration_source_profiles', 1);
+        $this->getJson('/api/merchant/api-keys')->assertOk()->assertJsonPath('source_profiles.0.profile_kind', 'account_connection');
+        $this->assertDatabaseCount('merchant_transactions', 0);
     }
 
     public function test_approved_account_prepares_connection_before_the_owner_generates_any_secret(): void
     {
-        $admin=User::factory()->create(['api_token'=>Str::random(64),'mfa_secret'=>Crypt::encryptString('SYNTHETICKEY'),'api_mfa_verified_at'=>now()]);
-        DB::table('profiles')->insert(['id'=>$admin->id,'email'=>$admin->email,'role'=>'super_admin']);
-        DB::table('merchants')->where('id',$this->merchant)->update(['status'=>'pending','registry_revision'=>1]);
+        $admin = User::factory()->create(['api_token' => Str::random(64),'mfa_secret' => Crypt::encryptString('SYNTHETICKEY'),'api_mfa_verified_at' => now()]);
+        DB::table('profiles')->insert(['id' => $admin->id,'email' => $admin->email,'role' => 'super_admin']);
+        DB::table('merchants')->where('id', $this->merchant)->update(['status' => 'pending','registry_revision' => 1]);
         $this->freshMfa();
-        $this->getJson('/api/merchant/api-keys')->assertOk()->assertJsonPath('merchant.status','pending')->assertJsonPath('access.owner',true);
-        $sessionBefore = DB::table('users')->where('id',$this->owner->id)->first(['api_token','api_mfa_verified_at']);
-        $this->partialMock(\App\Services\MerchantVerificationDocuments::class,fn($mock)=>$mock->shouldReceive('assertActivation')->once()->with($this->merchant));
-        $this->withToken($admin->api_token)->postJson('/api/business-registry/'.$this->merchant.'/review',[
-            'revision'=>1,'status'=>'active','stage'=>'onboarded','reason'=>'All account evidence independently verified.',
-            'evidence'=>'Synthetic business account review reference',
-            'checks'=>array_fill_keys(['registration_certificate','identity','business_information','representative_authority','contact_verification'],true),
-        ])->assertOk()->assertJsonPath('business.status','active');
-        $this->assertDatabaseHas('integration_source_profiles',['merchant_id'=>$this->merchant,'profile_kind'=>'account_connection','reviewed_by'=>(string)$admin->id]);
-        $this->assertDatabaseCount('merchant_api_keys',0);
-        $this->withToken($this->owner->api_token)->getJson('/api/merchant/api-keys')->assertOk()->assertJsonPath('merchant.status','active')->assertJsonPath('access.owner',true);
-        $this->assertEquals($sessionBefore, DB::table('users')->where('id',$this->owner->id)->first(['api_token','api_mfa_verified_at']));
-        $this->withToken($this->owner->api_token)->postJson('/api/merchant/api-keys',['name'=>'Approved ERP'])->assertCreated();
-        $this->assertDatabaseCount('integration_source_profiles',1);
+        $this->getJson('/api/merchant/api-keys')->assertOk()->assertJsonPath('merchant.status', 'pending')->assertJsonPath('access.owner', true);
+        $sessionBefore = DB::table('users')->where('id', $this->owner->id)->first(['api_token','api_mfa_verified_at']);
+        $this->partialMock(\App\Services\MerchantVerificationDocuments::class, fn ($mock) => $mock->shouldReceive('assertActivation')->once()->with($this->merchant));
+        $this->withToken($admin->api_token)->postJson('/api/business-registry/'.$this->merchant.'/review', [
+            'revision' => 1,'status' => 'active','stage' => 'onboarded','reason' => 'All account evidence independently verified.',
+            'evidence' => 'Synthetic business account review reference',
+            'checks' => array_fill_keys(['registration_certificate','identity','business_information','representative_authority','contact_verification'], true),
+        ])->assertOk()->assertJsonPath('business.status', 'active');
+        $this->assertDatabaseHas('integration_source_profiles', ['merchant_id' => $this->merchant,'profile_kind' => 'account_connection','reviewed_by' => (string)$admin->id]);
+        $this->assertDatabaseCount('merchant_api_keys', 0);
+        $this->withToken($this->owner->api_token)->getJson('/api/merchant/api-keys')->assertOk()->assertJsonPath('merchant.status', 'active')->assertJsonPath('access.owner', true);
+        $this->assertEquals($sessionBefore, DB::table('users')->where('id', $this->owner->id)->first(['api_token','api_mfa_verified_at']));
+        $this->withToken($this->owner->api_token)->postJson('/api/merchant/api-keys', ['name' => 'Approved ERP'])->assertCreated();
+        $this->assertDatabaseCount('integration_source_profiles', 1);
     }
 
     public function test_generated_connection_can_capture_and_retry_without_a_second_sale(): void
     {
-        DB::transaction(fn()=>app(\App\Services\MerchantWallet::class)->credit($this->merchant,300,(string)Str::uuid(),'Synthetic settled test funds','test-fixture'));
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit($this->merchant, 300, (string)Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $this->freshMfa();
-        $r=$this->postJson('/api/merchant/api-keys',['name'=>'ERP'])->assertCreated();
-        $p=$this->ownedEvent($r->json('connection'));
-        $this->withToken('')->withHeader('X-NUERS-API-Key',$r->json('key.plain_key'));
-        $a=$this->postJson('/api/integrations/transactions',$p)->assertCreated()->assertJsonPath('record_mode','source_capture')->assertJsonMissingPath('bir_acceptance')->assertJsonPath('nuers_status','success');
-        $this->postJson('/api/integrations/transactions',$p)->assertOk()->assertJsonPath('duplicate',true)->assertJsonPath('id',$a->json('id'));
-        $this->assertDatabaseCount('merchant_transactions',1);
-        $this->assertDatabaseCount('transaction_receipts',1);
-        $this->assertDatabaseCount('invoice_series',0);
-        $p['customer_name']='Changed original';
-        $this->postJson('/api/integrations/transactions',$p)->assertConflict();
+        $r = $this->postJson('/api/merchant/api-keys', ['name' => 'ERP'])->assertCreated();
+        $p = $this->ownedEvent($r->json('connection'));
+        $this->withToken('')->withHeader('X-NUERS-API-Key', $r->json('key.plain_key'));
+        $a = $this->postJson('/api/integrations/transactions', $p)->assertCreated()->assertJsonPath('record_mode', 'source_capture')->assertJsonMissingPath('bir_acceptance')->assertJsonPath('nuers_status', 'success');
+        $this->postJson('/api/integrations/transactions', $p)->assertOk()->assertJsonPath('duplicate', true)->assertJsonPath('id', $a->json('id'));
+        $this->assertDatabaseCount('merchant_transactions', 1);
+        $this->assertDatabaseCount('transaction_receipts', 1);
+        $this->assertDatabaseCount('invoice_series', 0);
+        $p['customer_name'] = 'Changed original';
+        $this->postJson('/api/integrations/transactions', $p)->assertConflict();
     }
 
     public function test_automatic_connection_does_not_bypass_revocation_identity_period_or_activation(): void
     {
         $this->freshMfa();
-        $r=$this->postJson('/api/merchant/api-keys',['name'=>'ERP'])->assertCreated();
-        $p=$this->ownedEvent($r->json('connection'));
-        $this->withToken('')->withHeader('X-NUERS-API-Key',$r->json('key.plain_key'));
-        $earlier=$p; $earlier['occurred_at']=now()->subDay()->toIso8601String();
-        $this->postJson('/api/integrations/transactions',$earlier)->assertConflict();
-        DB::table('merchants')->where('id',$this->merchant)->update(['address'=>'Changed registered address']);
-        $this->postJson('/api/integrations/transactions',$p)->assertConflict();
-        $this->withHeader('X-NUERS-API-Key','')->withToken($this->owner->api_token)->postJson('/api/merchant/api-keys',['name'=>'Cannot bypass changed identity'])->assertUnprocessable();
-        DB::table('merchants')->where('id',$this->merchant)->update(['address'=>'Synthetic registered address']);
-        DB::table('integration_source_profiles')->where('id',$p['source_profile_id'])->update(['status'=>'revoked']);
-        $replacement=$this->postJson('/api/merchant/api-keys',['name'=>'Replacement owned ERP'])->assertCreated();
-        $this->assertNotSame($p['source_profile_id'],$replacement->json('connection.source_profile_id'));
-        $this->assertSame($p['source_system'],$replacement->json('connection.source_system'));
-        $this->assertDatabaseHas('integration_source_profiles',['id'=>$p['source_profile_id'],'status'=>'revoked']);
-        $this->assertDatabaseHas('integration_source_profiles',['id'=>$replacement->json('connection.source_profile_id'),'status'=>'active']);
-        $again=$this->postJson('/api/merchant/api-keys',['name'=>'Replacement rotation'])->assertCreated();
-        $this->assertSame($replacement->json('connection'),$again->json('connection'));
-        $this->withToken('')->withHeader('X-NUERS-API-Key',$r->json('key.plain_key'))->postJson('/api/integrations/transactions',$p)->assertConflict();
-        DB::table('merchants')->where('id',$this->merchant)->update(['status'=>'suspended']);
-        $this->postJson('/api/integrations/transactions',$p)->assertForbidden();
-        $this->assertDatabaseCount('integration_source_profiles',2);
-        $this->assertDatabaseCount('merchant_transactions',0);
+        $r = $this->postJson('/api/merchant/api-keys', ['name' => 'ERP'])->assertCreated();
+        $p = $this->ownedEvent($r->json('connection'));
+        $this->withToken('')->withHeader('X-NUERS-API-Key', $r->json('key.plain_key'));
+        $earlier = $p;
+        $earlier['occurred_at'] = now()->subDay()->toIso8601String();
+        $this->postJson('/api/integrations/transactions', $earlier)->assertConflict();
+        DB::table('merchants')->where('id', $this->merchant)->update(['address' => 'Changed registered address']);
+        $this->postJson('/api/integrations/transactions', $p)->assertConflict();
+        $this->withHeader('X-NUERS-API-Key', '')->withToken($this->owner->api_token)->postJson('/api/merchant/api-keys', ['name' => 'Cannot bypass changed identity'])->assertUnprocessable();
+        DB::table('merchants')->where('id', $this->merchant)->update(['address' => 'Synthetic registered address']);
+        DB::table('integration_source_profiles')->where('id', $p['source_profile_id'])->update(['status' => 'revoked']);
+        $replacement = $this->postJson('/api/merchant/api-keys', ['name' => 'Replacement owned ERP'])->assertCreated();
+        $this->assertNotSame($p['source_profile_id'], $replacement->json('connection.source_profile_id'));
+        $this->assertSame($p['source_system'], $replacement->json('connection.source_system'));
+        $this->assertDatabaseHas('integration_source_profiles', ['id' => $p['source_profile_id'],'status' => 'revoked']);
+        $this->assertDatabaseHas('integration_source_profiles', ['id' => $replacement->json('connection.source_profile_id'),'status' => 'active']);
+        $again = $this->postJson('/api/merchant/api-keys', ['name' => 'Replacement rotation'])->assertCreated();
+        $this->assertSame($replacement->json('connection'), $again->json('connection'));
+        $this->withToken('')->withHeader('X-NUERS-API-Key', $r->json('key.plain_key'))->postJson('/api/integrations/transactions', $p)->assertConflict();
+        DB::table('merchants')->where('id', $this->merchant)->update(['status' => 'suspended']);
+        $this->postJson('/api/integrations/transactions', $p)->assertForbidden();
+        $this->assertDatabaseCount('integration_source_profiles', 2);
+        $this->assertDatabaseCount('merchant_transactions', 0);
     }
 
     public function test_auto_connection_retains_wallet_admission_and_sandbox_isolation(): void
     {
         $this->freshMfa();
-        $live=$this->postJson('/api/merchant/api-keys',['name'=>'ERP','environment'=>'live'])->assertCreated();
-        $sandbox=$this->postJson('/api/merchant/api-keys',['name'=>'ERP test','environment'=>'sandbox'])->assertCreated();
-        $this->assertSame($live->json('connection'),$sandbox->json('connection'));
-        $p=$this->ownedEvent($live->json('connection'),'OWNED-500','500.00');
-        $this->withToken('')->withHeader('X-NUERS-API-Key',$live->json('key.plain_key'))->postJson('/api/integrations/transactions',$p)->assertStatus(402);
-        $this->assertDatabaseCount('merchant_transactions',0);
-        $this->withHeader('X-NUERS-API-Key',$sandbox->json('key.plain_key'))->postJson('/api/integrations/transactions',$p)->assertCreated()->assertJsonPath('environment','sandbox');
-        $this->assertDatabaseCount('merchant_transactions',0);
-        $this->assertDatabaseCount('integration_sandbox_events',1);
-        $this->assertDatabaseCount('merchant_wallet_entries',0);
+        $live = $this->postJson('/api/merchant/api-keys', ['name' => 'ERP','environment' => 'live'])->assertCreated();
+        $sandbox = $this->postJson('/api/merchant/api-keys', ['name' => 'ERP test','environment' => 'sandbox'])->assertCreated();
+        $this->assertSame($live->json('connection'), $sandbox->json('connection'));
+        $p = $this->ownedEvent($live->json('connection'), 'OWNED-500', '500.00');
+        $this->withToken('')->withHeader('X-NUERS-API-Key', $live->json('key.plain_key'))->postJson('/api/integrations/transactions', $p)->assertStatus(402);
+        $this->assertDatabaseCount('merchant_transactions', 0);
+        $this->withHeader('X-NUERS-API-Key', $sandbox->json('key.plain_key'))->postJson('/api/integrations/transactions', $p)->assertCreated()->assertJsonPath('environment', 'sandbox');
+        $this->assertDatabaseCount('merchant_transactions', 0);
+        $this->assertDatabaseCount('integration_sandbox_events', 1);
+        $this->assertDatabaseCount('merchant_wallet_entries', 0);
     }
 
-    public function test_owned_capture_accepts_mixed_tax_lines_and_never_changes_seller_registration():void
+    public function test_owned_capture_accepts_mixed_tax_lines_and_never_changes_seller_registration(): void
     {
-        DB::transaction(fn()=>app(\App\Services\MerchantWallet::class)->credit($this->merchant,300,(string)Str::uuid(),'Synthetic settled test funds','test-fixture'));
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit($this->merchant, 300, (string)Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $this->freshMfa();
-        DB::table('merchants')->where('id',$this->merchant)->update(['vat_registered'=>true]);
-        $key=$this->postJson('/api/merchant/api-keys',['name'=>'Mixed VAT ERP'])->assertCreated();
-        $p=$this->ownedEvent($key->json('connection'),'MIXED-1','312.00');
-        $p['tax_type']='vatable';$p['document_type']='mixed_sales_invoice';
-        $p['items']=[['description'=>'Taxable product','quantity'=>1,'unit_price'=>'112.00','tax_type'=>'vatable'],['description'=>'Exempt product','quantity'=>1,'unit_price'=>'100.00','tax_type'=>'vat_exempt','tax_basis_reference'=>'Synthetic exemption evidence'],['description'=>'Eligible zero rated product','quantity'=>1,'unit_price'=>'100.00','tax_type'=>'zero_rated','tax_basis_reference'=>'Synthetic zero rating evidence']];
-        $this->withToken('')->withHeader('X-NUERS-API-Key',$key->json('key.plain_key'));
-        $r=$this->postJson('/api/integrations/transactions',$p)->assertCreated();
-        $this->assertEquals(12,$r->json('calculation.vat_amount'));
-        $this->assertEquals(100,$r->json('calculation.vatable_sales'));
-        $this->assertEquals(100,$r->json('calculation.vat_exempt_sales'));
-        $this->assertEquals(100,$r->json('calculation.zero_rated_sales'));
-        $bad=$p;$bad['source_event_id']='BAD-2';$bad['external_reference']='BAD-2';$bad['receipt_number']='BAD-2';$bad['items'][1]['tax_type']='non_vat';
-        $this->postJson('/api/integrations/transactions',$bad)->assertUnprocessable();
-        $this->assertDatabaseCount('merchant_transactions',1);
-        $this->assertEquals(1,DB::table('merchants')->where('id',$this->merchant)->value('vat_registered'));
+        DB::table('merchants')->where('id', $this->merchant)->update(['vat_registered' => true]);
+        $key = $this->postJson('/api/merchant/api-keys', ['name' => 'Mixed VAT ERP'])->assertCreated();
+        $p = $this->ownedEvent($key->json('connection'), 'MIXED-1', '312.00');
+        $p['tax_type'] = 'vatable';
+        $p['document_type'] = 'mixed_sales_invoice';
+        $p['items'] = [['description' => 'Taxable product','quantity' => 1,'unit_price' => '112.00','tax_type' => 'vatable'],['description' => 'Exempt product','quantity' => 1,'unit_price' => '100.00','tax_type' => 'vat_exempt','tax_basis_reference' => 'Synthetic exemption evidence'],['description' => 'Eligible zero rated product','quantity' => 1,'unit_price' => '100.00','tax_type' => 'zero_rated','tax_basis_reference' => 'Synthetic zero rating evidence']];
+        $this->withToken('')->withHeader('X-NUERS-API-Key', $key->json('key.plain_key'));
+        $r = $this->postJson('/api/integrations/transactions', $p)->assertCreated();
+        $this->assertEquals(12, $r->json('calculation.vat_amount'));
+        $this->assertEquals(100, $r->json('calculation.vatable_sales'));
+        $this->assertEquals(100, $r->json('calculation.vat_exempt_sales'));
+        $this->assertEquals(100, $r->json('calculation.zero_rated_sales'));
+        $bad = $p;
+        $bad['source_event_id'] = 'BAD-2';
+        $bad['external_reference'] = 'BAD-2';
+        $bad['receipt_number'] = 'BAD-2';
+        $bad['items'][1]['tax_type'] = 'non_vat';
+        $this->postJson('/api/integrations/transactions', $bad)->assertUnprocessable();
+        $this->assertDatabaseCount('merchant_transactions', 1);
+        $this->assertEquals(1, DB::table('merchants')->where('id', $this->merchant)->value('vat_registered'));
     }
 
     public function test_existing_verified_account_setup_is_idempotent_and_never_mints_credentials(): void
@@ -326,9 +332,9 @@ class MerchantApiIntegrationTest extends TestCase
         $this->assertDatabaseCount('integration_source_profiles',1);
         $this->assertDatabaseCount('merchant_api_keys',0);
         $this->assertDatabaseCount('merchant_transactions',0);
-        DB::table('integration_source_profiles')->update(['status'=>'revoked']);
+        DB::table('integration_source_profiles')->update(['status' => 'revoked']);
         $this->artisan('integrations:prepare-verified-connections')->assertSuccessful();
         $this->assertDatabaseCount('integration_source_profiles',1);
-        $this->assertDatabaseHas('integration_source_profiles',['status'=>'revoked']);
+        $this->assertDatabaseHas('integration_source_profiles',['status' => 'revoked']);
     }
 }

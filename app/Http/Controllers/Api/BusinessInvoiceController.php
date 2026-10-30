@@ -191,7 +191,7 @@ class BusinessInvoiceController extends Controller
 
         $validated['sales_benefit'] = app(\App\Services\StatutorySales::class)->validate($validated['sales_benefit'] ?? null, $validated['issue_date']);
         $request->merge(['sales_benefit' => $validated['sales_benefit']]);
-        $request->validate(['prices_include_vat'=>'sometimes|boolean']);
+        $request->validate(['prices_include_vat' => 'sometimes|boolean']);
         $totals = $this->totalsFromRequest($request, (bool) $merchant->vat_registered);
         $validated['line_items'] = $totals['_items'];
         $validated['withholding_details'] = $request->input('withholding_details');
@@ -228,7 +228,7 @@ class BusinessInvoiceController extends Controller
                 }
             }
 
-            app(\App\Services\MerchantInvoiceSettings::class)->assertPolicy($merchant,$validated['line_items'],$validated['buyer_tin']??null);
+            app(\App\Services\MerchantInvoiceSettings::class)->assertPolicy($merchant, $validated['line_items'], $validated['buyer_tin'] ?? null);
             abort_if(DB::table('business_invoices')->where('merchant_id', $merchant->id)->where('invoice_number', $validated['invoice_number'])->exists(), 422, 'This invoice number already exists for your Business Account.');
             if (! empty($validated['buyer_phone'])) {
                 abort_unless(strlen(preg_replace('/\D/', '', $validated['buyer_phone'])) >= 7 && strlen(preg_replace('/\D/', '', $validated['buyer_phone'])) <= 15, 422, 'Buyer phone must contain between seven and fifteen digits.');
@@ -312,9 +312,9 @@ class BusinessInvoiceController extends Controller
                 $invoiceRow['seller_branch_code'] = $status === 'draft' ? null : app(BirCompliance::class)->integration((string) $merchant->id, null, 'production')?->branch_code;
                 $invoiceRow['seller_rdo_code'] = $merchant->rdo_code ?? null;
             }
-            $invoiceRow['presentation_settings']=json_encode(app(\App\Services\MerchantInvoiceSettings::class)->snapshot($merchant),JSON_THROW_ON_ERROR);
+            $invoiceRow['presentation_settings'] = json_encode(app(\App\Services\MerchantInvoiceSettings::class)->snapshot($merchant), JSON_THROW_ON_ERROR);
             if (!empty($validated['manual_recovery_id'])) {
-                abort_unless(DB::table('merchant_compliance_records')->where('merchant_id',$merchant->id)->where('id',$validated['manual_recovery_id'])->where('kind','manual_invoice')->where('status','awaiting_replacement')->exists(),422,'Select an unreconciled manual invoice from this business.');
+                abort_unless(DB::table('merchant_compliance_records')->where('merchant_id', $merchant->id)->where('id', $validated['manual_recovery_id'])->where('kind', 'manual_invoice')->where('status', 'awaiting_replacement')->exists(), 422, 'Select an unreconciled manual invoice from this business.');
             }
             DB::table('business_invoices')->insert($invoiceRow);
             if (! empty($validated['customer_id'])) {
@@ -346,7 +346,9 @@ class BusinessInvoiceController extends Controller
                 ]);
             }
 
-            if ($status !== 'draft' && !empty($validated['manual_recovery_id'])) app(\App\Services\ComplianceOperations::class)->linkManual((string)$merchant->id,$validated['manual_recovery_id'],'invoice',$invoiceId,(string)$request->attributes->get('api_actor')->id);
+            if ($status !== 'draft' && !empty($validated['manual_recovery_id'])) {
+                app(\App\Services\ComplianceOperations::class)->linkManual((string)$merchant->id, $validated['manual_recovery_id'], 'invoice', $invoiceId, (string)$request->attributes->get('api_actor')->id);
+            }
             if ($status !== 'draft' && Schema::hasTable('eis_document_outbox')) {
                 app(EisDocumentReadiness::class)->prepare('invoice', $invoiceId);
             }
@@ -531,9 +533,14 @@ class BusinessInvoiceController extends Controller
     private function totalsFromRequest(Request $request, bool $vatRegistered = true): array
     {
         $calculator = app(InvoiceCalculator::class);
-        $computed = $calculator->calculate($request->input('line_items', []), $vatRegistered,
+        $computed = $calculator->calculate(
+            $request->input('line_items', []),
+            $vatRegistered,
             0,
-            $calculator->cents($request->input('other_charges', 0), 'other_charges', true), $request->boolean('prices_include_vat', true), $request->input('sales_benefit'));
+            $calculator->cents($request->input('other_charges', 0), 'other_charges', true),
+            $request->boolean('prices_include_vat', true),
+            $request->input('sales_benefit')
+        );
         $rate = $request->input('withholding_pct', 0);
         if (! is_numeric($rate) || $rate < 0 || $rate > 100 || abs($rate * 100 - round($rate * 100)) > 0.00001) {
             throw ValidationException::withMessages(['withholding_pct' => 'Use a percentage from 0 to 100 with at most two decimals.']);

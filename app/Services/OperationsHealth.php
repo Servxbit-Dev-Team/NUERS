@@ -84,6 +84,19 @@ class OperationsHealth
         $rawKey = str_starts_with($secret, 'base64:') ? base64_decode(substr($secret, 7), true) : $secret;
         $check('encryption', 'Application encryption key', is_string($rawKey) && strlen($rawKey) === 32, 'Key length check only; secret values are never included in this report.', true);
         $check('queue', 'Durable queue configuration', in_array(config('queue.default'), ['database', 'redis', 'sqs'], true), 'Configured queue: '.config('queue.default').'.');
+        $backup = $this->observation('backup', config('operations.backup.max_age_hours') * 3600);
+        $check(
+            'backup',
+            'Encrypted local recovery capture',
+            config('operations.backup.enabled') && $backup['fresh'],
+            'Requires enabled capture and a recent successful archive. Offsite custody and restore validation are separate controls.'
+        );
+        $check(
+            'audit_checkpoint',
+            'Audit checkpoint signing key',
+            strlen((string) config('security.audit_checkpoint_key')) >= 32,
+            'An independent signing key is required; external custody must be verified separately.'
+        );
 
         $workers = [];
         foreach ([

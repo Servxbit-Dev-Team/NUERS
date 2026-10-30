@@ -257,6 +257,6 @@ class MerchantBusinessProfileTest extends TestCase
         $this->acceptedSource($this->merchant, $key);
         $this->getJson('/api/merchant/business-profile')->assertOk()->assertJsonPath('integration.status', 'paused')->assertJsonCount(0, 'readiness');
         DB::table('merchant_api_keys')->where('id', $key)->update(['scopes' => json_encode(['transactions:read'])]);
-        $this->getJson('/api/merchant/business-profile')->assertOk()->assertJsonPath('integration.status','inactive');
+        $this->getJson('/api/merchant/business-profile')->assertOk()->assertJsonPath('integration.status', 'inactive');
     }
 }

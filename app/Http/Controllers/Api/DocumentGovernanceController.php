@@ -103,7 +103,9 @@ class DocumentGovernanceController extends Controller
             app(MerchantWallet::class)->charge($row->merchant_id, (int) $computed['total_amount'], $row->document_type, 'invoice', $row->id, $series['number'], $v['branch_code'], 'portal', (string) $u->id);
             DB::table('business_invoices')->where('id', $row->id)->update($authority + ['document_registration' => json_encode($series['document_registration'], JSON_THROW_ON_ERROR), 'invoice_number' => $series['number'], 'seller_branch_code' => $v['branch_code'], 'status' => 'issued', 'updated_at' => now()]);
             DB::table('invoice_lifecycle_events')->insert(['id' => (string) Str::uuid(), 'document_source' => 'invoice', 'document_id' => $row->id, 'merchant_id' => $row->merchant_id, 'event' => 'issued', 'actor' => (string) $u->id, 'reason' => 'Published from validated draft with recorded authority', 'details' => json_encode(['series_id' => $series['series_id'], 'original_issue_date' => $row->issue_date]), 'occurred_at' => now()]);
-            if ($row->manual_recovery_id) app(\App\Services\ComplianceOperations::class)->linkManual((string)$row->merchant_id,$row->manual_recovery_id,'invoice',$row->id,(string)$u->id);
+            if ($row->manual_recovery_id) {
+                app(\App\Services\ComplianceOperations::class)->linkManual((string)$row->merchant_id, $row->manual_recovery_id, 'invoice', $row->id, (string)$u->id);
+            }
             $outbox = app(EisDocumentReadiness::class)->prepare('invoice', $row->id);
             app(BirCompliance::class)->audit('invoice.draft.published', $row->id, (string) $u->id, ['number' => $series['number'], 'series_id' => $series['series_id']]);
 
@@ -180,10 +182,10 @@ class DocumentGovernanceController extends Controller
         $v['document_registration'] = json_encode(app(\App\Services\InvoiceDocumentRules::class)->registration($registration['document_registration'] ?? [], true), JSON_THROW_ON_ERROR);
         $id = (string) Str::uuid();
         DB::transaction(function () use ($id, $v, $u) {
-            DB::table('merchants')->where('id',$v['merchant_id'])->lockForUpdate()->first();
-            $existing = DB::table('invoice_series')->where('merchant_id',$v['merchant_id'])->where('branch_code',$v['branch_code'])->where('document_family',$v['document_family']);
-            abort_if((clone $existing)->where('prefix',$v['prefix'])->where('range_start','<=',$v['range_end'])->where('range_end','>=',$v['range_start'])->exists(), 409, 'This range overlaps a recorded series. Expired or retired numbers must not be reused.');
-            abort_if((clone $existing)->where('status','active')->where('valid_from','<=',$v['valid_until'])->where('valid_until','>=',$v['valid_from'])->exists(), 409, 'Another active series covers this branch and period. Review it before registering a replacement.');
+            DB::table('merchants')->where('id', $v['merchant_id'])->lockForUpdate()->first();
+            $existing = DB::table('invoice_series')->where('merchant_id', $v['merchant_id'])->where('branch_code', $v['branch_code'])->where('document_family', $v['document_family']);
+            abort_if((clone $existing)->where('prefix', $v['prefix'])->where('range_start', '<=', $v['range_end'])->where('range_end', '>=', $v['range_start'])->exists(), 409, 'This range overlaps a recorded series. Expired or retired numbers must not be reused.');
+            abort_if((clone $existing)->where('status', 'active')->where('valid_from', '<=', $v['valid_until'])->where('valid_until', '>=', $v['valid_from'])->exists(), 409, 'Another active series covers this branch and period. Review it before registering a replacement.');
             app(BirCompliance::class)->assertCanIssue($v['merchant_id'], $v['branch_code']);
             DB::table('invoice_series')->insert(['id' => $id, ...$v, 'status' => 'active', 'verified_by' => (string) $u->id, 'created_at' => now(), 'updated_at' => now()]);
             app(BirCompliance::class)->audit('invoice.series.recorded', $id, (string) $u->id, $v);

@@ -22,18 +22,31 @@ class EnterpriseDashboardTest extends TestCase
         (require database_path('migrations/2026_10_20_000005_submission_outcomes.php'))->up();
         Schema::table('profiles', fn (Blueprint $t) => $t->string('tin')->nullable());
         Schema::create('client_accounts', function (Blueprint $t) {
-            $t->string('id')->primary(); $t->unsignedBigInteger('user_id')->nullable();
-            $t->string('email')->nullable(); $t->string('tin')->nullable();
-            $t->string('status')->default('active'); $t->decimal('wallet_balance')->default(0);
+            $t->string('id')->primary();
+            $t->unsignedBigInteger('user_id')->nullable();
+            $t->string('email')->nullable();
+            $t->string('tin')->nullable();
+            $t->string('status')->default('active');
+            $t->decimal('wallet_balance')->default(0);
         });
         Schema::create('eis_transmissions', function (Blueprint $t) {
-            $t->string('id')->primary(); $t->string('merchant_id')->nullable(); $t->string('status');
-            $t->string('environment')->default('certification'); $t->timestamp('submitted_at')->nullable(); $t->string('bir_reference_number')->nullable();
+            $t->string('id')->primary();
+            $t->string('merchant_id')->nullable();
+            $t->string('status');
+            $t->string('environment')->default('certification');
+            $t->timestamp('submitted_at')->nullable();
+            $t->string('bir_reference_number')->nullable();
         });
-        Schema::create('eis_acknowledgements', function (Blueprint $t) { $t->string('id'); $t->string('transmission_id'); });
+        Schema::create('eis_acknowledgements', function (Blueprint $t) {
+            $t->string('id');
+            $t->string('transmission_id');
+        });
         Schema::create('system_health_checks', function (Blueprint $t) {
-            $t->string('service_key'); $t->string('category'); $t->string('service_name');
-            $t->string('status'); $t->timestamp('checked_at')->nullable();
+            $t->string('service_key');
+            $t->string('category');
+            $t->string('service_name');
+            $t->string('status');
+            $t->timestamp('checked_at')->nullable();
         });
         $this->travelTo(now()->setDate(2026, 10, 15)->setTime(12, 0));
     }
@@ -78,7 +91,7 @@ class EnterpriseDashboardTest extends TestCase
     public function test_citizen_tin_scope_accepts_formatting_and_never_exposes_other_records(): void
     {
         $user = $this->user('client', '123-456-789');
-        DB::table('client_accounts')->insert(['id' => 'own', 'user_id' => $user->id, 'wallet_balance' => 150, 'tin'=>'123456789', 'status'=>'active']);
+        DB::table('client_accounts')->insert(['id' => 'own', 'user_id' => $user->id, 'wallet_balance' => 150, 'tin' => '123456789', 'status' => 'active']);
         $this->transaction('mine', 'store', '123456789');
         $this->transaction('not-mine', 'store', '987654321');
         $response = $this->withToken($user->api_token)->getJson('/api/enterprise-dashboards/citizen');

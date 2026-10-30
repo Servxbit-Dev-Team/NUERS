@@ -87,7 +87,9 @@ class VerificationUploadController
             $u = $this->scoped($this->context($r, true))->where('id', $id)->lockForUpdate()->first();
             abort_unless($u, 404);
             abort_if(now()->gte($u->expires_at), 410, 'This upload expired. Select the file again.');
-            if ($u->document_id) return $this->result($u);
+            if ($u->document_id) {
+                return $this->result($u);
+            }
             $count = (int) ceil($u->bytes / PrivateDocumentStream::BLOCK_BYTES);
             abort_unless($u->next_index === $count, 409, 'Some file parts have not arrived. Wait for the upload to finish.');
             $temp = tmpfile();
@@ -103,7 +105,8 @@ class VerificationUploadController
                 $file = new UploadedFile(stream_get_meta_data($temp)['uri'], Crypt::decryptString($u->filename_encrypted), null, UPLOAD_ERR_OK, true);
                 // Registration proof validation may have cached the original empty file bag.
                 $assembled = Request::createFrom($r);
-                $assembled->merge(['kind' => $u->kind]); $assembled->files->set('file', $file);
+                $assembled->merge(['kind' => $u->kind]);
+                $assembled->files->set('file', $file);
                 $controller = app(MerchantVerificationDocumentController::class);
                 $response = $u->merchant_id ? $controller->upload($assembled) : $controller->stage($assembled);
                 $payload = $response->getData(true);
@@ -112,7 +115,9 @@ class VerificationUploadController
                 // The committed document has its own encryption. Temporary encrypted parts can be retired after commit.
                 DB::afterCommit(fn () => Storage::disk('local')->deleteDirectory('verification-uploads/'.$id));
                 return $response;
-            } finally { fclose($temp); }
+            } finally {
+                fclose($temp);
+            }
         });
     }
 

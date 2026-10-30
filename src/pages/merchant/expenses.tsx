@@ -40,7 +40,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -51,8 +57,16 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-type ExpenseFormState = { source_invoice_id: string; expense_category: string; evidence_reference: string };
-const initialForm: ExpenseFormState = { source_invoice_id: "", expense_category: "General", evidence_reference: "" };
+type ExpenseFormState = {
+  source_invoice_id: string;
+  expense_category: string;
+  evidence_reference: string;
+};
+const initialForm: ExpenseFormState = {
+  source_invoice_id: "",
+  expense_category: "General",
+  evidence_reference: "",
+};
 
 function formatPHP(value: number) {
   if (Math.abs(value) >= 1_000_000) return `PHP ${(value / 1_000_000).toFixed(2)}M`;
@@ -62,15 +76,27 @@ function formatPHP(value: number) {
 
 function formatDate(value: string | null) {
   if (!value) return "Not set";
-  return new Date(value).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "2-digit" });
+  return new Date(value).toLocaleDateString("en-PH", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
 }
 
 function statusClass(value: string | null | undefined) {
   const status = String(value ?? "").toLowerCase();
-  if (["matched", "validated", "deductible", "paid", "for_payment", "low"].some((key) => status.includes(key))) {
+  if (
+    ["matched", "validated", "deductible", "paid", "for_payment", "low"].some((key) =>
+      status.includes(key),
+    )
+  ) {
     return "border-success/20 bg-success/10 text-success";
   }
-  if (["critical", "high", "flagged", "bir_flagged", "mismatch", "hold"].some((key) => status.includes(key))) {
+  if (
+    ["critical", "high", "flagged", "bir_flagged", "mismatch", "hold"].some((key) =>
+      status.includes(key),
+    )
+  ) {
     return "border-destructive/20 bg-destructive/10 text-destructive";
   }
   if (["pending", "review", "medium"].some((key) => status.includes(key))) {
@@ -159,19 +185,47 @@ function ExpenseModal({
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <Label htmlFor="source_invoice_id">Original NUERS supplier document ID</Label>
-            <Input id="source_invoice_id" required maxLength={80} value={form.source_invoice_id} onChange={(event) => setField("source_invoice_id", event.target.value)} />
-            <p className="text-xs text-muted-foreground">Use the document ID from the original supplier invoice addressed to your business. Amounts are read from that record.</p>
+            <Input
+              id="source_invoice_id"
+              required
+              maxLength={80}
+              value={form.source_invoice_id}
+              onChange={(event) => setField("source_invoice_id", event.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Use the document ID from the original supplier invoice addressed to your business.
+              Amounts are read from that record.
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="expense_category">Expense category</Label>
-            <Input id="expense_category" required maxLength={120} value={form.expense_category} onChange={(event) => setField("expense_category", event.target.value)} />
+            <Input
+              id="expense_category"
+              required
+              maxLength={120}
+              value={form.expense_category}
+              onChange={(event) => setField("expense_category", event.target.value)}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="evidence_reference">Source evidence reference</Label>
-            <Textarea id="evidence_reference" required minLength={10} maxLength={2000} value={form.evidence_reference} onChange={(event) => setField("evidence_reference", event.target.value)} placeholder="Reference the original invoice and supporting evidence for independent review." />
+            <Textarea
+              id="evidence_reference"
+              required
+              minLength={10}
+              maxLength={2000}
+              value={form.evidence_reference}
+              onChange={(event) => setField("evidence_reference", event.target.value)}
+              placeholder="Reference the original invoice and supporting evidence for independent review."
+            />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={saving}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={saving}>
@@ -188,30 +242,52 @@ function ExpenseRow({ expense }: { expense: MerchantExpense }) {
   return (
     <tr className="border-b last:border-0 hover:bg-muted/30">
       <td className="px-4 py-3">
-        <p className="font-mono text-xs font-semibold text-foreground">{expense.source_invoice_reference}</p>
-        <p className="text-[10px] text-muted-foreground">{expense.purchase_order_reference ?? "No PO linked"}</p>
+        <p className="font-mono text-xs font-semibold text-foreground">
+          {expense.source_invoice_reference}
+        </p>
+        <p className="text-[10px] text-muted-foreground">
+          {expense.purchase_order_reference ?? "No PO linked"}
+        </p>
       </td>
       <td className="px-4 py-3">
         <p className="text-xs font-medium text-foreground">{expense.supplier_name}</p>
-        <p className="font-mono text-[10px] text-muted-foreground">{expense.supplier_tin ?? "TIN pending"}</p>
+        <p className="font-mono text-[10px] text-muted-foreground">
+          {expense.supplier_tin ?? "TIN pending"}
+        </p>
       </td>
       <td className="px-4 py-3">
-        <Badge variant="secondary" className="text-[10px]">{expense.expense_category}</Badge>
+        <Badge variant="secondary" className="text-[10px]">
+          {expense.expense_category}
+        </Badge>
       </td>
       <td className="px-4 py-3 text-xs text-muted-foreground">
         <p>{formatDate(expense.issued_at)}</p>
         <p className="text-[10px]">Due {formatDate(expense.due_at)}</p>
       </td>
-      <td className="px-4 py-3 text-right text-xs font-semibold text-foreground">{formatPHP(expense.gross_amount)}</td>
-      <td className="px-4 py-3 text-right text-xs text-success">{formatPHP(expense.input_vat_amount)}</td>
-      <td className="px-4 py-3 text-right text-xs text-foreground">{formatPHP(expense.withholding_tax_amount)}</td>
-      <td className="px-4 py-3 text-right text-xs font-semibold text-foreground">{formatPHP(expense.net_payable)}</td>
+      <td className="px-4 py-3 text-right text-xs font-semibold text-foreground">
+        {formatPHP(expense.gross_amount)}
+      </td>
+      <td className="px-4 py-3 text-right text-xs text-success">
+        {formatPHP(expense.input_vat_amount)}
+      </td>
+      <td className="px-4 py-3 text-right text-xs text-foreground">
+        {formatPHP(expense.withholding_tax_amount)}
+      </td>
+      <td className="px-4 py-3 text-right text-xs font-semibold text-foreground">
+        {formatPHP(expense.net_payable)}
+      </td>
       <td className="px-4 py-3">
         <div className="flex flex-col gap-1">
-          <Badge variant="outline" className={cn("w-fit text-[10px] capitalize", statusClass(expense.validation_status))}>
+          <Badge
+            variant="outline"
+            className={cn("w-fit text-[10px] capitalize", statusClass(expense.validation_status))}
+          >
             {pretty(expense.validation_status)}
           </Badge>
-          <Badge variant="outline" className={cn("w-fit text-[10px] capitalize", statusClass(expense.payment_status))}>
+          <Badge
+            variant="outline"
+            className={cn("w-fit text-[10px] capitalize", statusClass(expense.payment_status))}
+          >
             {pretty(expense.payment_status)}
           </Badge>
         </div>
@@ -221,7 +297,10 @@ function ExpenseRow({ expense }: { expense: MerchantExpense }) {
           <Progress value={expense.ai_score ?? 0} className="h-1.5 w-16" />
           <span className="text-xs font-bold text-foreground">{expense.ai_score ?? "-"}</span>
         </div>
-        <Badge variant="outline" className={cn("mt-1 text-[10px]", statusClass(expense.risk_level))}>
+        <Badge
+          variant="outline"
+          className={cn("mt-1 text-[10px]", statusClass(expense.risk_level))}
+        >
           {expense.risk_level ?? "Not assessed"}
         </Badge>
       </td>
@@ -235,7 +314,12 @@ export function MerchantExpenses() {
   const [status, setStatus] = useState("all");
   const [supplier, setSupplier] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
-  const { data, loading, error, refresh } = useMerchantExpenses({ search, category, status, supplier });
+  const { data, loading, error, refresh } = useMerchantExpenses({
+    search,
+    category,
+    status,
+    supplier,
+  });
 
   const maxCategoryAmount = useMemo(
     () => Math.max(1, ...data.series.categories.map((item) => item.amount)),
@@ -254,14 +338,21 @@ export function MerchantExpenses() {
             </Badge>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Track invoices issued by other business accounts to {data.merchant?.business_name ?? "your business account"} for source review. Tax deductibility requires supporting evidence.
+            Track invoices issued by other business accounts to{" "}
+            {data.merchant?.business_name ?? "your business account"} for source review. Tax
+            deductibility requires supporting evidence.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" className="gap-2" onClick={refresh}>
             <RefreshCw className="h-3.5 w-3.5" /> Refresh
           </Button>
-          <Button variant="outline" size="sm" className="gap-2" onClick={() => toast.info("Expense export will use the same ledger data.")}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => toast.info("Expense export will use the same ledger data.")}
+          >
             <Download className="h-3.5 w-3.5" /> Export
           </Button>
           <Button size="sm" className="gap-2" onClick={() => setModalOpen(true)}>
@@ -272,7 +363,9 @@ export function MerchantExpenses() {
 
       {loading && (
         <Card>
-          <CardContent className="p-4 text-sm text-muted-foreground">Loading B2B expenses from MySQL...</CardContent>
+          <CardContent className="p-4 text-sm text-muted-foreground">
+            Loading B2B expenses from MySQL...
+          </CardContent>
         </Card>
       )}
 
@@ -283,30 +376,96 @@ export function MerchantExpenses() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-        <KpiCard label="Total Expenses" value={formatPHP(data.summary.total_expenses)} subtext={`${data.summary.expense_count} supplier invoices`} icon={Receipt} accent="border-l-primary" />
-        <KpiCard label="Input VAT" value={formatPHP(data.summary.input_vat)} subtext="Reviewed original-source amount; tax treatment requires evidence" icon={Wallet} accent="border-l-success" />
-        <KpiCard label="EWT/CWT" value={formatPHP(data.summary.withholding_tax)} subtext="Recorded withholding; credit entitlement unverified" icon={Banknote} accent="border-l-chart-2" />
-        <KpiCard label="Net Payable" value={formatPHP(data.summary.net_payable)} subtext="Gross less withholding tax" icon={CreditCard} accent="border-l-warning" />
-        <KpiCard label="Suppliers" value={String(data.summary.supplier_count)} subtext="Unique supplier TINs" icon={Building2} accent="border-l-chart-3" />
-        <KpiCard label="Review Queue" value={String(data.summary.pending_validation)} subtext={`${data.summary.high_risk} high-risk records`} icon={AlertTriangle} accent="border-l-destructive" />
+        <KpiCard
+          label="Total Expenses"
+          value={formatPHP(data.summary.total_expenses)}
+          subtext={`${data.summary.expense_count} supplier invoices`}
+          icon={Receipt}
+          accent="border-l-primary"
+        />
+        <KpiCard
+          label="Input VAT"
+          value={formatPHP(data.summary.input_vat)}
+          subtext="Reviewed original-source amount; tax treatment requires evidence"
+          icon={Wallet}
+          accent="border-l-success"
+        />
+        <KpiCard
+          label="EWT/CWT"
+          value={formatPHP(data.summary.withholding_tax)}
+          subtext="Recorded withholding; credit entitlement unverified"
+          icon={Banknote}
+          accent="border-l-chart-2"
+        />
+        <KpiCard
+          label="Net Payable"
+          value={formatPHP(data.summary.net_payable)}
+          subtext="Gross less withholding tax"
+          icon={CreditCard}
+          accent="border-l-warning"
+        />
+        <KpiCard
+          label="Suppliers"
+          value={String(data.summary.supplier_count)}
+          subtext="Unique supplier TINs"
+          icon={Building2}
+          accent="border-l-chart-3"
+        />
+        <KpiCard
+          label="Review Queue"
+          value={String(data.summary.pending_validation)}
+          subtext={`${data.summary.high_risk} high-risk records`}
+          icon={AlertTriangle}
+          accent="border-l-destructive"
+        />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">Monthly Recorded Expense and VAT Trend</CardTitle>
-            <p className="text-xs text-muted-foreground">Gross expense, input VAT, and EWT/CWT from the business account expense ledger.</p>
+            <p className="text-xs text-muted-foreground">
+              Gross expense, input VAT, and EWT/CWT from the business account expense ledger.
+            </p>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={240}>
               <AreaChart data={data.series.monthly}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
-                <YAxis tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" tickFormatter={(value) => `PHP ${(Number(value) / 1_000_000).toFixed(1)}M`} />
+                <YAxis
+                  tick={{ fontSize: 11 }}
+                  stroke="var(--muted-foreground)"
+                  tickFormatter={(value) => `PHP ${(Number(value) / 1_000_000).toFixed(1)}M`}
+                />
                 <Tooltip formatter={(value) => formatPHP(Number(value))} />
-                <Area type="monotone" dataKey="gross" name="Gross Expenses" stroke="var(--chart-1)" fill="var(--chart-1)" fillOpacity={0.12} strokeWidth={2} />
-                <Area type="monotone" dataKey="input_vat" name="Recorded VAT" stroke="var(--chart-2)" fill="var(--chart-2)" fillOpacity={0.16} strokeWidth={2} />
-                <Area type="monotone" dataKey="withholding" name="EWT/CWT" stroke="var(--chart-3)" fill="var(--chart-3)" fillOpacity={0.1} strokeWidth={2} />
+                <Area
+                  type="monotone"
+                  dataKey="gross"
+                  name="Gross Expenses"
+                  stroke="var(--chart-1)"
+                  fill="var(--chart-1)"
+                  fillOpacity={0.12}
+                  strokeWidth={2}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="input_vat"
+                  name="Recorded VAT"
+                  stroke="var(--chart-2)"
+                  fill="var(--chart-2)"
+                  fillOpacity={0.16}
+                  strokeWidth={2}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="withholding"
+                  name="EWT/CWT"
+                  stroke="var(--chart-3)"
+                  fill="var(--chart-3)"
+                  fillOpacity={0.1}
+                  strokeWidth={2}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -315,13 +474,26 @@ export function MerchantExpenses() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">Expense Category Mix</CardTitle>
-            <p className="text-xs text-muted-foreground">Supplier spend grouped by B2B expense category.</p>
+            <p className="text-xs text-muted-foreground">
+              Supplier spend grouped by B2B expense category.
+            </p>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={data.series.categories} layout="vertical">
-                <XAxis type="number" tick={{ fontSize: 10 }} stroke="var(--muted-foreground)" tickFormatter={(value) => `${Number(value) / 1000}K`} />
-                <YAxis dataKey="label" type="category" tick={{ fontSize: 10 }} stroke="var(--muted-foreground)" width={92} />
+                <XAxis
+                  type="number"
+                  tick={{ fontSize: 10 }}
+                  stroke="var(--muted-foreground)"
+                  tickFormatter={(value) => `${Number(value) / 1000}K`}
+                />
+                <YAxis
+                  dataKey="label"
+                  type="category"
+                  tick={{ fontSize: 10 }}
+                  stroke="var(--muted-foreground)"
+                  width={92}
+                />
                 <Tooltip formatter={(value) => formatPHP(Number(value))} />
                 <Bar dataKey="amount" fill="var(--chart-1)" radius={[0, 4, 4, 0]} />
               </BarChart>
@@ -359,7 +531,9 @@ export function MerchantExpenses() {
               </SelectTrigger>
               <SelectContent>
                 {data.filters.categories.map((item) => (
-                  <SelectItem key={item} value={item}>{item === "all" ? "All categories" : item}</SelectItem>
+                  <SelectItem key={item} value={item}>
+                    {item === "all" ? "All categories" : item}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -369,7 +543,9 @@ export function MerchantExpenses() {
               </SelectTrigger>
               <SelectContent>
                 {data.filters.statuses.map((item) => (
-                  <SelectItem key={item} value={item} className="capitalize">{item === "all" ? "All validation" : pretty(item)}</SelectItem>
+                  <SelectItem key={item} value={item} className="capitalize">
+                    {item === "all" ? "All validation" : pretty(item)}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -379,7 +555,9 @@ export function MerchantExpenses() {
               </SelectTrigger>
               <SelectContent>
                 {data.filters.suppliers.map((item) => (
-                  <SelectItem key={item} value={item}>{item === "all" ? "All suppliers" : item}</SelectItem>
+                  <SelectItem key={item} value={item}>
+                    {item === "all" ? "All suppliers" : item}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -391,12 +569,24 @@ export function MerchantExpenses() {
             <table className="w-full min-w-[1160px] text-xs">
               <thead>
                 <tr className="border-b">
-                  {["Invoice", "Supplier", "Category", "Dates", "Gross", "Input VAT", "EWT/CWT", "Net Payable", "Status", "Recorded Risk"].map((header) => (
+                  {[
+                    "Invoice",
+                    "Supplier",
+                    "Category",
+                    "Dates",
+                    "Gross",
+                    "Input VAT",
+                    "EWT/CWT",
+                    "Net Payable",
+                    "Status",
+                    "Recorded Risk",
+                  ].map((header) => (
                     <th
                       key={header}
                       className={cn(
                         "px-4 pb-3 text-left text-[10px] font-semibold uppercase tracking-wide text-muted-foreground",
-                        ["Gross", "Input VAT", "EWT/CWT", "Net Payable"].includes(header) && "text-right",
+                        ["Gross", "Input VAT", "EWT/CWT", "Net Payable"].includes(header) &&
+                          "text-right",
                       )}
                     >
                       {header}
@@ -427,9 +617,21 @@ export function MerchantExpenses() {
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-3">
           {[
-            { title: "Supplier issues invoice", desc: "Another business account creates a B2B invoice with your TIN as buyer.", icon: FileText },
-            { title: "NUERS matches buyer TIN", desc: "The invoice is attached to your expense ledger for validation and VAT claim tracking.", icon: ShieldCheck },
-            { title: "Independent source review", desc: "Recorded amounts remain pending. Credits require reconciled original evidence and an independent decision.", icon: Brain },
+            {
+              title: "Supplier issues invoice",
+              desc: "Another business account creates a B2B invoice with your TIN as buyer.",
+              icon: FileText,
+            },
+            {
+              title: "NUERS matches buyer TIN",
+              desc: "The invoice is attached to your expense ledger for validation and VAT claim tracking.",
+              icon: ShieldCheck,
+            },
+            {
+              title: "Independent source review",
+              desc: "Recorded amounts remain pending. Credits require reconciled original evidence and an independent decision.",
+              icon: Brain,
+            },
           ].map((item) => (
             <div key={item.title} className="rounded-lg border p-4">
               <item.icon className="h-5 w-5 text-primary" />

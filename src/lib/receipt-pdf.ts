@@ -26,7 +26,8 @@ export type ReceiptPdfData = {
   items: ReceiptPdfLineItem[];
 };
 
-export const RECEIPT_TEMPLATE_REFERENCE = "RMC No. 77-2024 Annex A1-B6, sample format B6 Payment Receipt";
+export const RECEIPT_TEMPLATE_REFERENCE =
+  "RMC No. 77-2024 Annex A1-B6, sample format B6 Payment Receipt";
 
 const PAGE_WIDTH = 595.28;
 const PAGE_HEIGHT = 841.89;
@@ -56,10 +57,7 @@ function asciiText(value: unknown) {
 }
 
 function pdfText(value: unknown) {
-  return asciiText(value)
-    .replace(/\\/g, "\\\\")
-    .replace(/\(/g, "\\(")
-    .replace(/\)/g, "\\)");
+  return asciiText(value).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
 }
 
 function formatPHP(value: number) {
@@ -117,12 +115,29 @@ function buildContentStream(data: ReceiptPdfData) {
     push(`${n(r)} ${n(g)} ${n(b)} rg`);
   }
 
-  function line(x1: number, y1: number, x2: number, y2: number, width = 0.75, color: [number, number, number] = [0, 0, 0]) {
+  function line(
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    width = 0.75,
+    color: [number, number, number] = [0, 0, 0],
+  ) {
     strokeColor(...color);
     push(`${n(width)} w ${n(x1)} ${n(yPdf(y1))} m ${n(x2)} ${n(yPdf(y2))} l S`);
   }
 
-  function rect(x: number, y: number, width: number, height: number, options: { fill?: [number, number, number]; stroke?: [number, number, number]; lineWidth?: number } = {}) {
+  function rect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    options: {
+      fill?: [number, number, number];
+      stroke?: [number, number, number];
+      lineWidth?: number;
+    } = {},
+  ) {
     if (options.fill) {
       fillColor(...options.fill);
       push(`${n(x)} ${n(yPdf(y + height))} ${n(width)} ${n(height)} re f`);
@@ -130,7 +145,9 @@ function buildContentStream(data: ReceiptPdfData) {
 
     if (options.stroke !== undefined) {
       strokeColor(...options.stroke);
-      push(`${n(options.lineWidth ?? 0.75)} w ${n(x)} ${n(yPdf(y + height))} ${n(width)} ${n(height)} re S`);
+      push(
+        `${n(options.lineWidth ?? 0.75)} w ${n(x)} ${n(yPdf(y + height))} ${n(width)} ${n(height)} re S`,
+      );
     }
   }
 
@@ -152,7 +169,13 @@ function buildContentStream(data: ReceiptPdfData) {
     text(xRight - estimatedWidth(asciiText(value), size), y, value, options);
   }
 
-  function multilineText(x: number, y: number, value: unknown, maxChars: number, options: PdfTextOptions & { lineHeight?: number; maxLines?: number } = {}) {
+  function multilineText(
+    x: number,
+    y: number,
+    value: unknown,
+    maxChars: number,
+    options: PdfTextOptions & { lineHeight?: number; maxLines?: number } = {},
+  ) {
     wrapText(value, maxChars, options.maxLines ?? 2).forEach((lineText, index) => {
       text(x, y + index * (options.lineHeight ?? 12), lineText, options);
     });
@@ -186,16 +209,34 @@ function buildContentStream(data: ReceiptPdfData) {
   rect(formX, formY, formW, 12, { fill: [0.02, 0.16, 0.39] });
 
   text(formX + 36, formY + 48, "NUERS", { font: "F2", size: 18 });
-  multilineText(formX + 112, formY + 45, data.sellerName, 38, { font: "F2", size: 13, maxLines: 2 });
+  multilineText(formX + 112, formY + 45, data.sellerName, 38, {
+    font: "F2",
+    size: 13,
+    maxLines: 2,
+  });
   text(formX + 90, formY + 77, `REG TIN ${data.sellerTin || "TIN pending"}`, { size: 11 });
-  multilineText(formX + 90, formY + 94, data.sellerAddress || data.rdoBranch || "Registered business address", 54, { size: 8.5, maxLines: 2, lineHeight: 10 });
+  multilineText(
+    formX + 90,
+    formY + 94,
+    data.sellerAddress || data.rdoBranch || "Registered business address",
+    54,
+    { size: 8.5, maxLines: 2, lineHeight: 10 },
+  );
 
   text(formX + 52, formY + 152, "PAYMENT RECEIPT", { font: "F2", size: 18 });
-  rightText(formX + formW - 18, formY + 152, `No. ${receiptNo}`, { font: "F2", size: 15, color: [0.86, 0, 0] });
+  rightText(formX + formW - 18, formY + 152, `No. ${receiptNo}`, {
+    font: "F2",
+    size: 15,
+    color: [0.86, 0, 0],
+  });
 
   checkbox(formX + 52, formY + 174, paymentMethod.includes("cash"));
   text(formX + 67, formY + 182, "CASH", { font: "F2", size: 10 });
-  checkbox(formX + 52, formY + 188, paymentMethod.includes("card") || paymentMethod.includes("credit"));
+  checkbox(
+    formX + 52,
+    formY + 188,
+    paymentMethod.includes("card") || paymentMethod.includes("credit"),
+  );
   text(formX + 67, formY + 196, "CREDIT CARD", { font: "F2", size: 10 });
 
   const payBoxX = formX + 295;
@@ -214,28 +255,45 @@ function buildContentStream(data: ReceiptPdfData) {
   text(formX + 38, receivedY + 13, "RECEIVED FROM:", { font: "F2", size: 13 });
   text(formX + 52, receivedY + 36, "Registered Name", { font: "F2", size: 11 });
   text(formX + 160, receivedY + 36, ":", { font: "F2", size: 11 });
-  multilineText(formX + 172, receivedY + 36, data.buyerName || "Client account", 46, { size: 10, maxLines: 1 });
+  multilineText(formX + 172, receivedY + 36, data.buyerName || "Client account", 46, {
+    size: 10,
+    maxLines: 1,
+  });
   text(formX + 52, receivedY + 55, "TIN", { font: "F2", size: 11 });
   text(formX + 160, receivedY + 55, ":", { font: "F2", size: 11 });
   text(formX + 172, receivedY + 55, data.buyerTin || "TIN pending", { size: 10 });
   text(formX + 52, receivedY + 73, "Business Address", { font: "F2", size: 11 });
   text(formX + 160, receivedY + 73, ":", { font: "F2", size: 11 });
-  multilineText(formX + 172, receivedY + 73, data.buyerAddress || "Client address on file", 44, { size: 8.5, maxLines: 1 });
+  multilineText(formX + 172, receivedY + 73, data.buyerAddress || "Client address on file", 44, {
+    size: 8.5,
+    maxLines: 1,
+  });
 
   const tableY = formY + 300;
   rect(formX + 30, tableY, formW - 60, 92, { stroke: [0, 0, 0], lineWidth: 0.75 });
   rect(formX + 30, tableY, formW - 60, 28, { fill: [0.84, 0.84, 0.84] });
   line(formX + 30, tableY + 28, formX + formW - 30, tableY + 28);
   line(formX + formW - 112, tableY, formX + formW - 112, tableY + 92);
-  centeredText(tableY + 18, "Description of Transaction/Nature of Service", { font: "F2", size: 12 });
+  centeredText(tableY + 18, "Description of Transaction/Nature of Service", {
+    font: "F2",
+    size: 12,
+  });
   text(formX + formW - 76, tableY + 18, "Amount", { font: "F2", size: 12 });
-  multilineText(formX + 48, tableY + 52, `Payment for ${itemDescription}`, 48, { size: 10.5, maxLines: 2, lineHeight: 13 });
+  multilineText(formX + 48, tableY + 52, `Payment for ${itemDescription}`, 48, {
+    size: 10.5,
+    maxLines: 2,
+    lineHeight: 13,
+  });
   rightText(formX + formW - 42, tableY + 52, formatPHP(data.amount), { font: "F2", size: 10.5 });
   line(formX + 30, tableY + 62, formX + formW - 30, tableY + 62);
 
-  text(formX + 42, formY + 430, "\"THIS DOCUMENT IS", { font: "F2", size: 15, color: [0.9, 0, 0] });
-  text(formX + 38, formY + 449, "NOT VALID FOR CLAIM", { font: "F2", size: 15, color: [0.9, 0, 0] });
-  text(formX + 55, formY + 468, "OF INPUT TAX.\"", { font: "F2", size: 15, color: [0.9, 0, 0] });
+  text(formX + 42, formY + 430, '"THIS DOCUMENT IS', { font: "F2", size: 15, color: [0.9, 0, 0] });
+  text(formX + 38, formY + 449, "NOT VALID FOR CLAIM", {
+    font: "F2",
+    size: 15,
+    color: [0.9, 0, 0],
+  });
+  text(formX + 55, formY + 468, 'OF INPUT TAX."', { font: "F2", size: 15, color: [0.9, 0, 0] });
 
   const totalX = formX + 255;
   const totalY = formY + 421;
@@ -251,7 +309,12 @@ function buildContentStream(data: ReceiptPdfData) {
   text(formX + 8, formY + formH - 17, "PERMIT TO USE: NOT RECORDED", { size: 7.5 });
   text(formX + 8, formY + formH - 7, "AUTHORITY DATE ISSUED: NOT RECORDED", { size: 7.5 });
   text(formX + 258, formY + formH - 17, "BIR AUTHORITY: NOT RECORDED", { size: 7.5 });
-  text(formX + 258, formY + formH - 7, `RECORDED COPY: ${receiptNo} | STATUS: ${data.status || "issued"}`, { size: 7.5 });
+  text(
+    formX + 258,
+    formY + formH - 7,
+    `RECORDED COPY: ${receiptNo} | STATUS: ${data.status || "issued"}`,
+    { size: 7.5 },
+  );
 
   const noteY = formY + formH + 44;
   rect(formX, noteY, formW, 55, { stroke: [0, 0, 0], lineWidth: 0.75 });
@@ -259,7 +322,9 @@ function buildContentStream(data: ReceiptPdfData) {
   text(formX + 8, noteY + 17, "Sample Format:", { font: "F2", size: 11 });
   text(formX + 160, noteY + 17, "SUPPLEMENTARY INVOICE", { font: "F2", size: 13 });
   text(formX + 8, noteY + 34, "Who will use:", { font: "F2", size: 11 });
-  text(formX + 160, noteY + 34, "Both seller of goods, properties or services rendered", { size: 10 });
+  text(formX + 160, noteY + 34, "Both seller of goods, properties or services rendered", {
+    size: 10,
+  });
   text(formX + 8, noteY + 51, "Purpose:", { font: "F2", size: 11 });
   text(formX + 160, noteY + 51, "To record collection of payment or cash receipt", { size: 10 });
 

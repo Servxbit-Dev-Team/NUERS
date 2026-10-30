@@ -34,8 +34,12 @@ class AdminFinancialSummary
     private function window(Builder $query, ?CarbonImmutable $start, ?CarbonImmutable $end): Builder
     {
         $zone = config('app.timezone', 'UTC');
-        if ($start) $query->where('created_at', '>=', $start->setTimezone($zone)->format('Y-m-d H:i:s'));
-        if ($end) $query->where('created_at', '<=', $end->setTimezone($zone)->format('Y-m-d H:i:s'));
+        if ($start) {
+            $query->where('created_at', '>=', $start->setTimezone($zone)->format('Y-m-d H:i:s'));
+        }
+        if ($end) {
+            $query->where('created_at', '<=', $end->setTimezone($zone)->format('Y-m-d H:i:s'));
+        }
         return $query;
     }
 }

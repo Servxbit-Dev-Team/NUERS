@@ -25,7 +25,7 @@ export type TaxRecord = {
   tin: string | null;
   amount: number;
   vat_amount: number;
-  withholding_amount: number|null;
+  withholding_amount: number | null;
   status: string;
   risk_level: string | null;
   score: number | null;
@@ -43,8 +43,8 @@ export type TaxGraphEdge = {
 
 export type TaxIntelligencePayload = {
   scope: TaxScope | "";
-  notice?:string;
-  reporting_state?:string;
+  notice?: string;
+  reporting_state?: string;
   kpis: TaxKpi[];
   series: Record<string, TaxSeriesPoint[]>;
   records: Record<string, TaxRecord[]>;
@@ -61,12 +61,13 @@ const emptyPayload: TaxIntelligencePayload = {
 
 function authHeaders() {
   const headers: Record<string, string> = {
-    "Accept": "application/json",
+    Accept: "application/json",
     "Cache-Control": "no-store",
   };
 
   try {
-    const token = typeof window !== "undefined" ? window.localStorage.getItem("nuers_api_token") : null;
+    const token =
+      typeof window !== "undefined" ? window.localStorage.getItem("nuers_api_token") : null;
     if (token) headers.Authorization = `Bearer ${token}`;
   } catch {
     // Restricted browser storage should not block tax dashboard rendering.
@@ -83,8 +84,8 @@ export function useTaxIntelligenceData(scope: TaxScope) {
   useEffect(() => {
     let cancelled = false;
 
-    async function loadTaxIntelligence(quiet=false) {
-      if(!quiet)setLoading(true);
+    async function loadTaxIntelligence(quiet = false) {
+      if (!quiet) setLoading(true);
       setError(null);
 
       try {
@@ -92,12 +93,15 @@ export function useTaxIntelligenceData(scope: TaxScope) {
           cache: "no-store",
           headers: authHeaders(),
         });
-        const payload = await readJsonResponse<TaxIntelligencePayload>(response, "Unable to load tax intelligence data.");
+        const payload = await readJsonResponse<TaxIntelligencePayload>(
+          response,
+          "Unable to load tax intelligence data.",
+        );
 
         if (!cancelled) setData(payload);
       } catch (err) {
         if (!cancelled) {
-          if(!quiet)setData({ ...emptyPayload, scope });
+          if (!quiet) setData({ ...emptyPayload, scope });
           setError(err instanceof Error ? err.message : "Unable to load tax intelligence data.");
         }
       } finally {
@@ -106,9 +110,10 @@ export function useTaxIntelligenceData(scope: TaxScope) {
     }
 
     loadTaxIntelligence();
-    const stop=subscribeRealtimeRefresh(()=>loadTaxIntelligence(true));
+    const stop = subscribeRealtimeRefresh(() => loadTaxIntelligence(true));
     return () => {
-      stop(); cancelled = true;
+      stop();
+      cancelled = true;
     };
   }, [scope]);
 

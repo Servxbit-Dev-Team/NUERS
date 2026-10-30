@@ -330,6 +330,6 @@ class MerchantTeamTest extends TestCase
         $this->assertSame(1, $admin['user_count']);
         $this->assertSame($admin['id'], $state['members']['data'][0]['role_id']);
         $this->getJson('/api/merchant/team?role='.$admin['id'])->assertOk()->assertJsonPath('members.total', 1);
-        $this->assertDatabaseCount('merchant_team_roles',1);
+        $this->assertDatabaseCount('merchant_team_roles', 1);
     }
 }

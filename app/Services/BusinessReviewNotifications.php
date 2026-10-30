@@ -47,7 +47,9 @@ class BusinessReviewNotifications
                 $body .= 'Your NUERS business account has been approved and activated after independent verification of the required documents and onboarding checklist. Sign in to your Merchant Dashboard to manage your account. Transaction processing remains subject to your wallet balance, permissions and applicable integration requirements.';
             }
             $body .= "\n\nNUERS account approval and document verification do not establish BIR approval, PTI/PTT authority or BIR EIS transmission acceptance. Never send passwords, authenticator codes or API secrets by email.";
-            $drafts[$kind] = ['kind' => $kind, 'label' => $label, 'eligible' => (bool) ($allowed && $eligible), 'blocker' => $allowed && $eligible ? null : $reason, 'subject' => match ($kind) {'changes_requested' => 'Changes required for your business verification', 'documents_verified' => 'Your business documents are verified', 'account_approved' => 'Your NUERS business account is approved'}, 'body' => $body];
+            $drafts[$kind] = ['kind' => $kind, 'label' => $label, 'eligible' => (bool) ($allowed && $eligible), 'blocker' => $allowed && $eligible ? null : $reason, 'subject' => match ($kind) {
+                'changes_requested' => 'Changes required for your business verification', 'documents_verified' => 'Your business documents are verified', 'account_approved' => 'Your NUERS business account is approved'
+            }, 'body' => $body];
         }
 
         return ['merchant_id' => $id, 'owner_id' => $owner ? (string) $owner->id : null, 'recipient' => $owner?->email, 'business_name' => $m->business_name, 'fingerprint' => $fingerprint, 'revision' => (int) $m->registry_revision, 'drafts' => $drafts];

@@ -1,5 +1,5 @@
-import { apiFetch } from './api-url';
-import {storedToken,browserDevice,invalidateToken,TOKEN_KEY} from "./session-store";
+import { apiFetch } from "./api-url";
+import { storedToken, browserDevice, invalidateToken, TOKEN_KEY } from "./session-store";
 export type LaravelUser = {
   id: string;
   email: string;
@@ -41,7 +41,8 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<ApiResu
   headers.set("Accept", "application/json");
 
   const token = storedToken();
-  const device=browserDevice();if(device)headers.set("X-NUERS-Device",device);
+  const device = browserDevice();
+  if (device) headers.set("X-NUERS-Device", device);
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
   try {
@@ -57,12 +58,15 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<ApiResu
 
     const payload = await response.json().catch(() => ({}));
 
-    if(response.status===401&&!path.startsWith("/api/auth/login")&&!path.startsWith("/auth/google"))invalidateToken(token);
+    if (
+      response.status === 401 &&
+      !path.startsWith("/api/auth/login") &&
+      !path.startsWith("/auth/google")
+    )
+      invalidateToken(token);
     if (!response.ok) {
       const message =
-        payload?.message ||
-        Object.values(payload?.errors ?? {})?.flat()?.[0] ||
-        "Request failed.";
+        payload?.message || Object.values(payload?.errors ?? {})?.flat()?.[0] || "Request failed.";
 
       return { data: null, error: { message: String(message) } };
     }
@@ -155,10 +159,15 @@ class LaravelQuery<T = any> implements PromiseLike<ApiResult<T>> {
   }
 
   range(from: number, to: number) {
-    this.offsetValue = from; this.limitValue = to - from + 1; return this;
+    this.offsetValue = from;
+    this.limitValue = to - from + 1;
+    return this;
   }
 
-  search(value: string) { this.searchValue = value; return this; }
+  search(value: string) {
+    this.searchValue = value;
+    return this;
+  }
 
   maybeSingle() {
     this.maybeSingleRow = true;
@@ -211,9 +220,11 @@ class LaravelQuery<T = any> implements PromiseLike<ApiResult<T>> {
 export const supabase = {
   auth: {
     async completeGoogleSignIn() {
-      const { data, error } = await request<{ session: LaravelSession; user: LaravelUser; role: string }>(
-        "/auth/google/session", { credentials: "same-origin" },
-      );
+      const { data, error } = await request<{
+        session: LaravelSession;
+        user: LaravelUser;
+        role: string;
+      }>("/auth/google/session", { credentials: "same-origin" });
       const session = data?.session ?? null;
       if (session) {
         storeSession(session);
@@ -223,15 +234,18 @@ export const supabase = {
     },
 
     async getSession(options: { active?: boolean } = {}) {
-      const token=storedToken();
-      if(!token)return {data:{session:null},error:null,stale:false};
-      const {data,error}=await request<{session:LaravelSession|null}>("/api/auth/session", { headers: options.active ? { "X-NUERS-Activity": "1" } : undefined });
-      if(storedToken()!==token)return {data:{session:null},error:null,stale:true};
-      if(error)return {data:{session:null},error,stale:false};
-      const session=data?.session??null;
-      if(!session)invalidateToken(token);
+      const token = storedToken();
+      if (!token) return { data: { session: null }, error: null, stale: false };
+      const { data, error } = await request<{ session: LaravelSession | null }>(
+        "/api/auth/session",
+        { headers: options.active ? { "X-NUERS-Activity": "1" } : undefined },
+      );
+      if (storedToken() !== token) return { data: { session: null }, error: null, stale: true };
+      if (error) return { data: { session: null }, error, stale: false };
+      const session = data?.session ?? null;
+      if (!session) invalidateToken(token);
       else storeSession(session);
-      return {data:{session},error:null,stale:false};
+      return { data: { session }, error: null, stale: false };
     },
 
     onAuthStateChange(callback: AuthListener) {
@@ -254,7 +268,10 @@ export const supabase = {
       );
 
       const session = data?.session ?? null;
-      if (session) {storeSession(session);notify("SIGNED_IN", session);}
+      if (session) {
+        storeSession(session);
+        notify("SIGNED_IN", session);
+      }
 
       return { data: { session, user: data?.user ?? null }, error };
     },
@@ -266,15 +283,21 @@ export const supabase = {
       );
 
       const session = data?.session ?? null;
-      if (session) {storeSession(session);notify("SIGNED_IN", session);}
+      if (session) {
+        storeSession(session);
+        notify("SIGNED_IN", session);
+      }
 
       return { data: { session, user: data?.user ?? null }, error };
     },
 
     async signOut() {
-      const token=storedToken();
+      const token = storedToken();
       await request("/api/auth/logout", { method: "POST", body: "{}" });
-      if(!storedToken()||storedToken()===token){storeSession(null);notify("SIGNED_OUT", null);}
+      if (!storedToken() || storedToken() === token) {
+        storeSession(null);
+        notify("SIGNED_OUT", null);
+      }
     },
   },
 

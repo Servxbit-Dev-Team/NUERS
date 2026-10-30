@@ -13,16 +13,22 @@ class RefreshLedgerProjection extends Command
 
     public function handle(LedgerProjection $projection): int
     {
-        if ($this->option('rebuild')) $projection->enqueueAll();
+        if ($this->option('rebuild')) {
+            $projection->enqueueAll();
+        }
         $deadline = microtime(true) + max(1, min(86400, (int) $this->option('max-seconds')));
         $processed = 0;
         do {
             $n = $projection->refresh();
             $processed += $n;
-            if (!$n) break;
+            if (!$n) {
+                break;
+            }
         } while (microtime(true) < $deadline);
         $remaining = DB::table('ledger_dirty_documents')->count();
-        if ($this->option('activate') && !$remaining) $projection->activate();
+        if ($this->option('activate') && !$remaining) {
+            $projection->activate();
+        }
         $this->line(json_encode(['processed' => $processed, 'remaining' => $remaining, 'ready' => $projection->ready()]));
         return 0;
     }

@@ -21,7 +21,9 @@ class TaxpayerWorkspaceTest extends TestCase
         parent::setUp();
         config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:', 'app.timezone' => 'Asia/Manila', 'cache.default' => 'array']);
         DB::purge('sqlite');
-        foreach (glob(database_path('migrations/*.php')) as $migrationFile) { (require $migrationFile)->up(); }$this->admin = $this->actor('super_admin');
+        foreach (glob(database_path('migrations/*.php')) as $migrationFile) {
+            (require $migrationFile)->up();
+        }$this->admin = $this->actor('super_admin');
         $this->merchant = (string) Str::uuid();
         DB::table('merchants')->insert(['id' => $this->merchant, 'business_name' => 'Example Business', 'tin' => '123456789000', 'owner_name' => 'Owner', 'email' => 'owner@example.test', 'status' => 'active']);
         $this->withToken($this->admin->api_token);
@@ -37,7 +39,7 @@ class TaxpayerWorkspaceTest extends TestCase
 
     private function permit(array $p = [])
     {
-        return array_replace(['request_id' => (string) Str::uuid(), 'merchant_id' => $this->merchant, 'kind' => 'PTI', 'reference' => 'PTI-EXAMPLE-1', 'environment' => 'certification', 'branch_code'=>'00000', 'scope' => 'Example main branch approved system', 'issued_at' => now()->subDays(30)->toDateString(), 'valid_until' => now()->addDays(20)->toDateString(), 'status' => 'active', 'evidence' => 'Example authority document reference', 'reason' => 'Document checked against taxpayer registration'], $p);
+        return array_replace(['request_id' => (string) Str::uuid(), 'merchant_id' => $this->merchant, 'kind' => 'PTI', 'reference' => 'PTI-EXAMPLE-1', 'environment' => 'certification', 'branch_code' => '00000', 'scope' => 'Example main branch approved system', 'issued_at' => now()->subDays(30)->toDateString(), 'valid_until' => now()->addDays(20)->toDateString(), 'status' => 'active', 'evidence' => 'Example authority document reference', 'reason' => 'Document checked against taxpayer registration'], $p);
     }
 
     private function configForm(array $p = [])
@@ -162,10 +164,10 @@ class TaxpayerWorkspaceTest extends TestCase
         DB::table('eis_api_request_logs')->insert(['id' => (string) Str::uuid(), 'integration_id' => $i->id, 'method' => 'POST', 'endpoint' => 'https://example.test/invoices?token=secret-query', 'status_code' => 422, 'error_message' => 'token=secret-log rejected', 'created_at' => now(), 'updated_at' => now()]);
         $j = $this->getJson('/api/integration-workspace?status=failed')->assertOk();
         $this->assertStringNotContainsString('secret-query', $j->getContent());
-        $this->assertStringNotContainsString('secret-log',$j->getContent());
+        $this->assertStringNotContainsString('secret-log', $j->getContent());
         $csv = $this->get('/api/integration-workspace/export?status=failed')->assertOk()->streamedContent();
-        $this->assertStringNotContainsString('secret-query',$csv);
-        $this->assertStringNotContainsString('secret-log',$csv);
+        $this->assertStringNotContainsString('secret-query', $csv);
+        $this->assertStringNotContainsString('secret-log', $csv);
         $this->assertTrue(app(BirCompliance::class)->auditIntegrity());
     }
 }

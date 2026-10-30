@@ -48,7 +48,7 @@ class BirProtocolTest extends TestCase
 
     public function test_cas_splits_mixed_classifications_preserving_source_discount_and_payable(): void
     {
-        $mapped = (new InvoiceMapper)->map(self::model(), self::profile());
+        $mapped = (new InvoiceMapper())->map(self::model(), self::profile());
         $this->assertCount(2, $mapped);
         $this->assertEquals(125.0, $mapped['01']['ItemList'][0]['SalesAmt']);
         $this->assertEquals(25.0, $mapped['01']['ItemList'][0]['RegDscntAmt']);
@@ -61,20 +61,23 @@ class BirProtocolTest extends TestCase
 
     public function test_exempt_invoice_preserves_seller_number_and_separate_eis_identity(): void
     {
-        $m=self::model();$m['document_type']='vat_exempt_invoice';$m['number']='EXEMPT-000001';
-        $m['items']=[$m['items'][1]];$m['totals']['amount_centavos']=10000;
-        $d=(new InvoiceMapper)->map($m,self::profile())['03'];
-        $this->assertSame('EXEMPT-000001',$d['CompInvoiceId']);
-        $this->assertSame(24,strlen($d['EisUniqueId']));
-        $this->assertEquals(100,$d['NetAmtPay']);
-        $m['number']=str_repeat('A',51);
+        $m = self::model();
+        $m['document_type'] = 'vat_exempt_invoice';
+        $m['number'] = 'EXEMPT-000001';
+        $m['items'] = [$m['items'][1]];
+        $m['totals']['amount_centavos'] = 10000;
+        $d = (new InvoiceMapper())->map($m, self::profile())['03'];
+        $this->assertSame('EXEMPT-000001', $d['CompInvoiceId']);
+        $this->assertSame(24, strlen($d['EisUniqueId']));
+        $this->assertEquals(100, $d['NetAmtPay']);
+        $m['number'] = str_repeat('A', 51);
         $this->expectException(ValidationException::class);
-        (new InvoiceMapper)->map($m,self::profile());
+        (new InvoiceMapper())->map($m, self::profile());
     }
 
     public function test_pos_preserves_mixed_invoice_and_uses_versioned_case_sensitive_fields(): void
     {
-        $mapped = (new InvoiceMapper)->map(self::model(), self::profile(['system_type' => 'POS']));
+        $mapped = (new InvoiceMapper())->map(self::model(), self::profile(['system_type' => 'POS']));
         $d = $mapped['00'];
         $this->assertCount(1, $mapped);
         $this->assertEquals(125.0, $d['VATSales']);
@@ -82,7 +85,7 @@ class BirProtocolTest extends TestCase
         $this->assertEquals(212.0, $d['NetAmtPay']);
         $this->assertArrayNotHasKey('TransClass', $d);
         $this->assertSame('LAB-MIN', $d['Min']);
-        $d = (new InvoiceMapper)->map(self::model(), self::profile(['system_type' => 'POS', 'schema_dialect' => 'guide_20260730']))['00'];
+        $d = (new InvoiceMapper())->map(self::model(), self::profile(['system_type' => 'POS', 'schema_dialect' => 'guide_20260730']))['00'];
         $this->assertArrayHasKey('VatSales', $d);
         $this->assertArrayNotHasKey('VATSales', $d);
     }
@@ -93,7 +96,7 @@ class BirProtocolTest extends TestCase
         $m['items'] = [['description' => 'Eligible item', 'quantity' => '1', 'gross_base_centavos' => 10000, 'net_base_centavos' => 8000, 'regular_discount_base_centavos' => 0, 'statutory_discount_centavos' => 2000, 'vat_centavos' => 0, 'tax_type' => 'vat_exempt']];
         $m['totals']['amount_centavos'] = 8000;
         $m['sales_benefit']['eligibility']['category'] = 'senior_citizen';
-        $d = (new InvoiceMapper)->map($m, self::profile())['03'];
+        $d = (new InvoiceMapper())->map($m, self::profile())['03'];
         $this->assertEquals(100.0, $d['TotNetItemSales']);
         $this->assertEquals(20.0, $d['Discount']['ScAmt']);
         $this->assertEquals(0.0, $d['ItemList'][0]['RegDscntAmt']);
@@ -105,7 +108,7 @@ class BirProtocolTest extends TestCase
         $m = self::model();
         $m['buyer']['tin'] = '';
         $this->expectException(ValidationException::class);
-        (new InvoiceMapper)->map($m, self::profile());
+        (new InvoiceMapper())->map($m, self::profile());
     }
 
     public function test_unsupported_debit_note_dialect_fails_closed(): void
@@ -113,14 +116,14 @@ class BirProtocolTest extends TestCase
         $m = self::model();
         $m['document_type'] = 'debit_note';
         $this->expectException(ValidationException::class);
-        (new InvoiceMapper)->map($m, self::profile());
+        (new InvoiceMapper())->map($m, self::profile());
     }
 
     public function test_credit_notes_require_original_identity_and_preserve_negative_amounts(): void
     {
         $m = self::model();
         $m['document_type'] = 'credit_memo';
-        $map = (new InvoiceMapper)->map($m, self::profile(), ['correction_code' => '05', 'previous_uids' => ['01' => '2026010120146IT4ABCDEFGH', '03' => '2026010120146IT4ABCDEFGJ']]);
+        $map = (new InvoiceMapper())->map($m, self::profile(), ['correction_code' => '05', 'previous_uids' => ['01' => '2026010120146IT4ABCDEFGH', '03' => '2026010120146IT4ABCDEFGJ']]);
         $this->assertEquals(-112.0, $map['01']['NetAmtPay']);
         $this->assertEquals(-25.0, $map['01']['ItemList'][0]['RegDscntAmt']);
         $this->assertSame('Y', $map['01']['CorrYN']);
@@ -131,10 +134,10 @@ class BirProtocolTest extends TestCase
     {
         $p = (object) ['accreditation_id' => '20146IT4', 'user_id' => 'test'];
         $data = ['accreditationId' => '20146IT4', 'userId' => 'test', 'refSubmitId' => 'submission', 'ackId' => 'BIR-20261028120000-AB123', 'responseDtm' => '2026-10-28T12:00:00', 'processStatusCode' => '01', 'totalCountQuantity' => 2, 'successCountQuantity' => 1, 'failCountQuantity' => 1, 'processedDocuments' => [['invoiceUid' => 'A', 'resultStatusCode' => 'SUC001'], ['invoiceUid' => 'B', 'resultStatusCode' => 'SYN003', 'description' => 'Duplicate']]];
-        $v = new ResultVerifier;
-        $this->assertSame('partial',$v->verify($data,$p,'submission',['A', 'B'])['state']);
+        $v = new ResultVerifier();
+        $this->assertSame('partial', $v->verify($data, $p, 'submission', ['A', 'B'])['state']);
         $this->expectException(\RuntimeException::class);
         $data['processedDocuments'][1]['invoiceUid'] = 'A';
-        $v->verify($data,$p,'submission',['A', 'B']);
+        $v->verify($data, $p, 'submission', ['A', 'B']);
     }
 }

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
@@ -36,11 +35,13 @@ class BusinessAccountController extends Controller
 
     public function uploadLogo(Request $request): JsonResponse
     {
-        $merchant=$this->merchantForUser($this->userFromRequest($request) ?? abort(401));
-        abort_unless($merchant,404,'Business account not found.');
-        if(!$request->exists('expected_logo'))$request->merge(['expected_logo'=>$merchant->logo_url??null]);
+        $merchant = $this->merchantForUser($this->userFromRequest($request) ?? abort(401));
+        abort_unless($merchant, 404, 'Business account not found.');
+        if (!$request->exists('expected_logo')) {
+            $request->merge(['expected_logo' => $merchant->logo_url ?? null]);
+        }
         app(MerchantBrandController::class)->update($request);
-        return response()->json(['data'=>$this->merchantPayload(DB::table('merchants')->where('id',$merchant->id)->first(),$request)]);
+        return response()->json(['data' => $this->merchantPayload(DB::table('merchants')->where('id', $merchant->id)->first(), $request)]);
     }
 
     public function lookupByTin(Request $request): JsonResponse
@@ -62,13 +63,13 @@ class BusinessAccountController extends Controller
         if ($merchant) {
             return response()->json([
                 'data' => [
-                    'id'=>$merchant->id,'business_name'=>$merchant->business_name,'tin'=>$merchant->tin,'address'=>$merchant->address,'vat_registered'=>(bool)$merchant->vat_registered,
+                    'id' => $merchant->id,'business_name' => $merchant->business_name,'tin' => $merchant->tin,'address' => $merchant->address,'vat_registered' => (bool)$merchant->vat_registered,
                     'type' => 'business_account',
                 ],
             ]);
         }
 
-        $profile = DB::table('profiles')->where('id',$this->userFromRequest($request)->id)
+        $profile = DB::table('profiles')->where('id', $this->userFromRequest($request)->id)
             ->whereRaw($this->normalizedTinSql('tin').' = ?', [$tin])
             ->first();
 
@@ -226,8 +227,8 @@ class BusinessAccountController extends Controller
 
     private function profileDocuments(object $merchant): array
     {
-        $state=app(\App\Services\MerchantVerificationDocuments::class)->present($merchant->id);
-        return array_map(fn($d)=>['id'=>$d['kind'],'name'=>$d['name'],'type'=>$d['description'],'status'=>$d['status']==='needs_changes'?'expired':$d['status'],'uploaded'=>$d['created_at'],'expires'=>null,'size'=>$d['bytes']?round($d['bytes']/1024).' KB':null],$state['items']);
+        $state = app(\App\Services\MerchantVerificationDocuments::class)->present($merchant->id);
+        return array_map(fn ($d) => ['id' => $d['kind'],'name' => $d['name'],'type' => $d['description'],'status' => $d['status'] === 'needs_changes' ? 'expired' : $d['status'],'uploaded' => $d['created_at'],'expires' => null,'size' => $d['bytes'] ? round($d['bytes'] / 1024).' KB' : null], $state['items']);
     }
 
     private function profileAuditEvents(object $merchant): array

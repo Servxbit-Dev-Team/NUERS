@@ -16,7 +16,9 @@ class RmcComplianceTest extends TestCase
         parent::setUp();
         config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:', 'app.timezone' => 'Asia/Manila']);
         DB::purge('sqlite');
-        foreach (glob(database_path('migrations/*.php')) as $migrationFile) { (require $migrationFile)->up(); }$this->travelTo(\Carbon\Carbon::parse('2026-10-15 10:24:32', 'Asia/Manila'));
+        foreach (glob(database_path('migrations/*.php')) as $migrationFile) {
+            (require $migrationFile)->up();
+        }$this->travelTo(\Carbon\Carbon::parse('2026-10-15 10:24:32', 'Asia/Manila'));
         $this->admin = $this->user('super_admin');
     }
     private function user(string $role): User
@@ -39,7 +41,9 @@ class RmcComplianceTest extends TestCase
     }
     private function financialRow(string $id, string $date, string $status = 'completed', string $name = 'Example taxpayer'): void
     {
-        if (! DB::table('merchants')->where('id', 'merchant')->exists()) DB::table('merchants')->insert(['id' => 'merchant', 'business_name' => $name, 'tin' => '123-456-789-000']);
+        if (! DB::table('merchants')->where('id', 'merchant')->exists()) {
+            DB::table('merchants')->insert(['id' => 'merchant', 'business_name' => $name, 'tin' => '123-456-789-000']);
+        }
         DB::table('transaction_receipts')->insert(['id' => 'r-'.$id, 'transaction_id' => $id, 'merchant_id' => 'merchant', 'receipt_number' => $id, 'merchant_name' => $name, 'merchant_tin' => '123456789', 'status' => 'issued']);
         DB::table('merchant_transactions')->insert(['id' => $id, 'merchant_id' => 'merchant', 'receipt_id' => 'r-'.$id, 'transaction_ref' => $id, 'status' => $status, 'amount' => 112, 'created_at' => $date]);
     }
@@ -87,7 +91,9 @@ class RmcComplianceTest extends TestCase
         $id = $this->queue();
         $this->withToken($this->admin->api_token)->postJson('/api/bir-eis/transmissions', ['payload' => array_reverse($this->payload())])->assertOk()->assertJsonPath('duplicate', true)->assertJsonPath('transmission.id', $id);
         $this->withToken($this->admin->api_token)->postJson('/api/bir-eis/transmissions', ['payload' => $this->payload(['total_due' => 224])])->assertStatus(409);
-        $this->assertDatabaseCount('eis_transmissions', 1); $this->assertDatabaseCount('eis_invoice_payloads', 1); $this->assertDatabaseCount('eis_retry_queue', 1);
+        $this->assertDatabaseCount('eis_transmissions', 1);
+        $this->assertDatabaseCount('eis_invoice_payloads', 1);
+        $this->assertDatabaseCount('eis_retry_queue', 1);
         $row = DB::table('eis_invoice_payloads')->first();
         $this->assertArrayHasKey('encrypted', json_decode($row->payload, true));
         $this->assertSame('TEST-001', json_decode(Crypt::decryptString(json_decode($row->payload, true)['encrypted']), true)['invoice_number']);
@@ -121,7 +127,9 @@ class RmcComplianceTest extends TestCase
         $this->withToken($this->admin->api_token)->patchJson('/api/esp-compliance/incidents/'.$incident, ['restored_at' => '2026-10-15T08:00:00+08:00'])->assertOk();
         $this->withToken($this->admin->api_token)->postJson($url, ['incident_id' => $incident])->assertOk();
         $row = DB::table('eis_transmissions')->where('id', $id)->first();
-        $this->assertSame(2, $row->attempt_number); $this->assertSame('2026-10-15 23:59:59', $row->due_at); $this->assertSame('2026-10-18 23:59:59', $row->recovery_due_at);
+        $this->assertSame(2, $row->attempt_number);
+        $this->assertSame('2026-10-15 23:59:59', $row->due_at);
+        $this->assertSame('2026-10-18 23:59:59', $row->recovery_due_at);
         DB::table('eis_transmissions')->where('id', $id)->update(['status' => 'failed', 'attempt_number' => 5]);
         $this->withToken($this->admin->api_token)->postJson($url, [])->assertStatus(409);
         DB::table('eis_transmissions')->where('id', $id)->update(['attempt_number' => 2, 'response_code' => '422']);
@@ -148,12 +156,15 @@ class RmcComplianceTest extends TestCase
         $integration = DB::table('eis_integrations')->first();
         DB::table('eis_integrations')->where('id', $integration->id)->update(['cas_ptu_number' => 'TEST-CAS-PTU', 'credentials_present' => true, 'public_key_fingerprint' => 'test-key', 'ptt_status' => 'approved', 'permit_to_transmit_number' => 'TEST-PTT']);
         $gate = app(BirCompliance::class)->gate(DB::table('eis_integrations')->first());
-        $this->assertFalse($gate['can_transmit']); $this->assertFalse($gate['transport_ready']);
+        $this->assertFalse($gate['can_transmit']);
+        $this->assertFalse($gate['transport_ready']);
         $this->assertStringContainsString('PTI', implode(' ', $gate['blockers']));
     }
     public function test_append_only_journal_detects_modification_and_tail_deletion(): void
     {
-        $policy = app(BirCompliance::class); $policy->audit('test.first', null, 'test'); $policy->audit('test.second', null, 'test');
+        $policy = app(BirCompliance::class);
+        $policy->audit('test.first', null, 'test');
+        $policy->audit('test.second', null, 'test');
         $this->assertTrue($policy->auditIntegrity());
         $this->withToken($this->admin->api_token)->getJson('/api/live-monitoring/audit?search=test.first')->assertOk()->assertJsonPath('integrity', true)->assertJsonCount(1, 'events');
         $export = $this->withToken($this->admin->api_token)->get('/api/live-monitoring/audit?download=1')->assertOk()->streamedContent();
@@ -169,11 +180,14 @@ class RmcComplianceTest extends TestCase
     }
     public function test_exports_are_machine_readable_decrypt_authorized_data_and_escape_csv_formulas(): void
     {
-        $this->financialRow('TEST-001', '2026-10-15 10:24:20', 'completed', '=FORMULA()'); $this->queue();
+        $this->financialRow('TEST-001', '2026-10-15 10:24:20', 'completed', '=FORMULA()');
+        $this->queue();
         $json = $this->withToken($this->admin->api_token)->get('/api/live-monitoring/export?format=json')->assertOk()->streamedContent();
         $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
         $this->assertSame('TEST-001', $data['payloads'][0]['payload']['invoice_number']);
-        $this->assertCount(1, $data['source_transactions']); $this->assertCount(1, $data['receipts']); $this->assertNotEmpty($data['audit_events']);
+        $this->assertCount(1, $data['source_transactions']);
+        $this->assertCount(1, $data['receipts']);
+        $this->assertNotEmpty($data['audit_events']);
         $csv = $this->withToken($this->admin->api_token)->get('/api/live-monitoring/export?format=csv')->assertOk()->streamedContent();
         $this->assertStringContainsString("'=FORMULA()", $csv);
         $empty = $this->withToken($this->admin->api_token)->get('/api/live-monitoring/export?format=csv&search=no-match')->assertOk()->streamedContent();
@@ -200,17 +214,17 @@ class RmcComplianceTest extends TestCase
         $this->assertFalse($policy->gate(DB::table('eis_integrations')->first(), false)['can_issue']);
         $this->assertFalse($policy->gate(DB::table('eis_integrations')->first())['can_transmit']);
         $merchant = $this->user('merchant');
-        DB::table('merchants')->insert(['id' => 'seller', 'business_name' => 'Test seller', 'merchant_account_id' => $merchant->id, 'tin' => '123456789','status'=>'active']);
+        DB::table('merchants')->insert(['id' => 'seller', 'business_name' => 'Test seller', 'merchant_account_id' => $merchant->id, 'tin' => '123456789','status' => 'active']);
         // Synthetic funds satisfy the configurable minimum-zero wallet gate.
         DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit('seller', 600, (string) \Illuminate\Support\Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
-        DB::table('eis_integrations')->where('id', $integrationId)->update(['merchant_id'=>'seller','environment'=>'production','branch_code'=>'00000']);
-        DB::table('taxpayer_authorizations')->insert(['id'=>'fixture-pti','request_id'=>fake()->uuid(),'request_hash'=>str_repeat('a',64),'merchant_id'=>'seller','kind'=>'PTI','reference'=>'TEST-PTI','environment'=>'production','branch_code'=>'00000','scope'=>'Synthetic branch fixture only','issued_at'=>'2026-01-01','valid_until'=>'2027-01-01','status'=>'active','evidence'=>'Synthetic evidence not real','reason'=>'Isolated fixture only','reviewed_by'=>$this->admin->id,'reviewed_at'=>now()]);
-        DB::table('invoice_series')->insert(['document_registration'=>json_encode(['system_type'=>'CAS','ac_number'=>'SYNTHETIC-AC-ONLY','authority_issued_at'=>'2020-01-01']),'id'=>'fixture-series','merchant_id'=>'seller','branch_code'=>'00000','document_family'=>'invoice','prefix'=>'TEST-','range_start'=>1,'range_end'=>99,'status'=>'active','authority_reference'=>'Synthetic evidence not real','verified_by'=>$this->admin->id,'valid_from'=>'2026-01-01','valid_until'=>'2027-01-01','created_at'=>now(),'updated_at'=>now()]);
-        $invoice = ['request_id'=>fake()->uuid(),'invoice_number' => 'CLIENT-PROPOSED-NUMBER', 'document_type' => 'sales_invoice', 'buyer_name' => 'Test buyer', 'issue_date' => '2026-10-15', 'status' => 'issued', 'line_items' => [['line_number' => 1, 'description' => 'Test item', 'quantity' => 1, 'unit_price' => 10000, 'line_total' => 10000]]];
+        DB::table('eis_integrations')->where('id', $integrationId)->update(['merchant_id' => 'seller','environment' => 'production','branch_code' => '00000']);
+        DB::table('taxpayer_authorizations')->insert(['id' => 'fixture-pti','request_id' => fake()->uuid(),'request_hash' => str_repeat('a', 64),'merchant_id' => 'seller','kind' => 'PTI','reference' => 'TEST-PTI','environment' => 'production','branch_code' => '00000','scope' => 'Synthetic branch fixture only','issued_at' => '2026-01-01','valid_until' => '2027-01-01','status' => 'active','evidence' => 'Synthetic evidence not real','reason' => 'Isolated fixture only','reviewed_by' => $this->admin->id,'reviewed_at' => now()]);
+        DB::table('invoice_series')->insert(['document_registration' => json_encode(['system_type' => 'CAS','ac_number' => 'SYNTHETIC-AC-ONLY','authority_issued_at' => '2020-01-01']),'id' => 'fixture-series','merchant_id' => 'seller','branch_code' => '00000','document_family' => 'invoice','prefix' => 'TEST-','range_start' => 1,'range_end' => 99,'status' => 'active','authority_reference' => 'Synthetic evidence not real','verified_by' => $this->admin->id,'valid_from' => '2026-01-01','valid_until' => '2027-01-01','created_at' => now(),'updated_at' => now()]);
+        $invoice = ['request_id' => fake()->uuid(),'invoice_number' => 'CLIENT-PROPOSED-NUMBER', 'document_type' => 'sales_invoice', 'buyer_name' => 'Test buyer', 'issue_date' => '2026-10-15', 'status' => 'issued', 'line_items' => [['line_number' => 1, 'description' => 'Test item', 'quantity' => 1, 'unit_price' => 10000, 'line_total' => 10000]]];
         $invoiceId = $this->withToken($merchant->api_token)->postJson('/api/business-invoices', $invoice)->assertCreated()->assertJsonPath('invoice.permit_to_issue_number', 'TEST-PTI')->assertJsonPath('invoice.esp_accreditation_number', 'FIXTURE-NOT-REAL')->json('invoice.id');
-        $this->postJson('/api/business-invoices',$invoice)->assertOk()->assertJsonPath('invoice.id',$invoiceId);
-        $this->assertSame(1,DB::table('business_invoices')->where('merchant_id','seller')->count());
-        $this->assertSame(1,DB::table('merchant_customers')->where('merchant_id','seller')->count());
+        $this->postJson('/api/business-invoices', $invoice)->assertOk()->assertJsonPath('invoice.id', $invoiceId);
+        $this->assertSame(1, DB::table('business_invoices')->where('merchant_id', 'seller')->count());
+        $this->assertSame(1, DB::table('merchant_customers')->where('merchant_id', 'seller')->count());
         DB::table('eis_integrations')->where('id', $integrationId)->update(['permit_to_issue_number' => 'CHANGED-PTI']);
         $this->withToken($merchant->api_token)->getJson('/api/business-invoices/'.$invoiceId)->assertOk()->assertJsonPath('invoice.permit_to_issue_number', 'TEST-PTI');
         $this->assertTrue($policy->auditIntegrity());

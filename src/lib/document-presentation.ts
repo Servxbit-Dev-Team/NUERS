@@ -1,18 +1,143 @@
-import type { CenterDocument } from '../components/invoices/official-receipt';
-export type PreviewParty = { name:string; tin?:string|null; address?:string|null; email?:string|null; vatRegistration?:string|null; vatRegistered?:boolean|null; businessStyle?:string|null; permitToIssueNumber?:string|null; espAccreditationNumber?:string|null };
-export type PreviewItem = { description:string; quantity?:number; unit?:string; unitPrice?:number; amount:number; vatAmount?:number; taxType?:string|null };
-export type PreviewTotals = { gross:number; vatableSales?:number; vatExemptSales?:number; zeroRatedSales?:number; vatAmount?:number; discount?:number; withholding?:number; withholdingTax?:number; otherCharges?:number; totalDue:number };
-export type PreviewInput = {withholdingDetails?:CenterDocument["withholding_details"];salesBenefit?:import('./statutory-sales').SalesBenefit|null;statutoryDiscount?:number;vatAdjustment?:number; documentType?:string|null; taxType?:string|null; documentNumber:string; seriesNumber?:string|null; issueDate?:string|null; seller:PreviewParty; buyer:PreviewParty; items:PreviewItem[]; totals:PreviewTotals; paymentMethod?:string|null; referenceNumber?:string|null; status?:string|null; qrValue?:string|null; className?:string };
+import type { CenterDocument } from "../components/invoices/official-receipt";
+export type PreviewParty = {
+  name: string;
+  tin?: string | null;
+  address?: string | null;
+  email?: string | null;
+  vatRegistration?: string | null;
+  vatRegistered?: boolean | null;
+  businessStyle?: string | null;
+  permitToIssueNumber?: string | null;
+  espAccreditationNumber?: string | null;
+};
+export type PreviewItem = {
+  description: string;
+  quantity?: number;
+  unit?: string;
+  unitPrice?: number;
+  amount: number;
+  vatAmount?: number;
+  taxType?: string | null;
+};
+export type PreviewTotals = {
+  gross: number;
+  vatableSales?: number;
+  vatExemptSales?: number;
+  zeroRatedSales?: number;
+  vatAmount?: number;
+  discount?: number;
+  withholding?: number;
+  withholdingTax?: number;
+  otherCharges?: number;
+  totalDue: number;
+};
+export type PreviewInput = {
+  withholdingDetails?: CenterDocument["withholding_details"];
+  salesBenefit?: import("./statutory-sales").SalesBenefit | null;
+  statutoryDiscount?: number;
+  vatAdjustment?: number;
+  documentType?: string | null;
+  taxType?: string | null;
+  documentNumber: string;
+  seriesNumber?: string | null;
+  issueDate?: string | null;
+  seller: PreviewParty;
+  buyer: PreviewParty;
+  items: PreviewItem[];
+  totals: PreviewTotals;
+  paymentMethod?: string | null;
+  referenceNumber?: string | null;
+  status?: string | null;
+  qrValue?: string | null;
+  className?: string;
+};
 /** Wizard amounts are integer centavos; presentation amounts are PHP. No approval, party or payment inference. */
-export function previewDocument(input:PreviewInput):CenterDocument {
- const php=(n:number|undefined)=>n==null?null:n/100;
- const withholding=input.totals.withholdingTax??input.totals.withholding??0;
- const registration=(input.seller.vatRegistration||'').trim().toLowerCase();
- const registered=input.seller.vatRegistered??(['vat registered','vat-registered','vat'].includes(registration)?true:['non-vat','non-vat registered','non-vat-registered'].includes(registration)?false:null);
- return {withholding_details:input.withholdingDetails,sales_benefit:input.salesBenefit,sale_category:input.salesBenefit?.category||'regular',statutory_discount:(input.statutoryDiscount||0)/100,vat_adjustment:(input.vatAdjustment||0)/100,id:'unsaved-preview',source:'invoice',number:input.documentNumber,business:input.seller.name,tin:input.seller.tin||'',document_type:input.documentType||'unclassified_document',record_status:input.status==='draft'||input.status==='validated'||!input.status?'draft':input.status,status:'pending',category:['credit_memo','credit_note','debit_memo','debit_note'].includes(input.documentType||'')?'notes':['payment_receipt','official_receipt','delivery_receipt','purchase_invoice'].includes(input.documentType||'')?'receipts':'invoices',issued_at:input.issueDate||'',date_precision:/^\d{4}-\d{2}-\d{2}$/.test(input.issueDate||'')?'day':'instant',amount:(input.totals.totalDue+withholding)/100,
- seller_address:input.seller.address||null,seller_business_style:input.seller.businessStyle||null,buyer_name:input.buyer.name,buyer_tin:input.buyer.tin||null,buyer_address:input.buyer.address||null,buyer_business_style:input.buyer.businessStyle||null,reference:input.referenceNumber||null,payment_method:input.paymentMethod||null,branch:null,vat_registered:registered,
- items:input.items.map(i=>({description:i.description,quantity:i.quantity??null,unit:i.unit||null,unit_price:php(i.unitPrice),amount:i.amount/100,tax_type:i.taxType})),subtotal:php(input.totals.gross),discount:php(input.totals.discount),vatable:php(input.totals.vatableSales),vat_exempt:php(input.totals.vatExemptSales),zero_rated:php(input.totals.zeroRatedSales),vat:php(input.totals.vatAmount),withholding:withholding/100,other_charges:php(input.totals.otherCharges),net_payable:input.totals.totalDue/100,
- permit_number:input.seller.permitToIssueNumber||null,accreditation_number:input.seller.espAccreditationNumber||null,verification_url:null,authority_status:'BIR acceptance not verified',bir_status:'not_verified',currency:'PHP',source_notice:'Unsaved preview only. Local form checks do not issue an invoice or establish BIR approval.'};
+export function previewDocument(input: PreviewInput): CenterDocument {
+  const php = (n: number | undefined) => (n == null ? null : n / 100);
+  const withholding = input.totals.withholdingTax ?? input.totals.withholding ?? 0;
+  const registration = (input.seller.vatRegistration || "").trim().toLowerCase();
+  const registered =
+    input.seller.vatRegistered ??
+    (["vat registered", "vat-registered", "vat"].includes(registration)
+      ? true
+      : ["non-vat", "non-vat registered", "non-vat-registered"].includes(registration)
+        ? false
+        : null);
+  return {
+    withholding_details: input.withholdingDetails,
+    sales_benefit: input.salesBenefit,
+    sale_category: input.salesBenefit?.category || "regular",
+    statutory_discount: (input.statutoryDiscount || 0) / 100,
+    vat_adjustment: (input.vatAdjustment || 0) / 100,
+    id: "unsaved-preview",
+    source: "invoice",
+    number: input.documentNumber,
+    business: input.seller.name,
+    tin: input.seller.tin || "",
+    document_type: input.documentType || "unclassified_document",
+    record_status:
+      input.status === "draft" || input.status === "validated" || !input.status
+        ? "draft"
+        : input.status,
+    status: "pending",
+    category: ["credit_memo", "credit_note", "debit_memo", "debit_note"].includes(
+      input.documentType || "",
+    )
+      ? "notes"
+      : ["payment_receipt", "official_receipt", "delivery_receipt", "purchase_invoice"].includes(
+            input.documentType || "",
+          )
+        ? "receipts"
+        : "invoices",
+    issued_at: input.issueDate || "",
+    date_precision: /^\d{4}-\d{2}-\d{2}$/.test(input.issueDate || "") ? "day" : "instant",
+    amount: (input.totals.totalDue + withholding) / 100,
+    seller_address: input.seller.address || null,
+    seller_business_style: input.seller.businessStyle || null,
+    buyer_name: input.buyer.name,
+    buyer_tin: input.buyer.tin || null,
+    buyer_address: input.buyer.address || null,
+    buyer_business_style: input.buyer.businessStyle || null,
+    reference: input.referenceNumber || null,
+    payment_method: input.paymentMethod || null,
+    branch: null,
+    vat_registered: registered,
+    items: input.items.map((i) => ({
+      description: i.description,
+      quantity: i.quantity ?? null,
+      unit: i.unit || null,
+      unit_price: php(i.unitPrice),
+      amount: i.amount / 100,
+      tax_type: i.taxType,
+    })),
+    subtotal: php(input.totals.gross),
+    discount: php(input.totals.discount),
+    vatable: php(input.totals.vatableSales),
+    vat_exempt: php(input.totals.vatExemptSales),
+    zero_rated: php(input.totals.zeroRatedSales),
+    vat: php(input.totals.vatAmount),
+    withholding: withholding / 100,
+    other_charges: php(input.totals.otherCharges),
+    net_payable: input.totals.totalDue / 100,
+    permit_number: input.seller.permitToIssueNumber || null,
+    accreditation_number: input.seller.espAccreditationNumber || null,
+    verification_url: null,
+    authority_status: "BIR acceptance not verified",
+    bir_status: "not_verified",
+    currency: "PHP",
+    source_notice:
+      "Unsaved preview only. Local form checks do not issue an invoice or establish BIR approval.",
+  };
 }
 
-export function taxForDocument(type:string):"vatable"|"non_vat"|"vat_exempt"|"zero_rated" { return ({non_vat_invoice:"non_vat",vat_exempt_invoice:"vat_exempt",zero_rated_invoice:"zero_rated"} as const)[type as "non_vat_invoice"|"vat_exempt_invoice"|"zero_rated_invoice"] || "vatable"; }
+export function taxForDocument(type: string): "vatable" | "non_vat" | "vat_exempt" | "zero_rated" {
+  return (
+    (
+      {
+        non_vat_invoice: "non_vat",
+        vat_exempt_invoice: "vat_exempt",
+        zero_rated_invoice: "zero_rated",
+      } as const
+    )[type as "non_vat_invoice" | "vat_exempt_invoice" | "zero_rated_invoice"] || "vatable"
+  );
+}

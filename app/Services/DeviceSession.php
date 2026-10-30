@@ -62,7 +62,9 @@ class DeviceSession
                 $raw = $locked->api_token;
             }
             $same = $supports && $device && $locked->api_device_hash && hash_equals($locked->api_device_hash, $device) && $raw && (! Schema::hasColumn('users', 'api_token_hash') || app(ApiAccess::class)->user($request)?->id === $locked->id);
-            if ($supports && $device && $locked->api_device_hash && !hash_equals($locked->api_device_hash,$device)) app(PlatformNotifications::class)->user($locked->id,'security.new_browser',$locked->id.'|'.now('Asia/Manila')->format('Y-m-d-H'),'New browser sign-in','A sign-in from a new browser was completed on your NUERS account at '.now('Asia/Manila')->format('d M Y, g:i A').' PHT. If this was not you, reset your password and contact NUERS support.','security');
+            if ($supports && $device && $locked->api_device_hash && !hash_equals($locked->api_device_hash, $device)) {
+                app(PlatformNotifications::class)->user($locked->id, 'security.new_browser', $locked->id.'|'.now('Asia/Manila')->format('Y-m-d-H'), 'New browser sign-in', 'A sign-in from a new browser was completed on your NUERS account at '.now('Asia/Manila')->format('d M Y, g:i A').' PHT. If this was not you, reset your password and contact NUERS support.', 'security');
+            }
             $locked->api_token = $same ? $raw : Str::random(64);
             if (Schema::hasColumn('users', 'api_authenticated_at')) {
                 $locked->forceFill(['api_authenticated_at' => now(), 'api_mfa_verified_at' => null]);

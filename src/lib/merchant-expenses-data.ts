@@ -108,47 +108,61 @@ export function useMerchantExpenses(filters: {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (quiet=false) => {
-    if(!quiet)setLoading(true);
-    setError(null);
+  const load = useCallback(
+    async (quiet = false) => {
+      if (!quiet) setLoading(true);
+      setError(null);
 
-    const params = new URLSearchParams();
-    if (filters.search) params.set("search", filters.search);
-    if (filters.category && filters.category !== "all") params.set("category", filters.category);
-    if (filters.status && filters.status !== "all") params.set("status", filters.status);
-    if (filters.supplier && filters.supplier !== "all") params.set("supplier", filters.supplier);
+      const params = new URLSearchParams();
+      if (filters.search) params.set("search", filters.search);
+      if (filters.category && filters.category !== "all") params.set("category", filters.category);
+      if (filters.status && filters.status !== "all") params.set("status", filters.status);
+      if (filters.supplier && filters.supplier !== "all") params.set("supplier", filters.supplier);
 
-    try {
-      const response = await apiFetch(`/api/merchant/expenses${params.toString() ? `?${params}` : ""}`, {
-        headers: authHeaders(),
-        cache: "no-store",
-      });
-      const payload = await readJsonResponse<MerchantExpensePayload>(response, "Unable to load business account expenses.");
+      try {
+        const response = await apiFetch(
+          `/api/merchant/expenses${params.toString() ? `?${params}` : ""}`,
+          {
+            headers: authHeaders(),
+            cache: "no-store",
+          },
+        );
+        const payload = await readJsonResponse<MerchantExpensePayload>(
+          response,
+          "Unable to load business account expenses.",
+        );
 
-      setData(payload);
-    } catch (err) {
-      if(!quiet)setData(emptyPayload);
-      setError(err instanceof Error ? err.message : "Unable to load business account expenses.");
-    } finally {
-      setLoading(false);
-    }
-  }, [filters.category, filters.search, filters.status, filters.supplier]);
+        setData(payload);
+      } catch (err) {
+        if (!quiet) setData(emptyPayload);
+        setError(err instanceof Error ? err.message : "Unable to load business account expenses.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [filters.category, filters.search, filters.status, filters.supplier],
+  );
 
   useEffect(() => {
     load();
   }, [load]);
 
-  useRealtimeRefresh(()=>load(true));
+  useRealtimeRefresh(() => load(true));
   return { data, loading, error, refresh: () => load() };
 }
 
-export async function createMerchantExpense(values: MerchantExpenseInput): Promise<{ id: string; claim_status: string; duplicate?: boolean }> {
+export async function createMerchantExpense(
+  values: MerchantExpenseInput,
+): Promise<{ id: string; claim_status: string; duplicate?: boolean }> {
   const response = await apiFetch("/api/merchant/expenses", {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify(values),
   });
-  const payload = await readJsonResponse<{ id: string; claim_status: string; duplicate?: boolean }>(response, "Unable to record business account expense.");
+  const payload = await readJsonResponse<{ id: string; claim_status: string; duplicate?: boolean }>(
+    response,
+    "Unable to record business account expense.",
+  );
 
   return payload;
 }

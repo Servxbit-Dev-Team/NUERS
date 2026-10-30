@@ -58,7 +58,7 @@ class DurableWorkflowTest extends TestCase
 
     private function series(): void
     {
-        DB::table('invoice_series')->insert(['document_registration'=>json_encode(['system_type'=>'CAS','ac_number'=>'SYNTHETIC-AC-ONLY','authority_issued_at'=>'2020-01-01']),'id' => 'series', 'merchant_id' => 'm', 'branch_code' => '00000', 'document_family' => 'invoice', 'prefix' => 'SYN-', 'range_start' => 1, 'range_end' => 3, 'status' => 'active', 'authority_reference' => 'Synthetic fixture, not real authority', 'verified_by' => 'fixture-reviewer', 'valid_from' => now()->subDay(), 'valid_until' => now()->addDay(), 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('invoice_series')->insert(['document_registration' => json_encode(['system_type' => 'CAS','ac_number' => 'SYNTHETIC-AC-ONLY','authority_issued_at' => '2020-01-01']),'id' => 'series', 'merchant_id' => 'm', 'branch_code' => '00000', 'document_family' => 'invoice', 'prefix' => 'SYN-', 'range_start' => 1, 'range_end' => 3, 'status' => 'active', 'authority_reference' => 'Synthetic fixture, not real authority', 'verified_by' => 'fixture-reviewer', 'valid_from' => now()->subDay(), 'valid_until' => now()->addDay(), 'created_at' => now(), 'updated_at' => now()]);
     }
 
     private function payload(): array
@@ -73,7 +73,7 @@ class DurableWorkflowTest extends TestCase
 
     public function test_ingestion_preserves_time_has_stable_duplicate_response_and_tenant_status_scope(): void
     {
-        DB::transaction(fn()=>app(\App\Services\MerchantWallet::class)->credit('m',600,(string)Str::uuid(),'Synthetic settled test funds','test-fixture'));
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit('m', 600, (string)Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $key = $this->key();
         $this->series();
         $this->issueGate();
@@ -98,7 +98,7 @@ class DurableWorkflowTest extends TestCase
 
     public function test_offline_replay_after_key_rotation_reuses_original_and_separate_branches_cannot_poll(): void
     {
-        DB::transaction(fn()=>app(\App\Services\MerchantWallet::class)->credit('m',600,(string)Str::uuid(),'Synthetic settled test funds','test-fixture'));
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit('m', 600, (string)Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $raw = $this->key();
         $this->series();
         $this->issueGate();
@@ -119,8 +119,8 @@ class DurableWorkflowTest extends TestCase
     {
         $key = $this->key(env: 'sandbox');
         $p = $this->payload();
-        $this->withHeaders(['X-NUERS-API-Key' => $key])->postJson('/api/integrations/transactions', $p)->assertCreated()->assertJsonPath('environment','sandbox')->assertJsonPath('test_only',true);
-        $this->assertDatabaseCount('integration_sandbox_events',1);
+        $this->withHeaders(['X-NUERS-API-Key' => $key])->postJson('/api/integrations/transactions', $p)->assertCreated()->assertJsonPath('environment', 'sandbox')->assertJsonPath('test_only', true);
+        $this->assertDatabaseCount('integration_sandbox_events', 1);
         DB::table('merchant_api_keys')->update(['environment' => 'live', 'branch_code' => '00001']);
         $this->postJson('/api/integrations/transactions', $p)->assertForbidden();
         DB::table('merchant_api_keys')->update(['branch_code' => '00000']);
@@ -135,7 +135,7 @@ class DurableWorkflowTest extends TestCase
 
     public function test_ingestion_rolls_back_sequence_ledger_inbox_and_outbox_on_preparation_failure(): void
     {
-        DB::transaction(fn()=>app(\App\Services\MerchantWallet::class)->credit('m',600,(string)Str::uuid(),'Synthetic settled test funds','test-fixture'));
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit('m', 600, (string)Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $key = $this->key();
         $this->series();
         $this->issueGate();
@@ -149,7 +149,7 @@ class DurableWorkflowTest extends TestCase
 
     public function test_shared_atomic_budgets_reject_over_limit_without_partial_bucket_increment(): void
     {
-        $quota = new AtomicQuota;
+        $quota = new AtomicQuota();
         $quota->admit('synthetic', 3, 1);
         try {
             $quota->admit('synthetic', 3, 1);
@@ -167,7 +167,7 @@ class DurableWorkflowTest extends TestCase
     {
         DB::table('eis_document_outbox')->insert(['id' => 'outbox', 'merchant_id' => 'm', 'document_source' => 'receipt', 'document_id' => 'r', 'internal_schema' => 'fixture', 'document_hash' => hash('sha256', 'fixture-payload'), 'encrypted_document' => Crypt::encryptString('fixture-payload'), 'status' => 'blocked_pending_api', 'blockers' => '[]', 'prepared_at' => now()]);
 
-        return (new EisDelivery)->enqueue('outbox');
+        return (new EisDelivery())->enqueue('outbox');
     }
 
     private function deliveryGate(): void
@@ -178,11 +178,12 @@ class DurableWorkflowTest extends TestCase
 
     private function provider(array $send, array $inquiry): EisProvider
     {
-        return new class($send, $inquiry) implements EisProvider
-        {
+        return new class ($send, $inquiry) implements EisProvider {
             public array $calls = [];
 
-            public function __construct(private array $sendResult, private array $inquiryResult) {}
+            public function __construct(private array $sendResult, private array $inquiryResult)
+            {
+            }
 
             public function ready(): bool
             {
@@ -208,7 +209,7 @@ class DurableWorkflowTest extends TestCase
     public function test_default_provider_is_blocked_and_uncertain_send_requires_inquiry_before_any_replay(): void
     {
         $id = $this->outbox();
-        $this->assertSame('blocked', (new EisDelivery)->runOne()['state']);
+        $this->assertSame('blocked', (new EisDelivery())->runOne()['state']);
         $this->assertDatabaseCount('eis_delivery_attempts', 0);
         $this->deliveryGate();
         $provider = $this->provider(['outcome' => 'uncertain'], ['outcome' => 'accepted', 'authenticated' => true, 'reference' => 'SYNTHETIC', 'raw_response' => ['synthetic' => true]]);
@@ -291,7 +292,7 @@ class DurableWorkflowTest extends TestCase
         file_put_contents($file->getRealPath(), '<?php echo "injected"; ?>', FILE_APPEND);
         $directory = sys_get_temp_dir().'/nuers-image-test-'.Str::uuid();
         try {
-            $name = (new SafeImage)->store($file, $directory);
+            $name = (new SafeImage())->store($file, $directory);
             $this->assertStringEndsWith('.png', $name);
             $this->assertSame(IMAGETYPE_PNG, getimagesize($directory.'/'.$name)[2]);
             $this->assertStringNotContainsString('<?php', file_get_contents($directory.'/'.$name));
@@ -342,7 +343,7 @@ class DurableWorkflowTest extends TestCase
 
     public function test_draft_publish_reserves_series_and_commits_lifecycle_and_outbox_together(): void
     {
-        DB::transaction(fn()=>app(\App\Services\MerchantWallet::class)->credit('m',600,(string)Str::uuid(),'Synthetic settled test funds','test-fixture'));
+        DB::transaction(fn () => app(\App\Services\MerchantWallet::class)->credit('m', 600, (string)Str::uuid(), 'Synthetic settled test funds', 'test-fixture'));
         $this->series();
         $this->issueGate();
         $id = fake()->uuid();
@@ -359,7 +360,7 @@ class DurableWorkflowTest extends TestCase
         $this->withToken($this->owner->api_token)->postJson('/api/merchant/api-keys', ['name' => 'Synthetic test', 'environment' => 'live', 'branch_code' => 'MAIN'])->assertUnprocessable();
         $data = ['name' => 'Synthetic test', 'environment' => 'live', 'branch_code' => '00000', 'scopes' => ['transactions:write', 'transactions:read']];
         $this->postJson('/api/merchant/api-keys', $data + ['ip_whitelist' => ['not-an-ip']])->assertUnprocessable();
-        DB::table('merchant_branches')->insert(['id'=>(string)Str::uuid(),'merchant_id'=>'m','code'=>'SYNTHETIC','bir_branch_code'=>'00000','name'=>'Synthetic branch','address'=>'Synthetic address','city'=>'Synthetic city','region'=>'Synthetic region','rdo_code'=>'001','branch_type'=>'main','status'=>'active','contact_encrypted'=>\Illuminate\Support\Facades\Crypt::encryptString('{}'),'request_id'=>(string)Str::uuid(),'request_hash'=>str_repeat('a',64)]);
+        DB::table('merchant_branches')->insert(['id' => (string)Str::uuid(),'merchant_id' => 'm','code' => 'SYNTHETIC','bir_branch_code' => '00000','name' => 'Synthetic branch','address' => 'Synthetic address','city' => 'Synthetic city','region' => 'Synthetic region','rdo_code' => '001','branch_type' => 'main','status' => 'active','contact_encrypted' => \Illuminate\Support\Facades\Crypt::encryptString('{}'),'request_id' => (string)Str::uuid(),'request_hash' => str_repeat('a', 64)]);
         $key = $this->postJson('/api/merchant/api-keys', $data)->assertCreated()->json('key');
         $this->assertSame(hash('sha256', $key['plain_key']), DB::table('merchant_api_keys')->where('id', $key['id'])->value('key_hash'));
         $this->assertNotNull(DB::table('merchant_api_keys')->where('id', $key['id'])->value('expires_at'));

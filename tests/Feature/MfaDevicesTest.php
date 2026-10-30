@@ -178,8 +178,8 @@ class MfaDevicesTest extends TestCase
         $this->travel(61)->seconds();
         $d = $this->start('Backup phone');
         foreach (range(1, 5) as $i) {
-            $this->postJson('/api/auth/mfa/devices/'.$d['id'].'/confirm',['code' => 'invalid'])->assertUnprocessable();
+            $this->postJson('/api/auth/mfa/devices/'.$d['id'].'/confirm', ['code' => 'invalid'])->assertUnprocessable();
         }
-        $this->postJson('/api/auth/mfa/devices/'.$d['id'].'/confirm',['code' => 'invalid'])->assertTooManyRequests();
+        $this->postJson('/api/auth/mfa/devices/'.$d['id'].'/confirm', ['code' => 'invalid'])->assertTooManyRequests();
     }
 }

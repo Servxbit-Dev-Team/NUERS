@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class RdoController extends Controller
@@ -23,16 +22,19 @@ class RdoController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $actor=app(\App\Services\ApiAccess::class)->require($request,['admin','super_admin']);
-        $v=$request->validate(['rdo_code'=>'required|string|max:20','rdo_name'=>'required|string|max:255','region'=>'required|string|max:100','city'=>'nullable|string|max:255','office_address'=>'nullable|string|max:2000','head_name'=>'nullable|string|max:255','email'=>'nullable|email|max:255','phone'=>'nullable|string|max:100','password'=>'prohibited','user_id'=>'prohibited','coverage_area'=>'nullable|array|max:200','coverage_area.*'=>'string|max:255','notes'=>'nullable|string|max:2000']);
-        return DB::transaction(function()use($v,$actor){
-            $old=DB::table('rdo_offices')->where('rdo_code',$v['rdo_code'])->lockForUpdate()->first();
-            $id=$old?->id ?? (string)Str::uuid();
-            $data=[...$v,'coverage_area'=>json_encode($v['coverage_area']??[]),'updated_at'=>now()];
-            if($old) DB::table('rdo_offices')->where('id',$id)->update($data);
-            else DB::table('rdo_offices')->insert([...$data,'id'=>$id,'status'=>'active','created_at'=>now()]);
-            app(\App\Services\BirCompliance::class)->audit('rdo.registry.saved',$id,(string)$actor->id,['before'=>$old,'after'=>$data]);
-            return response()->json(['success'=>true,'office'=>$this->officePayload(DB::table('rdo_offices')->where('id',$id)->first())],$old?200:201);
+        $actor = app(\App\Services\ApiAccess::class)->require($request, ['admin','super_admin']);
+        $v = $request->validate(['rdo_code' => 'required|string|max:20','rdo_name' => 'required|string|max:255','region' => 'required|string|max:100','city' => 'nullable|string|max:255','office_address' => 'nullable|string|max:2000','head_name' => 'nullable|string|max:255','email' => 'nullable|email|max:255','phone' => 'nullable|string|max:100','password' => 'prohibited','user_id' => 'prohibited','coverage_area' => 'nullable|array|max:200','coverage_area.*' => 'string|max:255','notes' => 'nullable|string|max:2000']);
+        return DB::transaction(function () use ($v, $actor) {
+            $old = DB::table('rdo_offices')->where('rdo_code', $v['rdo_code'])->lockForUpdate()->first();
+            $id = $old?->id ?? (string)Str::uuid();
+            $data = [...$v,'coverage_area' => json_encode($v['coverage_area'] ?? []),'updated_at' => now()];
+            if ($old) {
+                DB::table('rdo_offices')->where('id', $id)->update($data);
+            } else {
+                DB::table('rdo_offices')->insert([...$data,'id' => $id,'status' => 'active','created_at' => now()]);
+            }
+            app(\App\Services\BirCompliance::class)->audit('rdo.registry.saved', $id, (string)$actor->id, ['before' => $old,'after' => $data]);
+            return response()->json(['success' => true,'office' => $this->officePayload(DB::table('rdo_offices')->where('id', $id)->first())], $old ? 200 : 201);
         });
     }
 
@@ -181,11 +183,15 @@ class RdoController extends Controller
 
     private function resolveOffice(Request $request): ?object
     {
-        $actor=app(\App\Services\ApiAccess::class)->require($request,['admin','super_admin','bir','rdo']);
-        $role=DB::table('profiles')->where('id',$actor->id)->value('role');
-        $q=DB::table('rdo_offices');
-        if($role==='rdo') $q->where('user_id',$actor->id);
-        if($request->filled('code')) $q->where('rdo_code',$request->query('code'));
+        $actor = app(\App\Services\ApiAccess::class)->require($request, ['admin','super_admin','bir','rdo']);
+        $role = DB::table('profiles')->where('id', $actor->id)->value('role');
+        $q = DB::table('rdo_offices');
+        if ($role === 'rdo') {
+            $q->where('user_id', $actor->id);
+        }
+        if ($request->filled('code')) {
+            $q->where('rdo_code', $request->query('code'));
+        }
         return $q->orderBy('rdo_code')->first();
     }
 

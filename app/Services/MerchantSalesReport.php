@@ -27,7 +27,9 @@ class MerchantSalesReport
         if (($filters['type'] ?? 'all') !== 'all') {
             $q->where('document_type', $filters['type']);
         }
-        if (($filters['sale_category'] ?? 'all') !== 'all') $q->where('sale_category', $filters['sale_category']);
+        if (($filters['sale_category'] ?? 'all') !== 'all') {
+            $q->where('sale_category', $filters['sale_category']);
+        }
         if ($search = trim($filters['search'] ?? '')) {
             // Binding and literal wildcard escaping prevent both SQL injection and wildcard broadening.
             $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $search).'%';
@@ -120,7 +122,9 @@ class MerchantSalesReport
 
     private function sourceBranch(object $source, ?array $snapshot): ?string
     {
-        if (!$snapshot) return null;
+        if (!$snapshot) {
+            return null;
+        }
         $branch = $snapshot['seller_branch_code'];
         if (! $branch) {
             $evidence = app(HistoricalBranchEvidence::class)->latest($source->document_source, $source->document_id);

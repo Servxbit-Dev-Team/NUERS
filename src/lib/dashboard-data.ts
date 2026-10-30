@@ -51,7 +51,8 @@ function dashboardCacheKey(portal: string) {
   let scope = "anonymous";
 
   try {
-    const token = typeof window !== "undefined" ? window.localStorage.getItem("nuers_api_token") : null;
+    const token =
+      typeof window !== "undefined" ? window.localStorage.getItem("nuers_api_token") : null;
     if (token) scope = token.slice(-16);
   } catch {
     // Restricted browser storage should not block dashboard rendering.
@@ -70,7 +71,11 @@ function readCachedDashboard(portal: string): CachedDashboardPayload | null {
     const cached = JSON.parse(raw) as CachedDashboardPayload;
     const cachedAt = Date.parse(cached.cachedAt);
 
-    if (!cached.payload || Number.isNaN(cachedAt) || Date.now() - cachedAt > DASHBOARD_BROWSER_CACHE_TTL_MS) {
+    if (
+      !cached.payload ||
+      Number.isNaN(cachedAt) ||
+      Date.now() - cachedAt > DASHBOARD_BROWSER_CACHE_TTL_MS
+    ) {
       window.sessionStorage.removeItem(dashboardCacheKey(portal));
       return null;
     }
@@ -96,11 +101,12 @@ function writeCachedDashboard(portal: string, payload: DashboardPayload) {
 
 function authHeaders() {
   const headers: Record<string, string> = {
-    "Accept": "application/json",
+    Accept: "application/json",
   };
 
   try {
-    const token = typeof window !== "undefined" ? window.localStorage.getItem("nuers_api_token") : null;
+    const token =
+      typeof window !== "undefined" ? window.localStorage.getItem("nuers_api_token") : null;
     if (token) headers.Authorization = `Bearer ${token}`;
   } catch {
     // Restricted browser storage should not block dashboard rendering.
@@ -113,14 +119,21 @@ type DashboardDataOptions = {
   refreshIntervalMs?: number;
 };
 
-export function useDashboardData(portal: "super-admin" | "bir" | "merchant" | "client", options: DashboardDataOptions = {}) {
+export function useDashboardData(
+  portal: "super-admin" | "bir" | "merchant" | "client",
+  options: DashboardDataOptions = {},
+) {
   const cachedDashboard = useRef<CachedDashboardPayload | null>(readCachedDashboard(portal));
-  const [data, setData] = useState<DashboardPayload>(cachedDashboard.current?.payload ?? emptyDashboard);
+  const [data, setData] = useState<DashboardPayload>(
+    cachedDashboard.current?.payload ?? emptyDashboard,
+  );
   const [loading, setLoading] = useState(!cachedDashboard.current);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(cachedDashboard.current?.cachedAt ?? null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(
+    cachedDashboard.current?.cachedAt ?? null,
+  );
   const hasLoaded = useRef(Boolean(cachedDashboard.current));
   const activePortal = useRef(portal);
   const refreshIntervalMs = options.refreshIntervalMs ?? 1000;
@@ -131,7 +144,7 @@ export function useDashboardData(portal: "super-admin" | "bir" | "merchant" | "c
 
   useEffect(() => {
     let cancelled = false;
-    let stop: (()=>void) | undefined;
+    let stop: (() => void) | undefined;
 
     if (activePortal.current !== portal) {
       activePortal.current = portal;
@@ -141,23 +154,27 @@ export function useDashboardData(portal: "super-admin" | "bir" | "merchant" | "c
       setLastUpdatedAt(cachedDashboard.current?.cachedAt ?? null);
     }
 
-    async function loadDashboard(quiet=false) {
+    async function loadDashboard(quiet = false) {
       const blockingLoad = !hasLoaded.current;
       if (blockingLoad) {
         setLoading(true);
-      } else if(!quiet) {
+      } else if (!quiet) {
         setRefreshing(true);
       }
       setError(null);
 
       try {
-        const query = !blockingLoad && (refreshKey > 0 || refreshIntervalMs > 0)
-          ? `?refresh=${Date.now()}`
-          : "";
+        const query =
+          !blockingLoad && (refreshKey > 0 || refreshIntervalMs > 0)
+            ? `?refresh=${Date.now()}`
+            : "";
         const response = await apiFetch(`/api/dashboards/${portal}${query}`, {
           headers: authHeaders(),
         });
-        const payload = await readJsonResponse<DashboardPayload>(response, "Unable to load dashboard data.");
+        const payload = await readJsonResponse<DashboardPayload>(
+          response,
+          "Unable to load dashboard data.",
+        );
 
         if (!cancelled) {
           setData(payload);
@@ -180,7 +197,7 @@ export function useDashboardData(portal: "super-admin" | "bir" | "merchant" | "c
     loadDashboard();
 
     if (refreshIntervalMs > 0) {
-      stop = subscribeRealtimeRefresh(()=>loadDashboard(true));
+      stop = subscribeRealtimeRefresh(() => loadDashboard(true));
     }
 
     return () => {

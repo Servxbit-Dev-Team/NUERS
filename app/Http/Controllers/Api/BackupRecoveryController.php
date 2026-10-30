@@ -201,10 +201,12 @@ class BackupRecoveryController
         $report['references'] = ['RMC 110-2026, VII(6-8), VII(20), VIII(4-7,10)', 'Annex A item 16: DR plan with tested RTO/RPO'];
         app(BirCompliance::class)->audit('bcdr.report.exported', 'bcdr', (string) $actor->id);
 
-        if($r->query('format')==='csv') {
-            $rows=iterator_to_array(\App\Services\ReportCsv::flatten($report),false);
-            if ($r->has('report_limit')) \App\Services\ReportCsv::limit($r,count($rows));
-            return \App\Services\ReportCsv::download(['Evidence field / record path','Recorded value'],$rows,'NUERS-backup-recovery-report.csv');
+        if ($r->query('format') === 'csv') {
+            $rows = iterator_to_array(\App\Services\ReportCsv::flatten($report), false);
+            if ($r->has('report_limit')) {
+                \App\Services\ReportCsv::limit($r, count($rows));
+            }
+            return \App\Services\ReportCsv::download(['Evidence field / record path','Recorded value'], $rows, 'NUERS-backup-recovery-report.csv');
         }
         return response()->json($report)->header('Content-Disposition', 'attachment; filename="NUERS-backup-recovery-report.json"')->header('Cache-Control', 'private, no-store');
     }

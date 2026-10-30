@@ -24,7 +24,9 @@ class OperationsReportController extends TransactionWorkspaceController
 
     protected function ledger()
     {
-        if (!$this->indexedSalesRead) return parent::ledger();
+        if (!$this->indexedSalesRead) {
+            return parent::ledger();
+        }
         // All sales aggregates require normalized status=success; drafts normalize
         // to pending. Avoid the wide record_status column in covering index reads.
         $q = app(LedgerProjection::class)->query(null, true, true);
@@ -37,19 +39,27 @@ class OperationsReportController extends TransactionWorkspaceController
             $q = DB::table('ledger_documents as ledger')->where('identity_rank', 1)->where('is_draft', false);
             if ($this->reconciliationAggregateRead) {
                 $columns = ['id','reconciliation_prefix','reconciliation_suffix','identity_count','document_family','amount','vat_amount','vatable_sales','created_at','business'];
-                $groupColumn = ['type'=>'document_type','payment'=>'payment_method','branch'=>'branch'][request()->input('group')] ?? null;
-                if ($groupColumn) $columns[] = $groupColumn;
+                $groupColumn = ['type' => 'document_type','payment' => 'payment_method','branch' => 'branch'][request()->input('group')] ?? null;
+                if ($groupColumn) {
+                    $columns[] = $groupColumn;
+                }
                 $q->select($columns);
-                if (DB::getDriverName() === 'mysql' && !request()->filled('search') && !request()->filled('customer') && !$groupColumn) $q->forceIndex('ledger_reconciliation_summary');
+                if (DB::getDriverName() === 'mysql' && !request()->filled('search') && !request()->filled('customer') && !$groupColumn) {
+                    $q->forceIndex('ledger_reconciliation_summary');
+                }
             }
             return $q;
         }
-        if (!$this->salesAggregateRead || !in_array($this->salesAggregateFilters['bir'] ?? 'all', ['', 'all'], true)) return parent::filterableLedger();
+        if (!$this->salesAggregateRead || !in_array($this->salesAggregateFilters['bir'] ?? 'all', ['', 'all'], true)) {
+            return parent::filterableLedger();
+        }
         // Aggregate directly on the validated projection. Nested SELECT * views
         // prevent covering-index reads on MySQL; no source payload is needed here.
-        $q=DB::table('ledger_documents as ledger')->where('identity_rank', 1);
-        $f=$this->salesAggregateFilters;
-        if(DB::getDriverName()==='mysql' && empty($f['search']) && empty($f['customer']) && empty($f['ids'])) $q->forceIndex('ledger_sales_summary');
+        $q = DB::table('ledger_documents as ledger')->where('identity_rank', 1);
+        $f = $this->salesAggregateFilters;
+        if (DB::getDriverName() === 'mysql' && empty($f['search']) && empty($f['customer']) && empty($f['ids'])) {
+            $q->forceIndex('ledger_sales_summary');
+        }
         return $q;
     }
 
@@ -57,7 +67,9 @@ class OperationsReportController extends TransactionWorkspaceController
     {
         [$q,$v] = $this->filtered($r);
         $q = $this->category($q, $v);
-        if ($r->has('report_limit')) \App\Services\ReportCsv::limit($r,(clone $q)->count());
+        if ($r->has('report_limit')) {
+            \App\Services\ReportCsv::limit($r, (clone $q)->count());
+        }
         abort_if((clone $q)->limit(1001)->get(['id'])->count() > 1000, 503, 'This report is awaiting its reporting index. Please retry shortly or narrow the dates.');
         $rows = (clone $q)->orderByDesc('created_at')->orderBy('id')->get()->map(fn ($x) => $this->row($x));
         $payloads = DB::table('eis_transmissions as t')->join('eis_invoice_payloads as p', 'p.id', '=', 't.payload_id')->whereIn('t.id', $rows->pluck('transmission_id')->filter())->get(['t.id', 'p.payload', 'p.payload_hash'])->keyBy('id');
@@ -282,7 +294,8 @@ class OperationsReportController extends TransactionWorkspaceController
             \App\Services\ReportCsv::limit($r, $count);
             app(BirCompliance::class)->audit('operations.report.exported', 'sales', (string) $this->actor($r)->id, ['filters' => $r->query(), 'records' => $count]);
             return response()->streamDownload(function () use ($service, $included, $v) {
-                $f = fopen('php://output', 'w'); fwrite($f, "\xEF\xBB\xBF");
+                $f = fopen('php://output', 'w');
+                fwrite($f, "\xEF\xBB\xBF");
                 $keys = ['transaction_ref','receipt_number','business','tin','created_at','document_type','amount','vat_amount','vatable_sales','vat_exempt_sales','zero_rated_sales','payment_method','branch','region','rdo_code','status','bir_status','sale_category','manual_discount_amount','statutory_discount_amount','vat_relief_amount','discount_amount'];
                 fputcsv($f, $keys, ',', '"', '');
                 foreach ($service->sort(clone $included, $v)->lazy(500) as $row) {
@@ -318,7 +331,9 @@ class OperationsReportController extends TransactionWorkspaceController
         $r['source_financial_checks_passed'] = (bool) $row->financial_valid;
         $r['sales_eligible'] = true;
         if ($row->document_family === 'credit') {
-            foreach (['amount','vat_amount','vatable_sales','vat_exempt_sales','zero_rated_sales'] as $key) $r[$key] = -abs($r[$key]);
+            foreach (['amount','vat_amount','vatable_sales','vat_exempt_sales','zero_rated_sales'] as $key) {
+                $r[$key] = -abs($r[$key]);
+            }
         }
         return $r;
     }
@@ -346,7 +361,9 @@ class OperationsReportController extends TransactionWorkspaceController
             app(BirCompliance::class)->audit('operations.report.exported', 'reconciliation', (string) $this->actor($r)->id, ['filters' => $r->query(), 'records' => $count]);
             $rows = (function () use ($query, $column, $direction) {
                 foreach ((clone $query)->orderBy($column, $direction)->orderBy('id', $direction)->lazy(250)->chunk(250) as $batch) {
-                    foreach ($this->reconciliationRows($batch) as $row) yield array_map(fn ($key) => $row[$key] ?? '', $this->reconciliationColumns());
+                    foreach ($this->reconciliationRows($batch) as $row) {
+                        yield array_map(fn ($key) => $row[$key] ?? '', $this->reconciliationColumns());
+                    }
                 }
             })();
             return \App\Services\ReportCsv::download($this->reconciliationColumns(), $rows, 'NUERS-reconciliation-'.now()->format('Y-m-d-His').'.csv');
@@ -370,7 +387,9 @@ class OperationsReportController extends TransactionWorkspaceController
 
     private function reconciliationRows($cases): array
     {
-        if ($cases->isEmpty()) return [];
+        if ($cases->isEmpty()) {
+            return [];
+        }
         $records = DB::query()->fromSub($this->ledger(), 'records')->whereIn('id', $cases->pluck('id'))->get()->keyBy('id');
         $payloads = DB::table('eis_transmissions as t')->join('eis_invoice_payloads as p', 'p.id', '=', 't.payload_id')
             ->whereIn('t.id', $records->pluck('transmission_id')->filter())->get(['t.id', 'p.payload', 'p.payload_hash'])->keyBy('id');
@@ -378,7 +397,9 @@ class OperationsReportController extends TransactionWorkspaceController
             $record = $records->get($case->id);
             $row = $this->row($record);
             $row += app(\App\Services\ReconciliationEvidence::class)->payload($payloads->get($record->transmission_id));
-            foreach (['exception', 'review_status', 'review_revision', 'review_reason', 'owner_id', 'priority', 'closure_evidence', 'reviewed_at'] as $key) $row[$key] = $case->$key;
+            foreach (['exception', 'review_status', 'review_revision', 'review_reason', 'owner_id', 'priority', 'closure_evidence', 'reviewed_at'] as $key) {
+                $row[$key] = $case->$key;
+            }
             $row['due_at'] = $case->review_due_at;
             $row['source_financial_checks_passed'] = (bool) $case->financial_valid;
             $row['document_amount'] = $row['amount'];

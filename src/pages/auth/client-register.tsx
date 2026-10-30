@@ -80,8 +80,18 @@ export function ClientRegisterPage() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError("");
-    if(accountType==="merchant"){navigate("/register");return;}
-    if(form.password.length<12||!/[a-zA-Z]/.test(form.password)||!/[0-9]/.test(form.password)){setError("Use at least 12 characters, including letters and numbers.");return;}
+    if (accountType === "merchant") {
+      navigate("/register");
+      return;
+    }
+    if (
+      form.password.length < 12 ||
+      !/[a-zA-Z]/.test(form.password) ||
+      !/[0-9]/.test(form.password)
+    ) {
+      setError("Use at least 12 characters, including letters and numbers.");
+      return;
+    }
 
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match.");
@@ -93,8 +103,8 @@ export function ClientRegisterPage() {
       return;
     }
 
-    const fullName=`${form.firstName.trim()} ${form.lastName.trim()}`.trim();
-    const organization="Citizen Account";
+    const fullName = `${form.firstName.trim()} ${form.lastName.trim()}`.trim();
+    const organization = "Citizen Account";
 
     setLoading(true);
     const { error: signUpError } = await signUp(form.email, form.password, {
@@ -131,36 +141,40 @@ export function ClientRegisterPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Account type">
-          {accountTypes.filter(type => type.value === "client").map((type) => {
-            const Icon = type.icon;
-            const selected = accountType === type.value;
-            return (
-              <button
-                key={type.value}
-                type="button"
-                onClick={() => setAccountType(type.value)}
-                className={cn(
-                  "rounded-lg border p-4 text-left transition-colors",
-                  selected
-                    ? "border-primary bg-primary/5 shadow-[inset_0_0_0_1px_hsl(var(--primary))]"
-                    : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
-                )}
-                aria-pressed={selected}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-lg",
-                    selected ? "bg-primary text-white" : "bg-slate-100 text-slate-500",
-                  )}>
-                    <Icon className="h-5 w-5" />
+          {accountTypes
+            .filter((type) => type.value === "client")
+            .map((type) => {
+              const Icon = type.icon;
+              const selected = accountType === type.value;
+              return (
+                <button
+                  key={type.value}
+                  type="button"
+                  onClick={() => setAccountType(type.value)}
+                  className={cn(
+                    "rounded-lg border p-4 text-left transition-colors",
+                    selected
+                      ? "border-primary bg-primary/5 shadow-[inset_0_0_0_1px_hsl(var(--primary))]"
+                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
+                  )}
+                  aria-pressed={selected}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div
+                      className={cn(
+                        "flex h-10 w-10 items-center justify-center rounded-lg",
+                        selected ? "bg-primary text-white" : "bg-slate-100 text-slate-500",
+                      )}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    {selected && <CheckCircle2 className="h-4 w-4 text-primary" />}
                   </div>
-                  {selected && <CheckCircle2 className="h-4 w-4 text-primary" />}
-                </div>
-                <p className="mt-3 text-sm font-semibold text-slate-950">{type.title}</p>
-                <p className="mt-1 text-xs leading-5 text-slate-500">{type.description}</p>
-              </button>
-            );
-          })}
+                  <p className="mt-3 text-sm font-semibold text-slate-950">{type.title}</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">{type.description}</p>
+                </button>
+              );
+            })}
         </div>
 
         {error && (
@@ -269,7 +283,8 @@ export function ClientRegisterPage() {
                 </Badge>
               </div>
               <p className="mt-1 text-xs leading-5 text-slate-500">
-                Your profile is prepared for role-based access, receipt history, compliance records, and audit logging.
+                Your profile is prepared for role-based access, receipt history, compliance records,
+                and audit logging.
               </p>
             </div>
           </div>
@@ -283,12 +298,38 @@ export function ClientRegisterPage() {
             className="mt-1 h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
           />
           <span>
-            I confirm that the account information is accurate, agree to the <Link to="/terms-of-service" target="_blank" rel="noopener noreferrer" className="underline">Terms of Service</Link>, and acknowledge the <Link to="/privacy-notice" target="_blank" rel="noopener noreferrer" className="underline">Privacy Notice</Link>.
+            I confirm that the account information is accurate, agree to the{" "}
+            <Link
+              to="/terms-of-service"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline"
+            >
+              Terms of Service
+            </Link>
+            , and acknowledge the{" "}
+            <Link
+              to="/privacy-notice"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline"
+            >
+              Privacy Notice
+            </Link>
+            .
           </span>
         </label>
 
-        <Button type="submit" className="h-11 w-full gap-2 bg-[#082844] text-white hover:bg-[#0b3559]" disabled={loading}>
-          {loading ? "Creating account..." : accountType === "merchant" ? "Register business account" : "Create client account"}
+        <Button
+          type="submit"
+          className="h-11 w-full gap-2 bg-[#082844] text-white hover:bg-[#0b3559]"
+          disabled={loading}
+        >
+          {loading
+            ? "Creating account..."
+            : accountType === "merchant"
+              ? "Register business account"
+              : "Create client account"}
           {!loading && <ArrowRight className="h-4 w-4" />}
         </Button>
       </form>
@@ -319,7 +360,9 @@ function Field({
 }) {
   return (
     <div className="space-y-2">
-      <Label htmlFor={id} className="text-sm font-medium">{label}</Label>
+      <Label htmlFor={id} className="text-sm font-medium">
+        {label}
+      </Label>
       <div className="relative">
         <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <Input
@@ -356,7 +399,9 @@ function PasswordField({
 }) {
   return (
     <div className="space-y-2">
-      <Label htmlFor={id} className="text-sm font-medium">{label}</Label>
+      <Label htmlFor={id} className="text-sm font-medium">
+        {label}
+      </Label>
       <div className="relative">
         <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <Input

@@ -16,14 +16,20 @@ export class RealtimeCoordinator {
   private now: () => number;
   probe?: () => Promise<boolean>;
 
-  constructor(now: () => number = Date.now) { this.now = now; }
+  constructor(now: () => number = Date.now) {
+    this.now = now;
+  }
 
   subscribe(listener: RefreshListener) {
     this.listeners.add(listener);
-    return () => { this.listeners.delete(listener); };
+    return () => {
+      this.listeners.delete(listener);
+    };
   }
 
-  invalidate() { this.refreshRequired = true; }
+  invalidate() {
+    this.refreshRequired = true;
+  }
 
   beginRequest() {
     this.requests++;
@@ -35,19 +41,31 @@ export class RealtimeCoordinator {
       if (status === 0 || status === 429 || status >= 500) {
         this.refreshRequired = true;
         this.failures = Math.min(this.failures + 1, 6);
-        this.retryAt = Math.max(this.retryAt, this.now() + Math.max(retryAfter, Math.min(60, 2 ** this.failures)) * 1000);
+        this.retryAt = Math.max(
+          this.retryAt,
+          this.now() + Math.max(retryAfter, Math.min(60, 2 ** this.failures)) * 1000,
+        );
       }
     };
   }
 
   async tick(available = true) {
-    if (!available || this.running || this.requests || this.now() < this.retryAt || !this.listeners.size) return;
+    if (
+      !available ||
+      this.running ||
+      this.requests ||
+      this.now() < this.retryAt ||
+      !this.listeners.size
+    )
+      return;
     this.running = true;
     const previousRetry = this.retryAt;
     try {
-      if (this.probe && !await this.probe() && !this.refreshRequired) return;
+      if (this.probe && !(await this.probe()) && !this.refreshRequired) return;
       this.refreshRequired = false;
-      await Promise.allSettled([...this.listeners].map(listener => Promise.resolve().then(listener)));
+      await Promise.allSettled(
+        [...this.listeners].map((listener) => Promise.resolve().then(listener)),
+      );
       if (this.retryAt === previousRetry && !this.requests) this.failures = 0;
     } catch {
       // Transport records the retry deadline. A failed heartbeat never starts reads.

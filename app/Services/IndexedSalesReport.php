@@ -19,7 +19,9 @@ class IndexedSalesReport
     public function query(object $merchant, array $filters, bool $refresh = true, bool $includeCustomer = true, bool $sequentialSummary = false): Builder
     {
         $source = app(LedgerProjection::class)->query((string) $merchant->id, $refresh);
-        if ($sequentialSummary && DB::getDriverName() === 'mysql') $source->forceIndex('PRIMARY');
+        if ($sequentialSummary && DB::getDriverName() === 'mysql') {
+            $source->forceIndex('PRIMARY');
+        }
         $q = DB::query()->fromSub($source, 'd')
             ->whereIn('d.document_source', ['invoice', 'receipt'])
             ->where('d.business_day', '>=', $filters['from'])->where('d.business_day', '<=', $filters['to']);
@@ -27,17 +29,19 @@ class IndexedSalesReport
         $q->leftJoin('ledger_documents as original', fn ($j) => $j->on('original.projection_id', '=', DB::raw($original))->on('original.merchant_id', '=', 'd.merchant_id')->whereIn('d.document_family', ['credit','debit']));
         $latest = "(SELECT o.id FROM eis_document_outbox o WHERE o.merchant_id=d.merchant_id AND o.document_source=d.document_source AND o.document_id=d.document_id ORDER BY o.source_review_revision DESC,o.prepared_at DESC,o.id DESC LIMIT 1)";
         $hasJobs = DB::table('eis_delivery_jobs')->where('merchant_id', $merchant->id)->exists();
-        if ($hasJobs) $q->leftJoin('eis_delivery_jobs as job', fn ($j) => $j->on('job.outbox_id', '=', DB::raw($latest))->on('job.merchant_id', '=', 'd.merchant_id'));
+        if ($hasJobs) {
+            $q->leftJoin('eis_delivery_jobs as job', fn ($j) => $j->on('job.outbox_id', '=', DB::raw($latest))->on('job.merchant_id', '=', 'd.merchant_id'));
+        }
         // customer_document_once guarantees one mapping per tenant/source/document.
         // Joins let the optimizer merge the derived query and seek the page index.
         $customer = "'unclassified'";
         if ($includeCustomer || ($filters['customer_type'] ?? 'all') !== 'all') {
-        $customerTable = DB::getDriverName() === 'mysql'
-            ? DB::raw('merchant_customer_documents as cd FORCE INDEX (customer_document_once)')
-            : 'merchant_customer_documents as cd';
-        $q->leftJoin($customerTable, fn ($j) => $j->on('cd.merchant_id', '=', 'd.merchant_id')->on('cd.document_source', '=', 'd.document_source')->on('cd.document_id', '=', 'd.document_id'))
-            ->leftJoin('merchant_customers as c', fn ($j) => $j->on('c.id', '=', 'cd.customer_id')->on('c.merchant_id', '=', 'd.merchant_id'));
-        $customer = "COALESCE(c.type,'unclassified')";
+            $customerTable = DB::getDriverName() === 'mysql'
+                ? DB::raw('merchant_customer_documents as cd FORCE INDEX (customer_document_once)')
+                : 'merchant_customer_documents as cd';
+            $q->leftJoin($customerTable, fn ($j) => $j->on('cd.merchant_id', '=', 'd.merchant_id')->on('cd.document_source', '=', 'd.document_source')->on('cd.document_id', '=', 'd.document_id'))
+                ->leftJoin('merchant_customers as c', fn ($j) => $j->on('c.id', '=', 'cd.customer_id')->on('c.merchant_id', '=', 'd.merchant_id'));
+            $customer = "COALESCE(c.type,'unclassified')";
         }
         $reason = "CASE
             WHEN d.document_family NOT IN ('invoice','credit','debit') THEN 'Payment / supplementary document: no additional invoice sales'
@@ -50,9 +54,14 @@ class IndexedSalesReport
         $q->selectRaw("d.*, $customer as customer_type, $reason as exclusion_reason, $bir as bir_status");
         $base = DB::query()->fromSub($q, 's');
         foreach (['branch' => 'verified_branch', 'type' => 'document_type', 'sale_category' => 'sale_category', 'customer_type' => 'customer_type', 'bir' => 'bir_status'] as $key => $column) {
-            if (($filters[$key] ?? 'all') === 'all') continue;
-            if ($key === 'branch' && $filters[$key] === 'unrecorded') $base->whereNull($column);
-            else $base->where($column, $filters[$key]);
+            if (($filters[$key] ?? 'all') === 'all') {
+                continue;
+            }
+            if ($key === 'branch' && $filters[$key] === 'unrecorded') {
+                $base->whereNull($column);
+            } else {
+                $base->where($column, $filters[$key]);
+            }
         }
         if ($term = trim($filters['search'] ?? '')) {
             $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $term).'%';
@@ -69,9 +78,12 @@ class IndexedSalesReport
 
     public function summary(object $merchant, array $filters, Builder $query): array
     {
-        return app(ReportingSnapshotCache::class)->remember('merchant-sales', (string) $merchant->id,
+        return app(ReportingSnapshotCache::class)->remember(
+            'merchant-sales',
+            (string) $merchant->id,
             [...$filters, 'business_name' => $merchant->business_name, 'business_tin' => $merchant->tin],
-            fn () => $this->calculateSummary($merchant, $filters, $query));
+            fn () => $this->calculateSummary($merchant, $filters, $query)
+        );
     }
 
     private function calculateSummary(object $merchant, array $filters, Builder $query): array
@@ -81,7 +93,9 @@ class IndexedSalesReport
         // seeks for small tenants and selective filters. Counts use narrow indexes;
         // this decision runs only when the revision-bound summary cache is empty.
         $broad = trim($filters['search'] ?? '') === '';
-        foreach (['branch','type','sale_category','customer_type','bir'] as $key) $broad = $broad && ($filters[$key] ?? 'all') === 'all';
+        foreach (['branch','type','sale_category','customer_type','bir'] as $key) {
+            $broad = $broad && ($filters[$key] ?? 'all') === 'all';
+        }
         if ($broad && DB::getDriverName() === 'mysql') {
             $matches = DB::table('ledger_documents')->forceIndex('ledger_merchant_period')
                 ->where('merchant_id', $merchant->id)->where('tenant_identity_rank', 1)
@@ -91,12 +105,21 @@ class IndexedSalesReport
             }
         }
         $aggregates = ['COUNT(*) as total', 'COALESCE(SUM(included),0) as included_count'];
-        foreach (self::MONEY as $key) $aggregates[] = "COALESCE(SUM($key),0) as $key";
-        foreach (['acknowledged', 'queued', 'needs_review', 'blocked', 'not_verified'] as $state) $aggregates[] = "COALESCE(SUM(CASE WHEN included=1 AND bir_status='$state' THEN 1 ELSE 0 END),0) as bir_$state";
+        foreach (self::MONEY as $key) {
+            $aggregates[] = "COALESCE(SUM($key),0) as $key";
+        }
+        foreach (['acknowledged', 'queued', 'needs_review', 'blocked', 'not_verified'] as $state) {
+            $aggregates[] = "COALESCE(SUM(CASE WHEN included=1 AND bir_status='$state' THEN 1 ELSE 0 END),0) as bir_$state";
+        }
         $stats = (clone $query)->selectRaw(implode(',', $aggregates))->first();
-        $totals = []; $bir = [];
-        foreach (self::MONEY as $key) $totals[$key] = (int) $stats->$key;
-        foreach (['acknowledged', 'queued', 'needs_review', 'blocked', 'not_verified'] as $state) $bir[$state] = (int) $stats->{'bir_'.$state};
+        $totals = [];
+        $bir = [];
+        foreach (self::MONEY as $key) {
+            $totals[$key] = (int) $stats->$key;
+        }
+        foreach (['acknowledged', 'queued', 'needs_review', 'blocked', 'not_verified'] as $state) {
+            $bir[$state] = (int) $stats->{'bir_'.$state};
+        }
         $options = DB::table('ledger_documents')->where('merchant_id', $merchant->id)->where('tenant_identity_rank', 1)->whereIn('document_source', ['invoice', 'receipt']);
         $revision = (int) DB::table('ledger_projection_state')->where('id', 1)->value('revision');
         return [
@@ -117,7 +140,8 @@ class IndexedSalesReport
             $query = $this->query($merchant, $filters, false, false);
             $result = $this->summary($merchant, $filters, $query);
             $count = $view === 'review' ? $result['excluded_count'] : $result['count'];
-            $last = max(1, (int) ceil($count / $size)); $page = max(1, min($page, $last));
+            $last = max(1, (int) ceil($count / $size));
+            $page = max(1, min($page, $last));
             $selection = app(ReportPagination::class)->page((clone $query)->where('included', $view === 'review' ? 0 : 1), $count, $page, $size, 'business_day', 'desc', 'projection_id');
             $ids = $selection['ids'];
             // Hydrate only the selected page; customer joins never sort a million wide rows.
@@ -141,7 +165,9 @@ class IndexedSalesReport
             'date_precision' => $r->document_source === 'invoice' ? 'day' : 'instant', 'customer' => $r->customer_name ?: 'Not recorded', 'tin' => $r->customer_tin,
             'customer_type' => $r->customer_type, 'branch' => $r->verified_branch, 'type' => $r->document_type, 'family' => $r->document_family, 'original_invoice_id' => $r->original_invoice_id,
             'bir_status' => $r->bir_status, 'included' => (bool) $r->included, 'exclusion_reason' => $r->exclusion_reason, 'source_amount' => (int) round($r->amount * 100), 'sale_category' => $r->sale_category];
-        foreach (self::MONEY as $key) $out[$key] = (int) $r->$key;
+        foreach (self::MONEY as $key) {
+            $out[$key] = (int) $r->$key;
+        }
         return $out;
     }
 }

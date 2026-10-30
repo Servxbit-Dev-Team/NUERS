@@ -39,7 +39,7 @@ class TransactionPricing
             throw new InvalidArgumentException('Transaction amount must be non-negative.');
         }
 
-        $p=$this->offer();
+        $p = $this->offer();
         return $amount >= $p->minimum_transaction_centavos ? (int)$p->fee_centavos : 0;
     }
 }

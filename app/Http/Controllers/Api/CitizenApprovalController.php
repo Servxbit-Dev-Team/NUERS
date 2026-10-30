@@ -100,7 +100,9 @@ class CitizenApprovalController extends Controller
             ]);
         }
 
-        if ($account->status !== $validated['status']) app(\App\Services\PlatformNotifications::class)->user($account->user_id,'citizen.reviewed',(string)Str::uuid(),'Citizen account review update','Your NUERS citizen account status is '.str_replace('_',' ',$validated['status']).'. Sign in to review your account requirements.');
+        if ($account->status !== $validated['status']) {
+            app(\App\Services\PlatformNotifications::class)->user($account->user_id, 'citizen.reviewed', (string)Str::uuid(), 'Citizen account review update', 'Your NUERS citizen account status is '.str_replace('_', ' ', $validated['status']).'. Sign in to review your account requirements.');
+        }
 
         $updated = DB::table('client_accounts')
             ->leftJoin('profiles', 'profiles.id', '=', 'client_accounts.user_id')
@@ -283,7 +285,9 @@ class CitizenApprovalController extends Controller
             ->orderByDesc('client_accounts.updated_at')
             ->first();
 
-        if (!$existingAccount || $existingAccount->status !== $status) app(\App\Services\PlatformNotifications::class)->user($profileId,'citizen.reviewed',(string)Str::uuid(),'Citizen account review update','Your NUERS citizen account status is '.str_replace('_',' ',$status).'. Sign in to review your account requirements.');
+        if (!$existingAccount || $existingAccount->status !== $status) {
+            app(\App\Services\PlatformNotifications::class)->user($profileId, 'citizen.reviewed', (string)Str::uuid(), 'Citizen account review update', 'Your NUERS citizen account status is '.str_replace('_', ' ', $status).'. Sign in to review your account requirements.');
+        }
         return $this->accountPayload($account);
     }
 

@@ -2,16 +2,56 @@ import { PageBoundary } from "@/components/page-boundary";
 import { useEffect, useMemo, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, ShieldAlert, Activity,
-  BarChart3, Settings, Code, QrCode, Server, Bell,
-  LogOut, ChevronDown, Search, FileText,
-  Globe, Lock, Database, Building2, Shield, Users,
-  ClipboardList, BookOpen, Download, Receipt, ArrowLeft,
-  Key, Webhook, Package, FlaskConical, BookMarked,
-  Store, CreditCard, Cpu, GitBranch, Layers, Send,
-  Archive, RefreshCw, Award, Bot, Plus,
-  Wifi, TrendingUp, Landmark, Wallet, Brain, Fingerprint,
-  HardDrive, ShieldCheck, Network, UserCheck,
+  LayoutDashboard,
+  ShieldAlert,
+  Activity,
+  BarChart3,
+  Settings,
+  Code,
+  QrCode,
+  Server,
+  Bell,
+  LogOut,
+  ChevronDown,
+  Search,
+  FileText,
+  Globe,
+  Lock,
+  Database,
+  Building2,
+  Shield,
+  Users,
+  ClipboardList,
+  BookOpen,
+  Download,
+  Receipt,
+  ArrowLeft,
+  Key,
+  Webhook,
+  Package,
+  FlaskConical,
+  BookMarked,
+  Store,
+  CreditCard,
+  Cpu,
+  GitBranch,
+  Layers,
+  Send,
+  Archive,
+  RefreshCw,
+  Award,
+  Bot,
+  Plus,
+  Wifi,
+  TrendingUp,
+  Landmark,
+  Wallet,
+  Brain,
+  Fingerprint,
+  HardDrive,
+  ShieldCheck,
+  Network,
+  UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,10 +87,31 @@ import { EnterpriseShell } from "@/components/enterprise/enterprise-shell";
 import { apiFetch, publicAssetUrl } from "@/lib/api-url";
 
 type PortalType =
-  | "super-admin" | "bir" | "rdo" | "merchant" | "admin" | "consumer" | "client" | "api" | "soc" | "system" | "taxpayer"
-  | "engine" | "eis" | "invoices" | "monitoring" | "compliance" | "audit"
-  | "notifications" | "certificates" | "archive" | "bcdr"
-  | "accreditation" | "executive" | "ai" | "platform";
+  | "super-admin"
+  | "bir"
+  | "rdo"
+  | "merchant"
+  | "admin"
+  | "consumer"
+  | "client"
+  | "api"
+  | "soc"
+  | "system"
+  | "taxpayer"
+  | "engine"
+  | "eis"
+  | "invoices"
+  | "monitoring"
+  | "compliance"
+  | "audit"
+  | "notifications"
+  | "certificates"
+  | "archive"
+  | "bcdr"
+  | "accreditation"
+  | "executive"
+  | "ai"
+  | "platform";
 
 type NavItem = {
   label: string;
@@ -311,9 +372,7 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
     groups: [
       {
         section: "Navigation",
-        items: [
-          { label: "Back to Home", href: "/", icon: LayoutDashboard },
-        ],
+        items: [{ label: "Back to Home", href: "/", icon: LayoutDashboard }],
       },
       {
         section: "Consumer Portal",
@@ -360,9 +419,7 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
     groups: [
       {
         section: "Navigation",
-        items: [
-          { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
-        ],
+        items: [{ label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard }],
       },
       {
         section: "Platform",
@@ -394,15 +451,11 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
     groups: [
       {
         section: "Navigation",
-        items: [
-          { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
-        ],
+        items: [{ label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard }],
       },
       {
         section: "Module 3 — Taxpayer",
-        items: [
-          { label: "Dashboard", href: "/taxpayer", icon: LayoutDashboard, badge: "M3" },
-        ],
+        items: [{ label: "Dashboard", href: "/taxpayer", icon: LayoutDashboard, badge: "M3" }],
       },
       {
         section: "Registration",
@@ -415,14 +468,17 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
       {
         section: "Verification",
         items: [
-          { label: "Verification Center", href: "/taxpayer/verification", icon: ShieldAlert, badge: "63" },
+          {
+            label: "Verification Center",
+            href: "/taxpayer/verification",
+            icon: ShieldAlert,
+            badge: "63",
+          },
         ],
       },
       {
         section: "Customer Portal",
-        items: [
-          { label: "Self-Service Portal", href: "/taxpayer/portal", icon: CreditCard },
-        ],
+        items: [{ label: "Self-Service Portal", href: "/taxpayer/portal", icon: CreditCard }],
       },
     ],
   },
@@ -432,21 +488,15 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
     groups: [
       {
         section: "Navigation",
-        items: [
-          { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
-        ],
+        items: [{ label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard }],
       },
       {
         section: "Module 1 — Engine",
-        items: [
-          { label: "Engine Overview", href: "/engine", icon: Layers },
-        ],
+        items: [{ label: "Engine Overview", href: "/engine", icon: Layers }],
       },
       {
         section: "Create Documents",
-        items: [
-          { label: "New Invoice", href: "/merchant/invoices/create", icon: Plus },
-        ],
+        items: [{ label: "New Invoice", href: "/merchant/invoices/create", icon: Plus }],
       },
       {
         section: "Manage",
@@ -464,15 +514,11 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
     groups: [
       {
         section: "Navigation",
-        items: [
-          { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
-        ],
+        items: [{ label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard }],
       },
       {
         section: "Module 2 — EIS Hub",
-        items: [
-          { label: "Integration Hub", href: "/eis", icon: Globe },
-        ],
+        items: [{ label: "Integration Hub", href: "/eis", icon: Globe }],
       },
       {
         section: "EIS Gateway",
@@ -498,21 +544,15 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
     groups: [
       {
         section: "Navigation",
-        items: [
-          { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
-        ],
+        items: [{ label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard }],
       },
       {
         section: "Module 5 — Invoices",
-        items: [
-          { label: "Invoice Center", href: "/invoices", icon: FileText },
-        ],
+        items: [{ label: "Invoice Center", href: "/invoices", icon: FileText }],
       },
       {
         section: "Create",
-        items: [
-          { label: "New Invoice", href: "/merchant/invoices/create", icon: Plus },
-        ],
+        items: [{ label: "New Invoice", href: "/merchant/invoices/create", icon: Plus }],
       },
       {
         section: "Related",
@@ -529,15 +569,11 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
     groups: [
       {
         section: "Navigation",
-        items: [
-          { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
-        ],
+        items: [{ label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard }],
       },
       {
         section: "Module 6 — Monitoring",
-        items: [
-          { label: "Monitoring Center", href: "/monitoring", icon: Activity },
-        ],
+        items: [{ label: "Monitoring Center", href: "/monitoring", icon: Activity }],
       },
       {
         section: "EIS Gateway",
@@ -555,15 +591,11 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
     groups: [
       {
         section: "Navigation",
-        items: [
-          { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
-        ],
+        items: [{ label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard }],
       },
       {
         section: "Module 7 — Compliance",
-        items: [
-          { label: "Compliance Center", href: "/compliance", icon: Shield },
-        ],
+        items: [{ label: "Compliance Center", href: "/compliance", icon: Shield }],
       },
       {
         section: "Related",
@@ -581,15 +613,11 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
     groups: [
       {
         section: "Navigation",
-        items: [
-          { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
-        ],
+        items: [{ label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard }],
       },
       {
         section: "Module 8 — Audit",
-        items: [
-          { label: "Audit Log", href: "/audit", icon: ClipboardList },
-        ],
+        items: [{ label: "Audit Log", href: "/audit", icon: ClipboardList }],
       },
       {
         section: "Related",
@@ -607,15 +635,11 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
     groups: [
       {
         section: "Navigation",
-        items: [
-          { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
-        ],
+        items: [{ label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard }],
       },
       {
         section: "Module 9 — Notifications",
-        items: [
-          { label: "Notification Center", href: "/notifications", icon: Bell },
-        ],
+        items: [{ label: "Notification Center", href: "/notifications", icon: Bell }],
       },
       {
         section: "Related",
@@ -633,15 +657,11 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
     groups: [
       {
         section: "Navigation",
-        items: [
-          { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
-        ],
+        items: [{ label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard }],
       },
       {
         section: "Module 10 — Certificates",
-        items: [
-          { label: "Certificate Management", href: "/certificates", icon: Key },
-        ],
+        items: [{ label: "Certificate Management", href: "/certificates", icon: Key }],
       },
       {
         section: "Related",
@@ -659,15 +679,11 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
     groups: [
       {
         section: "Navigation",
-        items: [
-          { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
-        ],
+        items: [{ label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard }],
       },
       {
         section: "Module 11 — Archive",
-        items: [
-          { label: "Archive Center", href: "/archive", icon: Archive },
-        ],
+        items: [{ label: "Archive Center", href: "/archive", icon: Archive }],
       },
       {
         section: "Related",
@@ -685,15 +701,11 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
     groups: [
       {
         section: "Navigation",
-        items: [
-          { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
-        ],
+        items: [{ label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard }],
       },
       {
         section: "Module 12 — BCDR",
-        items: [
-          { label: "BCDR Dashboard", href: "/bcdr", icon: RefreshCw },
-        ],
+        items: [{ label: "BCDR Dashboard", href: "/bcdr", icon: RefreshCw }],
       },
       {
         section: "Related",
@@ -711,9 +723,7 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
     groups: [
       {
         section: "Navigation",
-        items: [
-          { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
-        ],
+        items: [{ label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard }],
       },
       {
         section: "Module 13 — SOC",
@@ -738,15 +748,11 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
     groups: [
       {
         section: "Navigation",
-        items: [
-          { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
-        ],
+        items: [{ label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard }],
       },
       {
         section: "Module 14 — ESP",
-        items: [
-          { label: "ESP Accreditation", href: "/accreditation", icon: Award },
-        ],
+        items: [{ label: "ESP Accreditation", href: "/accreditation", icon: Award }],
       },
       {
         section: "Related",
@@ -764,15 +770,11 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
     groups: [
       {
         section: "Navigation",
-        items: [
-          { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
-        ],
+        items: [{ label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard }],
       },
       {
         section: "Analytics",
-        items: [
-          { label: "Executive Dashboard", href: "/executive", icon: TrendingUp },
-        ],
+        items: [{ label: "Executive Dashboard", href: "/executive", icon: TrendingUp }],
       },
       {
         section: "Reports",
@@ -791,15 +793,11 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
     groups: [
       {
         section: "Navigation",
-        items: [
-          { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
-        ],
+        items: [{ label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard }],
       },
       {
         section: "NUERS AI",
-        items: [
-          { label: "AI Assistant", href: "/ai", icon: Bot },
-        ],
+        items: [{ label: "AI Assistant", href: "/ai", icon: Bot }],
       },
       {
         section: "Quick Access",
@@ -818,9 +816,7 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
     groups: [
       {
         section: "Navigation",
-        items: [
-          { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
-        ],
+        items: [{ label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard }],
       },
       {
         section: "System Admin",
@@ -859,17 +855,11 @@ const portalConfig: Record<PortalType, { title: string; groups: NavGroup[] }> = 
   },
 };
 
-const sharedToolItems: NavItem[] = [
-  { label: "Verify Receipt", href: "/verify", icon: QrCode },
-];
+const sharedToolItems: NavItem[] = [{ label: "Verify Receipt", href: "/verify", icon: QrCode }];
 
-const superAdminToolItems: NavItem[] = [
-  { label: "Verify Receipt", href: "/verify", icon: QrCode },
-];
+const superAdminToolItems: NavItem[] = [{ label: "Verify Receipt", href: "/verify", icon: QrCode }];
 
-const clientToolItems: NavItem[] = [
-  { label: "Verify Receipt", href: "/verify", icon: QrCode },
-];
+const clientToolItems: NavItem[] = [{ label: "Verify Receipt", href: "/verify", icon: QrCode }];
 
 const cleanSidebarGroups: Partial<Record<PortalType, NavGroup[]>> = {
   "super-admin": [
@@ -928,7 +918,12 @@ const cleanSidebarGroups: Partial<Record<PortalType, NavGroup[]>> = {
       section: "Platform Ops",
       items: [
         { label: "API Platform", href: "/super-admin/api-platform", icon: Code },
-        { label: "BIR EIS Readiness", href: "/super-admin/eis-readiness", icon: Globe, badge: "EIS" },
+        {
+          label: "BIR EIS Readiness",
+          href: "/super-admin/eis-readiness",
+          icon: Globe,
+          badge: "EIS",
+        },
         { label: "EIS Transmissions", href: "/super-admin/eis-transmissions", icon: Send },
         { label: "API Keys", href: "/super-admin/api-keys", icon: Key },
         { label: "Webhooks", href: "/super-admin/webhooks", icon: Webhook },
@@ -1007,9 +1002,7 @@ const cleanSidebarGroups: Partial<Record<PortalType, NavGroup[]>> = {
     },
     {
       section: "B2B Tax",
-      items: [
-        { label: "B2B Expenses", href: "/merchant/expenses", icon: Wallet },
-      ],
+      items: [{ label: "B2B Expenses", href: "/merchant/expenses", icon: Wallet }],
     },
     {
       section: "Business",
@@ -1097,10 +1090,15 @@ const cleanSidebarGroups: Partial<Record<PortalType, NavGroup[]>> = {
 
 function compactModuleGroups(config: { title: string; groups: NavGroup[] }): NavGroup[] {
   const navigationItems = config.groups.flatMap((group) => group.items);
-  const homeItem = navigationItems.find((item) => item.label.includes("Dashboard") || item.label.includes("Overview")) ?? navigationItems[0];
+  const homeItem =
+    navigationItems.find(
+      (item) => item.label.includes("Dashboard") || item.label.includes("Overview"),
+    ) ?? navigationItems[0];
   const relatedItems = navigationItems
     .filter((item) => item.href !== homeItem?.href)
-    .filter((item, index, arr) => arr.findIndex((candidate) => candidate.href === item.href) === index)
+    .filter(
+      (item, index, arr) => arr.findIndex((candidate) => candidate.href === item.href) === index,
+    )
     .slice(0, 5);
 
   return [
@@ -1111,7 +1109,10 @@ function compactModuleGroups(config: { title: string; groups: NavGroup[] }): Nav
   ];
 }
 
-function cleanGroupsForPortal(portal: PortalType, config: { title: string; groups: NavGroup[] }): NavGroup[] {
+function cleanGroupsForPortal(
+  portal: PortalType,
+  config: { title: string; groups: NavGroup[] },
+): NavGroup[] {
   return cleanSidebarGroups[portal] ?? compactModuleGroups(config);
 }
 
@@ -1123,12 +1124,15 @@ function isNavItemActive(currentLocation: string, href: string): boolean {
 
   if (normalizedHrefHash) {
     if (currentPath !== hrefPath) return false;
-    if (normalizedHrefHash === "#overview") return normalizedCurrentHash === "" || normalizedCurrentHash === "#overview";
+    if (normalizedHrefHash === "#overview")
+      return normalizedCurrentHash === "" || normalizedCurrentHash === "#overview";
     return normalizedCurrentHash === normalizedHrefHash;
   }
 
   if (currentPath === hrefPath && normalizedCurrentHash === "") return true;
-  const shouldMatchChildren = hrefPath !== "/" && !["/admin", "/merchant", "/client", "/consumer", "/super-admin", "/bir"].includes(hrefPath);
+  const shouldMatchChildren =
+    hrefPath !== "/" &&
+    !["/admin", "/merchant", "/client", "/consumer", "/super-admin", "/bir"].includes(hrefPath);
   return shouldMatchChildren && currentPath.startsWith(`${hrefPath}/`);
 }
 
@@ -1168,43 +1172,69 @@ export function DashboardLayout({ portal }: { portal: PortalType }) {
         ? "/client/notifications"
         : portal === "merchant"
           ? "/merchant/notifications"
-        : "/notifications";
+          : "/notifications";
   const accountName = useMemo(() => {
-    if (portal === "merchant" && businessIdentity?.business_name) return businessIdentity.business_name;
-    if ((portal === "client" || portal === "consumer") && (clientIdentity?.full_name || clientIdentity?.organization)) {
+    if (portal === "merchant" && businessIdentity?.business_name)
+      return businessIdentity.business_name;
+    if (
+      (portal === "client" || portal === "consumer") &&
+      (clientIdentity?.full_name || clientIdentity?.organization)
+    ) {
       return clientIdentity.full_name || clientIdentity.organization || config.title;
     }
-    return profile?.full_name || profile?.organization || user?.email?.split("@")[0] || config.title;
-  }, [businessIdentity?.business_name, clientIdentity?.full_name, clientIdentity?.organization, config.title, portal, profile?.full_name, profile?.organization, user?.email]);
-  const accountEmail = portal === "merchant"
-    ? businessIdentity?.email || user?.email
-    : portal === "client" || portal === "consumer"
-      ? clientIdentity?.email || user?.email
-      : user?.email;
-  const accountLogo = portal === "merchant"
-    ? publicAssetUrl(businessIdentity?.logo_url)
-    : portal === "client" || portal === "consumer"
-      ? publicAssetUrl(clientIdentity?.profile_photo_url || profile?.profile_photo_url)
-      : null;
+    return (
+      profile?.full_name || profile?.organization || user?.email?.split("@")[0] || config.title
+    );
+  }, [
+    businessIdentity?.business_name,
+    clientIdentity?.full_name,
+    clientIdentity?.organization,
+    config.title,
+    portal,
+    profile?.full_name,
+    profile?.organization,
+    user?.email,
+  ]);
+  const accountEmail =
+    portal === "merchant"
+      ? businessIdentity?.email || user?.email
+      : portal === "client" || portal === "consumer"
+        ? clientIdentity?.email || user?.email
+        : user?.email;
+  const accountLogo =
+    portal === "merchant"
+      ? publicAssetUrl(businessIdentity?.logo_url)
+      : portal === "client" || portal === "consumer"
+        ? publicAssetUrl(clientIdentity?.profile_photo_url || profile?.profile_photo_url)
+        : null;
   const accountInitials = initialsFor(accountName, user?.email?.slice(0, 1).toUpperCase() ?? "A");
-  const roleLabel = portal === "merchant"
-    ? "Business Account"
-    : portal === "client" || portal === "consumer"
-      ? "Client Portal"
-      : portal === "bir"
-        ? "BIR Regulator"
-        : portal === "super-admin"
-          ? "Super Admin"
-          : config.title;
-  const profilePath = portal === "merchant"
-    ? "/merchant/profile"
-    : portal === "client" || portal === "consumer"
-      ? "/client/profile"
-      : portal === "bir"
-        ? "/bir"
-        : ["admin", "super_admin"].includes(profile?.role ?? "") ? "/super-admin/profile" : "/super-admin";
+  const roleLabel =
+    portal === "merchant"
+      ? "Business Account"
+      : portal === "client" || portal === "consumer"
+        ? "Client Portal"
+        : portal === "bir"
+          ? "BIR Regulator"
+          : portal === "super-admin"
+            ? "Super Admin"
+            : config.title;
+  const profilePath =
+    portal === "merchant"
+      ? "/merchant/profile"
+      : portal === "client" || portal === "consumer"
+        ? "/client/profile"
+        : portal === "bir"
+          ? "/bir"
+          : ["admin", "super_admin"].includes(profile?.role ?? "")
+            ? "/super-admin/profile"
+            : "/super-admin";
   const integrationPath = portal === "merchant" ? "/merchant/api-keys" : "/api";
-  const securityPath = portal === "merchant" ? "/merchant/profile" : portal === "client" || portal === "consumer" ? "/client/security" : "/soc";
+  const securityPath =
+    portal === "merchant"
+      ? "/merchant/profile"
+      : portal === "client" || portal === "consumer"
+        ? "/client/security"
+        : "/soc";
   const showUtilityAccountLinks = portal !== "client" && portal !== "consumer";
 
   useEffect(() => {
@@ -1267,7 +1297,14 @@ export function DashboardLayout({ portal }: { portal: PortalType }) {
       cancelled = true;
       window.removeEventListener("nuers:client-profile-updated", handleClientProfileUpdate);
     };
-  }, [portal, profile?.full_name, profile?.organization, profile?.profile_photo_url, profile?.tin, user?.email]);
+  }, [
+    portal,
+    profile?.full_name,
+    profile?.organization,
+    profile?.profile_photo_url,
+    profile?.tin,
+    user?.email,
+  ]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1315,8 +1352,41 @@ export function DashboardLayout({ portal }: { portal: PortalType }) {
     navigate("/login");
   }
 
-  const enterprisePortal = portal === "merchant" ? "merchant" : portal === "client" || portal === "consumer" ? "citizen" : ["admin", "super-admin"].includes(portal) || ["admin", "super_admin"].includes(profile?.role ?? "") ? "admin" : null;
-  if (enterprisePortal) return <EnterpriseShell portal={enterprisePortal} root={portal === "admin" ? "/admin" : "/super-admin"} accountName={accountName} accountEmail={accountEmail} accountLogo={accountLogo} initials={accountInitials} roleLabel={enterprisePortal === "admin" ? (profile?.role === "super_admin" ? "Super Administrator" : "System Administrator") : enterprisePortal === "merchant" ? "Business Account" : "Citizen Account"} profilePath={profilePath} notificationPath={enterprisePortal === "admin" ? "/super-admin/notifications" : notificationPath} accountActive={isClientAccountActive} onSignOut={handleSignOut} />;
+  const enterprisePortal =
+    portal === "merchant"
+      ? "merchant"
+      : portal === "client" || portal === "consumer"
+        ? "citizen"
+        : ["admin", "super-admin"].includes(portal) ||
+            ["admin", "super_admin"].includes(profile?.role ?? "")
+          ? "admin"
+          : null;
+  if (enterprisePortal)
+    return (
+      <EnterpriseShell
+        portal={enterprisePortal}
+        root={portal === "admin" ? "/admin" : "/super-admin"}
+        accountName={accountName}
+        accountEmail={accountEmail}
+        accountLogo={accountLogo}
+        initials={accountInitials}
+        roleLabel={
+          enterprisePortal === "admin"
+            ? profile?.role === "super_admin"
+              ? "Super Administrator"
+              : "System Administrator"
+            : enterprisePortal === "merchant"
+              ? "Business Account"
+              : "Citizen Account"
+        }
+        profilePath={profilePath}
+        notificationPath={
+          enterprisePortal === "admin" ? "/super-admin/notifications" : notificationPath
+        }
+        accountActive={isClientAccountActive}
+        onSignOut={handleSignOut}
+      />
+    );
 
   return (
     <SidebarProvider>
@@ -1337,8 +1407,12 @@ export function DashboardLayout({ portal }: { portal: PortalType }) {
               />
             </div>
             <div className="rounded-md border border-sidebar-border/70 bg-sidebar-accent/40 px-3 py-2 group-data-[collapsible=icon]:hidden">
-              <p className="text-[10px] uppercase tracking-wide text-sidebar-foreground/50">Current workspace</p>
-              <p className="truncate text-sm font-semibold text-sidebar-foreground">{config.title}</p>
+              <p className="text-[10px] uppercase tracking-wide text-sidebar-foreground/50">
+                Current workspace
+              </p>
+              <p className="truncate text-sm font-semibold text-sidebar-foreground">
+                {config.title}
+              </p>
             </div>
           </SidebarHeader>
 
@@ -1367,7 +1441,9 @@ export function DashboardLayout({ portal }: { portal: PortalType }) {
                             </Link>
                           </SidebarMenuButton>
                           {item.badge && (
-                            <SidebarMenuBadge className="right-2 text-[10px] text-sidebar-foreground/45">{item.badge}</SidebarMenuBadge>
+                            <SidebarMenuBadge className="right-2 text-[10px] text-sidebar-foreground/45">
+                              {item.badge}
+                            </SidebarMenuBadge>
                           )}
                         </SidebarMenuItem>
                       );
@@ -1387,7 +1463,13 @@ export function DashboardLayout({ portal }: { portal: PortalType }) {
                     const isActive = isNavItemActive(activeLocation, item.href);
                     return (
                       <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton asChild isActive={isActive} tooltip={item.label} size="sm" className="h-8 px-2 text-[13px]">
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive}
+                          tooltip={item.label}
+                          size="sm"
+                          className="h-8 px-2 text-[13px]"
+                        >
                           <Link to={item.href}>
                             <item.icon />
                             <span>{item.label}</span>
@@ -1420,7 +1502,9 @@ export function DashboardLayout({ portal }: { portal: PortalType }) {
                 <p className="text-xs font-medium text-sidebar-foreground truncate">
                   {accountName}
                 </p>
-                <p className="text-[10px] text-sidebar-foreground/60 truncate">{displayEmail(accountEmail)}</p>
+                <p className="text-[10px] text-sidebar-foreground/60 truncate">
+                  {displayEmail(accountEmail)}
+                </p>
               </div>
               <Button
                 variant="ghost"
@@ -1455,7 +1539,11 @@ export function DashboardLayout({ portal }: { portal: PortalType }) {
               <div className="relative hidden min-w-0 flex-1 md:block lg:max-w-sm">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder={portal === "client" ? "Search your transactions..." : "Search transactions, business accounts..."}
+                  placeholder={
+                    portal === "client"
+                      ? "Search your transactions..."
+                      : "Search transactions, business accounts..."
+                  }
                   className="h-9 w-full pl-9 text-sm"
                 />
               </div>
@@ -1474,9 +1562,19 @@ export function DashboardLayout({ portal }: { portal: PortalType }) {
               <Separator orientation="vertical" className="hidden h-6 sm:block" />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-10 gap-2 rounded-xl px-2 text-sm sm:px-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-10 gap-2 rounded-xl px-2 text-sm sm:px-3"
+                  >
                     <Avatar className="h-7 w-7 border bg-primary text-primary-foreground">
-                      {accountLogo && <AvatarImage src={accountLogo} alt={`${accountName} logo`} className="object-cover" />}
+                      {accountLogo && (
+                        <AvatarImage
+                          src={accountLogo}
+                          alt={`${accountName} logo`}
+                          className="object-cover"
+                        />
+                      )}
                       <AvatarFallback className="bg-primary text-[10px] font-bold text-primary-foreground">
                         {accountInitials}
                       </AvatarFallback>
@@ -1491,18 +1589,36 @@ export function DashboardLayout({ portal }: { portal: PortalType }) {
                   <DropdownMenuLabel className="p-2">
                     <div className="flex items-start gap-3">
                       <Avatar className="h-12 w-12 rounded-xl border bg-primary text-primary-foreground">
-                        {accountLogo && <AvatarImage src={accountLogo} alt={`${accountName} logo`} className="object-cover" />}
+                        {accountLogo && (
+                          <AvatarImage
+                            src={accountLogo}
+                            alt={`${accountName} logo`}
+                            className="object-cover"
+                          />
+                        )}
                         <AvatarFallback className="rounded-xl bg-primary text-sm font-bold text-primary-foreground">
                           {accountInitials}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-bold text-foreground">{accountName}</p>
-                        <p className="truncate text-xs font-normal text-muted-foreground">{displayEmail(accountEmail)}</p>
+                        <p className="truncate text-xs font-normal text-muted-foreground">
+                          {displayEmail(accountEmail)}
+                        </p>
                         <div className="mt-2 flex flex-wrap gap-1.5">
-                          <Badge variant="secondary" className="text-[10px]">{roleLabel}</Badge>
-                          {businessIdentity?.tin && <Badge variant="outline" className="font-mono text-[10px]">{businessIdentity.tin}</Badge>}
-                          {businessIdentity?.status && <Badge variant="outline" className="text-[10px] capitalize">{businessIdentity.status.replace(/_/g, " ")}</Badge>}
+                          <Badge variant="secondary" className="text-[10px]">
+                            {roleLabel}
+                          </Badge>
+                          {businessIdentity?.tin && (
+                            <Badge variant="outline" className="font-mono text-[10px]">
+                              {businessIdentity.tin}
+                            </Badge>
+                          )}
+                          {businessIdentity?.status && (
+                            <Badge variant="outline" className="text-[10px] capitalize">
+                              {businessIdentity.status.replace(/_/g, " ")}
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1535,7 +1651,10 @@ export function DashboardLayout({ portal }: { portal: PortalType }) {
                     </>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={handleSignOut}>
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={handleSignOut}
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign out
                   </DropdownMenuItem>
@@ -1546,7 +1665,9 @@ export function DashboardLayout({ portal }: { portal: PortalType }) {
 
           {/* Page content */}
           <main className="dashboard-main flex-1 overflow-y-auto overflow-x-hidden bg-background p-3 sm:p-4 lg:p-6">
-            <PageBoundary><Outlet /></PageBoundary>
+            <PageBoundary>
+              <Outlet />
+            </PageBoundary>
           </main>
         </div>
       </div>

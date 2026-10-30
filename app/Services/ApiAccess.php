@@ -65,7 +65,9 @@ class ApiAccess
         }
         return DB::table('merchants')->where(function ($q) use ($user) {
             $q->where('merchant_account_id', $user->id);
-            if (app(MerchantTeamAccess::class)->ready()) $q->orWhereIn('id', DB::table('merchant_team_members')->where('user_id', (string) $user->id)->where('status', 'active')->select('merchant_id'));
+            if (app(MerchantTeamAccess::class)->ready()) {
+                $q->orWhereIn('id', DB::table('merchant_team_members')->where('user_id', (string) $user->id)->where('status', 'active')->select('merchant_id'));
+            }
         });
     }
 

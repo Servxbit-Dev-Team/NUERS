@@ -162,7 +162,9 @@ class ServerManagementController
     {
         $u = $this->actor($r);
         app(Audit::class)->record('inventory.exported', null, (string) $u->id, ['format' => 'csv']);
-        if ($r->has('report_limit')) \App\Services\ReportCsv::limit($r,DB::table('infra_nodes')->count());
+        if ($r->has('report_limit')) {
+            \App\Services\ReportCsv::limit($r, DB::table('infra_nodes')->count());
+        }
         $nodes = DB::table('infra_nodes')->orderBy('code')->get();
 
         return response()->streamDownload(function () use ($nodes) {

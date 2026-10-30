@@ -59,7 +59,7 @@ class EnterpriseDashboardController extends Controller
         $validReceipts = (clone $receipts)->whereIn('r.status', self::RECEIPTS)->count();
         $invalid = (clone $transactions)->whereIn('t.status', self::INVALID)->count();
         $rejectedAttempts = $portal === 'admin' ? app(\App\Services\SubmissionAttempts::class)->failures('live')->count() : 0;
-        $birCount=app(\App\Services\SubmissionEvidence::class)->count(clone $transmissions);
+        $birCount = app(\App\Services\SubmissionEvidence::class)->count(clone $transmissions);
         $metrics = [
             ['label' => 'Total Transactions', 'value' => $count, 'color' => 'blue', 'icon' => 'receipt', 'note' => 'All recorded transactions'],
             ['label' => 'Valid Receipts', 'value' => $validReceipts, 'color' => 'green', 'icon' => 'file-check', 'note' => 'Issued and verified receipts'],
@@ -89,7 +89,9 @@ class EnterpriseDashboardController extends Controller
             'week' => $start->addWeek(), 'month' => $start->addMonth(),
             'year' => $start->addYear(), default => $start->addDay(),
         };
-        $format = match ($period) { 'today' => 'H', 'year' => 'm', default => 'Y-m-d' };
+        $format = match ($period) {
+            'today' => 'H', 'year' => 'm', default => 'Y-m-d'
+        };
         $buckets = [];
         for ($cursor = $start; $cursor->lessThan($end); $cursor = match ($period) {
             'today' => $cursor->addHour(), 'year' => $cursor->addMonth(), default => $cursor->addDay(),
@@ -105,7 +107,9 @@ class EnterpriseDashboardController extends Controller
             ->where('t.created_at', '<', $end->setTimezone($databaseZone)->format('Y-m-d H:i:s'))
             ->selectRaw("$bucket as bucket,t.status,COUNT(*) as total")->groupByRaw("$bucket,t.status")->get();
         foreach ($groups as $row) {
-            if (!isset($buckets[$row->bucket])) continue;
+            if (!isset($buckets[$row->bucket])) {
+                continue;
+            }
             $state = in_array($row->status, self::INVALID, true) ? 'invalid' : (in_array($row->status, self::VALID, true) ? 'valid' : 'pending');
             $buckets[$row->bucket][$state] += (int) $row->total;
         }
@@ -137,16 +141,18 @@ class EnterpriseDashboardController extends Controller
                 $row->receipt = $receipt ? ['source' => 'receipt', 'id' => $receipt->id, 'number' => $receipt->receipt_number] : null;
             }
         }
-        foreach ($recent as $row) unset($row->merchant_id, $row->receipt_id);
+        foreach ($recent as $row) {
+            unset($row->merchant_id, $row->receipt_id);
+        }
         // Migration seed rows are not health evidence. Report only direct observations or an explicit unknown.
         $status = $portal === 'admin'
             ? collect([
-                ['name'=>'Application response','status'=>'online','checked_at'=>$now->toIso8601String()],
-                ['name'=>'Database query','status'=>'online','checked_at'=>$now->toIso8601String()],
-                ['name'=>'Local storage permissions','status'=>is_writable(storage_path('app'))?'writable':'unavailable','checked_at'=>$now->toIso8601String()],
-                ['name'=>'BIR Gateway','status'=>'not_verified','checked_at'=>null],
-                ['name'=>'Backup restore','status'=>'not_verified','checked_at'=>null],
-                ['name'=>'HA / continuous monitoring','status'=>'not_verified','checked_at'=>null],
+                ['name' => 'Application response','status' => 'online','checked_at' => $now->toIso8601String()],
+                ['name' => 'Database query','status' => 'online','checked_at' => $now->toIso8601String()],
+                ['name' => 'Local storage permissions','status' => is_writable(storage_path('app')) ? 'writable' : 'unavailable','checked_at' => $now->toIso8601String()],
+                ['name' => 'BIR Gateway','status' => 'not_verified','checked_at' => null],
+                ['name' => 'Backup restore','status' => 'not_verified','checked_at' => null],
+                ['name' => 'HA / continuous monitoring','status' => 'not_verified','checked_at' => null],
             ])
             : collect([
                 ['name' => $portal === 'merchant' ? 'Business Account' : 'Citizen Account', 'status' => ($merchant?->status ?? $account?->status) ?: 'unlinked'],

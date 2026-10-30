@@ -1,26 +1,416 @@
-import {useState} from 'react';
-import {Link} from 'react-router-dom';
-import {ArrowRight,CheckCircle2,Copy,Database,FileCheck2,Info,RefreshCw} from 'lucide-react';
-import {SearchableSelect} from '@/components/registration/searchable-select';
-import './source-profile-panel.css';
-export type MerchantSourceProfile={id:string;branch_code:string;source_system:string;vat_registered:boolean;seller_name:string;valid_from:string;valid_until:string;status:string;profile_kind?:string};
-type Props={profiles:MerchantSourceProfile[];environment:'live'|'sandbox';loading:boolean;onRefresh:()=>void;onCopy:(value:string)=>Promise<boolean>;onGenerate:()=>void;canGenerate:boolean};
-const stamp=(v:string)=>new Date(v.includes('T')?v:v.replace(' ','T')+'+08:00').toLocaleString('en-PH',{timeZone:'Asia/Manila',year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
-function mapping(p:MerchantSourceProfile){return JSON.stringify({schema_version:'NUERS-ingestion-1',record_mode:'source_capture',source_profile_id:p.id,source_system:p.source_system,branch_code:p.branch_code},null,2)}
-export function MerchantSourceProfiles({profiles,environment,loading,onRefresh,onCopy,onGenerate,canGenerate}:Props){
- const[selected,setSelected]=useState(''),[search,setSearch]=useState(''),[page,setPage]=useState(1),[copyNotice,setCopyNotice]=useState('');
- async function copy(value:string,label:string){const ok=await onCopy(value);setCopyNotice(ok?label+' copied.':'Clipboard unavailable. Select the field text to copy manually.')}
- function select(id:string){setSelected(id);setCopyNotice('')}
- const profile=profiles.find(p=>p.id===selected)||profiles.find(p=>p.status==='active'&&p.profile_kind==='account_connection')||profiles.find(p=>p.status==='active');
- const filtered=profiles.filter(p=>[p.id,p.source_system,p.branch_code,p.seller_name,p.status].join(' ').toLowerCase().includes(search.trim().toLowerCase()));
- const lastPage=Math.max(1,Math.ceil(filtered.length/10));const currentPage=Math.min(page,lastPage);const rows=filtered.slice((currentPage-1)*10,currentPage*10);
- function copyField(label:string,value:string){return <div className="sp-copy-field"><div><span>{label}</span><code>{value}</code></div><button type="button" className="mi-outline" aria-label={'Copy '+label} onClick={()=>void copy(value,label)}><Copy size={14}/>Copy</button></div>}
- return <section className="mi-panel sp-panel"><header><span className="mi-icon"><Database size={24}/></span><div><h2>Source Profiles & Connection Details</h2><p>Find the exact values your ERP, POS or ecommerce connector needs for existing source documents.</p></div><button className="mi-outline" disabled={loading} onClick={onRefresh}><RefreshCw size={15}/>Refresh profiles</button></header>
- <div className="sp-explain"><article><code>source_system</code><h3>Your system identifier</h3><p>A stable, case-sensitive name such as <code>your-erp</code>. For <code>source_capture</code>, copy the exact value from your connection profile. Keep it unchanged on retries.</p></article><article><code>source_profile_id</code><h3>Your source connection ID</h3><p>NUERS creates a default connection automatically when your business is approved. Existing verified merchants receive it when generating a key. Required for <code>source_capture</code>. Omit it for <code>nuers_issuance</code>.</p></article></div>
- {environment==='sandbox'&&<div className="sp-sandbox"><Info size={18}/><p>You are viewing the Sandbox workspace. Your connection values can be used with the matching business/location key in either environment. Records remain separate. Sandbox test capture accepts a UUID-shaped test profile ID and uses your current business VAT registration. A successful Sandbox test does not approve a business or grant BIR authority.</p></div>}
- {profiles.length>0?<div className="sp-connection"><SearchableSelect label="Select a source connection" required={false} value={profile?.id||selected} onChange={select} placeholder="Search by system, profile ID or registered location" items={profiles.map(p=>({value:p.id,label:`${p.source_system} · ${p.branch_code} · ${p.status} · ${p.id}`}))}/>{profile?<><div className="sp-profile-heading"><div><h3>{profile.source_system}</h3><p>{profile.seller_name} · Registered location {profile.branch_code} · {profile.vat_registered?'VAT registered':'Non-VAT registered'}</p></div><span className={'mi-badge '+(profile.status==='active'?'good':'bad')}>{profile.status==='active'?(profile.profile_kind==='account_connection'?'Account verified · Ready':'Reviewed · Active'):profile.status}</span></div><div className="sp-values">{copyField('source_profile_id',profile.id)}{copyField('source_system',profile.source_system)}{copyField('branch_code',profile.branch_code)}</div><div className="sp-period"><FileCheck2 size={18}/><p><strong>{profile.profile_kind==='account_connection'?'Automatic owned-system connection':'Reviewed original issue period (PHT)'}</strong><br/>{profile.profile_kind==='account_connection'?<>Ready for originals dated from {stamp(profile.valid_from)} while your account is active and the verified seller details match. Keep your original dates. Earlier originals or a different historical VAT registration need a separate historical profile review.</>:<>{stamp(profile.valid_from)} – {stamp(profile.valid_until)}<br/>Your original <code>occurred_at</code> must fall within this reviewed period.</>}</p></div>{profile.status==='active'?<><button className="mi-primary" onClick={()=>void copy(mapping(profile),'Connection JSON')}><Copy size={15}/>Copy connection JSON</button><p className="mi-caption">This copies the mapping fields only. Add your original event ID, document number, original date, buyer information and financial lines according to the API guide. Use a Live key for this business and registered location when submitting a real source copy.</p></>:<div className="mi-note"><Info size={18}/><p>This profile is {profile.status}. It cannot authorize new Live captures. For a revoked automatic connection, generate a new API key to prepare a replacement from your current verified business details. No separate source approval is needed. Changed registered details still require Business Profile review. Previously accepted originals remain unchanged.</p></div>}</>:<div className="sp-select-hint"><CheckCircle2 size={20}/><p>Select a profile to see and copy its exact API fields.</p></div>}</div>:<div className="sp-empty"><Database size={30}/><h3>Your connection is prepared automatically</h3><p>Once your business is verified and active, generate a named API key. NUERS automatically assigns your registered location, source_profile_id and source_system. No separate source request is needed for new owned-system copies.</p><button className="mi-primary" disabled={!canGenerate} onClick={onGenerate}>Generate API Key <ArrowRight size={15}/></button></div>}
- <details className="sp-how" open={!profiles.length}><summary>Connect your ERP in three steps</summary><ol><li>Complete Business Profile review. An approved, active business can generate keys using its verified owner login.</li><li>Select Live or Sandbox, enter a key name, and generate. Save the one-time secret API key in your ERP server's secret manager. The API key is the secret credential; no separate public/private key pair is needed.</li><li>Copy your connection JSON and submit finalized originals with <code>record_mode: source_capture</code>. Keep original numbers, dates and stable event IDs; retry the same JSON after a connection failure. Live eligible sales require sufficient wallet funds.</li></ol><p>Keys can be rotated without changing these connection identifiers. If several owned systems share this default connection, prefix <code>source_event_id</code> and <code>external_reference</code> with a stable identifier for each system. Copies retain their original document numbers; conflicting numbers must be reconciled.</p><p>Account verification allows record storage. New NUERS originals use <code>nuers_issuance</code>, omit <code>source_profile_id</code>, and retain separate issuance authority and numbering checks. Earlier originals or historical seller changes use an independently reviewed historical profile.</p><Link className="mi-text" to="/merchant?panel=support">Need help with historical records? <ArrowRight size={14}/></Link></details>
- {!!profiles.length&&<><div className="sp-directory-heading"><h3>Source connection directory</h3><label>Search profiles<input type="search" maxLength={200} value={search} onChange={e=>{setSearch(e.target.value);setPage(1)}} placeholder="System, profile ID, location or status"/></label></div><div className="mi-scroll"><table><thead><tr><th>source_system</th><th>source_profile_id</th><th>Registered Location</th><th>Seller Registration</th><th>Coverage (PHT)</th><th>Status</th><th>Action</th></tr></thead><tbody>{rows.map(p=><tr key={p.id}><td><code>{p.source_system}</code></td><td><code>{p.id}</code></td><td>{p.branch_code}</td><td>{p.vat_registered?'VAT':'Non-VAT'}</td><td>{stamp(p.valid_from)}<br/>{p.profile_kind==='account_connection'?'While verified details remain current':stamp(p.valid_until)}</td><td><span className={'mi-badge '+(p.status==='active'?'good':'bad')}>{p.status}</span></td><td><button className="mi-outline" onClick={()=>{select(p.id);document.querySelector('.sp-connection')?.scrollIntoView({behavior:'smooth',block:'start'})}}>View fields</button></td></tr>)}{!rows.length&&<tr><td colSpan={7}>No source profiles match your search.</td></tr>}</tbody></table></div><footer data-slot="table-pagination" className="mi-pagination"><span>{filtered.length} matching profiles{profiles.length===500?' · Latest 500 returned':''}</span><button className="mi-outline" disabled={currentPage===1} onClick={()=>setPage(currentPage-1)}>Previous</button><span>{currentPage} / {lastPage}</span><button className="mi-outline" disabled={currentPage>=lastPage} onClick={()=>setPage(currentPage+1)}>Next</button></footer></>}
- {copyNotice&&<p className="sp-copy-status" role="status">{copyNotice}</p>}
- </section>
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Copy,
+  Database,
+  FileCheck2,
+  Info,
+  RefreshCw,
+} from "lucide-react";
+import { SearchableSelect } from "@/components/registration/searchable-select";
+import "./source-profile-panel.css";
+export type MerchantSourceProfile = {
+  id: string;
+  branch_code: string;
+  source_system: string;
+  vat_registered: boolean;
+  seller_name: string;
+  valid_from: string;
+  valid_until: string;
+  status: string;
+  profile_kind?: string;
+};
+type Props = {
+  profiles: MerchantSourceProfile[];
+  environment: "live" | "sandbox";
+  loading: boolean;
+  onRefresh: () => void;
+  onCopy: (value: string) => Promise<boolean>;
+  onGenerate: () => void;
+  canGenerate: boolean;
+};
+const stamp = (v: string) =>
+  new Date(v.includes("T") ? v : v.replace(" ", "T") + "+08:00").toLocaleString("en-PH", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+function mapping(p: MerchantSourceProfile) {
+  return JSON.stringify(
+    {
+      schema_version: "NUERS-ingestion-1",
+      record_mode: "source_capture",
+      source_profile_id: p.id,
+      source_system: p.source_system,
+      branch_code: p.branch_code,
+    },
+    null,
+    2,
+  );
+}
+export function MerchantSourceProfiles({
+  profiles,
+  environment,
+  loading,
+  onRefresh,
+  onCopy,
+  onGenerate,
+  canGenerate,
+}: Props) {
+  const [selected, setSelected] = useState(""),
+    [search, setSearch] = useState(""),
+    [page, setPage] = useState(1),
+    [copyNotice, setCopyNotice] = useState("");
+  async function copy(value: string, label: string) {
+    const ok = await onCopy(value);
+    setCopyNotice(
+      ok ? label + " copied." : "Clipboard unavailable. Select the field text to copy manually.",
+    );
+  }
+  function select(id: string) {
+    setSelected(id);
+    setCopyNotice("");
+  }
+  const profile =
+    profiles.find((p) => p.id === selected) ||
+    profiles.find((p) => p.status === "active" && p.profile_kind === "account_connection") ||
+    profiles.find((p) => p.status === "active");
+  const filtered = profiles.filter((p) =>
+    [p.id, p.source_system, p.branch_code, p.seller_name, p.status]
+      .join(" ")
+      .toLowerCase()
+      .includes(search.trim().toLowerCase()),
+  );
+  const lastPage = Math.max(1, Math.ceil(filtered.length / 10));
+  const currentPage = Math.min(page, lastPage);
+  const rows = filtered.slice((currentPage - 1) * 10, currentPage * 10);
+  function copyField(label: string, value: string) {
+    return (
+      <div className="sp-copy-field">
+        <div>
+          <span>{label}</span>
+          <code>{value}</code>
+        </div>
+        <button
+          type="button"
+          className="mi-outline"
+          aria-label={"Copy " + label}
+          onClick={() => void copy(value, label)}
+        >
+          <Copy size={14} />
+          Copy
+        </button>
+      </div>
+    );
+  }
+  return (
+    <section className="mi-panel sp-panel">
+      <header>
+        <span className="mi-icon">
+          <Database size={24} />
+        </span>
+        <div>
+          <h2>Source Profiles & Connection Details</h2>
+          <p>
+            Find the exact values your ERP, POS or ecommerce connector needs for existing source
+            documents.
+          </p>
+        </div>
+        <button className="mi-outline" disabled={loading} onClick={onRefresh}>
+          <RefreshCw size={15} />
+          Refresh profiles
+        </button>
+      </header>
+      <div className="sp-explain">
+        <article>
+          <code>source_system</code>
+          <h3>Your system identifier</h3>
+          <p>
+            A stable, case-sensitive name such as <code>your-erp</code>. For{" "}
+            <code>source_capture</code>, copy the exact value from your connection profile. Keep it
+            unchanged on retries.
+          </p>
+        </article>
+        <article>
+          <code>source_profile_id</code>
+          <h3>Your source connection ID</h3>
+          <p>
+            NUERS creates a default connection automatically when your business is approved.
+            Existing verified merchants receive it when generating a key. Required for{" "}
+            <code>source_capture</code>. Omit it for <code>nuers_issuance</code>.
+          </p>
+        </article>
+      </div>
+      {environment === "sandbox" && (
+        <div className="sp-sandbox">
+          <Info size={18} />
+          <p>
+            You are viewing the Sandbox workspace. Your connection values can be used with the
+            matching business/location key in either environment. Records remain separate. Sandbox
+            test capture accepts a UUID-shaped test profile ID and uses your current business VAT
+            registration. A successful Sandbox test does not approve a business or grant BIR
+            authority.
+          </p>
+        </div>
+      )}
+      {profiles.length > 0 ? (
+        <div className="sp-connection">
+          <SearchableSelect
+            label="Select a source connection"
+            required={false}
+            value={profile?.id || selected}
+            onChange={select}
+            placeholder="Search by system, profile ID or registered location"
+            items={profiles.map((p) => ({
+              value: p.id,
+              label: `${p.source_system} · ${p.branch_code} · ${p.status} · ${p.id}`,
+            }))}
+          />
+          {profile ? (
+            <>
+              <div className="sp-profile-heading">
+                <div>
+                  <h3>{profile.source_system}</h3>
+                  <p>
+                    {profile.seller_name} · Registered location {profile.branch_code} ·{" "}
+                    {profile.vat_registered ? "VAT registered" : "Non-VAT registered"}
+                  </p>
+                </div>
+                <span className={"mi-badge " + (profile.status === "active" ? "good" : "bad")}>
+                  {profile.status === "active"
+                    ? profile.profile_kind === "account_connection"
+                      ? "Account verified · Ready"
+                      : "Reviewed · Active"
+                    : profile.status}
+                </span>
+              </div>
+              <div className="sp-values">
+                {copyField("source_profile_id", profile.id)}
+                {copyField("source_system", profile.source_system)}
+                {copyField("branch_code", profile.branch_code)}
+              </div>
+              <div className="sp-period">
+                <FileCheck2 size={18} />
+                <p>
+                  <strong>
+                    {profile.profile_kind === "account_connection"
+                      ? "Automatic owned-system connection"
+                      : "Reviewed original issue period (PHT)"}
+                  </strong>
+                  <br />
+                  {profile.profile_kind === "account_connection" ? (
+                    <>
+                      Ready for originals dated from {stamp(profile.valid_from)} while your account
+                      is active and the verified seller details match. Keep your original dates.
+                      Earlier originals or a different historical VAT registration need a separate
+                      historical profile review.
+                    </>
+                  ) : (
+                    <>
+                      {stamp(profile.valid_from)} – {stamp(profile.valid_until)}
+                      <br />
+                      Your original <code>occurred_at</code> must fall within this reviewed period.
+                    </>
+                  )}
+                </p>
+              </div>
+              {profile.status === "active" ? (
+                <>
+                  <button
+                    className="mi-primary"
+                    onClick={() => void copy(mapping(profile), "Connection JSON")}
+                  >
+                    <Copy size={15} />
+                    Copy connection JSON
+                  </button>
+                  <p className="mi-caption">
+                    This copies the mapping fields only. Add your original event ID, document
+                    number, original date, buyer information and financial lines according to the
+                    API guide. Use a Live key for this business and registered location when
+                    submitting a real source copy.
+                  </p>
+                </>
+              ) : (
+                <div className="mi-note">
+                  <Info size={18} />
+                  <p>
+                    This profile is {profile.status}. It cannot authorize new Live captures. For a
+                    revoked automatic connection, generate a new API key to prepare a replacement
+                    from your current verified business details. No separate source approval is
+                    needed. Changed registered details still require Business Profile review.
+                    Previously accepted originals remain unchanged.
+                  </p>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="sp-select-hint">
+              <CheckCircle2 size={20} />
+              <p>Select a profile to see and copy its exact API fields.</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="sp-empty">
+          <Database size={30} />
+          <h3>Your connection is prepared automatically</h3>
+          <p>
+            Once your business is verified and active, generate a named API key. NUERS automatically
+            assigns your registered location, source_profile_id and source_system. No separate
+            source request is needed for new owned-system copies.
+          </p>
+          <button className="mi-primary" disabled={!canGenerate} onClick={onGenerate}>
+            Generate API Key <ArrowRight size={15} />
+          </button>
+        </div>
+      )}
+      <details className="sp-how" open={!profiles.length}>
+        <summary>Connect your ERP in three steps</summary>
+        <ol>
+          <li>
+            Complete Business Profile review. An approved, active business can generate keys using
+            its verified owner login.
+          </li>
+          <li>
+            Select Live or Sandbox, enter a key name, and generate. Save the one-time secret API key
+            in your ERP server's secret manager. The API key is the secret credential; no separate
+            public/private key pair is needed.
+          </li>
+          <li>
+            Copy your connection JSON and submit finalized originals with{" "}
+            <code>record_mode: source_capture</code>. Keep original numbers, dates and stable event
+            IDs; retry the same JSON after a connection failure. Live eligible sales require
+            sufficient wallet funds.
+          </li>
+        </ol>
+        <p>
+          Keys can be rotated without changing these connection identifiers. If several owned
+          systems share this default connection, prefix <code>source_event_id</code> and{" "}
+          <code>external_reference</code> with a stable identifier for each system. Copies retain
+          their original document numbers; conflicting numbers must be reconciled.
+        </p>
+        <p>
+          Account verification allows record storage. New NUERS originals use{" "}
+          <code>nuers_issuance</code>, omit <code>source_profile_id</code>, and retain separate
+          issuance authority and numbering checks. Earlier originals or historical seller changes
+          use an independently reviewed historical profile.
+        </p>
+        <Link className="mi-text" to="/merchant?panel=support">
+          Need help with historical records? <ArrowRight size={14} />
+        </Link>
+      </details>
+      {!!profiles.length && (
+        <>
+          <div className="sp-directory-heading">
+            <h3>Source connection directory</h3>
+            <label>
+              Search profiles
+              <input
+                type="search"
+                maxLength={200}
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="System, profile ID, location or status"
+              />
+            </label>
+          </div>
+          <div className="mi-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>source_system</th>
+                  <th>source_profile_id</th>
+                  <th>Registered Location</th>
+                  <th>Seller Registration</th>
+                  <th>Coverage (PHT)</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((p) => (
+                  <tr key={p.id}>
+                    <td>
+                      <code>{p.source_system}</code>
+                    </td>
+                    <td>
+                      <code>{p.id}</code>
+                    </td>
+                    <td>{p.branch_code}</td>
+                    <td>{p.vat_registered ? "VAT" : "Non-VAT"}</td>
+                    <td>
+                      {stamp(p.valid_from)}
+                      <br />
+                      {p.profile_kind === "account_connection"
+                        ? "While verified details remain current"
+                        : stamp(p.valid_until)}
+                    </td>
+                    <td>
+                      <span className={"mi-badge " + (p.status === "active" ? "good" : "bad")}>
+                        {p.status}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        className="mi-outline"
+                        onClick={() => {
+                          select(p.id);
+                          document
+                            .querySelector(".sp-connection")
+                            ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }}
+                      >
+                        View fields
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {!rows.length && (
+                  <tr>
+                    <td colSpan={7}>No source profiles match your search.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <footer data-slot="table-pagination" className="mi-pagination">
+            <span>
+              {filtered.length} matching profiles
+              {profiles.length === 500 ? " · Latest 500 returned" : ""}
+            </span>
+            <button
+              className="mi-outline"
+              disabled={currentPage === 1}
+              onClick={() => setPage(currentPage - 1)}
+            >
+              Previous
+            </button>
+            <span>
+              {currentPage} / {lastPage}
+            </span>
+            <button
+              className="mi-outline"
+              disabled={currentPage >= lastPage}
+              onClick={() => setPage(currentPage + 1)}
+            >
+              Next
+            </button>
+          </footer>
+        </>
+      )}
+      {copyNotice && (
+        <p className="sp-copy-status" role="status">
+          {copyNotice}
+        </p>
+      )}
+    </section>
+  );
 }

@@ -178,7 +178,7 @@ class MerchantSalesReportTest extends TestCase
         $this->assertStringStartsWith('PK', $xlsx);
         $path = tempnam(sys_get_temp_dir(), 'sales-test-');
         file_put_contents($path, $xlsx);
-        $zip = new ZipArchive;
+        $zip = new ZipArchive();
         $zip->open($path);
         $xml = $zip->getFromName('xl/worksheets/sheet1.xml');
         $zip->close();

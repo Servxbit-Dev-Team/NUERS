@@ -24,32 +24,32 @@ class MerchantApiKeyController extends Controller
     public function index(Request $request): JsonResponse
     {
         $merchant = $this->currentMerchant($request);
-        $environment=$request->validate(['environment'=>'nullable|in:live,sandbox'])['environment']??null;
+        $environment = $request->validate(['environment' => 'nullable|in:live,sandbox'])['environment'] ?? null;
 
         abort_unless(Schema::hasTable('merchant_api_keys'), 500, 'merchant_api_keys table is not migrated.');
 
         $keys = DB::table('merchant_api_keys')
             ->where('merchant_id', $merchant->id)
-            ->when($environment,fn($q)=>$q->where('environment',$environment))
+            ->when($environment, fn ($q) => $q->where('environment', $environment))
             ->orderByDesc('created_at')
             ->get()
             ->map(fn ($key) => $this->keyPayload($key))
             ->values();
 
         return response()->json([
-            'environment'=>$environment??'all', 'summary' => $this->summary($merchant->id,$environment),
+            'environment' => $environment ?? 'all', 'summary' => $this->summary($merchant->id, $environment),
             'keys' => $keys,
             'webhooks' => $this->webhooks($merchant->id),
-            'hourly_requests' => $this->hourlyRequests($merchant->id,$environment),
-            'latency_data' => $this->latencyData($merchant->id,$environment),
+            'hourly_requests' => $this->hourlyRequests($merchant->id, $environment),
+            'latency_data' => $this->latencyData($merchant->id, $environment),
             'merchant' => ['id' => $merchant->id, 'name' => $merchant->business_name, 'status' => $merchant->status, 'vat_registered' => (bool) $merchant->vat_registered],
             'source_profiles' => DB::table('integration_source_profiles')->where('merchant_id', $merchant->id)->orderByDesc('created_at')->limit(500)->get()->map(function ($p) use ($merchant) {
                 $ready = $p->status === 'active' && ($p->profile_kind !== 'account_connection' || app(\App\Services\MerchantApiOnboarding::class)->matches($p, $merchant));
-                return ['id'=>$p->id,'branch_code'=>$p->branch_code,'source_system'=>$p->source_system,'vat_registered'=>(bool)$p->vat_registered,
-                    'seller_name'=>$p->seller_name,'valid_from'=>$p->valid_from,'valid_until'=>$p->valid_until,'profile_kind'=>$p->profile_kind,
-                    'status'=>$ready ? 'active' : ($p->status === 'active' ? 'review_required' : $p->status)];
+                return ['id' => $p->id,'branch_code' => $p->branch_code,'source_system' => $p->source_system,'vat_registered' => (bool)$p->vat_registered,
+                    'seller_name' => $p->seller_name,'valid_from' => $p->valid_from,'valid_until' => $p->valid_until,'profile_kind' => $p->profile_kind,
+                    'status' => $ready ? 'active' : ($p->status === 'active' ? 'review_required' : $p->status)];
             }),
-            'registered_branches' => DB::table('merchant_branches')->where('merchant_id', $merchant->id)->where('status','active')->get(['bir_branch_code','name','branch_type']),
+            'registered_branches' => DB::table('merchant_branches')->where('merchant_id', $merchant->id)->where('status', 'active')->get(['bir_branch_code','name','branch_type']),
             'access' => ['owner' => (string) $merchant->merchant_account_id === (string) $this->userFromRequest($request)->id, 'credential_mfa_required' => (bool) config('security.enforce_privileged_mfa')],
             'integration' => [
                 'transaction_endpoint' => url('/api/integrations/transactions'),
@@ -66,9 +66,9 @@ class MerchantApiKeyController extends Controller
     public function logs(Request $request): JsonResponse
     {
         $m = $this->currentMerchant($request);
-        $v = $request->validate(['from' => 'nullable|date_format:Y-m-d', 'to' => ['nullable', 'date_format:Y-m-d', ...($request->filled('from') ? ['after_or_equal:from'] : [])], 'page' => 'sometimes|integer|min:1|max:100000', 'key' => 'nullable|uuid', 'result' => 'nullable|in:success,error','environment'=>'nullable|in:live,sandbox']);
-        $envKeys=DB::table('merchant_api_keys')->where('merchant_id',$m->id)->pluck('environment','id');
-        $q = $this->environmentLogs($m->id,$v['environment']??null);
+        $v = $request->validate(['from' => 'nullable|date_format:Y-m-d', 'to' => ['nullable', 'date_format:Y-m-d', ...($request->filled('from') ? ['after_or_equal:from'] : [])], 'page' => 'sometimes|integer|min:1|max:100000', 'key' => 'nullable|uuid', 'result' => 'nullable|in:success,error','environment' => 'nullable|in:live,sandbox']);
+        $envKeys = DB::table('merchant_api_keys')->where('merchant_id', $m->id)->pluck('environment', 'id');
+        $q = $this->environmentLogs($m->id, $v['environment'] ?? null);
         if (! empty($v['key'])) {
             $q->where('merchant_api_key_id', $v['key']);
         }
@@ -82,8 +82,8 @@ class MerchantApiKeyController extends Controller
             $q->where('status_code', $v['result'] === 'success' ? '<' : '>=', 400);
         }
         $rows = $q->orderByDesc('created_at')->orderByDesc('id')->paginate(20, ['id', 'merchant_api_key_id', 'endpoint', 'method', 'status_code', 'latency_ms', 'request_reference', 'source_system', 'created_at'], 'page', $v['page'] ?? 1);
-        $rows->getCollection()->transform(function ($row) use($envKeys) {
-            $row->environment=$envKeys[$row->merchant_api_key_id]??'unknown';
+        $rows->getCollection()->transform(function ($row) use ($envKeys) {
+            $row->environment = $envKeys[$row->merchant_api_key_id] ?? 'unknown';
             $row->created_at = Carbon::parse($row->created_at)->toIso8601String();
 
             return $row;
@@ -217,44 +217,44 @@ class MerchantApiKeyController extends Controller
         $now = now();
 
         return DB::transaction(function () use ($request, $merchant, $user, $validated, $plainKey, $id, $now) {
-        $registered = $this->lockMerchant($request, $merchant->id);
-        $branch = app(\App\Services\MerchantApiContext::class)->resolve($registered, (string) $user->id, $validated['branch_code'] ?? null);
-        $profile = app(\App\Services\MerchantApiOnboarding::class)->prepare($registered, (string) $user->id, false, $branch, true);
-        abort_unless($profile, 422, 'Your verified business identity needs review before connection setup. Confirm the registered name, TIN, address and VAT registration in Business Profile.');
-        abort_unless($profile->status === 'active', 409, 'This source connection is unavailable. Confirm your account is active and your registered details are current.');
-        DB::table('merchant_api_keys')->insert([
-            'id' => $id,
-            'merchant_id' => $merchant->id,
-            'created_by_user_id' => $user?->id,
-            'name' => $validated['name'],
-            'environment' => $validated['environment'],
-            'branch_type' => $branch->branch_type,
-            'branch_code' => $branch->bir_branch_code,
-            'branch_name' => $branch->name,
-            'branch_location' => $branch->address,
-            'key_prefix' => Str::substr($plainKey, 0, 18),
-            'key_hash' => hash('sha256', $plainKey),
-            'expires_at' => now()->addDays(90),
-            'key_last_four' => Str::substr($plainKey, -4),
-            'status' => 'active',
-            'scopes' => json_encode($validated['scopes'] ?? ['transactions:write', 'transactions:read']),
-            'ip_whitelist' => json_encode($validated['ip_whitelist'] ?? []),
-            'rate_limit_per_day' => $validated['rate_limit_per_day'] ?? ($validated['environment'] === 'live' ? 50000 : 5000),
-            'created_at' => $now,
-            'updated_at' => $now,
-        ]);
+            $registered = $this->lockMerchant($request, $merchant->id);
+            $branch = app(\App\Services\MerchantApiContext::class)->resolve($registered, (string) $user->id, $validated['branch_code'] ?? null);
+            $profile = app(\App\Services\MerchantApiOnboarding::class)->prepare($registered, (string) $user->id, false, $branch, true);
+            abort_unless($profile, 422, 'Your verified business identity needs review before connection setup. Confirm the registered name, TIN, address and VAT registration in Business Profile.');
+            abort_unless($profile->status === 'active', 409, 'This source connection is unavailable. Confirm your account is active and your registered details are current.');
+            DB::table('merchant_api_keys')->insert([
+                'id' => $id,
+                'merchant_id' => $merchant->id,
+                'created_by_user_id' => $user?->id,
+                'name' => $validated['name'],
+                'environment' => $validated['environment'],
+                'branch_type' => $branch->branch_type,
+                'branch_code' => $branch->bir_branch_code,
+                'branch_name' => $branch->name,
+                'branch_location' => $branch->address,
+                'key_prefix' => Str::substr($plainKey, 0, 18),
+                'key_hash' => hash('sha256', $plainKey),
+                'expires_at' => now()->addDays(90),
+                'key_last_four' => Str::substr($plainKey, -4),
+                'status' => 'active',
+                'scopes' => json_encode($validated['scopes'] ?? ['transactions:write', 'transactions:read']),
+                'ip_whitelist' => json_encode($validated['ip_whitelist'] ?? []),
+                'rate_limit_per_day' => $validated['rate_limit_per_day'] ?? ($validated['environment'] === 'live' ? 50000 : 5000),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
 
-        app(BirCompliance::class)->audit('api_key.created', $id, (string) $user->id, ['merchant_id' => $merchant->id, 'environment' => $validated['environment'], 'branch_code' => $branch->bir_branch_code]);
-        $record = DB::table('merchant_api_keys')->where('id', $id)->first();
+            app(BirCompliance::class)->audit('api_key.created', $id, (string) $user->id, ['merchant_id' => $merchant->id, 'environment' => $validated['environment'], 'branch_code' => $branch->bir_branch_code]);
+            $record = DB::table('merchant_api_keys')->where('id', $id)->first();
 
-        return response()->json([
-            'key' => [
-                ...$this->keyPayload($record),
-                'plain_key' => $plainKey,
-            ],
-            'connection' => app(\App\Services\MerchantApiOnboarding::class)->connection($profile),
-            'message' => 'Store this key now. NUERS will only show it once.',
-        ], 201)->header('Cache-Control', 'private, no-store');
+            return response()->json([
+                'key' => [
+                    ...$this->keyPayload($record),
+                    'plain_key' => $plainKey,
+                ],
+                'connection' => app(\App\Services\MerchantApiOnboarding::class)->connection($profile),
+                'message' => 'Store this key now. NUERS will only show it once.',
+            ], 201)->header('Cache-Control', 'private, no-store');
         }, 3);
     }
 
@@ -404,11 +404,14 @@ class MerchantApiKeyController extends Controller
         ];
     }
 
-    private function environmentLogs(string $merchantId,?string $environment=null) { return DB::table('merchant_api_request_logs')->where('merchant_id',$merchantId)->when($environment,fn($q)=>$q->whereIn('merchant_api_key_id',DB::table('merchant_api_keys')->select('id')->where('merchant_id',$merchantId)->where('environment',$environment))); }
-
-    private function summary(string $merchantId,?string $environment=null): array
+    private function environmentLogs(string $merchantId, ?string $environment = null)
     {
-        $keys = DB::table('merchant_api_keys')->where('merchant_id', $merchantId)->when($environment,fn($q)=>$q->where('environment',$environment));
+        return DB::table('merchant_api_request_logs')->where('merchant_id', $merchantId)->when($environment, fn ($q) => $q->whereIn('merchant_api_key_id', DB::table('merchant_api_keys')->select('id')->where('merchant_id', $merchantId)->where('environment', $environment)));
+    }
+
+    private function summary(string $merchantId, ?string $environment = null): array
+    {
+        $keys = DB::table('merchant_api_keys')->where('merchant_id', $merchantId)->when($environment, fn ($q) => $q->where('environment', $environment));
 
         if (! Schema::hasTable('merchant_api_request_logs')) {
             return [
@@ -416,13 +419,13 @@ class MerchantApiKeyController extends Controller
                 'total_keys' => (clone $keys)->count(),
                 'requests_today' => 0,
                 'requests_month' => 0,
-                'active_webhooks' => $this->activeWebhookCount($merchantId,$environment),
+                'active_webhooks' => $this->activeWebhookCount($merchantId, $environment),
                 'avg_latency_ms' => null,
             ];
         }
 
-        $todayLogs = $this->environmentLogs($merchantId,$environment)->where('created_at', '>=', now()->startOfDay());
-        $monthLogs = $this->environmentLogs($merchantId,$environment)->where('created_at', '>=', now()->startOfMonth());
+        $todayLogs = $this->environmentLogs($merchantId, $environment)->where('created_at', '>=', now()->startOfDay());
+        $monthLogs = $this->environmentLogs($merchantId, $environment)->where('created_at', '>=', now()->startOfMonth());
         $avgLatency = (clone $todayLogs)->avg('latency_ms');
 
         return [
@@ -430,15 +433,17 @@ class MerchantApiKeyController extends Controller
             'total_keys' => (clone $keys)->count(),
             'requests_today' => (clone $todayLogs)->count(),
             'requests_month' => (clone $monthLogs)->count(),
-            'active_webhooks' => $this->activeWebhookCount($merchantId,$environment),
+            'active_webhooks' => $this->activeWebhookCount($merchantId, $environment),
             'avg_latency_ms' => $avgLatency === null ? null : round((float) $avgLatency, 1),
         ];
     }
 
-    private function activeWebhookCount(string $merchantId,?string $environment): int
+    private function activeWebhookCount(string $merchantId, ?string $environment): int
     {
-        if(!Schema::hasTable('merchant_webhook_endpoints'))return 0;
-        return DB::table('merchant_webhook_endpoints')->where('merchant_id',$merchantId)->when($environment,fn($q)=>$q->where('environment',$environment))->where('status','active')->whereNotNull('verified_at')->count();
+        if (!Schema::hasTable('merchant_webhook_endpoints')) {
+            return 0;
+        }
+        return DB::table('merchant_webhook_endpoints')->where('merchant_id', $merchantId)->when($environment, fn ($q) => $q->where('environment', $environment))->where('status', 'active')->whereNotNull('verified_at')->count();
     }
 
     private function webhooks(string $merchantId): array
@@ -464,17 +469,17 @@ class MerchantApiKeyController extends Controller
             ->all();
     }
 
-    private function hourlyRequests(string $merchantId,?string $environment=null): array
+    private function hourlyRequests(string $merchantId, ?string $environment = null): array
     {
         if (! Schema::hasTable('merchant_api_request_logs')) {
             return [];
         }
 
         return collect(range(11, 0))
-            ->map(function ($offset) use ($merchantId,$environment) {
+            ->map(function ($offset) use ($merchantId, $environment) {
                 $hour = now()->subHours($offset)->startOfHour();
                 $next = $hour->copy()->addHour();
-                $base = $this->environmentLogs($merchantId,$environment)
+                $base = $this->environmentLogs($merchantId, $environment)
                     ->whereBetween('created_at', [$hour, $next]);
 
                 return [
@@ -487,17 +492,17 @@ class MerchantApiKeyController extends Controller
             ->all();
     }
 
-    private function latencyData(string $merchantId,?string $environment=null): array
+    private function latencyData(string $merchantId, ?string $environment = null): array
     {
         if (! Schema::hasTable('merchant_api_request_logs')) {
             return [];
         }
 
         return collect(range(11, 0))
-            ->map(function ($offset) use ($merchantId,$environment) {
+            ->map(function ($offset) use ($merchantId, $environment) {
                 $hour = now()->subHours($offset)->startOfHour();
                 $next = $hour->copy()->addHour();
-                $latency = $this->environmentLogs($merchantId,$environment)
+                $latency = $this->environmentLogs($merchantId, $environment)
                     ->whereBetween('created_at', [$hour, $next])
                     ->avg('latency_ms') ?: 0;
 

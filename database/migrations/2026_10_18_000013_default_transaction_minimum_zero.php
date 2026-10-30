@@ -4,12 +4,14 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-return new class extends Migration {
+return new class () extends Migration {
     public function up(): void
     {
         DB::transaction(function () {
             $p = DB::table('website_subscription_plans')->where('slug', 'transaction-pricing')->lockForUpdate()->first();
-            if (!$p || (int) $p->minimum_transaction_centavos === 0) return;
+            if (!$p || (int) $p->minimum_transaction_centavos === 0) {
+                return;
+            }
             $revision = (int) $p->revision + 1;
             DB::table('website_subscription_plans')->where('id', $p->id)->update([
                 'minimum_transaction_centavos' => 0,

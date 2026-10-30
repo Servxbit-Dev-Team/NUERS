@@ -1,4 +1,5 @@
 <?php
+
 namespace Tests\Feature;
 
 /** Repeat the existing access/filter contract with the indexed read model active. */
@@ -9,7 +10,8 @@ class IndexedOperationsWorkspaceTest extends OperationsWorkspaceTest
         parent::setUp();
         config(['cache.default' => 'array']);
         $projection = app(\App\Services\LedgerProjection::class);
-        while ($projection->refresh()) {}
+        while ($projection->refresh()) {
+        }
         $projection->activate();
     }
 }

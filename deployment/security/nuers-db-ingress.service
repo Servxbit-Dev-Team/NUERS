@@ -1,0 +1,12 @@
+[Unit]
+Description=NUERS approved MariaDB ingress source allowlist
+After=network-pre.target
+Before=mariadb.service mysql.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/nuers-db-ingress apply
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

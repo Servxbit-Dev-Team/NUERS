@@ -40,7 +40,9 @@ class RegistryMerchantOverview
 
     public function summary(Builder $merchants): ?array
     {
-        if (!$this->available()) return null;
+        if (!$this->available()) {
+            return null;
+        }
         // Reuse small aggregates across refreshes; every committed app write changes the key.
         $key = 'registry-overview:v1:'.hash('sha256', json_encode([
             DB::connection()->getDatabaseName(), $merchants->toSql(), $merchants->getBindings(),
@@ -63,7 +65,9 @@ class RegistryMerchantOverview
 
     public function rows(array $ids): array
     {
-        if (!$ids || !$this->available()) return [];
+        if (!$ids || !$this->available()) {
+            return [];
+        }
         $wallets = DB::table('merchant_wallets')->whereIn('merchant_id', $ids)->get([
             'merchant_id', 'available_centavos', 'reserved_centavos', 'low_balance_threshold', 'updated_at',
         ])->keyBy('merchant_id');

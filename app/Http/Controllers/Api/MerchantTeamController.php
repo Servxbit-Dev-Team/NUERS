@@ -309,7 +309,9 @@ class MerchantTeamController
         $r->validate(['reason' => 'required|string|min:10|max:1000']);
         $rows = $this->index($r)->getData(true);
         $all = $this->memberQuery((string) $m->id)->orderBy('tm.created_at')->orderBy('tm.id')->get()->map(fn ($x) => $this->row($x));
-        if ($r->has('report_limit')) \App\Services\ReportCsv::limit($r,$all->count()+1);
+        if ($r->has('report_limit')) {
+            \App\Services\ReportCsv::limit($r, $all->count() + 1);
+        }
         $roles = collect($rows['roles'])->keyBy('id');
         $owner = $r->attributes->get('api_actor');
         $all->prepend(['id' => 'owner', 'name' => $m->owner_name ?: $owner->name, 'email' => $owner->email, 'role_id' => 'owner', 'status' => 'active', 'scope' => 'all', 'mfa_enabled' => (bool) $owner->mfa_secret]);

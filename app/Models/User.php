@@ -10,6 +10,9 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    /** @use HasFactory<UserFactory> */
+    use HasFactory;
+    use Notifiable;
     private ?string $issuedAccessToken = null;
 
     public function setApiTokenAttribute(?string $value): void
@@ -29,8 +32,6 @@ class User extends Authenticatable
     {
         return $this->issuedAccessToken ?? $value;
     }
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -66,7 +67,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'api_expires_at'=>'datetime','api_authenticated_at'=>'datetime','api_mfa_verified_at'=>'datetime','mfa_pending_at'=>'datetime',
+            'api_expires_at' => 'datetime','api_authenticated_at' => 'datetime','api_mfa_verified_at' => 'datetime','mfa_pending_at' => 'datetime',
         ];
     }
 }

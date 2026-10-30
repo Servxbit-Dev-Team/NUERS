@@ -1,57 +1,1233 @@
 import { useRealtimeRefresh } from "@/lib/use-realtime-refresh";
 import { useEffect, useRef, useState, type FormEvent, type ElementType } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Bell, Building2, CalendarDays, Camera, Check, ChevronRight, Clock3, Eye, EyeOff, KeyRound, LoaderCircle, LockKeyhole, Mail, MapPin, Monitor, Pencil, Phone, RefreshCw, Save, Settings2, ShieldCheck, UserRound, Users, X } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Bell,
+  Building2,
+  CalendarDays,
+  Camera,
+  Check,
+  ChevronRight,
+  Clock3,
+  Eye,
+  EyeOff,
+  KeyRound,
+  LoaderCircle,
+  LockKeyhole,
+  Mail,
+  MapPin,
+  Monitor,
+  Pencil,
+  Phone,
+  RefreshCw,
+  Save,
+  Settings2,
+  ShieldCheck,
+  UserRound,
+  Users,
+  X,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { apiFetch, apiJson } from "@/lib/api-url";
 import { useAuth } from "@/lib/auth";
 import "./account-profile.css";
 
-type Details={full_name:string;organization:string;mobile:string;position:string;department:string;office_address:string;telephone:string;alternate_email:string;timezone:string;time_format:string;density:string};
-export type AdminProfileData={profile:Details;account:{email:string;email_verified:boolean;id:string;role:string;created_at:string|null;has_avatar:boolean;revision:number};security:{mfa_enrolled:boolean;mfa_verified_at:string|null;password_changed_at:string|null;idle_minutes:number;absolute_minutes:number;step_up_minutes:number|null;login_alerts:boolean};notifications:{security_email:boolean;workflow_email:boolean;support_email:boolean;operations_email:boolean};session:{device:string;browser:string;ip:string;started_at:string|null;expires_at:string|null;absolute_expires_at:string|null;observed_at:string;current:boolean};activity:{id:string;event:string;at:string}[];generated_at:string};
-type Tab="profile"|"security"|"notifications"|"preferences"|"sessions"|"activity";
-const tabs:{id:Tab;label:string;icon:ElementType}[]=[{id:'profile',label:'Profile Information',icon:UserRound},{id:'security',label:'Security Settings',icon:ShieldCheck},{id:'notifications',label:'Notifications',icon:Bell},{id:'preferences',label:'Preferences',icon:Settings2},{id:'sessions',label:'My Sessions',icon:Monitor},{id:'activity',label:'Activity Log',icon:Clock3}];
-const zones=['Asia/Manila','Asia/Singapore','UTC','Europe/London','America/New_York'];
-const eventLabel=(event:string)=>({'account.profile.updated':'Profile information updated','account.photo.updated':'Profile photo updated','account.preferences.updated':'Notification preferences updated','security.password.changed':'Password changed','security.password.reset':'Password reset','security.mfa.enrolled':'Authenticator enabled','security.mfa.verified':'Multifactor verification completed','security.mfa.enrollment_started':'Authenticator setup started'}[event]||event.replaceAll('.',' ').replaceAll('_',' '));
-const hours=(minutes:number)=>minutes%60===0?`${minutes/60} hours`:`${minutes} minutes`;
-function Panel({icon:Icon,title,description,children,action}:{icon:ElementType;title:string;description?:string;children:React.ReactNode;action?:React.ReactNode}){return <section className="ap-panel"><header><span><Icon size={20} aria-hidden="true"/></span><div><h2>{title}</h2>{description&&<p>{description}</p>}</div>{action}</header>{children}</section>}
+type Details = {
+  full_name: string;
+  organization: string;
+  mobile: string;
+  position: string;
+  department: string;
+  office_address: string;
+  telephone: string;
+  alternate_email: string;
+  timezone: string;
+  time_format: string;
+  density: string;
+};
+export type AdminProfileData = {
+  profile: Details;
+  account: {
+    email: string;
+    email_verified: boolean;
+    id: string;
+    role: string;
+    created_at: string | null;
+    has_avatar: boolean;
+    revision: number;
+  };
+  security: {
+    mfa_enrolled: boolean;
+    mfa_verified_at: string | null;
+    password_changed_at: string | null;
+    idle_minutes: number;
+    absolute_minutes: number;
+    step_up_minutes: number | null;
+    login_alerts: boolean;
+  };
+  notifications: {
+    security_email: boolean;
+    workflow_email: boolean;
+    support_email: boolean;
+    operations_email: boolean;
+  };
+  session: {
+    device: string;
+    browser: string;
+    ip: string;
+    started_at: string | null;
+    expires_at: string | null;
+    absolute_expires_at: string | null;
+    observed_at: string;
+    current: boolean;
+  };
+  activity: { id: string; event: string; at: string }[];
+  generated_at: string;
+};
+type Tab = "profile" | "security" | "notifications" | "preferences" | "sessions" | "activity";
+const tabs: { id: Tab; label: string; icon: ElementType }[] = [
+  { id: "profile", label: "Profile Information", icon: UserRound },
+  { id: "security", label: "Security Settings", icon: ShieldCheck },
+  { id: "notifications", label: "Notifications", icon: Bell },
+  { id: "preferences", label: "Preferences", icon: Settings2 },
+  { id: "sessions", label: "My Sessions", icon: Monitor },
+  { id: "activity", label: "Activity Log", icon: Clock3 },
+];
+const zones = ["Asia/Manila", "Asia/Singapore", "UTC", "Europe/London", "America/New_York"];
+const eventLabel = (event: string) =>
+  ({
+    "account.profile.updated": "Profile information updated",
+    "account.photo.updated": "Profile photo updated",
+    "account.preferences.updated": "Notification preferences updated",
+    "security.password.changed": "Password changed",
+    "security.password.reset": "Password reset",
+    "security.mfa.enrolled": "Authenticator enabled",
+    "security.mfa.verified": "Multifactor verification completed",
+    "security.mfa.enrollment_started": "Authenticator setup started",
+  })[event] || event.replaceAll(".", " ").replaceAll("_", " ");
+const hours = (minutes: number) =>
+  minutes % 60 === 0 ? `${minutes / 60} hours` : `${minutes} minutes`;
+function Panel({
+  icon: Icon,
+  title,
+  description,
+  children,
+  action,
+}: {
+  icon: ElementType;
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  action?: React.ReactNode;
+}) {
+  return (
+    <section className="ap-panel">
+      <header>
+        <span>
+          <Icon size={20} aria-hidden="true" />
+        </span>
+        <div>
+          <h2>{title}</h2>
+          {description && <p>{description}</p>}
+        </div>
+        {action}
+      </header>
+      {children}
+    </section>
+  );
+}
 
-export function AdminAccountProfile(){
- const{signOut}=useAuth();const location=useLocation(),navigate=useNavigate();const parsed=new URLSearchParams(location.search).get('tab');const tab:Tab=tabs.some(t=>t.id===parsed)?parsed as Tab:'profile';
- const[data,setData]=useState<AdminProfileData|null>(null),[draft,setDraft]=useState<Details|null>(null),[notifications,setNotifications]=useState<AdminProfileData['notifications']|null>(null),[editing,setEditing]=useState(false),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState(''),[message,setMessage]=useState(''),[fieldErrors,setFieldErrors]=useState<Record<string,string>>({}),[photo,setPhoto]=useState(''),[photoVersion,setPhotoVersion]=useState(0),[now,setNow]=useState(new Date()),[passwordOpen,setPasswordOpen]=useState(false),[photoOpen,setPhotoOpen]=useState(false),[photoFile,setPhotoFile]=useState<File|null>(null),[pending,setPending]=useState<string|null>(null),[logoutOpen,setLogoutOpen]=useState(false),[currentPassword,setCurrentPassword]=useState(''),[password,setPassword]=useState(''),[confirmPassword,setConfirmPassword]=useState(''),[showPassword,setShowPassword]=useState(false);
- const fileInput=useRef<HTMLInputElement>(null);const initialRead=useRef(false);
- const profileDirty=!!data&&!!draft&&JSON.stringify(draft)!==JSON.stringify(data.profile);const preferencesDirty=!!data&&!!notifications&&JSON.stringify(notifications)!==JSON.stringify(data.notifications);const dirty=profileDirty||preferencesDirty||!!(photoOpen&&photoFile)||!!(passwordOpen&&(currentPassword||password||confirmPassword));
- const zone=data?.profile.timezone||'Asia/Manila';const date=(value:string|null|undefined)=>value?new Date(value).toLocaleString('en-PH',{timeZone:zone,year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:data?.profile.time_format!=='24'}):'Not recorded';
- function adopt(result:AdminProfileData){setData(result);setDraft(result.profile);if(!preferencesDirty)setNotifications(result.notifications);setFieldErrors({});window.dispatchEvent(new CustomEvent('nuers:admin-profile-updated'));}
- const liveAllowed=useRef(true);liveAllowed.current=!dirty&&!editing&&!busy&&!photoOpen&&!passwordOpen&&!logoutOpen;
- async function load(quiet=false){if(!quiet)setLoading(true);setError('');try{const next=await apiJson('/api/admin/account-profile');if(!quiet||liveAllowed.current)adopt(next);}catch(e){setError(e instanceof Error?e.message:'Unable to load your profile.')}finally{setLoading(false)}}
- useRealtimeRefresh(()=>load(true),!dirty&&!editing&&!busy&&!photoOpen&&!passwordOpen&&!logoutOpen);
- useEffect(()=>{if(!initialRead.current){initialRead.current=true;void load()}},[]);
- useEffect(()=>{const id=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(id)},[]);
- useEffect(()=>{let active=true,url='';if(data?.account.has_avatar)apiFetch('/api/admin/account-profile/avatar').then(async r=>{if(!r.ok)throw new Error('Unable to load profile photo');return r.blob()}).then(blob=>{if(active){url=URL.createObjectURL(blob);setPhoto(url)}}).catch(()=>{if(active)setPhoto('')});else setPhoto('');return()=>{active=false;if(url)URL.revokeObjectURL(url)}},[data?.account.has_avatar,photoVersion]);
- useEffect(()=>{if(!dirty)return;const unload=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue=''};const links=(e:MouseEvent)=>{if(e.target instanceof Element&&e.target.closest('.ne-account-menu button')){e.preventDefault();e.stopPropagation();setPending('signout');return}const el=e.target instanceof Element?e.target.closest('a[href]'):null;if(el){const href=el.getAttribute('href')||'';if(href&&!href.startsWith('#')&&href!==location.pathname+location.search){e.preventDefault();e.stopPropagation();setPending(href)}}};window.addEventListener('beforeunload',unload);document.addEventListener('click',links,true);return()=>{window.removeEventListener('beforeunload',unload);document.removeEventListener('click',links,true)}},[dirty,location.pathname,location.search]);
- async function saveProfile(e?:FormEvent){e?.preventDefault();if(busy||!data||!draft)return;setBusy(true);setError('');setMessage('');setFieldErrors({});try{const r=await apiFetch('/api/admin/account-profile',{method:'PUT',body:JSON.stringify({revision:data.account.revision,profile:draft})});const result=await r.json();if(!r.ok){const fields:Record<string,string>={};for(const[k,v]of Object.entries(result.errors||{}))fields[k]=Array.isArray(v)?String(v[0]):String(v);setFieldErrors(fields);throw new Error(result.message||'Unable to save your profile.')}adopt(result);setEditing(false);setMessage('Your account profile has been saved.')}catch(e){setError(e instanceof Error?e.message:'Unable to save your profile.')}finally{setBusy(false)}}
- async function saveNotifications(){if(busy||!notifications)return;setBusy(true);setError('');setMessage('');try{const fresh=await apiJson<AdminProfileData>('/api/admin/account-profile/notifications',{method:'PUT',body:JSON.stringify({revision:data?.account.revision,workflow_email:notifications.workflow_email,support_email:notifications.support_email,operations_email:notifications.operations_email})});setData(fresh);setNotifications(fresh.notifications);setMessage('Email notification preferences saved.');}catch(e){setError(e instanceof Error?e.message:'Unable to save notification preferences.')}finally{setBusy(false)}}
- async function uploadPhoto(e:FormEvent){e.preventDefault();if(!photoFile||!data||busy)return;setBusy(true);setError('');try{const form=new FormData();form.append('avatar',photoFile);form.append('revision',String(data.account.revision));adopt(await apiJson('/api/admin/account-profile/avatar',{method:'POST',body:form}));setPhotoVersion(v=>v+1);setPhotoOpen(false);setPhotoFile(null);setMessage('Your profile photo has been updated.');}catch(e){setError(e instanceof Error?e.message:'Unable to update your photo.')}finally{setBusy(false)}}
- async function changePassword(e:FormEvent){e.preventDefault();if(busy)return;if(password!==confirmPassword){setError('New passwords do not match.');return}setBusy(true);setError('');try{await apiJson('/api/auth/change-password',{method:'POST',body:JSON.stringify({current_password:currentPassword,password,password_confirmation:confirmPassword})});setCurrentPassword('');setPassword('');setConfirmPassword('');setPasswordOpen(false);await signOut();window.location.assign('/login?password=changed')}catch(e){setError(e instanceof Error?e.message:'Unable to change your password.')}finally{setBusy(false)}}
- function switchTab(next:Tab){if(dirty){setPending(`/super-admin/profile${next==='profile'?'':`?tab=${next}`}`);return}setError('');setMessage('');setEditing(false);navigate(`/super-admin/profile${next==='profile'?'':`?tab=${next}`}`)}
- function field(key:keyof Details,label:string,options?:{multiline?:boolean;readOnly?:boolean;type?:string;choices?:string[];required?:boolean;max?:number}){const opts=options||{},id=`ap-${key}`,err=fieldErrors['profile.'+key];const common={id,value:draft?.[key]||'',disabled:busy||(!editing&&tab!=='preferences')||opts.readOnly,required:opts.required,'aria-invalid':!!err,'aria-describedby':err?id+'-error':undefined,onChange:(e:React.ChangeEvent<HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement>)=>setDraft(v=>v?{...v,[key]:e.target.value}:v)};return <label className="ap-field" key={key} htmlFor={id}><span>{label}{opts.required&&<b> *</b>}</span>{opts.choices?<select {...common}>{opts.choices.map(x=><option key={x}>{x}</option>)}</select>:opts.multiline?<textarea {...common} maxLength={opts.max||1000} rows={3}/>:<input {...common} type={opts.type||'text'} maxLength={opts.max||150} pattern={key==='mobile'||key==='telephone'?'[+0-9\\s\\(\\)\\-]{7,32}':undefined}/>} {err&&<small id={id+'-error'} role="alert">{err}</small>}</label>}
- const role=data?.account.role==='super_admin'?'Super Administrator':'System Administrator';const titleName=data?.profile.full_name||'NUERS Administrator';const initials=titleName.split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase();
- const Security=()=> <Panel icon={ShieldCheck} title="Account Security" description="Manage your authentication and security controls."><div className="ap-security-rows"><div><LockKeyhole/><span><strong>Password status</strong><small>{data?.security.password_changed_at?'Last changed '+date(data.security.password_changed_at):'Change date not recorded'}</small></span><b className="ap-tag neutral">Configured</b></div><div><ShieldCheck/><span><strong>Two-Factor Authentication (2FA)</strong><small>Authenticator app · verified once per login</small></span><Link className={'ap-tag '+(data?.security.mfa_enrolled?'good':'warning')} to="/security/mfa">{data?.security.mfa_enrolled?'Enabled':'Set up'}</Link></div><div><Bell/><span><strong>Security & login alerts</strong><small>Essential security emails remain enabled</small></span><b className="ap-tag good">Enabled</b></div><div><Clock3/><span><strong>Session protection</strong><small>Idle window {hours(data?.security.idle_minutes||0)} · maximum {hours(data?.security.absolute_minutes||0)}</small></span><b className="ap-tag neutral">System policy</b></div><div><Mail/><span><strong>Recovery email</strong><small>{data?.account.email||'—'}</small></span><span className={'ap-tag '+(data?.account.email_verified?'good':'warning')}>{data?.account.email_verified?'Verified':'Not verified'}</span></div></div>{tab==='security'&&<div className="ap-section-actions"><button className="ap-primary" onClick={()=>{setError('');setPasswordOpen(true)}}><KeyRound size={16}/>Change password</button><Link className="ap-outline" to="/security/mfa">Manage authenticator<ChevronRight size={16}/></Link>{!data?.account.email_verified&&<button className="ap-outline" disabled={busy} onClick={async()=>{setBusy(true);setError('');try{const r=await apiJson<{message:string}>('/api/auth/resend-verification',{method:'POST'});setMessage(r.message)}catch(e){setError(e instanceof Error?e.message:'Unable to request verification.')}finally{setBusy(false)}}}>Verify sign-in email</button>}</div>}</Panel>;
- const Notifications=()=> <Panel icon={Bell} title="Notification Preferences" description="Choose the NUERS emails you want to receive."><div className="ap-notifications">{([{key:'security_email',label:'Security alerts',hint:'Password changes, access and security events',icon:ShieldCheck,locked:true},{key:'workflow_email',label:'Account & workflow updates',hint:'Account reviews and related workflow updates',icon:Mail},{key:'support_email',label:'Support notifications',hint:'Support replies and case status changes',icon:Users},{key:'operations_email',label:'Operational notices',hint:'Maintenance and operational action reminders',icon:Settings2}] as const).map(x=><div key={x.key}><x.icon size={19}/><span><strong>{x.label}</strong><small>{x.hint}</small></span><button type="button" role="switch" aria-checked={!!notifications?.[x.key]} aria-label={x.label} disabled={busy||x.key==='security_email'} onClick={()=>setNotifications(v=>v?{...v,[x.key]:!v[x.key]}:v)}><i/></button></div>)}</div><footer className="ap-inline-save"><small>Essential security alerts cannot be disabled.</small><button className="ap-outline" disabled={busy||!preferencesDirty} onClick={()=>void saveNotifications()}><Save size={14}/>Save preferences</button></footer></Panel>;
- const Activity=()=> <Panel icon={Clock3} title="Recent Account Activity" description="Your recorded account and security events." action={tab==='profile'?<button className="ap-link" onClick={()=>switchTab('activity')}>View all<ChevronRight size={13}/></button>:undefined}><div className="ap-activity">{(tab==='activity'?data?.activity:data?.activity.slice(0,5))?.map(x=><div key={x.id}><span><ShieldCheck size={15}/></span><div><strong>{eventLabel(x.event)}</strong><small>Recorded in your NUERS audit trail</small></div><time>{date(x.at)}</time></div>)}{!data?.activity.length&&<p className="ap-empty">No account activity has been recorded yet.</p>}</div></Panel>;
- const Sessions=()=> <Panel icon={Monitor} title="Active Login Session" description="The system currently supports one active application session per account."><div className="ap-table-scroll"><table><thead><tr><th>#</th><th>Device</th><th>Browser</th><th>Observed IP address</th><th>Signed in</th><th>Session expires</th><th>Status</th><th>Action</th></tr></thead><tbody><tr><td>1</td><td><Monitor size={16}/>{data?.session.device} (this device)</td><td>{data?.session.browser}</td><td>{data?.session.ip}</td><td>{date(data?.session.started_at)}</td><td>{date(data?.session.expires_at)}</td><td><span className="ap-tag good">Current session</span></td><td><button className="ap-danger" disabled={busy} onClick={()=>setLogoutOpen(true)}>Sign out</button></td></tr></tbody></table></div><p className="ap-table-note">A sign-in from another browser replaces this session. Session expiry and MFA are enforced by the system; profile preferences do not change them.</p></Panel>;
- return <div className={`admin-profile ${data?.profile.density==='compact'?'ap-compact':''}`}><header className="ap-hero"><div><h1>Account Profile</h1><p>Manage your account information, security settings, sessions, and preferences.</p></div><time>{now.toLocaleDateString('en-PH',{timeZone:zone,weekday:'long',month:'long',day:'numeric',year:'numeric'})}<strong>{now.toLocaleTimeString('en-PH',{timeZone:zone,hour12:data?.profile.time_format!=='24'})}</strong></time></header>
- {error&&<div className="ap-error" role="alert">{error}<button aria-label="Dismiss error" onClick={()=>setError('')}><X size={16}/></button></div>}{message&&<div className="ap-success" role="status"><Check size={17}/>{message}</div>}
- {loading?<div className="ap-loading" role="status"><LoaderCircle className="ap-spin"/>Loading your account profile…</div>:!data?<button className="ap-outline" onClick={()=>void load()}><RefreshCw size={16}/>Try again</button>:<>
- <section className="ap-summary"><div className="ap-portrait">{photo?<img src={photo} alt="Your profile"/>:<span>{initials}</span>}<button aria-label="Change profile photo" disabled={busy||dirty} onClick={()=>{setError('');setPhotoOpen(true)}}><Camera size={16}/></button></div><div className="ap-summary-main"><div className="ap-summary-name"><h2>{titleName}</h2><span className="ap-tag good">Signed in</span></div><p>{data.profile.position||role}</p><small>{role}{data.profile.organization?' · '+data.profile.organization:' · NUERS platform account'}</small><div className="ap-summary-fields">{[{icon:Mail,label:'Sign-in email',value:data.account.email},{icon:Phone,label:'Mobile number',value:data.profile.mobile||'Not recorded'},{icon:UserRound,label:'NUERS Account ID',value:data.account.id},{icon:Building2,label:'Department',value:data.profile.department||'Not recorded'},{icon:CalendarDays,label:'Date created',value:date(data.account.created_at)}].map(x=><div key={x.label}><x.icon size={21}/><span><small>{x.label}</small><strong>{x.value}</strong></span></div>)}</div></div><div className="ap-summary-actions"><button className="ap-primary" disabled={busy} onClick={()=>{if(tab!=='profile')switchTab('profile');setEditing(true)}}><Pencil size={15}/>Edit profile</button><button className="ap-outline" disabled={busy||dirty} onClick={()=>{setError('');setPhotoOpen(true)}}><Camera size={15}/>Change photo</button><button className="ap-outline" disabled={busy||dirty} onClick={()=>{setError('');setPasswordOpen(true)}}><LockKeyhole size={15}/>Change password</button></div></section>
- <nav className="ap-tabs" aria-label="Account profile sections">{tabs.map(x=><button key={x.id} aria-current={tab===x.id?'page':undefined} className={tab===x.id?'active':''} onClick={()=>switchTab(x.id)}><x.icon size={19}/>{x.label}</button>)}</nav>
- {(tab==='profile')&&<><form id="ap-profile-form" onSubmit={saveProfile}><div className="ap-profile-grid"><Panel icon={UserRound} title="Personal Information" description="View and update your personal and professional details."><div className="ap-fields">{field('full_name','Full name',{required:true})}<label className="ap-field"><span>Sign-in email</span><input readOnly disabled value={data.account.email}/></label>{field('mobile','Mobile number',{max:32})}{field('position','Position / title')}{field('department','Department')}{field('organization','Organization')}{field('timezone','Profile timezone',{choices:zones,required:true})}<label className="ap-field"><span>NUERS Account ID</span><input disabled value={data.account.id}/></label></div></Panel><Panel icon={MapPin} title="Address / Contact Information" description="Your optional office and additional contact details."><div className="ap-fields ap-contact">{field('office_address','Office address',{multiline:true})}{field('telephone','Telephone number',{max:32})}{field('alternate_email','Alternate contact email',{type:'email',max:254})}</div><p className="ap-helper">Your sign-in email is used for recovery and security alerts. Contact details do not change your role or establish government affiliation.</p></Panel><Panel icon={Users} title="Role & Access Summary" description="Your assigned platform role and access level."><div className="ap-role"><UserRound/><div><small>Role name</small><strong>{role}</strong></div><span className="ap-tag neutral">Assigned</span><ShieldCheck/><div><small>Access level</small><strong>{data.account.role==='super_admin'?'NUERS platform administration':'Administrator permissions'}</strong></div><span/><Building2/><div><small>Permission scope</small><p>Access follows your assigned role. MFA is verified once per login; taxpayer authority and BIR connectivity are reviewed separately.</p></div></div></Panel></div>{editing&&<div className="ap-form-actions"><span>{profileDirty?'You have unsaved profile changes.':'Update your details, then save.'}</span><button type="button" className="ap-outline" disabled={busy} onClick={()=>{if(profileDirty)setPending('cancel');else setEditing(false)}}>Cancel</button><button type="submit" className="ap-primary" disabled={busy||!profileDirty}>{busy?<LoaderCircle className="ap-spin" size={16}/>:<Save size={16}/>}Save changes</button></div>}</form><div className="ap-lower-grid">{Security()}{Notifications()}{Activity()}</div>{Sessions()}</>}
- {tab==='security'&&Security()}{tab==='notifications'&&Notifications()}{tab==='activity'&&Activity()}{tab==='sessions'&&Sessions()}{tab==='preferences'&&<form onSubmit={saveProfile}><Panel icon={Settings2} title="Display Preferences" description="Personalize how this account page presents dates and records."><div className="ap-fields ap-preferences">{field('timezone','Profile timezone',{choices:zones,required:true})}{field('time_format','Time format',{choices:['12','24'],required:true})}{field('density','Table density',{choices:['comfortable','compact'],required:true})}</div><p className="ap-helper">Recorded transaction dates and system security limits retain their original rules.</p><div className="ap-section-actions"><button type="submit" className="ap-primary" disabled={busy||!profileDirty}><Save size={16}/>Save preferences</button></div></Panel></form>}
- </>}
- <Dialog open={passwordOpen} onOpenChange={v=>{if(!busy){if(!v&&(currentPassword||password||confirmPassword)){setPending('password');return}setPasswordOpen(v);setError('')}}}><DialogContent className="ap-dialog"><DialogHeader><DialogTitle>Change your password</DialogTitle><DialogDescription>All application sessions will be signed out after a successful change. Your authenticator remains enabled.</DialogDescription></DialogHeader>{error&&<p className="ap-error" role="alert">{error}</p>}<form onSubmit={changePassword}><label className="ap-field"><span>Current password *</span><input required type="password" autoComplete="current-password" value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} disabled={busy}/></label><label className="ap-field"><span>New password *</span><div className="ap-password"><input required type={showPassword?'text':'password'} autoComplete="new-password" minLength={12} maxLength={72} value={password} onChange={e=>setPassword(e.target.value)} disabled={busy}/><button type="button" aria-label={showPassword?'Hide new password':'Show new password'} onClick={()=>setShowPassword(!showPassword)}>{showPassword?<EyeOff size={18}/>:<Eye size={18}/>}</button></div></label><label className="ap-field"><span>Confirm new password *</span><input required type="password" autoComplete="new-password" minLength={12} maxLength={72} value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} disabled={busy}/></label><p className="ap-helper">Use at least 12 characters including letters and numbers, up to 72 bytes.</p><button className="ap-primary" disabled={busy}>{busy?'Updating…':'Change password'}</button></form></DialogContent></Dialog>
- <Dialog open={photoOpen} onOpenChange={v=>{if(!busy){if(!v&&photoFile){setPending('photo');return}setPhotoOpen(v);if(!v)setPhotoFile(null)}}}><DialogContent className="ap-dialog"><DialogHeader><DialogTitle>Change profile photo</DialogTitle><DialogDescription>Upload a JPG, PNG, or WebP image up to 2 MB. Your photo is stored privately and is visible only through your authorized account.</DialogDescription></DialogHeader>{error&&<p className="ap-error" role="alert">{error}</p>}<form onSubmit={uploadPhoto}><label className="ap-upload"><Camera size={32}/><strong>{photoFile?.name||'Choose a profile photo'}</strong><input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" required disabled={busy} onChange={e=>{const f=e.target.files?.[0];if(f&&f.size>2*1024*1024){setError('Choose an image smaller than 2 MB.');e.target.value='';setPhotoFile(null)}else{setError('');setPhotoFile(f||null)}}}/></label><button className="ap-primary" disabled={busy||!photoFile}>{busy?'Uploading…':'Save photo'}</button></form></DialogContent></Dialog>
- <Dialog open={pending!==null} onOpenChange={v=>{if(!v)setPending(null)}}><DialogContent className="ap-dialog"><DialogHeader><DialogTitle>Discard unsaved changes?</DialogTitle><DialogDescription>Your changes have not been saved. You can keep editing or discard them to continue.</DialogDescription></DialogHeader><div className="ap-section-actions"><button className="ap-outline" onClick={()=>setPending(null)}>Keep editing</button><button className="ap-primary" onClick={()=>{const next=pending;setPending(null);if(next==='photo'){setPhotoFile(null);setPhotoOpen(false);return}if(next==='signout'){setCurrentPassword('');setPassword('');setConfirmPassword('');setPhotoFile(null);void signOut().then(()=>navigate('/login'));return}if(next==='password'){setCurrentPassword('');setPassword('');setConfirmPassword('');setPasswordOpen(false);return}if(data){setDraft(data.profile);setNotifications(data.notifications)}setEditing(false);if(next&&next!=='cancel')navigate(next)}}>Discard changes</button></div></DialogContent></Dialog>
- <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}><DialogContent className="ap-dialog"><DialogHeader><DialogTitle>Sign out this session?</DialogTitle><DialogDescription>You will need to sign in and complete MFA again to access your administrator account.</DialogDescription></DialogHeader><button className="ap-primary" disabled={busy} onClick={async()=>{setBusy(true);await signOut();navigate('/login')}}>Sign out</button></DialogContent></Dialog>
- </div>;
+export function AdminAccountProfile() {
+  const { signOut } = useAuth();
+  const location = useLocation(),
+    navigate = useNavigate();
+  const parsed = new URLSearchParams(location.search).get("tab");
+  const tab: Tab = tabs.some((t) => t.id === parsed) ? (parsed as Tab) : "profile";
+  const [data, setData] = useState<AdminProfileData | null>(null),
+    [draft, setDraft] = useState<Details | null>(null),
+    [notifications, setNotifications] = useState<AdminProfileData["notifications"] | null>(null),
+    [editing, setEditing] = useState(false),
+    [busy, setBusy] = useState(false),
+    [loading, setLoading] = useState(true),
+    [error, setError] = useState(""),
+    [message, setMessage] = useState(""),
+    [fieldErrors, setFieldErrors] = useState<Record<string, string>>({}),
+    [photo, setPhoto] = useState(""),
+    [photoVersion, setPhotoVersion] = useState(0),
+    [now, setNow] = useState(new Date()),
+    [passwordOpen, setPasswordOpen] = useState(false),
+    [photoOpen, setPhotoOpen] = useState(false),
+    [photoFile, setPhotoFile] = useState<File | null>(null),
+    [pending, setPending] = useState<string | null>(null),
+    [logoutOpen, setLogoutOpen] = useState(false),
+    [currentPassword, setCurrentPassword] = useState(""),
+    [password, setPassword] = useState(""),
+    [confirmPassword, setConfirmPassword] = useState(""),
+    [showPassword, setShowPassword] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const initialRead = useRef(false);
+  const profileDirty = !!data && !!draft && JSON.stringify(draft) !== JSON.stringify(data.profile);
+  const preferencesDirty =
+    !!data &&
+    !!notifications &&
+    JSON.stringify(notifications) !== JSON.stringify(data.notifications);
+  const dirty =
+    profileDirty ||
+    preferencesDirty ||
+    !!(photoOpen && photoFile) ||
+    !!(passwordOpen && (currentPassword || password || confirmPassword));
+  const zone = data?.profile.timezone || "Asia/Manila";
+  const date = (value: string | null | undefined) =>
+    value
+      ? new Date(value).toLocaleString("en-PH", {
+          timeZone: zone,
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: data?.profile.time_format !== "24",
+        })
+      : "Not recorded";
+  function adopt(result: AdminProfileData) {
+    setData(result);
+    setDraft(result.profile);
+    if (!preferencesDirty) setNotifications(result.notifications);
+    setFieldErrors({});
+    window.dispatchEvent(new CustomEvent("nuers:admin-profile-updated"));
+  }
+  const liveAllowed = useRef(true);
+  liveAllowed.current = !dirty && !editing && !busy && !photoOpen && !passwordOpen && !logoutOpen;
+  async function load(quiet = false) {
+    if (!quiet) setLoading(true);
+    setError("");
+    try {
+      const next = await apiJson("/api/admin/account-profile");
+      if (!quiet || liveAllowed.current) adopt(next);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unable to load your profile.");
+    } finally {
+      setLoading(false);
+    }
+  }
+  useRealtimeRefresh(
+    () => load(true),
+    !dirty && !editing && !busy && !photoOpen && !passwordOpen && !logoutOpen,
+  );
+  useEffect(() => {
+    if (!initialRead.current) {
+      initialRead.current = true;
+      void load();
+    }
+  }, []);
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  useEffect(() => {
+    let active = true,
+      url = "";
+    if (data?.account.has_avatar)
+      apiFetch("/api/admin/account-profile/avatar")
+        .then(async (r) => {
+          if (!r.ok) throw new Error("Unable to load profile photo");
+          return r.blob();
+        })
+        .then((blob) => {
+          if (active) {
+            url = URL.createObjectURL(blob);
+            setPhoto(url);
+          }
+        })
+        .catch(() => {
+          if (active) setPhoto("");
+        });
+    else setPhoto("");
+    return () => {
+      active = false;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [data?.account.has_avatar, photoVersion]);
+  useEffect(() => {
+    if (!dirty) return;
+    const unload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    const links = (e: MouseEvent) => {
+      if (e.target instanceof Element && e.target.closest(".ne-account-menu button")) {
+        e.preventDefault();
+        e.stopPropagation();
+        setPending("signout");
+        return;
+      }
+      const el = e.target instanceof Element ? e.target.closest("a[href]") : null;
+      if (el) {
+        const href = el.getAttribute("href") || "";
+        if (href && !href.startsWith("#") && href !== location.pathname + location.search) {
+          e.preventDefault();
+          e.stopPropagation();
+          setPending(href);
+        }
+      }
+    };
+    window.addEventListener("beforeunload", unload);
+    document.addEventListener("click", links, true);
+    return () => {
+      window.removeEventListener("beforeunload", unload);
+      document.removeEventListener("click", links, true);
+    };
+  }, [dirty, location.pathname, location.search]);
+  async function saveProfile(e?: FormEvent) {
+    e?.preventDefault();
+    if (busy || !data || !draft) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    setFieldErrors({});
+    try {
+      const r = await apiFetch("/api/admin/account-profile", {
+        method: "PUT",
+        body: JSON.stringify({ revision: data.account.revision, profile: draft }),
+      });
+      const result = await r.json();
+      if (!r.ok) {
+        const fields: Record<string, string> = {};
+        for (const [k, v] of Object.entries(result.errors || {}))
+          fields[k] = Array.isArray(v) ? String(v[0]) : String(v);
+        setFieldErrors(fields);
+        throw new Error(result.message || "Unable to save your profile.");
+      }
+      adopt(result);
+      setEditing(false);
+      setMessage("Your account profile has been saved.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unable to save your profile.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function saveNotifications() {
+    if (busy || !notifications) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const fresh = await apiJson<AdminProfileData>("/api/admin/account-profile/notifications", {
+        method: "PUT",
+        body: JSON.stringify({
+          revision: data?.account.revision,
+          workflow_email: notifications.workflow_email,
+          support_email: notifications.support_email,
+          operations_email: notifications.operations_email,
+        }),
+      });
+      setData(fresh);
+      setNotifications(fresh.notifications);
+      setMessage("Email notification preferences saved.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unable to save notification preferences.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function uploadPhoto(e: FormEvent) {
+    e.preventDefault();
+    if (!photoFile || !data || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const form = new FormData();
+      form.append("avatar", photoFile);
+      form.append("revision", String(data.account.revision));
+      adopt(await apiJson("/api/admin/account-profile/avatar", { method: "POST", body: form }));
+      setPhotoVersion((v) => v + 1);
+      setPhotoOpen(false);
+      setPhotoFile(null);
+      setMessage("Your profile photo has been updated.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unable to update your photo.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function changePassword(e: FormEvent) {
+    e.preventDefault();
+    if (busy) return;
+    if (password !== confirmPassword) {
+      setError("New passwords do not match.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      await apiJson("/api/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify({
+          current_password: currentPassword,
+          password,
+          password_confirmation: confirmPassword,
+        }),
+      });
+      setCurrentPassword("");
+      setPassword("");
+      setConfirmPassword("");
+      setPasswordOpen(false);
+      await signOut();
+      window.location.assign("/login?password=changed");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unable to change your password.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  function switchTab(next: Tab) {
+    if (dirty) {
+      setPending(`/super-admin/profile${next === "profile" ? "" : `?tab=${next}`}`);
+      return;
+    }
+    setError("");
+    setMessage("");
+    setEditing(false);
+    navigate(`/super-admin/profile${next === "profile" ? "" : `?tab=${next}`}`);
+  }
+  function field(
+    key: keyof Details,
+    label: string,
+    options?: {
+      multiline?: boolean;
+      readOnly?: boolean;
+      type?: string;
+      choices?: string[];
+      required?: boolean;
+      max?: number;
+    },
+  ) {
+    const opts = options || {},
+      id = `ap-${key}`,
+      err = fieldErrors["profile." + key];
+    const common = {
+      id,
+      value: draft?.[key] || "",
+      disabled: busy || (!editing && tab !== "preferences") || opts.readOnly,
+      required: opts.required,
+      "aria-invalid": !!err,
+      "aria-describedby": err ? id + "-error" : undefined,
+      onChange: (
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
+      ) => setDraft((v) => (v ? { ...v, [key]: e.target.value } : v)),
+    };
+    return (
+      <label className="ap-field" key={key} htmlFor={id}>
+        <span>
+          {label}
+          {opts.required && <b> *</b>}
+        </span>
+        {opts.choices ? (
+          <select {...common}>
+            {opts.choices.map((x) => (
+              <option key={x}>{x}</option>
+            ))}
+          </select>
+        ) : opts.multiline ? (
+          <textarea {...common} maxLength={opts.max || 1000} rows={3} />
+        ) : (
+          <input
+            {...common}
+            type={opts.type || "text"}
+            maxLength={opts.max || 150}
+            pattern={
+              key === "mobile" || key === "telephone" ? "[+0-9\\s\\(\\)\\-]{7,32}" : undefined
+            }
+          />
+        )}{" "}
+        {err && (
+          <small id={id + "-error"} role="alert">
+            {err}
+          </small>
+        )}
+      </label>
+    );
+  }
+  const role =
+    data?.account.role === "super_admin" ? "Super Administrator" : "System Administrator";
+  const titleName = data?.profile.full_name || "NUERS Administrator";
+  const initials = titleName
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((x) => x[0])
+    .join("")
+    .toUpperCase();
+  const Security = () => (
+    <Panel
+      icon={ShieldCheck}
+      title="Account Security"
+      description="Manage your authentication and security controls."
+    >
+      <div className="ap-security-rows">
+        <div>
+          <LockKeyhole />
+          <span>
+            <strong>Password status</strong>
+            <small>
+              {data?.security.password_changed_at
+                ? "Last changed " + date(data.security.password_changed_at)
+                : "Change date not recorded"}
+            </small>
+          </span>
+          <b className="ap-tag neutral">Configured</b>
+        </div>
+        <div>
+          <ShieldCheck />
+          <span>
+            <strong>Two-Factor Authentication (2FA)</strong>
+            <small>Authenticator app · verified once per login</small>
+          </span>
+          <Link
+            className={"ap-tag " + (data?.security.mfa_enrolled ? "good" : "warning")}
+            to="/security/mfa"
+          >
+            {data?.security.mfa_enrolled ? "Enabled" : "Set up"}
+          </Link>
+        </div>
+        <div>
+          <Bell />
+          <span>
+            <strong>Security & login alerts</strong>
+            <small>Essential security emails remain enabled</small>
+          </span>
+          <b className="ap-tag good">Enabled</b>
+        </div>
+        <div>
+          <Clock3 />
+          <span>
+            <strong>Session protection</strong>
+            <small>
+              Idle window {hours(data?.security.idle_minutes || 0)} · maximum{" "}
+              {hours(data?.security.absolute_minutes || 0)}
+            </small>
+          </span>
+          <b className="ap-tag neutral">System policy</b>
+        </div>
+        <div>
+          <Mail />
+          <span>
+            <strong>Recovery email</strong>
+            <small>{data?.account.email || "—"}</small>
+          </span>
+          <span className={"ap-tag " + (data?.account.email_verified ? "good" : "warning")}>
+            {data?.account.email_verified ? "Verified" : "Not verified"}
+          </span>
+        </div>
+      </div>
+      {tab === "security" && (
+        <div className="ap-section-actions">
+          <button
+            className="ap-primary"
+            onClick={() => {
+              setError("");
+              setPasswordOpen(true);
+            }}
+          >
+            <KeyRound size={16} />
+            Change password
+          </button>
+          <Link className="ap-outline" to="/security/mfa">
+            Manage authenticator
+            <ChevronRight size={16} />
+          </Link>
+          {!data?.account.email_verified && (
+            <button
+              className="ap-outline"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                setError("");
+                try {
+                  const r = await apiJson<{ message: string }>("/api/auth/resend-verification", {
+                    method: "POST",
+                  });
+                  setMessage(r.message);
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : "Unable to request verification.");
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Verify sign-in email
+            </button>
+          )}
+        </div>
+      )}
+    </Panel>
+  );
+  const Notifications = () => (
+    <Panel
+      icon={Bell}
+      title="Notification Preferences"
+      description="Choose the NUERS emails you want to receive."
+    >
+      <div className="ap-notifications">
+        {(
+          [
+            {
+              key: "security_email",
+              label: "Security alerts",
+              hint: "Password changes, access and security events",
+              icon: ShieldCheck,
+              locked: true,
+            },
+            {
+              key: "workflow_email",
+              label: "Account & workflow updates",
+              hint: "Account reviews and related workflow updates",
+              icon: Mail,
+            },
+            {
+              key: "support_email",
+              label: "Support notifications",
+              hint: "Support replies and case status changes",
+              icon: Users,
+            },
+            {
+              key: "operations_email",
+              label: "Operational notices",
+              hint: "Maintenance and operational action reminders",
+              icon: Settings2,
+            },
+          ] as const
+        ).map((x) => (
+          <div key={x.key}>
+            <x.icon size={19} />
+            <span>
+              <strong>{x.label}</strong>
+              <small>{x.hint}</small>
+            </span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={!!notifications?.[x.key]}
+              aria-label={x.label}
+              disabled={busy || x.key === "security_email"}
+              onClick={() => setNotifications((v) => (v ? { ...v, [x.key]: !v[x.key] } : v))}
+            >
+              <i />
+            </button>
+          </div>
+        ))}
+      </div>
+      <footer className="ap-inline-save">
+        <small>Essential security alerts cannot be disabled.</small>
+        <button
+          className="ap-outline"
+          disabled={busy || !preferencesDirty}
+          onClick={() => void saveNotifications()}
+        >
+          <Save size={14} />
+          Save preferences
+        </button>
+      </footer>
+    </Panel>
+  );
+  const Activity = () => (
+    <Panel
+      icon={Clock3}
+      title="Recent Account Activity"
+      description="Your recorded account and security events."
+      action={
+        tab === "profile" ? (
+          <button className="ap-link" onClick={() => switchTab("activity")}>
+            View all
+            <ChevronRight size={13} />
+          </button>
+        ) : undefined
+      }
+    >
+      <div className="ap-activity">
+        {(tab === "activity" ? data?.activity : data?.activity.slice(0, 5))?.map((x) => (
+          <div key={x.id}>
+            <span>
+              <ShieldCheck size={15} />
+            </span>
+            <div>
+              <strong>{eventLabel(x.event)}</strong>
+              <small>Recorded in your NUERS audit trail</small>
+            </div>
+            <time>{date(x.at)}</time>
+          </div>
+        ))}
+        {!data?.activity.length && (
+          <p className="ap-empty">No account activity has been recorded yet.</p>
+        )}
+      </div>
+    </Panel>
+  );
+  const Sessions = () => (
+    <Panel
+      icon={Monitor}
+      title="Active Login Session"
+      description="The system currently supports one active application session per account."
+    >
+      <div className="ap-table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Device</th>
+              <th>Browser</th>
+              <th>Observed IP address</th>
+              <th>Signed in</th>
+              <th>Session expires</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>
+                <Monitor size={16} />
+                {data?.session.device} (this device)
+              </td>
+              <td>{data?.session.browser}</td>
+              <td>{data?.session.ip}</td>
+              <td>{date(data?.session.started_at)}</td>
+              <td>{date(data?.session.expires_at)}</td>
+              <td>
+                <span className="ap-tag good">Current session</span>
+              </td>
+              <td>
+                <button className="ap-danger" disabled={busy} onClick={() => setLogoutOpen(true)}>
+                  Sign out
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p className="ap-table-note">
+        A sign-in from another browser replaces this session. Session expiry and MFA are enforced by
+        the system; profile preferences do not change them.
+      </p>
+    </Panel>
+  );
+  return (
+    <div className={`admin-profile ${data?.profile.density === "compact" ? "ap-compact" : ""}`}>
+      <header className="ap-hero">
+        <div>
+          <h1>Account Profile</h1>
+          <p>Manage your account information, security settings, sessions, and preferences.</p>
+        </div>
+        <time>
+          {now.toLocaleDateString("en-PH", {
+            timeZone: zone,
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          })}
+          <strong>
+            {now.toLocaleTimeString("en-PH", {
+              timeZone: zone,
+              hour12: data?.profile.time_format !== "24",
+            })}
+          </strong>
+        </time>
+      </header>
+      {error && (
+        <div className="ap-error" role="alert">
+          {error}
+          <button aria-label="Dismiss error" onClick={() => setError("")}>
+            <X size={16} />
+          </button>
+        </div>
+      )}
+      {message && (
+        <div className="ap-success" role="status">
+          <Check size={17} />
+          {message}
+        </div>
+      )}
+      {loading ? (
+        <div className="ap-loading" role="status">
+          <LoaderCircle className="ap-spin" />
+          Loading your account profile…
+        </div>
+      ) : !data ? (
+        <button className="ap-outline" onClick={() => void load()}>
+          <RefreshCw size={16} />
+          Try again
+        </button>
+      ) : (
+        <>
+          <section className="ap-summary">
+            <div className="ap-portrait">
+              {photo ? <img src={photo} alt="Your profile" /> : <span>{initials}</span>}
+              <button
+                aria-label="Change profile photo"
+                disabled={busy || dirty}
+                onClick={() => {
+                  setError("");
+                  setPhotoOpen(true);
+                }}
+              >
+                <Camera size={16} />
+              </button>
+            </div>
+            <div className="ap-summary-main">
+              <div className="ap-summary-name">
+                <h2>{titleName}</h2>
+                <span className="ap-tag good">Signed in</span>
+              </div>
+              <p>{data.profile.position || role}</p>
+              <small>
+                {role}
+                {data.profile.organization
+                  ? " · " + data.profile.organization
+                  : " · NUERS platform account"}
+              </small>
+              <div className="ap-summary-fields">
+                {[
+                  { icon: Mail, label: "Sign-in email", value: data.account.email },
+                  {
+                    icon: Phone,
+                    label: "Mobile number",
+                    value: data.profile.mobile || "Not recorded",
+                  },
+                  { icon: UserRound, label: "NUERS Account ID", value: data.account.id },
+                  {
+                    icon: Building2,
+                    label: "Department",
+                    value: data.profile.department || "Not recorded",
+                  },
+                  {
+                    icon: CalendarDays,
+                    label: "Date created",
+                    value: date(data.account.created_at),
+                  },
+                ].map((x) => (
+                  <div key={x.label}>
+                    <x.icon size={21} />
+                    <span>
+                      <small>{x.label}</small>
+                      <strong>{x.value}</strong>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="ap-summary-actions">
+              <button
+                className="ap-primary"
+                disabled={busy}
+                onClick={() => {
+                  if (tab !== "profile") switchTab("profile");
+                  setEditing(true);
+                }}
+              >
+                <Pencil size={15} />
+                Edit profile
+              </button>
+              <button
+                className="ap-outline"
+                disabled={busy || dirty}
+                onClick={() => {
+                  setError("");
+                  setPhotoOpen(true);
+                }}
+              >
+                <Camera size={15} />
+                Change photo
+              </button>
+              <button
+                className="ap-outline"
+                disabled={busy || dirty}
+                onClick={() => {
+                  setError("");
+                  setPasswordOpen(true);
+                }}
+              >
+                <LockKeyhole size={15} />
+                Change password
+              </button>
+            </div>
+          </section>
+          <nav className="ap-tabs" aria-label="Account profile sections">
+            {tabs.map((x) => (
+              <button
+                key={x.id}
+                aria-current={tab === x.id ? "page" : undefined}
+                className={tab === x.id ? "active" : ""}
+                onClick={() => switchTab(x.id)}
+              >
+                <x.icon size={19} />
+                {x.label}
+              </button>
+            ))}
+          </nav>
+          {tab === "profile" && (
+            <>
+              <form id="ap-profile-form" onSubmit={saveProfile}>
+                <div className="ap-profile-grid">
+                  <Panel
+                    icon={UserRound}
+                    title="Personal Information"
+                    description="View and update your personal and professional details."
+                  >
+                    <div className="ap-fields">
+                      {field("full_name", "Full name", { required: true })}
+                      <label className="ap-field">
+                        <span>Sign-in email</span>
+                        <input readOnly disabled value={data.account.email} />
+                      </label>
+                      {field("mobile", "Mobile number", { max: 32 })}
+                      {field("position", "Position / title")}
+                      {field("department", "Department")}
+                      {field("organization", "Organization")}
+                      {field("timezone", "Profile timezone", { choices: zones, required: true })}
+                      <label className="ap-field">
+                        <span>NUERS Account ID</span>
+                        <input disabled value={data.account.id} />
+                      </label>
+                    </div>
+                  </Panel>
+                  <Panel
+                    icon={MapPin}
+                    title="Address / Contact Information"
+                    description="Your optional office and additional contact details."
+                  >
+                    <div className="ap-fields ap-contact">
+                      {field("office_address", "Office address", { multiline: true })}
+                      {field("telephone", "Telephone number", { max: 32 })}
+                      {field("alternate_email", "Alternate contact email", {
+                        type: "email",
+                        max: 254,
+                      })}
+                    </div>
+                    <p className="ap-helper">
+                      Your sign-in email is used for recovery and security alerts. Contact details
+                      do not change your role or establish government affiliation.
+                    </p>
+                  </Panel>
+                  <Panel
+                    icon={Users}
+                    title="Role & Access Summary"
+                    description="Your assigned platform role and access level."
+                  >
+                    <div className="ap-role">
+                      <UserRound />
+                      <div>
+                        <small>Role name</small>
+                        <strong>{role}</strong>
+                      </div>
+                      <span className="ap-tag neutral">Assigned</span>
+                      <ShieldCheck />
+                      <div>
+                        <small>Access level</small>
+                        <strong>
+                          {data.account.role === "super_admin"
+                            ? "NUERS platform administration"
+                            : "Administrator permissions"}
+                        </strong>
+                      </div>
+                      <span />
+                      <Building2 />
+                      <div>
+                        <small>Permission scope</small>
+                        <p>
+                          Access follows your assigned role. MFA is verified once per login;
+                          taxpayer authority and BIR connectivity are reviewed separately.
+                        </p>
+                      </div>
+                    </div>
+                  </Panel>
+                </div>
+                {editing && (
+                  <div className="ap-form-actions">
+                    <span>
+                      {profileDirty
+                        ? "You have unsaved profile changes."
+                        : "Update your details, then save."}
+                    </span>
+                    <button
+                      type="button"
+                      className="ap-outline"
+                      disabled={busy}
+                      onClick={() => {
+                        if (profileDirty) setPending("cancel");
+                        else setEditing(false);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit" className="ap-primary" disabled={busy || !profileDirty}>
+                      {busy ? <LoaderCircle className="ap-spin" size={16} /> : <Save size={16} />}
+                      Save changes
+                    </button>
+                  </div>
+                )}
+              </form>
+              <div className="ap-lower-grid">
+                {Security()}
+                {Notifications()}
+                {Activity()}
+              </div>
+              {Sessions()}
+            </>
+          )}
+          {tab === "security" && Security()}
+          {tab === "notifications" && Notifications()}
+          {tab === "activity" && Activity()}
+          {tab === "sessions" && Sessions()}
+          {tab === "preferences" && (
+            <form onSubmit={saveProfile}>
+              <Panel
+                icon={Settings2}
+                title="Display Preferences"
+                description="Personalize how this account page presents dates and records."
+              >
+                <div className="ap-fields ap-preferences">
+                  {field("timezone", "Profile timezone", { choices: zones, required: true })}
+                  {field("time_format", "Time format", { choices: ["12", "24"], required: true })}
+                  {field("density", "Table density", {
+                    choices: ["comfortable", "compact"],
+                    required: true,
+                  })}
+                </div>
+                <p className="ap-helper">
+                  Recorded transaction dates and system security limits retain their original rules.
+                </p>
+                <div className="ap-section-actions">
+                  <button type="submit" className="ap-primary" disabled={busy || !profileDirty}>
+                    <Save size={16} />
+                    Save preferences
+                  </button>
+                </div>
+              </Panel>
+            </form>
+          )}
+        </>
+      )}
+      <Dialog
+        open={passwordOpen}
+        onOpenChange={(v) => {
+          if (!busy) {
+            if (!v && (currentPassword || password || confirmPassword)) {
+              setPending("password");
+              return;
+            }
+            setPasswordOpen(v);
+            setError("");
+          }
+        }}
+      >
+        <DialogContent className="ap-dialog">
+          <DialogHeader>
+            <DialogTitle>Change your password</DialogTitle>
+            <DialogDescription>
+              All application sessions will be signed out after a successful change. Your
+              authenticator remains enabled.
+            </DialogDescription>
+          </DialogHeader>
+          {error && (
+            <p className="ap-error" role="alert">
+              {error}
+            </p>
+          )}
+          <form onSubmit={changePassword}>
+            <label className="ap-field">
+              <span>Current password *</span>
+              <input
+                required
+                type="password"
+                autoComplete="current-password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                disabled={busy}
+              />
+            </label>
+            <label className="ap-field">
+              <span>New password *</span>
+              <div className="ap-password">
+                <input
+                  required
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  minLength={12}
+                  maxLength={72}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={busy}
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Hide new password" : "Show new password"}
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </label>
+            <label className="ap-field">
+              <span>Confirm new password *</span>
+              <input
+                required
+                type="password"
+                autoComplete="new-password"
+                minLength={12}
+                maxLength={72}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={busy}
+              />
+            </label>
+            <p className="ap-helper">
+              Use at least 12 characters including letters and numbers, up to 72 bytes.
+            </p>
+            <button className="ap-primary" disabled={busy}>
+              {busy ? "Updating…" : "Change password"}
+            </button>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={photoOpen}
+        onOpenChange={(v) => {
+          if (!busy) {
+            if (!v && photoFile) {
+              setPending("photo");
+              return;
+            }
+            setPhotoOpen(v);
+            if (!v) setPhotoFile(null);
+          }
+        }}
+      >
+        <DialogContent className="ap-dialog">
+          <DialogHeader>
+            <DialogTitle>Change profile photo</DialogTitle>
+            <DialogDescription>
+              Upload a JPG, PNG, or WebP image up to 2 MB. Your photo is stored privately and is
+              visible only through your authorized account.
+            </DialogDescription>
+          </DialogHeader>
+          {error && (
+            <p className="ap-error" role="alert">
+              {error}
+            </p>
+          )}
+          <form onSubmit={uploadPhoto}>
+            <label className="ap-upload">
+              <Camera size={32} />
+              <strong>{photoFile?.name || "Choose a profile photo"}</strong>
+              <input
+                ref={fileInput}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                required
+                disabled={busy}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f && f.size > 2 * 1024 * 1024) {
+                    setError("Choose an image smaller than 2 MB.");
+                    e.target.value = "";
+                    setPhotoFile(null);
+                  } else {
+                    setError("");
+                    setPhotoFile(f || null);
+                  }
+                }}
+              />
+            </label>
+            <button className="ap-primary" disabled={busy || !photoFile}>
+              {busy ? "Uploading…" : "Save photo"}
+            </button>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={pending !== null}
+        onOpenChange={(v) => {
+          if (!v) setPending(null);
+        }}
+      >
+        <DialogContent className="ap-dialog">
+          <DialogHeader>
+            <DialogTitle>Discard unsaved changes?</DialogTitle>
+            <DialogDescription>
+              Your changes have not been saved. You can keep editing or discard them to continue.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="ap-section-actions">
+            <button className="ap-outline" onClick={() => setPending(null)}>
+              Keep editing
+            </button>
+            <button
+              className="ap-primary"
+              onClick={() => {
+                const next = pending;
+                setPending(null);
+                if (next === "photo") {
+                  setPhotoFile(null);
+                  setPhotoOpen(false);
+                  return;
+                }
+                if (next === "signout") {
+                  setCurrentPassword("");
+                  setPassword("");
+                  setConfirmPassword("");
+                  setPhotoFile(null);
+                  void signOut().then(() => navigate("/login"));
+                  return;
+                }
+                if (next === "password") {
+                  setCurrentPassword("");
+                  setPassword("");
+                  setConfirmPassword("");
+                  setPasswordOpen(false);
+                  return;
+                }
+                if (data) {
+                  setDraft(data.profile);
+                  setNotifications(data.notifications);
+                }
+                setEditing(false);
+                if (next && next !== "cancel") navigate(next);
+              }}
+            >
+              Discard changes
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
+        <DialogContent className="ap-dialog">
+          <DialogHeader>
+            <DialogTitle>Sign out this session?</DialogTitle>
+            <DialogDescription>
+              You will need to sign in and complete MFA again to access your administrator account.
+            </DialogDescription>
+          </DialogHeader>
+          <button
+            className="ap-primary"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              await signOut();
+              navigate("/login");
+            }}
+          >
+            Sign out
+          </button>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }

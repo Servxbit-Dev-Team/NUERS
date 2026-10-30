@@ -56,15 +56,16 @@ export function AuthShell({
               <h2 className="text-4xl font-semibold leading-tight tracking-normal text-white xl:text-5xl">
                 {heroTitle}
               </h2>
-              <p className="mt-5 max-w-xl text-sm leading-6 text-white/72">
-                {heroDescription}
-              </p>
+              <p className="mt-5 max-w-xl text-sm leading-6 text-white/72">{heroDescription}</p>
 
               <div className="mt-8 grid max-w-xl grid-cols-2 gap-3">
                 {assuranceItems.map((item) => {
                   const Icon = item.icon;
                   return (
-                    <div key={item.label} className="rounded-lg border border-white/12 bg-white/[0.07] p-4">
+                    <div
+                      key={item.label}
+                      className="rounded-lg border border-white/12 bg-white/[0.07] p-4"
+                    >
                       <Icon className="h-4 w-4 text-amber-300" />
                       <p className="mt-3 text-sm font-medium text-white">{item.value}</p>
                       <p className="mt-1 text-xs text-white/55">{item.label}</p>
@@ -94,10 +95,15 @@ export function AuthShell({
           <div className="mx-auto flex w-full max-w-[520px] flex-1 flex-col justify-center py-8">
             <div className="rounded-lg border border-slate-200/80 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.08)] sm:p-8">
               <div className="mb-7">
-                <Badge variant="secondary" className="rounded-md bg-amber-50 text-amber-700 hover:bg-amber-50">
+                <Badge
+                  variant="secondary"
+                  className="rounded-md bg-amber-50 text-amber-700 hover:bg-amber-50"
+                >
                   {eyebrow}
                 </Badge>
-                <h1 className="mt-4 text-3xl font-semibold tracking-normal text-slate-950">{title}</h1>
+                <h1 className="mt-4 text-3xl font-semibold tracking-normal text-slate-950">
+                  {title}
+                </h1>
                 <p className="mt-3 text-sm leading-6 text-slate-600">{description}</p>
               </div>
 

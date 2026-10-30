@@ -18,12 +18,12 @@ class WebhookSecurityTest extends TestCase
         foreach ([['event-2', $time, $body], ['event-1', $time, $body.' '], ['event-1', (string) ((int) $time - 301), $body]] as [$id,$at,$raw]) {
             $this->assertFalse(SignedWebhook::verify($secret, $id, $at, $raw, $sig, (int) $time));
         }
-        $this->assertSame('disabled', (new SignedWebhook)->runOne());
+        $this->assertSame('disabled', (new SignedWebhook())->runOne());
     }
 
     public function test_egress_rejects_credentials_redirect_destinations_ports_local_and_special_addresses(): void
     {
-        $service = new SignedWebhook;
+        $service = new SignedWebhook();
         foreach (['http://public.example.com', 'https://user@public.example.com', 'https://public.example.com:8443', 'https://localhost', 'https://127.0.0.1', 'https://public.example.com/#fragment'] as $url) {
             try {
                 $service->address($url, fn () => ['8.8.8.8']);
@@ -40,6 +40,6 @@ class WebhookSecurityTest extends TestCase
                 $this->assertSame(422, $e->getStatusCode());
             }
         }
-        $this->assertSame(['public.example.com', '8.8.8.8'], $service->address('https://public.example.com/path',fn () => ['8.8.8.8']));
+        $this->assertSame(['public.example.com', '8.8.8.8'], $service->address('https://public.example.com/path', fn () => ['8.8.8.8']));
     }
 }

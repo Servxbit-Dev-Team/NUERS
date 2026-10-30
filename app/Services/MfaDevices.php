@@ -53,7 +53,7 @@ class MfaDevices
                     DB::table('users')->where('id', $u->id)->update(['mfa_last_counter' => $counter]);
                 }
 
-return ['recovery_code' => false, 'device_id' => $d->id];
+                return ['recovery_code' => false, 'device_id' => $d->id];
             }
         }
         $recovery = json_decode($u->mfa_recovery_hashes ?? '[]', true);

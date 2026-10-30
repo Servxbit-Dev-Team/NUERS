@@ -55,7 +55,9 @@ class MerchantWallet
             return ['fee_centavos' => 0, 'pricing_revision' => null];
         }
         $p = app(TransactionPricing::class)->offer(DB::transactionLevel() > 0);
-        if ($gross < (int)$p->minimum_transaction_centavos) return ['fee_centavos'=>0,'pricing_revision'=>(int)$p->revision];
+        if ($gross < (int)$p->minimum_transaction_centavos) {
+            return ['fee_centavos' => 0,'pricing_revision' => (int)$p->revision];
+        }
         $fee = (int) $p->fee_centavos;
         $w = $this->locked($merchant);
         if ((int) $w->available_centavos < $fee) {

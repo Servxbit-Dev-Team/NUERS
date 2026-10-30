@@ -73,7 +73,7 @@ class BirWireTransportTest extends TestCase
 
     private function fakeBir(string $result = 'SUC001'): void
     {
-        Http::swap(new Factory);
+        Http::swap(new Factory());
         Http::preventStrayRequests();
         Http::fake(function ($r) use ($result) {
             $path = parse_url($r->url(), PHP_URL_PATH);
@@ -317,7 +317,7 @@ class BirWireTransportTest extends TestCase
         $this->fakeBir();
         app(WireBatches::class)->release($b->id, (string) $this->admin->id);
         app(WireClient::class)->session($p);
-        Http::swap(new Factory);
+        Http::swap(new Factory());
         Http::preventStrayRequests();
         Http::fake(['*' => Http::failedConnection()]);
         $this->assertSame('uncertain', app(WireBatches::class)->runOne()['state']);

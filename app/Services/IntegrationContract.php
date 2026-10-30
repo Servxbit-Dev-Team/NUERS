@@ -12,10 +12,13 @@ class IntegrationContract
 
     public function documentCatalog(): array
     {
-        return array_map(fn ($code, $label, $event, $tax) => compact('code', 'label', 'event', 'tax'), self::DOCUMENT_TYPES,
+        return array_map(
+            fn ($code, $label, $event, $tax) => compact('code', 'label', 'event', 'tax'),
+            self::DOCUMENT_TYPES,
             ['VAT Invoice', 'Non-VAT Invoice', 'VAT-Exempt Sales Invoice', 'Zero-Rated Sales Invoice', 'Mixed Sales Invoice', 'Payment Receipt (Supplementary)', 'Sales Invoice (Auto-classify)', 'Official Receipt (Payment Alias)'],
             ['invoice.finalized', 'invoice.finalized', 'invoice.finalized', 'invoice.finalized', 'invoice.finalized', 'payment.recorded', 'invoice.finalized', 'payment.recorded'],
-            ['vatable', 'non_vat', 'vat_exempt', 'zero_rated', 'mixed', 'source', 'source', 'source']);
+            ['vatable', 'non_vat', 'vat_exempt', 'zero_rated', 'mixed', 'source', 'source', 'source']
+        );
     }
 
     public function rules(bool $ingestion = false): array

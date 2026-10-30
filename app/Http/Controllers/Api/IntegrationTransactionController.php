@@ -32,11 +32,17 @@ class IntegrationTransactionController extends Controller
         // Laravel trims normal form strings. Never let that silently change a seller serial.
         $raw = json_decode($request->getContent(), true);
         $events = $batch ? ($raw['events'] ?? []) : [$raw];
-        if (!is_array($events)) return;
+        if (!is_array($events)) {
+            return;
+        }
         foreach ($events as $index => $event) {
-            if (!is_array($event)) continue;
+            if (!is_array($event)) {
+                continue;
+            }
             foreach (['receipt_number', 'invoice_reference'] as $field) {
-                if (!isset($event[$field]) || !is_string($event[$field])) continue;
+                if (!isset($event[$field]) || !is_string($event[$field])) {
+                    continue;
+                }
                 if ($error = app(\App\Services\InvoiceDocumentRules::class)->numberError($event[$field])) {
                     throw \Illuminate\Validation\ValidationException::withMessages([($batch ? 'events.'.$index.'.' : '').$field => $error]);
                 }
@@ -103,7 +109,9 @@ class IntegrationTransactionController extends Controller
                 return app(IntegrationStatus::class)->accepted(['duplicate' => true, ...json_decode($old->response, true), 'environment' => 'live', 'customer_receipt' => app(ApiCustomerReceipt::class)->status((string) $merchant->id, (string) $old->receipt_id)]);
             }
             $profile = app(IntegrationSourceProfile::class)->forEvent($v, $merchant);
-            if ($profile) app(BirCompliance::class)->assertSourceCaptureAllowed();
+            if ($profile) {
+                app(BirCompliance::class)->assertSourceCaptureAllowed();
+            }
             $sellerVat = $profile ? (bool) $profile->vat_registered : (bool) $merchant->vat_registered;
             $tax = app(IntegrationContract::class)->calculateDocument($v, $sellerVat);
             $resolved = app(IntegrationContract::class)->resolveDocument($v, $tax);
@@ -139,7 +147,9 @@ class IntegrationTransactionController extends Controller
                 'items' => json_encode(array_map(fn ($i) => $i + ['vat_inclusive' => (bool) ($v['vat_inclusive'] ?? true)], $tax['items'])),
                 'status' => 'issued', 'issued_at' => $at, 'created_at' => now(), 'updated_at' => now(),
             ]);
-            if (!empty($v['manual_recovery_id'])) app(\App\Services\ComplianceOperations::class)->linkManual((string)$merchant->id,$v['manual_recovery_id'],'receipt',$receipt,'api-key:'.$key->id);
+            if (!empty($v['manual_recovery_id'])) {
+                app(\App\Services\ComplianceOperations::class)->linkManual((string)$merchant->id, $v['manual_recovery_id'], 'receipt', $receipt, 'api-key:'.$key->id);
+            }
             $prep = app(EisDocumentReadiness::class)->prepare('receipt', $receipt);
             $body = ['environment' => 'live', 'id' => $id, 'transaction_id' => $transaction, 'receipt_id' => $receipt, 'receipt_number' => $series['number'], 'external_reference' => $v['external_reference'],
                 'record_mode' => $profile ? 'source_capture' : 'nuers_issuance', 'source_profile_id' => $profile?->id, 'calculation' => $tax, 'source_event_id' => $v['source_event_id'], 'occurred_at' => $v['occurred_at'], 'accepted_at' => now()->toIso8601String(), 'status' => 'durably_recorded',
@@ -198,7 +208,7 @@ class IntegrationTransactionController extends Controller
                     $rows[] = app(SandboxTransactions::class)->accept($event, $key, $merchant);
                 }
 
-return $rows;
+                return $rows;
             }, 3);
 
             return response()->json(['environment' => 'sandbox', 'test_only' => true, 'atomic' => true, 'accepted' => count($results), 'results' => $results], 201)->header('Cache-Control', 'private, no-store');

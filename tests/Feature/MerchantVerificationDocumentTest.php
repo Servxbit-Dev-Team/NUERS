@@ -259,7 +259,9 @@ class MerchantVerificationDocumentTest extends TestCase
             $raw = ($i === 0 ? "%PDF-1.4\n" : '').str_repeat('x', 1048576 - ($i === 0 ? 9 : 0));
             hash_update($hash, $raw);
             $this->part($id, $i, $raw)->assertOk()->assertJsonPath('next_index', $i + 1);
-            if ($i === 0) $this->part($id, 0, $raw)->assertOk()->assertJsonPath('next_index', 1);
+            if ($i === 0) {
+                $this->part($id, 0, $raw)->assertOk()->assertJsonPath('next_index', 1);
+            }
         }
         $url = '/api/merchant/verification-uploads/'.$id.'/complete';
         $document = $this->postJson($url)->assertOk()->json('items.0.id');
@@ -270,7 +272,9 @@ class MerchantVerificationDocumentTest extends TestCase
         $this->assertSame(hash_final($hash), $row->sha256);
         $this->assertFalse(Storage::disk('local')->exists('verification-uploads/'.$id.'/0.enc'));
         $stream = app(\App\Services\PrivateDocumentStream::class)->verified($row);
-        $verifiedHash = hash_init('sha256'); hash_update_stream($verifiedHash, $stream); fclose($stream);
+        $verifiedHash = hash_init('sha256');
+        hash_update_stream($verifiedHash, $stream);
+        fclose($stream);
         $this->assertSame($row->sha256, hash_final($verifiedHash));
         $this->get('/api/merchant/verification-documents/'.$document)->assertOk()->assertHeader('Content-Length', (string) Documents::MAX_BYTES);
         $this->withToken($this->admin->api_token)->postJson('/api/admin/verification-documents/'.$document.'/review', $this->reviewPayload($document, 'Synthetic large document independently checked'))->assertOk()->assertJsonPath('verified', 1);
@@ -332,7 +336,8 @@ class MerchantVerificationDocumentTest extends TestCase
 
     public function test_admin_preview_and_history_are_private_scoped_and_preserve_prior_versions(): void
     {
-        $old = $this->upload('bir_cor', 'version one'); $new = $this->upload('bir_cor', 'version two');
+        $old = $this->upload('bir_cor', 'version one');
+        $new = $this->upload('bir_cor', 'version two');
         $this->withToken($this->other->api_token)->get('/api/admin/verification-documents/'.$new.'/preview')->assertForbidden();
         $this->getJson('/api/admin/businesses/'.$this->merchant.'/verification-document-history?kind=bir_cor')->assertForbidden();
         $this->withToken($this->admin->api_token);
@@ -366,8 +371,10 @@ class MerchantVerificationDocumentTest extends TestCase
         $this->postJson($url, $payload)->assertOk();
         $this->assertSame($revision, DB::table('merchants')->where('id', $this->merchant)->value('registry_revision'));
         $events = DB::table('eis_audit_events')->where('event', 'business.verification.document_reviewed')->get();
-        $this->assertCount(1, $events); $event = json_decode($events[0]->details, true);
-        $this->assertSame('pending', $event['before_status']); $this->assertSame('verified', $event['after_status']);
+        $this->assertCount(1, $events);
+        $event = json_decode($events[0]->details, true);
+        $this->assertSame('pending', $event['before_status']);
+        $this->assertSame('verified', $event['after_status']);
         $this->assertTrue($event['checks']['identity_match']);
         $this->assertStringNotContainsString($payload['preview_token'], $events[0]->details);
         $this->assertTrue(app(\App\Services\BirCompliance::class)->auditIntegrity());
@@ -375,10 +382,14 @@ class MerchantVerificationDocumentTest extends TestCase
 
     public function test_expired_preview_replaced_file_and_replayed_session_cannot_authorize_a_review(): void
     {
-        $id = $this->upload();$this->withToken($this->admin->api_token);$payload = $this->reviewPayload($id);
-        $proof = json_decode(Crypt::decryptString($payload['preview_token']), true);$proof['expires'] = now()->subMinute()->timestamp;
+        $id = $this->upload();
+        $this->withToken($this->admin->api_token);
+        $payload = $this->reviewPayload($id);
+        $proof = json_decode(Crypt::decryptString($payload['preview_token']), true);
+        $proof['expires'] = now()->subMinute()->timestamp;
         $this->postJson('/api/admin/verification-documents/'.$id.'/review', [...$payload, 'preview_token' => Crypt::encryptString(json_encode($proof))])->assertUnprocessable();
-        $proof['expires'] = now()->addMinutes(10)->timestamp;$proof['session'] = str_repeat('0',64);
+        $proof['expires'] = now()->addMinutes(10)->timestamp;
+        $proof['session'] = str_repeat('0', 64);
         $this->postJson('/api/admin/verification-documents/'.$id.'/review', [...$payload, 'preview_token' => Crypt::encryptString(json_encode($proof))])->assertUnprocessable();
         $new = $this->upload('bir_cor', 'replacement during review');
         $this->withToken($this->admin->api_token)->postJson('/api/admin/verification-documents/'.$id.'/review', $payload)->assertConflict();
@@ -387,7 +398,8 @@ class MerchantVerificationDocumentTest extends TestCase
 
     public function test_broken_private_file_can_only_be_returned_for_changes_and_never_verified(): void
     {
-        $id = $this->upload();$row = DB::table('merchant_verification_documents')->where('document_id', $id)->first();
+        $id = $this->upload();
+        $row = DB::table('merchant_verification_documents')->where('document_id', $id)->first();
         Storage::disk('local')->put($row->private_path, 'corrupted bytes');
         $this->withToken($this->admin->api_token);
         $preview = $this->getJson('/api/admin/verification-documents/'.$id.'/preview')->assertConflict();

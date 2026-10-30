@@ -1,1 +1,61 @@
-.review-text-field{display:grid;gap:7px;margin:10px 0 15px;min-width:0;color:#244675}.review-text-field>label{font-size:12px;font-weight:600;line-height:1.5}.review-text-field>select,.review-text-field>input,.review-text-field>textarea{display:block;width:100%;min-width:0;border:1px solid #bfd5f8;border-radius:6px;padding:10px 11px;background:#fff;color:#173b70;font:13px/1.55 Inter,Arial,sans-serif}.review-text-field>select{background:#f2f7ff;color:#1253aa;min-height:40px}.review-text-field>textarea{resize:vertical;min-height:85px}.review-text-field>small{font-size:11px;color:#6b83a9;line-height:1.6}.review-text-field :is(select,input,textarea):focus-visible{outline:3px solid #b7d4ff;outline-offset:2px}.review-text-field :disabled{opacity:.6;cursor:not-allowed}.dv-decision-fields .review-text-field{margin-top:10px}@media(max-width:600px){.review-text-field>select{font-size:12px}.review-text-field>textarea{min-height:105px}}
+.review-text-field {
+  display: grid;
+  gap: 7px;
+  margin: 10px 0 15px;
+  min-width: 0;
+  color: #244675;
+}
+.review-text-field > label {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.review-text-field > select,
+.review-text-field > input,
+.review-text-field > textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #bfd5f8;
+  border-radius: 6px;
+  padding: 10px 11px;
+  background: #fff;
+  color: #173b70;
+  font:
+    13px/1.55 Inter,
+    Arial,
+    sans-serif;
+}
+.review-text-field > select {
+  background: #f2f7ff;
+  color: #1253aa;
+  min-height: 40px;
+}
+.review-text-field > textarea {
+  resize: vertical;
+  min-height: 85px;
+}
+.review-text-field > small {
+  font-size: 11px;
+  color: #6b83a9;
+  line-height: 1.6;
+}
+.review-text-field :is(select, input, textarea):focus-visible {
+  outline: 3px solid #b7d4ff;
+  outline-offset: 2px;
+}
+.review-text-field :disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.dv-decision-fields .review-text-field {
+  margin-top: 10px;
+}
+@media (max-width: 600px) {
+  .review-text-field > select {
+    font-size: 12px;
+  }
+  .review-text-field > textarea {
+    min-height: 105px;
+  }
+}

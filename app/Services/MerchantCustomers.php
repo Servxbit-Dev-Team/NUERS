@@ -22,8 +22,8 @@ class MerchantCustomers
 
     public function branches(string $merchant)
     {
-        $legacy=DB::table('merchant_api_keys')->where('merchant_id',$merchant)->whereNotNull('branch_code')->where('branch_code','!=','')->select('branch_code','branch_name')->distinct()->get();
-        $registry=\Illuminate\Support\Facades\Schema::hasTable('merchant_branches') ? DB::table('merchant_branches')->where('merchant_id',$merchant)->whereNotNull('bir_branch_code')->select('bir_branch_code as branch_code','name as branch_name')->get() : collect();
+        $legacy = DB::table('merchant_api_keys')->where('merchant_id', $merchant)->whereNotNull('branch_code')->where('branch_code', '!=', '')->select('branch_code', 'branch_name')->distinct()->get();
+        $registry = \Illuminate\Support\Facades\Schema::hasTable('merchant_branches') ? DB::table('merchant_branches')->where('merchant_id', $merchant)->whereNotNull('bir_branch_code')->select('bir_branch_code as branch_code', 'name as branch_name')->get() : collect();
         return $registry->concat($legacy)->unique('branch_code')->sortBy('branch_code')->values();
     }
 

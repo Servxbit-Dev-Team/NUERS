@@ -137,7 +137,7 @@ class MerchantWalletController
     public function pricing(Request $r)
     {
         $u = $this->admin($r);
-        $v = $r->validate(['fee_centavos' => 'required|integer|min:0|max:1000000', 'minimum_transaction_centavos'=>'sometimes|required|integer|min:0|max:1000000000000', 'revision' => 'required|integer|min:1', 'reason' => 'required|string|min:10|max:1000']);
+        $v = $r->validate(['fee_centavos' => 'required|integer|min:0|max:1000000', 'minimum_transaction_centavos' => 'sometimes|required|integer|min:0|max:1000000000000', 'revision' => 'required|integer|min:1', 'reason' => 'required|string|min:10|max:1000']);
 
         $v['reason'] = trim($v['reason']);
         abort_unless(mb_strlen($v['reason']) >= 10, 422, 'Enter a meaningful change reference.');
@@ -147,10 +147,10 @@ class MerchantWalletController
             abort_unless($p, 503);
             abort_unless((int) $p->revision === (int) $v['revision'], 409, 'Pricing changed. Refresh before saving.');
             $v['minimum_transaction_centavos'] ??= (int)$p->minimum_transaction_centavos;
-            DB::table('website_subscription_plans')->where('id', $p->id)->update(['minimum_transaction_centavos'=>(int)$v['minimum_transaction_centavos'], 'fee_centavos' => (int) $v['fee_centavos'], 'description' => 'Pay ₱'.number_format($v['fee_centavos'] / 100, 2, '.', ',').((int)$v['minimum_transaction_centavos'] === 0 ? ' per finalized sale, with no minimum amount.' : ' per finalized sale of ₱'.number_format($v['minimum_transaction_centavos']/100,2,'.',',').' and above.').' Unlimited storage with five-year retention.', 'revision' => $p->revision + 1, 'updated_at' => now()]);
+            DB::table('website_subscription_plans')->where('id', $p->id)->update(['minimum_transaction_centavos' => (int)$v['minimum_transaction_centavos'], 'fee_centavos' => (int) $v['fee_centavos'], 'description' => 'Pay ₱'.number_format($v['fee_centavos'] / 100, 2, '.', ',').((int)$v['minimum_transaction_centavos'] === 0 ? ' per finalized sale, with no minimum amount.' : ' per finalized sale of ₱'.number_format($v['minimum_transaction_centavos'] / 100, 2, '.', ',').' and above.').' Unlimited storage with five-year retention.', 'revision' => $p->revision + 1, 'updated_at' => now()]);
             $id = (string) Str::uuid();
-            DB::table('wallet_pricing_history')->insert(['id' => $id, 'revision' => $p->revision + 1, 'previous_minimum_transaction_centavos'=>(int)$p->minimum_transaction_centavos, 'minimum_transaction_centavos'=>(int)$v['minimum_transaction_centavos'], 'previous_fee_centavos' => $p->fee_centavos, 'fee_centavos' => $v['fee_centavos'], 'actor_id' => (string) $u->id, 'reason' => $v['reason'], 'created_at' => now()]);
-            app(BirCompliance::class)->audit('wallet.pricing.updated', $id, (string) $u->id, ['previous_minimum_transaction_centavos'=>(int)$p->minimum_transaction_centavos, 'minimum_transaction_centavos'=>(int)$v['minimum_transaction_centavos'], 'revision' => $p->revision + 1, 'fee_centavos' => $v['fee_centavos']]);
+            DB::table('wallet_pricing_history')->insert(['id' => $id, 'revision' => $p->revision + 1, 'previous_minimum_transaction_centavos' => (int)$p->minimum_transaction_centavos, 'minimum_transaction_centavos' => (int)$v['minimum_transaction_centavos'], 'previous_fee_centavos' => $p->fee_centavos, 'fee_centavos' => $v['fee_centavos'], 'actor_id' => (string) $u->id, 'reason' => $v['reason'], 'created_at' => now()]);
+            app(BirCompliance::class)->audit('wallet.pricing.updated', $id, (string) $u->id, ['previous_minimum_transaction_centavos' => (int)$p->minimum_transaction_centavos, 'minimum_transaction_centavos' => (int)$v['minimum_transaction_centavos'], 'revision' => $p->revision + 1, 'fee_centavos' => $v['fee_centavos']]);
 
             return response()->json(['pricing' => app(TransactionPricing::class)->offer()]);
         });
@@ -216,7 +216,9 @@ class MerchantWalletController
         }if (! empty($v['kind'])) {
             $q->where('kind', $v['kind']);
         }abort_if((clone $q)->count() > 5000, 422, 'Narrow the date range to at most 5,000 entries.');
-        if ($r->has('report_limit')) \App\Services\ReportCsv::limit($r,(clone $q)->count());
+        if ($r->has('report_limit')) {
+            \App\Services\ReportCsv::limit($r, (clone $q)->count());
+        }
         $rows = $q->orderBy('sequence')->get();
 
         return response()->streamDownload(function () use ($rows) {

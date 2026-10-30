@@ -20,7 +20,9 @@ class StatutorySales
 
     public function validate(?array $benefit, string $date): ?array
     {
-        if ($benefit === null || $benefit === []) return null;
+        if ($benefit === null || $benefit === []) {
+            return null;
+        }
         $v = Validator::make(['sales_benefit' => $benefit], [
             'sales_benefit' => 'required|array:category,scope,beneficiary_name,id_number,evidence_reference,eligibility_confirmed,child_birth_date,id_valid_until,income_below_250000,booklet_reference',
             'sales_benefit.category' => ['required', Rule::in(array_slice(self::CATEGORIES, 1))],
@@ -35,13 +37,21 @@ class StatutorySales
             'sales_benefit.booklet_reference' => 'nullable|string|max:200',
         ])->validate()['sales_benefit'];
         $day = CarbonImmutable::parse($date)->setTimezone('Asia/Manila')->startOfDay();
-        if (!in_array($v['scope'], self::SCOPES[$v['category']], true)) $this->fail('scope', 'Choose a covered goods/services category. Ordinary retail goods do not automatically qualify for the 20% benefit.');
-        if ($v['category'] === 'solo_parent') {
-            if (empty($v['income_below_250000']) || empty($v['child_birth_date']) || empty($v['id_valid_until']) || empty(trim($v['booklet_reference'] ?? ''))) $this->fail('category', 'Solo-parent sales require a valid SPIC, purchase booklet, child birth date and confirmed annual income below PHP 250,000.');
-            $birth = CarbonImmutable::parse($v['child_birth_date'], 'Asia/Manila');
-            if ($birth->gt($day) || $birth->addYears(7)->lte($day)) $this->fail('child_birth_date', 'The child must be six years old or younger on the transaction date.');
+        if (!in_array($v['scope'], self::SCOPES[$v['category']], true)) {
+            $this->fail('scope', 'Choose a covered goods/services category. Ordinary retail goods do not automatically qualify for the 20% benefit.');
         }
-        if (!empty($v['id_valid_until']) && $v['id_valid_until'] < $day->toDateString()) $this->fail('id_valid_until', 'Eligibility identification was expired on the transaction date.');
+        if ($v['category'] === 'solo_parent') {
+            if (empty($v['income_below_250000']) || empty($v['child_birth_date']) || empty($v['id_valid_until']) || empty(trim($v['booklet_reference'] ?? ''))) {
+                $this->fail('category', 'Solo-parent sales require a valid SPIC, purchase booklet, child birth date and confirmed annual income below PHP 250,000.');
+            }
+            $birth = CarbonImmutable::parse($v['child_birth_date'], 'Asia/Manila');
+            if ($birth->gt($day) || $birth->addYears(7)->lte($day)) {
+                $this->fail('child_birth_date', 'The child must be six years old or younger on the transaction date.');
+            }
+        }
+        if (!empty($v['id_valid_until']) && $v['id_valid_until'] < $day->toDateString()) {
+            $this->fail('id_valid_until', 'Eligibility identification was expired on the transaction date.');
+        }
         return $v;
     }
 
@@ -52,5 +62,8 @@ class StatutorySales
             'vat_relief_amount' => ($totals['vat_relief_amount'] ?? 0) / ($centavos ? 100 : 1)];
     }
 
-    private function fail(string $key, string $message): never { throw ValidationException::withMessages(['sales_benefit.'.$key => $message]); }
+    private function fail(string $key, string $message): never
+    {
+        throw ValidationException::withMessages(['sales_benefit.'.$key => $message]);
+    }
 }

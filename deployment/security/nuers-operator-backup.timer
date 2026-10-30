@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily NUERS recovery capture
+
+[Timer]
+OnCalendar=*-*-* 02:30:00 Asia/Manila
+Persistent=true
+RandomizedDelaySec=60
+Unit=nuers-operator-backup.service
+
+[Install]
+WantedBy=timers.target

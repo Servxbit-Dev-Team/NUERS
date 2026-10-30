@@ -33,11 +33,15 @@ class MerchantRecordsController extends Controller
             $canonical = ($indexed
                 ? app(\App\Services\LedgerProjection::class)->query((string) $merchant->id, true, true)
                 : app(IssuedDocumentLedger::class)->query((string) $merchant->id))->whereIn('document_source', ['invoice', 'receipt']);
-            if ($indexed && $optionIndex && DB::getDriverName() === 'mysql') $canonical->forceIndex($optionIndex);
+            if ($indexed && $optionIndex && DB::getDriverName() === 'mysql') {
+                $canonical->forceIndex($optionIndex);
+            }
             $q = DB::query()->fromSub($canonical, 'd')->selectRaw("d.id,d.document_id as record_id,d.document_id,d.document_source,d.receipt_number as number,d.business_date as source_date,d.recorded_at,d.customer_name as customer,d.customer_tin,d.document_type,d.document_family as family,
                 CASE WHEN d.record_status='draft' THEN 'draft' WHEN d.status='success' THEN 'issued' ELSE d.status END as status,d.record_status as raw_status,d.amount,d.vat_amount as vat,COALESCE(d.branch_code,d.branch) as branch,d.channel,d.payment_method,d.tin as seller_tin,d.identity_count,d.original_invoice_id,
                 CASE WHEN d.document_source='invoice' THEN 'day' ELSE 'instant' END as date_precision,d.sale_category,d.statutory_discount_amount,d.vat_relief_amount,d.discount_amount");
-            if ($indexed && $decorate) $q->leftJoin('ledger_documents as original', fn ($j) => $j->on('original.projection_id', '=', DB::raw($this->prefix('invoice:', 'd.original_invoice_id')))->on('original.merchant_id', '=', 'd.merchant_id')->whereIn('d.document_family', ['credit','debit']));
+            if ($indexed && $decorate) {
+                $q->leftJoin('ledger_documents as original', fn ($j) => $j->on('original.projection_id', '=', DB::raw($this->prefix('invoice:', 'd.original_invoice_id')))->on('original.merchant_id', '=', 'd.merchant_id')->whereIn('d.document_family', ['credit','debit']));
+            }
             $q->selectRaw($indexed && $decorate ? "CASE WHEN d.status='success' AND d.identity_count=1 AND d.financial_valid=1 AND d.document_family IN ('invoice','credit','debit')
                 AND (d.document_family='invoice' OR (original.document_family='invoice' AND original.status='success' AND original.financial_valid=1 AND original.tenant_identity_count=1))
                 THEN ROUND(d.amount*100)*(CASE WHEN d.document_family='credit' THEN -1 ELSE 1 END) ELSE 0 END as sales_centavos" : '0 as sales_centavos');
@@ -45,7 +49,9 @@ class MerchantRecordsController extends Controller
                 CASE WHEN b.document_type IN ('credit_note','credit_memo') THEN 'credit' WHEN b.document_type IN ('debit_note','debit_memo') THEN 'debit' WHEN b.document_type IN ('payment_receipt','official_receipt') THEN 'receipt' WHEN b.document_type IN ('delivery_receipt','purchase_invoice') THEN 'supplementary' ELSE 'invoice' END as family,
                 'draft' as status,b.status as raw_status,b.total_amount as amount,b.vat_amount as vat,b.seller_branch_code as branch,NULL as channel,NULL as payment_method,b.merchant_tin as seller_tin,1 as identity_count,b.original_invoice_id,'day' as date_precision,b.sale_category,b.statutory_discount_amount,b.vat_relief_amount,b.discount_amount");
             $draft->selectRaw('0 as sales_centavos');
-            if (!$indexed) $q->unionAll($draft);
+            if (!$indexed) {
+                $q->unionAll($draft);
+            }
         } else {
             // Exactly one tenant-owned receipt can join a payment; repeated receipt links cannot multiply its rows.
             $q = DB::table('merchant_transactions as t')->leftJoin('transaction_receipts as r', function ($j) {
@@ -55,7 +61,9 @@ class MerchantRecordsController extends Controller
             $q->selectRaw("CASE WHEN t.status IN ('completed','paid','settled','verified','success','valid') THEN ROUND(t.amount*100) ELSE 0 END as sales_centavos");
         }
         $q = DB::query()->fromSub($q, 'records');
-        if (!$decorate) return app(\App\Services\MerchantTeamAccess::class)->scopeRecords(DB::query()->fromSub($q, 'r'));
+        if (!$decorate) {
+            return app(\App\Services\MerchantTeamAccess::class)->scopeRecords(DB::query()->fromSub($q, 'r'));
+        }
         if (!DB::table('eis_delivery_jobs')->where('merchant_id', $merchant->id)->exists()
             && !DB::table('eis_transmissions')->where('merchant_id', $merchant->id)->exists()) {
             $q->selectRaw("records.*,NULL as delivery_state,NULL as delivery_updated_at,CASE WHEN records.document_source='payment' AND records.document_id IS NULL THEN 'not_linked' ELSE 'not_submitted' END as bir_status");
@@ -165,7 +173,9 @@ class MerchantRecordsController extends Controller
         $sort = $v['sort'] ?? 'newest';
 
         $direction = in_array($sort, ['oldest', 'amount_asc']) ? 'asc' : 'desc';
-        if (($v['mode'] ?? 'documents') === 'transactions') return $q->orderBy(str_starts_with($sort, 'amount') ? 'amount' : 'source_date', $direction)->orderBy('record_id', $direction);
+        if (($v['mode'] ?? 'documents') === 'transactions') {
+            return $q->orderBy(str_starts_with($sort, 'amount') ? 'amount' : 'source_date', $direction)->orderBy('record_id', $direction);
+        }
         return $q->orderBy(str_starts_with($sort, 'amount') ? 'amount' : 'source_date', $direction)->orderBy('recorded_at', $direction)->orderBy('id', $direction);
     }
 
@@ -174,40 +184,54 @@ class MerchantRecordsController extends Controller
         $team = app(\App\Services\MerchantTeamAccess::class)->context(request());
         $fullScope = !$team || ($team->scope === 'all' && $team->terminal_scope === 'all');
         if ($indexed && $fullScope && $mode === 'documents') {
-            $source = ['customers'=>'customer_name','branches'=>"COALESCE(branch_code,branch)",'types'=>'document_type','channels'=>'channel','payments'=>'payment_method'][$label];
-            $q = DB::table('ledger_documents')->where('merchant_id',$merchant->id)->where('tenant_identity_rank',1)->whereIn('document_source',['invoice','receipt']);
-            if (DB::getDriverName() === 'mysql') $q->forceIndex($index);
+            $source = ['customers' => 'customer_name','branches' => "COALESCE(branch_code,branch)",'types' => 'document_type','channels' => 'channel','payments' => 'payment_method'][$label];
+            $q = DB::table('ledger_documents')->where('merchant_id', $merchant->id)->where('tenant_identity_rank', 1)->whereIn('document_source', ['invoice','receipt']);
+            if (DB::getDriverName() === 'mysql') {
+                $q->forceIndex($index);
+            }
             return $q->whereRaw("$source IS NOT NULL AND $source<>''")->selectRaw("$source as option_value")->distinct()->orderBy('option_value')->limit(200)->pluck('option_value');
         }
         if ($fullScope && $mode === 'transactions' && $label !== 'customers') {
             $source = $label === 'types' ? 'transaction_type' : $column;
-            return DB::table('merchant_transactions')->where('merchant_id',$merchant->id)->whereNotNull($source)->where($source,'!=','')->distinct()->orderBy($source)->limit(200)->pluck($source);
+            return DB::table('merchant_transactions')->where('merchant_id', $merchant->id)->whereNotNull($source)->where($source, '!=', '')->distinct()->orderBy($source)->limit(200)->pluck($source);
         }
-        return $this->base($merchant,$mode,false,$mode === 'documents' && $indexed ? $index : null)
-            ->whereNotNull($column)->where($column,'!=','')->select($column)->distinct()->orderBy($column)->limit(200)->pluck($column);
+        return $this->base($merchant, $mode, false, $mode === 'documents' && $indexed ? $index : null)
+            ->whereNotNull($column)->where($column, '!=', '')->select($column)->distinct()->orderBy($column)->limit(200)->pluck($column);
     }
 
     /** Default counters do not need customer, receipt or delivery joins across every row. */
     private function summaryBase(object $merchant, string $mode, array $filters, bool $indexed): ?Builder
     {
-        if (!$indexed) return null;
+        if (!$indexed) {
+            return null;
+        }
         $team = app(\App\Services\MerchantTeamAccess::class)->context(request());
-        if ($team && ($team->scope !== 'all' || $team->terminal_scope !== 'all')) return null;
+        if ($team && ($team->scope !== 'all' || $team->terminal_scope !== 'all')) {
+            return null;
+        }
         foreach (['from','to','search','type','customer','branch','bir','channel','payment','sale_category'] as $key) {
-            if (!empty($filters[$key]) && $filters[$key] !== 'all') return null;
+            if (!empty($filters[$key]) && $filters[$key] !== 'all') {
+                return null;
+            }
         }
         if (DB::table('eis_delivery_jobs')->where('merchant_id', $merchant->id)->exists()
-            || DB::table('eis_transmissions')->where('merchant_id', $merchant->id)->exists()) return null;
+            || DB::table('eis_transmissions')->where('merchant_id', $merchant->id)->exists()) {
+            return null;
+        }
         if ($mode === 'transactions') {
             $q = DB::table('merchant_transactions')->where('merchant_id', $merchant->id);
-            if (DB::getDriverName() === 'mysql') $q->forceIndex('mt_registry_summary');
+            if (DB::getDriverName() === 'mysql') {
+                $q->forceIndex('mt_registry_summary');
+            }
             $q->selectRaw("amount,'payment' as family,'not_submitted' as bir_status,
                 CASE WHEN status IN ('completed','paid','settled','verified','success','valid') THEN 'completed' WHEN status IN ('cancelled','canceled','voided','void','refunded','refund') THEN 'cancelled' WHEN status IN ('failed','rejected','invalid') THEN 'failed' ELSE 'pending' END as status,
                 CASE WHEN status IN ('completed','paid','settled','verified','success','valid') THEN ROUND(amount*100) ELSE 0 END as sales_centavos");
         } else {
             $source = DB::table('ledger_documents')->where('merchant_id', $merchant->id)->where('tenant_identity_rank', 1)->whereIn('document_source', ['invoice','receipt'])
                 ->select(['merchant_id','document_family','status','is_draft','amount','tenant_identity_count','financial_valid','original_invoice_id']);
-            if (DB::getDriverName() === 'mysql') $source->forceIndex('ledger_merchant_overview');
+            if (DB::getDriverName() === 'mysql') {
+                $source->forceIndex('ledger_merchant_overview');
+            }
             $q = DB::query()->fromSub($source, 'd')->leftJoin('ledger_documents as original', fn ($j) => $j->on('original.projection_id', '=', DB::raw($this->prefix('invoice:', 'd.original_invoice_id')))->on('original.merchant_id', '=', 'd.merchant_id')->whereIn('d.document_family', ['credit','debit']))
                 ->selectRaw("d.amount,d.document_family as family,'not_submitted' as bir_status,
                     CASE WHEN d.is_draft=1 THEN 'draft' WHEN d.status='success' THEN 'issued' ELSE d.status END as status,
@@ -224,7 +248,9 @@ class MerchantRecordsController extends Controller
         $v = $this->filters($r);
         $mode = $v['mode'] ?? 'documents';
         $indexed = app(\App\Services\LedgerProjection::class)->ready();
-        if ($indexed) app(\App\Services\LedgerProjection::class)->catchUp();
+        if ($indexed) {
+            app(\App\Services\LedgerProjection::class)->catchUp();
+        }
         $base = $this->base($merchant, $mode);
         $summaryBase = $this->summaryBase($merchant, $mode, $v, $indexed) ?? $base;
         $filtered = $this->apply(clone $summaryBase, $v, false);
@@ -248,21 +274,21 @@ class MerchantRecordsController extends Controller
             }
         }
         $s->total_amount = $sales / 100;
-        $tabs = ($v['category'] ?? 'all') === 'all' ? ['all'=>(int)$s->total,'invoices'=>(int)$s->invoices,'receipts'=>(int)$s->receipts,'credit'=>(int)$s->credit,'debit'=>(int)$s->debit,'drafts'=>(int)$s->drafts] : (array) (clone $filtered)->selectRaw("COUNT(*) as 'all',COALESCE(SUM(CASE WHEN family='invoice' THEN 1 ELSE 0 END),0) as invoices,COALESCE(SUM(CASE WHEN family IN ('receipt','supplementary') THEN 1 ELSE 0 END),0) as receipts,COALESCE(SUM(CASE WHEN family='credit' THEN 1 ELSE 0 END),0) as credit,COALESCE(SUM(CASE WHEN family='debit' THEN 1 ELSE 0 END),0) as debit,COALESCE(SUM(CASE WHEN status='draft' THEN 1 ELSE 0 END),0) as drafts")->first();
-        $sort=$v['sort']??'newest';
-        $key=$mode==='transactions'?'record_id':'id';
-        $selection=app(\App\Services\ReportPagination::class)->page($q,(int)$s->total,(int)($v['page']??1),(int)($v['per_page']??10),str_starts_with($sort,'amount')?'amount':'source_date',in_array($sort,['oldest','amount_asc'])?'asc':'desc',$key,$mode==='documents'?['recorded_at']:[]);
-        $selected=$selection['ids']->isEmpty()?collect():(clone $q)->whereIn($key,$selection['ids'])->get()->keyBy($key);
-        $items=$selection['ids']->filter(fn ($id)=>$selected->has($id))->map(fn ($id)=>$this->row($selected->get($id)))->values();
+        $tabs = ($v['category'] ?? 'all') === 'all' ? ['all' => (int)$s->total,'invoices' => (int)$s->invoices,'receipts' => (int)$s->receipts,'credit' => (int)$s->credit,'debit' => (int)$s->debit,'drafts' => (int)$s->drafts] : (array) (clone $filtered)->selectRaw("COUNT(*) as 'all',COALESCE(SUM(CASE WHEN family='invoice' THEN 1 ELSE 0 END),0) as invoices,COALESCE(SUM(CASE WHEN family IN ('receipt','supplementary') THEN 1 ELSE 0 END),0) as receipts,COALESCE(SUM(CASE WHEN family='credit' THEN 1 ELSE 0 END),0) as credit,COALESCE(SUM(CASE WHEN family='debit' THEN 1 ELSE 0 END),0) as debit,COALESCE(SUM(CASE WHEN status='draft' THEN 1 ELSE 0 END),0) as drafts")->first();
+        $sort = $v['sort'] ?? 'newest';
+        $key = $mode === 'transactions' ? 'record_id' : 'id';
+        $selection = app(\App\Services\ReportPagination::class)->page($q, (int)$s->total, (int)($v['page'] ?? 1), (int)($v['per_page'] ?? 10), str_starts_with($sort, 'amount') ? 'amount' : 'source_date', in_array($sort, ['oldest','amount_asc']) ? 'asc' : 'desc', $key, $mode === 'documents' ? ['recorded_at'] : []);
+        $selected = $selection['ids']->isEmpty() ? collect() : (clone $q)->whereIn($key, $selection['ids'])->get()->keyBy($key);
+        $items = $selection['ids']->filter(fn ($id) => $selected->has($id))->map(fn ($id) => $this->row($selected->get($id)))->values();
         $options = [];
-        $optionIndexes = ['customers'=>'ledger_customer_options','branches'=>'ledger_record_branch_options','types'=>'ledger_type_options','channels'=>'ledger_channel_options','payments'=>'ledger_payment_options'];
+        $optionIndexes = ['customers' => 'ledger_customer_options','branches' => 'ledger_record_branch_options','types' => 'ledger_type_options','channels' => 'ledger_channel_options','payments' => 'ledger_payment_options'];
         foreach (['customers' => 'customer', 'branches' => 'branch', 'types' => 'document_type', 'channels' => 'channel', 'payments' => 'payment_method'] as $label => $column) {
             $calculateOptions = fn () => $this->optionValues($merchant, $mode, $label, $column, $optionIndexes[$label], $indexed);
-            $options[$label] = $indexed ? app(\App\Services\ReportingSnapshotCache::class)->remember('record-options-'.$mode.'-'.$label, (string)$merchant->id, ['scope'=>$summaryFilters['scope']], $calculateOptions) : $calculateOptions();
+            $options[$label] = $indexed ? app(\App\Services\ReportingSnapshotCache::class)->remember('record-options-'.$mode.'-'.$label, (string)$merchant->id, ['scope' => $summaryFilters['scope']], $calculateOptions) : $calculateOptions();
         }
 
-        return response()->json(['mode' => $mode, 'merchant' => ['id' => $merchant->id, 'name' => $merchant->business_name, 'status' => $merchant->status], 'data' => $items, 'summary' => $s, 'tabs' => $tabs, 'options' => $options, 'pagination' => ['page' => $selection['page'], 'per_page' => (int)($v['per_page']??10), 'total' => $selection['total'], 'last_page' => $selection['last_page']],
-            'recent' => $this->ordered(clone $q, ['sort' => 'newest','mode'=>$mode])->limit(5)->get()->map(fn ($row) => $this->row($row)), 'generated_at' => now()->toIso8601String(), 'notice' => $mode === 'documents' ? 'Source-reconciled invoice sales draft; payment/delivery receipts and drafts are excluded from sales. BIR acknowledgment requires verified production evidence.' : 'Payment/ledger activity only, including portal and API records. Completed amounts are not additional invoice sales. Unlinked entries carry no BIR acknowledgment proof.'])->header('Cache-Control', 'private, no-store');
+        return response()->json(['mode' => $mode, 'merchant' => ['id' => $merchant->id, 'name' => $merchant->business_name, 'status' => $merchant->status], 'data' => $items, 'summary' => $s, 'tabs' => $tabs, 'options' => $options, 'pagination' => ['page' => $selection['page'], 'per_page' => (int)($v['per_page'] ?? 10), 'total' => $selection['total'], 'last_page' => $selection['last_page']],
+            'recent' => $this->ordered(clone $q, ['sort' => 'newest','mode' => $mode])->limit(5)->get()->map(fn ($row) => $this->row($row)), 'generated_at' => now()->toIso8601String(), 'notice' => $mode === 'documents' ? 'Source-reconciled invoice sales draft; payment/delivery receipts and drafts are excluded from sales. BIR acknowledgment requires verified production evidence.' : 'Payment/ledger activity only, including portal and API records. Completed amounts are not additional invoice sales. Unlinked entries carry no BIR acknowledgment proof.'])->header('Cache-Control', 'private, no-store');
     }
 
     public function show(Request $r, string $record)
@@ -312,7 +338,9 @@ class MerchantRecordsController extends Controller
             abort_unless((clone $q)->whereIn('id', $ids)->count() === count($ids), 404, 'One or more selected records do not match this authorized export.');
             $q->whereIn('id', $ids);
         }
-        if ($r->has('report_limit')) \App\Services\ReportCsv::limit($r,(clone $q)->count());
+        if ($r->has('report_limit')) {
+            \App\Services\ReportCsv::limit($r, (clone $q)->count());
+        }
         app(BirCompliance::class)->audit('merchant.records.export', (string) $merchant->id, (string) $r->attributes->get('api_actor')->id, ['merchant_id' => $merchant->id, 'actor_role' => $r->attributes->get('api_role'), 'correlation_id' => (string) Str::uuid(), 'outcome' => 'authorized_for_stream', 'format' => 'NUERS-merchant-records-csv-1', 'mode' => $mode, 'filters' => $v]);
 
         return response()->streamDownload(function () use ($q, $v) {

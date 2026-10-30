@@ -28,7 +28,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -59,13 +65,15 @@ const statusStyles: Record<string, string> = {
 };
 
 function initialsFor(value?: string | null) {
-  return (value || "CA")
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase() || "CA";
+  return (
+    (value || "CA")
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "CA"
+  );
 }
 
 function statusLabel(value: string) {
@@ -127,7 +135,7 @@ export function AdminClientAccounts() {
   useEffect(() => {
     loadAccounts();
   }, []);
-  useRealtimeRefresh(()=>loadAccounts({quiet:true}));
+  useRealtimeRefresh(() => loadAccounts({ quiet: true }));
 
   const statusOptions = useMemo(
     () => Array.from(new Set(accounts.map((account) => account.status || "active"))).sort(),
@@ -146,22 +154,34 @@ export function AdminClientAccounts() {
         account.account_type,
         account.status,
         account.tin,
-      ].join(" ").toLowerCase();
+      ]
+        .join(" ")
+        .toLowerCase();
 
-      return (!query || searchable.includes(query))
-        && (statusFilter === "all" || account.status === statusFilter);
+      return (
+        (!query || searchable.includes(query)) &&
+        (statusFilter === "all" || account.status === statusFilter)
+      );
     });
   }, [accounts, search, statusFilter]);
 
   const activeCount = accounts.filter((account) => account.status === "active").length;
-  const pendingCount = accounts.filter((account) => ["pending", "under_review"].includes(account.status)).length;
-  const walletTotal = accounts.reduce((total, account) => total + Number(account.wallet_balance ?? 0), 0);
+  const pendingCount = accounts.filter((account) =>
+    ["pending", "under_review"].includes(account.status),
+  ).length;
+  const walletTotal = accounts.reduce(
+    (total, account) => total + Number(account.wallet_balance ?? 0),
+    0,
+  );
 
   async function handleDeleteAccount() {
     if (!deleteTarget) return;
     setDeleting(true);
 
-    const { error, count } = await supabase.from("client_accounts").delete().eq("id", deleteTarget.id);
+    const { error, count } = await supabase
+      .from("client_accounts")
+      .delete()
+      .eq("id", deleteTarget.id);
 
     if (error) {
       toast.error(error.message || "Unable to delete client account.");
@@ -182,9 +202,18 @@ export function AdminClientAccounts() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Client Accounts</h1>
-          <p className="text-sm text-muted-foreground">Manage citizen/client accounts, TIN binding state, wallet balances, and account deletion.</p>
+          <p className="text-sm text-muted-foreground">
+            Manage citizen/client accounts, TIN binding state, wallet balances, and account
+            deletion.
+          </p>
         </div>
-        <Button variant="outline" size="sm" className="gap-2" onClick={() => loadAccounts({ quiet: true })} disabled={loading || refreshing}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={() => loadAccounts({ quiet: true })}
+          disabled={loading || refreshing}
+        >
           <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} /> Refresh
         </Button>
       </div>
@@ -247,7 +276,9 @@ export function AdminClientAccounts() {
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
                 {statusOptions.map((status) => (
-                  <SelectItem key={status} value={status}>{statusLabel(status)}</SelectItem>
+                  <SelectItem key={status} value={status}>
+                    {statusLabel(status)}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -263,7 +294,9 @@ export function AdminClientAccounts() {
             <div className="rounded-lg border border-dashed p-10 text-center">
               <UserCheck className="mx-auto h-10 w-10 text-muted-foreground" />
               <p className="mt-3 text-sm font-medium text-foreground">No client accounts found</p>
-              <p className="text-xs text-muted-foreground">Try adjusting the search or status filter.</p>
+              <p className="text-xs text-muted-foreground">
+                Try adjusting the search or status filter.
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -281,45 +314,81 @@ export function AdminClientAccounts() {
                 </thead>
                 <tbody>
                   {filtered.map((account) => {
-                    const isCurrent = String(currentUser?.id ?? "") === String(account.user_id ?? "");
+                    const isCurrent =
+                      String(currentUser?.id ?? "") === String(account.user_id ?? "");
 
                     return (
                       <tr key={account.id} className="border-b last:border-0">
                         <td className="py-3 pr-4">
                           <div className="flex items-center gap-3">
                             <Avatar className="h-9 w-9">
-                              <AvatarFallback className="bg-primary text-xs text-primary-foreground">{initialsFor(account.full_name)}</AvatarFallback>
+                              <AvatarFallback className="bg-primary text-xs text-primary-foreground">
+                                {initialsFor(account.full_name)}
+                              </AvatarFallback>
                             </Avatar>
                             <div>
                               <div className="flex items-center gap-2">
-                                <p className="text-sm font-medium text-foreground">{account.full_name}</p>
-                                {isCurrent && <Badge variant="outline" className="text-[10px]">Current session</Badge>}
+                                <p className="text-sm font-medium text-foreground">
+                                  {account.full_name}
+                                </p>
+                                {isCurrent && (
+                                  <Badge variant="outline" className="text-[10px]">
+                                    Current session
+                                  </Badge>
+                                )}
                               </div>
-                              <p className="text-xs text-muted-foreground">{account.email || "No email"}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {account.email || "No email"}
+                              </p>
                             </div>
                           </div>
                         </td>
                         <td className="py-3 pr-4">
-                          <p className="font-mono text-xs text-foreground">{account.account_number}</p>
+                          <p className="font-mono text-xs text-foreground">
+                            {account.account_number}
+                          </p>
                           <div className="mt-1 flex items-center gap-2">
-                            <Badge variant="secondary" className="text-[10px]">{statusLabel(account.account_type)}</Badge>
-                            <Badge variant="outline" className={cn("text-[10px]", statusStyles[account.status] ?? statusStyles.inactive)}>
+                            <Badge variant="secondary" className="text-[10px]">
+                              {statusLabel(account.account_type)}
+                            </Badge>
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "text-[10px]",
+                                statusStyles[account.status] ?? statusStyles.inactive,
+                              )}
+                            >
                               {statusLabel(account.status)}
                             </Badge>
                           </div>
                         </td>
                         <td className="py-3 pr-4">
-                          <p className="font-mono text-xs text-foreground">{formatTin(account.tin) || "No TIN bound"}</p>
-                          <p className="text-xs text-muted-foreground">{account.mobile || "No mobile"}</p>
+                          <p className="font-mono text-xs text-foreground">
+                            {formatTin(account.tin) || "No TIN bound"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {account.mobile || "No mobile"}
+                          </p>
                         </td>
-                        <td className="py-3 pr-4 text-xs font-semibold text-foreground">{money(account.wallet_balance)}</td>
+                        <td className="py-3 pr-4 text-xs font-semibold text-foreground">
+                          {money(account.wallet_balance)}
+                        </td>
                         <td className="py-3 pr-4">
-                          <Badge variant={account.mfa_enabled ? "default" : "outline"} className="gap-1 text-[10px]">
-                            {account.mfa_enabled ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                          <Badge
+                            variant={account.mfa_enabled ? "default" : "outline"}
+                            className="gap-1 text-[10px]"
+                          >
+                            {account.mfa_enabled ? (
+                              <CheckCircle2 className="h-3 w-3" />
+                            ) : (
+                              <XCircle className="h-3 w-3" />
+                            )}
                             {account.mfa_enabled ? "MFA Enabled" : "MFA Off"}
                           </Badge>
                         </td>
-                        <td className="py-3 pr-4 text-xs text-muted-foreground">{dateLabel(account.updated_at)}</td>
+                        <td className="py-3 pr-4 text-xs text-muted-foreground">
+                          {dateLabel(account.updated_at)}
+                        </td>
                         <td className="py-3 text-right">
                           <Button
                             variant="ghost"
@@ -346,8 +415,9 @@ export function AdminClientAccounts() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Client Account</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete <strong>{deleteTarget?.full_name}</strong> and remove the linked login/profile when one exists.
-              Transactions and issued receipts remain in the audit ledger. This action cannot be undone.
+              This will permanently delete <strong>{deleteTarget?.full_name}</strong> and remove the
+              linked login/profile when one exists. Transactions and issued receipts remain in the
+              audit ledger. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

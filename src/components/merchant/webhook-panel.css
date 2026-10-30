@@ -1,1 +1,141 @@
-.mw-workspace{display:grid;gap:18px}.mw-workspace>.mi-panel{min-width:0}.mw-health{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:18px}.mw-health>div{border:1px solid #dbe7f7;border-radius:8px;padding:14px;background:#f8fbff;display:flex;flex-direction:column;align-items:start;gap:7px}.mw-health span,.mw-health small{font-size:12px;color:#5c7495}.mw-health strong{font-size:21px;color:#123463}.mw-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:18px 0}.mw-steps p{border-left:3px solid #0867ed;padding:8px 12px;font-size:12px;color:#607a9a;line-height:1.7}.mw-steps b{display:block;color:#153e70;font-size:13px;margin-bottom:4px}.mw-event{display:block;font-size:11px;margin:3px 0}.mw-actions{display:flex;gap:8px 13px;flex-wrap:wrap;max-width:260px}.mw-actions button{font-size:12px}.mw-actions .mw-danger{color:#dc3145}.mw-log-filters{display:flex;align-items:end;gap:14px;flex-wrap:wrap;margin:16px 0}.mw-log-filters label{display:grid;gap:6px;font-size:12px;min-width:180px}.mw-log-filters>span{font-size:12px;color:#6782a0}.mw-guide p{font-size:13px;color:#526f92;line-height:1.8;margin:12px 0}.mw-guide h2{font-weight:700}.mw-guide code{background:#f0f6ff;padding:2px 4px;overflow-wrap:anywhere;font-size:12px}.mw-detail{max-width:900px!important}.mw-detail .mi-guide{max-height:280px;overflow:auto}.mw-workspace button:disabled{opacity:.45;cursor:not-allowed}.mw-workspace td{vertical-align:top}.mw-workspace .mi-cell-sub{max-width:340px;overflow-wrap:anywhere}@media(max-width:1000px){.mw-health{grid-template-columns:repeat(3,1fr)}.mw-steps{grid-template-columns:1fr}}@media(max-width:600px){.mw-health{grid-template-columns:1fr 1fr}.mw-log-filters label{min-width:0;flex:1}.mw-workspace .mi-panel>header{flex-wrap:wrap}.mw-workspace .mi-panel>header>.mi-toolbar{width:100%}}
+.mw-workspace {
+  display: grid;
+  gap: 18px;
+}
+.mw-workspace > .mi-panel {
+  min-width: 0;
+}
+.mw-health {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.mw-health > div {
+  border: 1px solid #dbe7f7;
+  border-radius: 8px;
+  padding: 14px;
+  background: #f8fbff;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 7px;
+}
+.mw-health span,
+.mw-health small {
+  font-size: 12px;
+  color: #5c7495;
+}
+.mw-health strong {
+  font-size: 21px;
+  color: #123463;
+}
+.mw-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 18px 0;
+}
+.mw-steps p {
+  border-left: 3px solid #0867ed;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #607a9a;
+  line-height: 1.7;
+}
+.mw-steps b {
+  display: block;
+  color: #153e70;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.mw-event {
+  display: block;
+  font-size: 11px;
+  margin: 3px 0;
+}
+.mw-actions {
+  display: flex;
+  gap: 8px 13px;
+  flex-wrap: wrap;
+  max-width: 260px;
+}
+.mw-actions button {
+  font-size: 12px;
+}
+.mw-actions .mw-danger {
+  color: #dc3145;
+}
+.mw-log-filters {
+  display: flex;
+  align-items: end;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+.mw-log-filters label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  min-width: 180px;
+}
+.mw-log-filters > span {
+  font-size: 12px;
+  color: #6782a0;
+}
+.mw-guide p {
+  font-size: 13px;
+  color: #526f92;
+  line-height: 1.8;
+  margin: 12px 0;
+}
+.mw-guide h2 {
+  font-weight: 700;
+}
+.mw-guide code {
+  background: #f0f6ff;
+  padding: 2px 4px;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.mw-detail {
+  max-width: 900px !important;
+}
+.mw-detail .mi-guide {
+  max-height: 280px;
+  overflow: auto;
+}
+.mw-workspace button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.mw-workspace td {
+  vertical-align: top;
+}
+.mw-workspace .mi-cell-sub {
+  max-width: 340px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 1000px) {
+  .mw-health {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .mw-steps {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .mw-health {
+    grid-template-columns: 1fr 1fr;
+  }
+  .mw-log-filters label {
+    min-width: 0;
+    flex: 1;
+  }
+  .mw-workspace .mi-panel > header {
+    flex-wrap: wrap;
+  }
+  .mw-workspace .mi-panel > header > .mi-toolbar {
+    width: 100%;
+  }
+}

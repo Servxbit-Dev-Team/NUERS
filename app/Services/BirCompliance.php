@@ -22,9 +22,11 @@ class BirCompliance
 
     public function assertSourceCaptureAllowed(): void
     {
-        if (!config('bir_compliance.source_capture_accreditation_enforced')) return;
-        $state=$this->accreditation();
-        abort_unless($state['authorized'],409,'New Live source intake is paused by the accreditation policy. Existing records remain available.');
+        if (!config('bir_compliance.source_capture_accreditation_enforced')) {
+            return;
+        }
+        $state = $this->accreditation();
+        abort_unless($state['authorized'], 409, 'New Live source intake is paused by the accreditation policy. Existing records remain available.');
     }
 
     public function accreditation(?string $id = null): array
@@ -145,7 +147,7 @@ class BirCompliance
         if ($integration && ! Schema::hasTable('taxpayer_authorizations')) {
             $blockers[] = 'Maintained taxpayer authority records are required.';
         }
-        if ($integration && Schema::hasTable('merchant_branches') && DB::table('merchant_branches')->where('merchant_id',$integration->merchant_id)->where('bir_branch_code',$integration->branch_code)->where('status','inactive')->exists()) {
+        if ($integration && Schema::hasTable('merchant_branches') && DB::table('merchant_branches')->where('merchant_id', $integration->merchant_id)->where('bir_branch_code', $integration->branch_code)->where('status', 'inactive')->exists()) {
             $blockers[] = 'The registered branch is operationally inactive.';
         }
         $authorizationReady = ! $blockers;

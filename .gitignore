@@ -44,3 +44,14 @@ storage/framework/views/*
 
 # Rendered document previews and other temporary PDF work files.
 /tmp/pdfs/
+
+# Generated artifacts and private evidence are stored outside the source handoff.
+/dist/
+/public/build/
+/bootstrap/ssr/
+/bootstrap/cache/*.php
+/output/
+/outputs/
+/tmp/
+/database/*.sqlite*
+*.tsbuildinfo

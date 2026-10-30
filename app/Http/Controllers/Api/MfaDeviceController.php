@@ -111,9 +111,9 @@ class MfaDeviceController
                 DB::table('users')->where('id', $u->id)->update(['mfa_secret' => $replacement->encrypted_secret, 'mfa_last_counter' => $replacement->last_counter]);
             }
             $s->cancelPending($u);
-            $s->notify($u,'security.mfa.device_removed',$id);
+            $s->notify($u, 'security.mfa.device_removed', $id);
 
-            return response()->json(['message' => 'Authenticator removed. Its codes can no longer sign in.', ...$s->listing($u->fresh())])->header('Cache-Control','private, no-store');
+            return response()->json(['message' => 'Authenticator removed. Its codes can no longer sign in.', ...$s->listing($u->fresh())])->header('Cache-Control', 'private, no-store');
         });
     }
 }

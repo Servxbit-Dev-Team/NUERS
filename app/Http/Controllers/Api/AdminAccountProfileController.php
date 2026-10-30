@@ -183,11 +183,11 @@ class AdminAccountProfileController
     public function avatar(Request $r)
     {
         $u = $this->actor($r);
-        $name = DB::table('admin_account_profiles')->where('user_id',$u->id)->value('avatar_path');
-        abort_unless($name && preg_match('/^[a-f0-9-]{36}\.png$/',$name),404);
+        $name = DB::table('admin_account_profiles')->where('user_id', $u->id)->value('avatar_path');
+        abort_unless($name && preg_match('/^[a-f0-9-]{36}\.png$/', $name), 404);
         $path = storage_path('app/private/admin-avatars/'.$name);
-        abort_unless(is_file($path),404);
+        abort_unless(is_file($path), 404);
 
-        return response()->file($path,['Content-Type' => 'image/png', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff']);
+        return response()->file($path, ['Content-Type' => 'image/png', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff']);
     }
 }

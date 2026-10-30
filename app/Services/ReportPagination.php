@@ -17,7 +17,9 @@ class ReportPagination
         $reverse = $offset > $total / 2;
         $readDirection = $reverse ? ($direction === 'desc' ? 'asc' : 'desc') : $direction;
         $keys = (clone $query)->reorder()->select($key)->orderBy($column, $readDirection);
-        foreach ($tieColumns as $tie) $keys->orderBy($tie, $readDirection);
+        foreach ($tieColumns as $tie) {
+            $keys->orderBy($tie, $readDirection);
+        }
         $ids = $keys->orderBy($key, $readDirection)->offset($reverse ? max(0, $total - $offset - $take) : $offset)->limit($take)->pluck($key);
         return ['ids' => $reverse ? $ids->reverse()->values() : $ids, 'page' => $page, 'last_page' => $last, 'total' => $total];
     }

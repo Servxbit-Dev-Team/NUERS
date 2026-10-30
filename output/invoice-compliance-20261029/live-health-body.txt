@@ -1,1 +1,0 @@
-{"ok":true,"app":"NUERS Laravel API","solution":{"name":"NUERS","version":"1.0.0"}}

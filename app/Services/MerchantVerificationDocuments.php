@@ -131,7 +131,11 @@ class MerchantVerificationDocuments
     public function contents(object $row): string
     {
         $stream = app(PrivateDocumentStream::class)->verified($row);
-        try { return stream_get_contents($stream); } finally { fclose($stream); }
+        try {
+            return stream_get_contents($stream);
+        } finally {
+            fclose($stream);
+        }
     }
 
     public function assertIntegrity(object $row): void

@@ -109,6 +109,26 @@ class StorageOperationsTest extends TestCase
         $this->assertSame(0, fileperms($this->root.'/recovered/objects/merchant-a/document.bin') & 0077);
     }
 
+    public function test_standalone_operator_format_is_bidirectionally_compatible_and_authenticated(): void
+    {
+        require_once base_path('deployment/security/StandaloneRecoveryArchive.php');
+        $standalone = new \NuersOperator\RecoveryArchive();
+        $key = random_bytes(32);
+        file_put_contents($this->root.'/source', 'Synthetic standalone recovery fixture');
+        $standalone->create(['objects/fixture.txt' => $this->root.'/source'], $this->root.'/operator.nuers', $key, ['environment' => 'testing']);
+        app(RecoveryArchive::class)->restore($this->root.'/operator.nuers', $this->root.'/app-restored', $key);
+        $this->assertSame('Synthetic standalone recovery fixture', file_get_contents($this->root.'/app-restored/objects/fixture.txt'));
+        app(RecoveryArchive::class)->create(['fixture.txt' => $this->root.'/source'], $this->root.'/app.nuers', $key);
+        $standalone->restore($this->root.'/app.nuers', $this->root.'/operator-restored', $key);
+        $this->assertSame(hash_file('sha256', $this->root.'/source'), hash_file('sha256', $this->root.'/operator-restored/fixture.txt'));
+        try {
+            $standalone->restore($this->root.'/app.nuers', $this->root.'/bad-key', random_bytes(32));
+            $this->fail('Wrong recovery key was accepted.');
+        } catch (\RuntimeException) {
+            $this->assertDirectoryDoesNotExist($this->root.'/bad-key');
+        }
+    }
+
     public function test_corruption_wrong_key_truncation_and_trailing_data_fail_closed(): void
     {
         $key = random_bytes(32);

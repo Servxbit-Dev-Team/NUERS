@@ -21,11 +21,9 @@ use App\Http\Controllers\Api\RdoController;
 use App\Http\Controllers\Api\TableController;
 use App\Http\Controllers\Api\TaxIntelligenceController;
 use App\Http\Controllers\Api\TransactionController;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
 
-Route::get('/legal/policies', fn()=>response()->json(json_decode(file_get_contents(resource_path('data/legal-policies.json')),true)));
+Route::get('/legal/policies', fn () => response()->json(json_decode(file_get_contents(resource_path('data/legal-policies.json')), true)));
 
 Route::get('/health', fn () => ['ok' => true, 'app' => 'NUERS Laravel API', 'solution' => ['name' => config('bir_compliance.solution_name'), 'version' => config('bir_compliance.solution_version')]]);
 
@@ -242,8 +240,8 @@ Route::post('/integration-workspace/webhooks', [\App\Http\Controllers\Api\Integr
 Route::put('/integration-workspace/webhooks/{id}', [\App\Http\Controllers\Api\IntegrationWorkspaceController::class,'webhook'])->whereUuid('id');
 
 Route::post('/developer/sandbox', [\App\Http\Controllers\Api\DeveloperSandboxController::class,'run'])->middleware('throttle:20,1');
-Route::get('/developer/openapi', fn()=>response()->file(resource_path('data/developer-openapi.json'),['Content-Type'=>'application/json','Content-Disposition'=>'attachment; filename="nuers-openapi.json"','Cache-Control'=>'public, max-age=300']));
-Route::get('/developer/catalog', fn()=>response()->file(resource_path('data/developer-catalog.json'),['Content-Type'=>'application/json','Cache-Control'=>'public, max-age=300']));
+Route::get('/developer/openapi', fn () => response()->file(resource_path('data/developer-openapi.json'), ['Content-Type' => 'application/json','Content-Disposition' => 'attachment; filename="nuers-openapi.json"','Cache-Control' => 'public, max-age=300']));
+Route::get('/developer/catalog', fn () => response()->file(resource_path('data/developer-catalog.json'), ['Content-Type' => 'application/json','Cache-Control' => 'public, max-age=300']));
 
 Route::get('/auth/mfa/status', [\App\Http\Controllers\Api\MfaController::class,'status']);
 Route::post('/auth/mfa/enroll', [\App\Http\Controllers\Api\MfaController::class,'enroll'])->middleware('throttle:5,1');
@@ -272,8 +270,8 @@ Route::post('/auth/verify-email', [\App\Http\Controllers\Api\AccountSecurityCont
 Route::get('/admin/backups', [\App\Http\Controllers\Api\BackupRecoveryController::class,'index']);
 Route::get('/admin/backups/records', [\App\Http\Controllers\Api\BackupRecoveryController::class,'records']);
 Route::get('/admin/backups/export', [\App\Http\Controllers\Api\BackupRecoveryController::class,'export'])->middleware('throttle:10,1,bcdr-export:');
-Route::post('/admin/backups/{type}', [\App\Http\Controllers\Api\BackupRecoveryController::class,'create'])->whereIn('type',['requests','evidence'])->middleware('throttle:20,1,bcdr-create:');
-Route::post('/admin/backups/{type}/{id}/review', [\App\Http\Controllers\Api\BackupRecoveryController::class,'review'])->whereIn('type',['requests','evidence'])->whereUuid('id')->middleware('throttle:20,1,bcdr-review:');
+Route::post('/admin/backups/{type}', [\App\Http\Controllers\Api\BackupRecoveryController::class,'create'])->whereIn('type', ['requests','evidence'])->middleware('throttle:20,1,bcdr-create:');
+Route::post('/admin/backups/{type}/{id}/review', [\App\Http\Controllers\Api\BackupRecoveryController::class,'review'])->whereIn('type', ['requests','evidence'])->whereUuid('id')->middleware('throttle:20,1,bcdr-review:');
 
 // Merchant customer registry: ownership always comes from the authenticated merchant.
 Route::get('/merchant/customers', [\App\Http\Controllers\Api\MerchantCustomerController::class,'index']);
@@ -372,22 +370,22 @@ Route::post('/merchant/invoice-settings/logo', [\App\Http\Controllers\Api\Mercha
 Route::delete('/merchant/invoice-settings/logo', [\App\Http\Controllers\Api\MerchantBrandController::class,'invoiceLogo'])->middleware('throttle:20,1,invoice-logo:');
 
 // Isolated API test records; no production financial or document mutation.
-Route::get('/merchant/sandbox-records',[\App\Http\Controllers\Api\SandboxRecordsController::class,'index']);
-Route::get('/merchant/sandbox-records/{id}',[\App\Http\Controllers\Api\SandboxRecordsController::class,'show'])->whereUuid('id');
-Route::get('/admin/sandbox-records/export',[\App\Http\Controllers\Api\SandboxRecordsController::class,'export']);
-Route::get('/admin/sandbox-records',[\App\Http\Controllers\Api\SandboxRecordsController::class,'index']);
-Route::get('/admin/sandbox-records/{id}',[\App\Http\Controllers\Api\SandboxRecordsController::class,'show'])->whereUuid('id');
+Route::get('/merchant/sandbox-records', [\App\Http\Controllers\Api\SandboxRecordsController::class,'index']);
+Route::get('/merchant/sandbox-records/{id}', [\App\Http\Controllers\Api\SandboxRecordsController::class,'show'])->whereUuid('id');
+Route::get('/admin/sandbox-records/export', [\App\Http\Controllers\Api\SandboxRecordsController::class,'export']);
+Route::get('/admin/sandbox-records', [\App\Http\Controllers\Api\SandboxRecordsController::class,'index']);
+Route::get('/admin/sandbox-records/{id}', [\App\Http\Controllers\Api\SandboxRecordsController::class,'show'])->whereUuid('id');
 
 // Merchant-owned callbacks: independent of the legacy platform/BIR webhook queue.
-Route::get('/merchant/webhooks',[\App\Http\Controllers\Api\MerchantWebhookController::class,'index']);
-Route::get('/merchant/webhooks/deliveries',[\App\Http\Controllers\Api\MerchantWebhookController::class,'logs']);
-Route::get('/merchant/webhooks/deliveries/{id}',[\App\Http\Controllers\Api\MerchantWebhookController::class,'detail'])->whereUuid('id');
-Route::post('/merchant/webhooks',[\App\Http\Controllers\Api\MerchantWebhookController::class,'store'])->middleware('throttle:10,1,merchant-hook-create:');
-Route::patch('/merchant/webhooks/{id}',[\App\Http\Controllers\Api\MerchantWebhookController::class,'update'])->whereUuid('id')->middleware('throttle:20,1,merchant-hook-edit:');
-Route::delete('/merchant/webhooks/{id}',[\App\Http\Controllers\Api\MerchantWebhookController::class,'destroy'])->whereUuid('id')->middleware('throttle:10,1,merchant-hook-revoke:');
-Route::post('/merchant/webhooks/{id}/rotate',[\App\Http\Controllers\Api\MerchantWebhookController::class,'rotate'])->whereUuid('id')->middleware('throttle:5,1,merchant-hook-rotate:');
-Route::post('/merchant/webhooks/{id}/test',[\App\Http\Controllers\Api\MerchantWebhookController::class,'test'])->whereUuid('id')->middleware('throttle:5,1,merchant-hook-test:');
-Route::post('/merchant/webhooks/deliveries/{id}/retry',[\App\Http\Controllers\Api\MerchantWebhookController::class,'retry'])->whereUuid('id')->middleware('throttle:10,1,merchant-hook-retry:');
+Route::get('/merchant/webhooks', [\App\Http\Controllers\Api\MerchantWebhookController::class,'index']);
+Route::get('/merchant/webhooks/deliveries', [\App\Http\Controllers\Api\MerchantWebhookController::class,'logs']);
+Route::get('/merchant/webhooks/deliveries/{id}', [\App\Http\Controllers\Api\MerchantWebhookController::class,'detail'])->whereUuid('id');
+Route::post('/merchant/webhooks', [\App\Http\Controllers\Api\MerchantWebhookController::class,'store'])->middleware('throttle:10,1,merchant-hook-create:');
+Route::patch('/merchant/webhooks/{id}', [\App\Http\Controllers\Api\MerchantWebhookController::class,'update'])->whereUuid('id')->middleware('throttle:20,1,merchant-hook-edit:');
+Route::delete('/merchant/webhooks/{id}', [\App\Http\Controllers\Api\MerchantWebhookController::class,'destroy'])->whereUuid('id')->middleware('throttle:10,1,merchant-hook-revoke:');
+Route::post('/merchant/webhooks/{id}/rotate', [\App\Http\Controllers\Api\MerchantWebhookController::class,'rotate'])->whereUuid('id')->middleware('throttle:5,1,merchant-hook-rotate:');
+Route::post('/merchant/webhooks/{id}/test', [\App\Http\Controllers\Api\MerchantWebhookController::class,'test'])->whereUuid('id')->middleware('throttle:5,1,merchant-hook-test:');
+Route::post('/merchant/webhooks/deliveries/{id}/retry', [\App\Http\Controllers\Api\MerchantWebhookController::class,'retry'])->whereUuid('id')->middleware('throttle:10,1,merchant-hook-retry:');
 
 // Proposed merchant identity changes: owner submission, independent administrator decision.
 Route::get('/merchant/profile-changes', [\App\Http\Controllers\Api\BusinessProfileChangeController::class,'index']);

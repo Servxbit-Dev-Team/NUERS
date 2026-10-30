@@ -1,66 +1,1403 @@
-import {PtiApplications} from './applications';
-import {exportReport as openReportExport} from "@/components/reports/export-report";
+import { PtiApplications } from "./applications";
+import { exportReport as openReportExport } from "@/components/reports/export-report";
 import { useRealtimeRefresh } from "@/lib/use-realtime-refresh";
 import { formatTin } from "@/lib/tin";
-import {useEffect,useRef,useState,type FormEvent,type ElementType} from 'react';
-import {Link,useLocation} from 'react-router-dom';
-import {Settings2,Building2,CheckCircle2,Radio,Clock3,CircleX,Search,Filter,Plus,Download,Upload,Eye,Pencil,RefreshCw,ChevronRight,ChevronLeft,FileText,ShieldCheck} from 'lucide-react';
-import {ResponsiveContainer,PieChart,Pie,Cell,Tooltip} from 'recharts';
-import {Dialog,DialogContent,DialogHeader,DialogTitle,DialogDescription} from '@/components/ui/dialog';
-import {SearchableSelect} from '@/components/registration/searchable-select';
-import {registryApi,title} from '../business-registry';
-import {apiFetch} from '@/lib/api-url';
-import '../operations/workspace.css';import '../business-registry/registry.css';import './permits.css';
-type Row={id:string;reference:string;kind:string;merchant_id:string;business_name:string;tin:string;rdo_code:string;environment:string;scope:string;issued_at:string;valid_until:string;status:string;effective_status:string;evidence:string;reason:string;revision:number;device_count:number;name:string;serial_number:string;authorization_id:string;branch:string;device_type:string;connection_status:string;permit_status:string;last_observation?:{status:string;observed_at:string};observed_at:string;event:string;details:string;occurred_at:string};
-type Payload={data:Row[];summary:Record<string,number>;charts:Record<string,{name:string;value:number}[]>;total:number;last_page:number;can_write:boolean;generated_at:string;options:{rdos:{rdo_code:string;rdo_name:string}[];businesses:{id:string;business_name:string;tin:string}[];permits:{id:string;reference:string;business_name:string;environment:string;effective_status:string}[]}};
-const tabs={pti:'PTI Management',ptt:'PTT Management',devices:'Device Registration',logs:'Connection Logs',renewals:'Renewal & Validation',audit:'Audit Trail'};
-const statuses={all:'All Statuses',pending:'Pending Review',active:'Active',expiring_soon:'Expiring Soon',expired:'Expired',suspended:'Suspended',revoked:'Revoked',not_yet_valid:'Not Yet Effective'};
-const blank={merchant_id:'',kind:'PTI',branch_code:'',system_reference:'',branch_notification_reference:'',reference:'',environment:'certification',scope:'',issued_at:'',valid_until:'',status:'pending',evidence:'',reason:''};
-const blankDevice={authorization_id:'',name:'',serial_number:'',branch:'',device_type:'pos',status:'registered',reason:''};
-const req=(method:string,data:unknown)=>({method,body:JSON.stringify(data)});
-const date=(v:string)=>v?new Date(v.includes('T')?v:v.includes(' ')?v.replace(' ','T')+'+08:00':v+'T00:00:00+08:00').toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric',timeZone:'Asia/Manila'}):'—';
-export function PermitManagement(){
- const location=useLocation(), register=new URLSearchParams(location.search).get('view')==='register';
- return <><nav className="pa-workspace-tabs" aria-label="PTI workspace"><Link className={!register?'active':''} to="/super-admin/pti-ptt">PTI Applications</Link><Link className={register?'active':''} to="/super-admin/pti-ptt?view=register">Issued PTI / PTT Register</Link></nav>{register?<PermitRegister/>:<PtiApplications/>}</>;
+import { useEffect, useRef, useState, type FormEvent, type ElementType } from "react";
+import { Link, useLocation } from "react-router-dom";
+import {
+  Settings2,
+  Building2,
+  CheckCircle2,
+  Radio,
+  Clock3,
+  CircleX,
+  Search,
+  Filter,
+  Plus,
+  Download,
+  Upload,
+  Eye,
+  Pencil,
+  RefreshCw,
+  ChevronRight,
+  ChevronLeft,
+  FileText,
+  ShieldCheck,
+} from "lucide-react";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { SearchableSelect } from "@/components/registration/searchable-select";
+import { registryApi, title } from "../business-registry";
+import { apiFetch } from "@/lib/api-url";
+import "../operations/workspace.css";
+import "../business-registry/registry.css";
+import "./permits.css";
+type Row = {
+  id: string;
+  reference: string;
+  kind: string;
+  merchant_id: string;
+  business_name: string;
+  tin: string;
+  rdo_code: string;
+  environment: string;
+  scope: string;
+  issued_at: string;
+  valid_until: string;
+  status: string;
+  effective_status: string;
+  evidence: string;
+  reason: string;
+  revision: number;
+  device_count: number;
+  name: string;
+  serial_number: string;
+  authorization_id: string;
+  branch: string;
+  device_type: string;
+  connection_status: string;
+  permit_status: string;
+  last_observation?: { status: string; observed_at: string };
+  observed_at: string;
+  event: string;
+  details: string;
+  occurred_at: string;
+};
+type Payload = {
+  data: Row[];
+  summary: Record<string, number>;
+  charts: Record<string, { name: string; value: number }[]>;
+  total: number;
+  last_page: number;
+  can_write: boolean;
+  generated_at: string;
+  options: {
+    rdos: { rdo_code: string; rdo_name: string }[];
+    businesses: { id: string; business_name: string; tin: string }[];
+    permits: {
+      id: string;
+      reference: string;
+      business_name: string;
+      environment: string;
+      effective_status: string;
+    }[];
+  };
+};
+const tabs = {
+  pti: "PTI Management",
+  ptt: "PTT Management",
+  devices: "Device Registration",
+  logs: "Connection Logs",
+  renewals: "Renewal & Validation",
+  audit: "Audit Trail",
+};
+const statuses = {
+  all: "All Statuses",
+  pending: "Pending Review",
+  active: "Active",
+  expiring_soon: "Expiring Soon",
+  expired: "Expired",
+  suspended: "Suspended",
+  revoked: "Revoked",
+  not_yet_valid: "Not Yet Effective",
+};
+const blank = {
+  merchant_id: "",
+  kind: "PTI",
+  branch_code: "",
+  system_reference: "",
+  branch_notification_reference: "",
+  reference: "",
+  environment: "certification",
+  scope: "",
+  issued_at: "",
+  valid_until: "",
+  status: "pending",
+  evidence: "",
+  reason: "",
+};
+const blankDevice = {
+  authorization_id: "",
+  name: "",
+  serial_number: "",
+  branch: "",
+  device_type: "pos",
+  status: "registered",
+  reason: "",
+};
+const req = (method: string, data: unknown) => ({ method, body: JSON.stringify(data) });
+const date = (v: string) =>
+  v
+    ? new Date(
+        v.includes("T")
+          ? v
+          : v.includes(" ")
+            ? v.replace(" ", "T") + "+08:00"
+            : v + "T00:00:00+08:00",
+      ).toLocaleDateString("en-PH", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "Asia/Manila",
+      })
+    : "—";
+export function PermitManagement() {
+  const location = useLocation(),
+    register = new URLSearchParams(location.search).get("view") === "register";
+  return (
+    <>
+      <nav className="pa-workspace-tabs" aria-label="PTI workspace">
+        <Link className={!register ? "active" : ""} to="/super-admin/pti-ptt">
+          PTI Applications
+        </Link>
+        <Link className={register ? "active" : ""} to="/super-admin/pti-ptt?view=register">
+          Issued PTI / PTT Register
+        </Link>
+      </nav>
+      {register ? <PermitRegister /> : <PtiApplications />}
+    </>
+  );
 }
-function PermitRegister(){
- const location=useLocation();const [tab,setTab]=useState('pti'),[data,setData]=useState<Payload|null>(null),[page,setPage]=useState(1),[size,setSize]=useState('10'),[more,setMore]=useState(false),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState('');
- const initial={search:new URLSearchParams(location.search).get('search')||'',status:'all',rdo_code:'all',environment:'all',merchant_id:'all',validity:'all',from:'',to:'',sort:'newest'};
- const [filters,setFilters]=useState(initial),[applied,setApplied]=useState(initial),[modal,setModal]=useState(''),[selected,setSelected]=useState<Row|null>(null),[form,setForm]=useState(blank),[device,setDevice]=useState(blankDevice),[detail,setDetail]=useState<{record:Row;history:{event:string;occurred_at:string;details:string}[]}|null>(null),[selectedIds,setSelectedIds]=useState<string[]>([]),[file,setFile]=useState<File|null>(null),[preview,setPreview]=useState<{id:string|null;rows:number;errors:{row:number;message:string}[]}|null>(null),[obs,setObs]=useState({status:'unverified',evidence:'',reason:'',observed_at:''});const [dirty,setDirty]=useState(false);const requestId=useRef(crypto.randomUUID()),seq=useRef(0);
- const query=()=>new URLSearchParams({...applied,tab,kind:tab==='pti'?'PTI':tab==='ptt'?'PTT':'all',page:String(page),per_page:size}).toString();
- async function load(quiet=false){const n=++seq.current;if(!quiet)setLoading(true);try{const d=await registryApi('/api/taxpayer-authorizations?'+query());if(n===seq.current){setData(d);setError('')}}catch(e){if(n===seq.current)setError((e as Error).message)}finally{if(n===seq.current)setLoading(false)}}
- useEffect(()=>{load();return()=>{seq.current++}},[tab,page,size,applied]);
- useRealtimeRefresh(()=>load(true),!busy&&!modal&&!dirty);
- useEffect(()=>{const s=new URLSearchParams(location.search).get('search')||'';setFilters(f=>({...f,search:s}));setApplied(f=>({...f,search:s}));setPage(1)},[location.search]);
- useEffect(()=>{setSelectedIds([])},[tab,page,applied]);
- useEffect(()=>{if(!modal)return;const h=(e:BeforeUnloadEvent)=>{if(dirty){e.preventDefault();e.returnValue=''}};window.addEventListener('beforeunload',h);return()=>window.removeEventListener('beforeunload',h)},[modal,dirty]);
- const rows=data?.data||[],summary=data?.summary||{},canWrite=!!data?.can_write;
- function open(kind:string,row?:Row){setDirty(false);setError('');setSelected(row||null);requestId.current=crypto.randomUUID();setForm(row?Object.fromEntries(Object.keys(blank).map(k=>[k,(row as unknown as Record<string,string>)[k]||''])) as typeof blank:{...blank,kind:tab==='ptt'?'PTT':'PTI'});setDevice(row?{authorization_id:row.authorization_id,name:row.name,serial_number:row.serial_number,branch:row.branch,device_type:row.device_type,status:row.status,reason:''}:blankDevice);setObs({status:'unverified',evidence:'',reason:'',observed_at:new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16)});setPreview(null);setFile(null);setDetail(null);setModal(kind);if(kind==='view'&&row)registryApi('/api/taxpayer-authorizations/'+row.id).then(setDetail).catch(e=>setError(e.message));}
- async function save(e:FormEvent){e.preventDefault();setBusy(true);setError('');try{if(modal==='permit')await registryApi('/api/taxpayer-authorizations'+(selected?'/'+selected.id:''),req(selected?'PUT':'POST',{...form,valid_until:form.valid_until||null,...(selected?{revision:selected.revision}:{request_id:requestId.current})}));else if(modal==='device')await registryApi('/api/taxpayer-devices'+(selected?'/'+selected.id:''),req(selected?'PUT':'POST',{...device,revision:selected?.revision||0,request_id:requestId.current}));else await registryApi('/api/taxpayer-devices/'+selected?.id+'/observations',req('POST',{...obs,observed_at:new Date(obs.observed_at).toISOString(),request_id:requestId.current}));setModal('');setNotice('Record saved with audit history. BIR connectivity remains subject to verified transport.');await load()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
- async function download(path:string,name:string){if(path.includes("/export?")){await openReportExport({path,title:name.replace(/NUERS-|\.csv/g,""),filename:name,scope:"All matching records within your authorized registry",filters:Object.fromEntries(new URLSearchParams(path.split("?")[1]))});return;}try{setBusy(true);const r=await apiFetch(path);if(!r.ok)throw new Error('Download failed');const u=URL.createObjectURL(await r.blob());const a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
- async function importFile(){setBusy(true);try{const f=new FormData();if(!file)return;f.set('file',file);setPreview(await registryApi('/api/taxpayer-authorizations/import',{method:'POST',body:f}))}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
- async function commit(){setBusy(true);try{const d=await registryApi('/api/taxpayer-authorizations/import/'+preview?.id,req('POST',{}));setNotice(d.imported+' permits imported as pending review.');setModal('');await load()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
- function closeModal(){if(!busy&&(!dirty||window.confirm('Discard unsaved changes?'))){setModal('');setDirty(false)}}
- function select(label:string,value:string,onChange:(v:string)=>void,items:Record<string,string>,disabled=false){return <div className="ow-field"><SearchableSelect label={label.replace(/\s*\*/g,'')} required={label.includes('*')} value={value} onChange={v=>{if(modal)setDirty(true);onChange(v)}} items={Object.entries(items).map(([value,label])=>({value,label}))} disabled={disabled}/></div>}
- function field(label:string,value:string,onChange:(v:string)=>void,type='text',required=true,disabled=false){return <label className="ow-field"><span>{label}{required?' *':''}</span><input value={value} onChange={e=>{if(modal)setDirty(true);onChange(e.target.value)}} type={type} required={required} disabled={disabled} maxLength={3000}/></label>}
- function ring(kind:string){const values=data?.charts[kind]||[],total=values.reduce((a,x)=>a+x.value,0);return <section className="ow-panel br-chart"><h2>{kind.toUpperCase()} Status Distribution</h2><div className="pt-distribution"><div className="br-ring"><ResponsiveContainer width="100%" height={155}><PieChart><Pie data={values.length?values:[{name:'No records',value:1}]} dataKey="value" innerRadius={47} outerRadius={65} isAnimationActive={false}>{(values.length?values:[{name:'none',value:1}]).map(x=><Cell key={x.name} fill={x.name==='active'?'#00ad74':x.name==='expiring_soon'?'#ffbc00':x.name==='pending'||x.name==='none'?'#dce6f6':'#ff2a46'}/>)}</Pie><Tooltip/></PieChart></ResponsiveContainer><div><b>{total}</b><small>Total {kind.toUpperCase()}s</small></div></div><div>{values.map(x=><p key={x.name}><span>{title(x.name)}</span><b>{x.value} ({total?(x.value/total*100).toFixed(1):0}%)</b></p>)}{!values.length&&<p>No permits recorded</p>}</div></div></section>}
- const metrics:[string,string,ElementType,string][]=[['Total PTIs','pti',Building2,'blue'],['Active PTIs','active',CheckCircle2,'green'],['Total PTTs','ptt',Radio,'purple'],['Verified Connections','connected',Radio,'green'],['Expiring Soon (30 days)','expiring',Clock3,'yellow'],['Expired / Inactive','inactive',CircleX,'red']];
- return <div className="ow-page br-page pt-page"><div className="ow-hero"><div className="ow-breadcrumb"><Link to="/super-admin">Dashboard</Link><ChevronRight size={13}/><span>PTI / PTT Management</span><time>{new Date().toLocaleDateString('en-PH',{dateStyle:'full'})}</time></div><div className="ow-heading"><span className="ow-title-icon"><Settings2 size={28}/></span><div><h1>PTI / PTT Management</h1><p>Manage taxpayer permits to issue and transmit, validity, supporting evidence, device registration and connection records.</p></div><div className="ow-bir"><img src="/auth-assets/bir-official-seal.png" alt="Bureau of Internal Revenue official seal"/><div><b>BUREAU OF INTERNAL REVENUE</b><span>REPUBLIC OF THE PHILIPPINES</span><small>Working together for a fair and progressive tax system.</small></div></div></div></div>
- {notice&&<div className="br-notice" role="status">{notice}<button onClick={()=>setNotice('')}>Dismiss</button></div>}{error&&!modal&&<div className="ow-error" role="alert">{error}</div>}
- <div className="ow-metrics">{metrics.map(([label,key,Icon,color])=><section key={key}><span className={'ow-metric-icon '+color}><Icon size={29}/></span><div><h2>{label}</h2><strong>{summary[key]||0}</strong><p>Recorded evidence</p></div></section>)}</div>
- <div className="br-toolbar"><div className="ow-tabs">{Object.entries(tabs).map(([k,v])=><button className={tab===k?'active':''} key={k} onClick={()=>{setTab(k);setPage(1);setFilters(f=>({...f,status:'all'}));setApplied(f=>({...f,status:'all'}))}}>{v}</button>)}</div><div className="ow-actions"><button className="ow-primary" disabled={!canWrite} onClick={()=>open('permit')}><Plus size={16}/>Register New PTI</button><button disabled={!canWrite} onClick={()=>{open('permit');setForm({...blank,kind:'PTT'})}}><Plus size={16}/>Add PTT</button><button disabled={busy} onClick={()=>download('/api/taxpayer-authorizations/export?'+query(),'NUERS-permits.csv')}><Download size={16}/>Export PDF / CSV</button></div></div>
- <form className="ow-filters" onSubmit={e=>{e.preventDefault();setApplied({...filters});setPage(1)}}><label className="ow-field ow-search"><span>Search</span><div><Search size={15}/><input placeholder="TIN, business name, PTI / PTT reference…" value={filters.search} onChange={e=>setFilters({...filters,search:e.target.value})}/></div></label>{select('Type / Environment',filters.environment,v=>setFilters({...filters,environment:v}),{all:'All Environments',production:'Production',certification:'Certification'})}{select('Status',filters.status,v=>setFilters({...filters,status:v}),tab==='devices'?{all:'All device statuses',registered:'Registered',maintenance:'Maintenance',deactivated:'Deactivated'}:tab==='logs'?{all:'All observations',unverified:'Not verified',disconnected:'Disconnected',maintenance:'Maintenance'}:statuses)}{select('Validity',filters.validity,v=>setFilters({...filters,validity:v}),{all:'All Validity',current:'Current',expiring:'Expiring in 30 days',expired:'Expired'})}<div className="ow-field ow-dates"><span>Issued Date Range</span><div><input aria-label="From date" type="date" value={filters.from} onChange={e=>setFilters({...filters,from:e.target.value})}/><input aria-label="To date" type="date" value={filters.to} onChange={e=>setFilters({...filters,to:e.target.value})}/></div></div><button className="ow-primary"><Search size={16}/>Search</button><button type="button" onClick={()=>{setFilters(initial);setApplied(initial);setPage(1)}}>Reset</button><button type="button" onClick={()=>setMore(!more)}><Filter size={16}/>More Filters</button>{more&&<div className="ow-advanced">{select('Taxpayer',filters.merchant_id,v=>setFilters({...filters,merchant_id:v}),{all:'All Businesses',...Object.fromEntries((data?.options.businesses||[]).map(b=>[b.id,b.business_name+' · '+formatTin(b.tin)]))})}{select('RDO',filters.rdo_code,v=>setFilters({...filters,rdo_code:v}),{all:'All RDOs',...Object.fromEntries((data?.options.rdos||[]).map(r=>[r.rdo_code,r.rdo_code+' — '+r.rdo_name]))})}{select('Sort',filters.sort,v=>setFilters({...filters,sort:v}),{newest:'Newest first',oldest:'Oldest first'})}<span>Search applies filters. Connection indicators require measured transport evidence.</span></div>}</form>
- <div className="br-layout"><section className="ow-panel br-list"><div className="ow-table-title"><div><h2>{tab==='pti'?'Permit to Issue (PTI)':tab==='ptt'?'Permit to Transmit (PTT)':tabs[tab as keyof typeof tabs]}</h2><p>{tab==='logs'?'Append-only operational observations; manual notes cannot certify a live connection.':'Taxpayer authorities and supporting records. PTU / AC is distinct from PTI.'}</p></div><button aria-label="Refresh permit records" onClick={()=>load()}><RefreshCw size={16}/></button></div>{selectedIds.length>0&&<div className="ow-selection">{selectedIds.length} selected <button onClick={()=>void openReportExport({title:'Selected Permits',scope:selectedIds.length+' selected permit records on the current page',data:rows.filter(x=>selectedIds.includes(x.id)),filters:applied})}>Export selected PDF / CSV</button><button onClick={()=>setSelectedIds([])}>Clear</button></div>}
- <div className="ow-scroll"><table><thead><tr><th>#</th>{!['logs','audit'].includes(tab)&&<th><input aria-label="Select all visible permits" type="checkbox" checked={!!rows.length&&rows.every(x=>selectedIds.includes(x.id))} onChange={e=>setSelectedIds(e.target.checked?rows.map(x=>x.id):[])}/></th>}{tab==='devices'?<><th>Device Name</th><th>Serial / Asset ID</th><th>Taxpayer</th><th>PTT Reference</th><th>Branch</th><th>Device Status</th><th>Connection</th><th>Permit Status</th></>:tab==='logs'?<><th>Device</th><th>Serial</th><th>Observed At</th><th>Observation</th><th>Evidence</th><th>Reason</th></>:tab==='audit'?<><th>Event</th><th>Time</th><th>Details</th></>:<><th>{tab==='pti'?'PTI':tab==='ptt'?'PTT':'Permit'} Reference</th><th>TIN</th><th>Business Name</th><th>RDO</th><th>Environment</th><th>Issued Date</th><th>Valid Until</th><th>Status</th><th>Device Count</th></>}<th>Actions</th></tr></thead><tbody>{rows.map((r,i)=><tr key={r.id}><td>{(page-1)*Number(size)+i+1}</td>{!['logs','audit'].includes(tab)&&<td><input aria-label={'Select '+(r.reference||r.name)} type="checkbox" checked={selectedIds.includes(r.id)} onChange={e=>setSelectedIds(v=>e.target.checked?[...v,r.id]:v.filter(x=>x!==r.id))}/></td>}{tab==='devices'?<><td>{r.name}</td><td>{r.serial_number}</td><td>{r.business_name}</td><td>{r.reference}</td><td>{r.branch}</td><td><span className={'ow-badge '+r.status}>{title(r.status)}</span></td><td>Not verified</td><td>{title(r.permit_status)}</td></>:tab==='logs'?<><td>{r.name}</td><td>{r.serial_number}</td><td>{date(r.observed_at)}</td><td>{title(r.status)}</td><td>{r.evidence}</td><td>{r.reason}</td></>:tab==='audit'?<><td>{r.event}</td><td>{date(r.occurred_at)}</td><td><pre>{r.details}</pre></td></>:<><td>{r.reference}</td><td>{formatTin(r.tin)}</td><td>{r.business_name}</td><td>{r.rdo_code||'—'}</td><td>{title(r.environment)}</td><td>{date(r.issued_at)}</td><td>{date(r.valid_until)}</td><td><span className={'ow-badge '+r.effective_status}>{statuses[r.effective_status as keyof typeof statuses]||title(r.effective_status)}</span></td><td>{r.device_count}</td></>}<td><div className="ow-row-actions">{['logs','audit'].includes(tab)?<button aria-label="View event details" onClick={()=>{setSelected(r);setModal('event')}}><Eye size={16}/></button>:<>{tab!=='devices'&&<button aria-label={'View '+r.reference} onClick={()=>open('view',r)}><Eye size={16}/></button>}<button disabled={!canWrite} aria-label={'Edit '+(r.name||r.reference)} onClick={()=>open(tab==='devices'?'device':'permit',r)}><Pencil size={16}/></button>{tab==='devices'&&<button disabled={!canWrite} title="Record observation" onClick={()=>open('observe',r)}><Radio size={16}/></button>}</>}</div></td></tr>)}{!rows.length&&<tr><td colSpan={15} className="ow-empty">{loading?'Loading records…':'No records match these filters. Register a BIR-issued authority to begin.'}</td></tr>}</tbody></table></div><div data-slot="table-pagination" className="ow-pagination"><span>Showing {data?.total?(page-1)*Number(size)+1:0} to {Math.min(page*Number(size),data?.total||0)} of {data?.total||0} entries</span>{select('Per page',size,v=>{setSize(v);setPage(1)},{10:'10 per page',25:'25 per page',50:'50 per page',100:'100 per page'})}<button aria-label="Previous page" disabled={page===1} onClick={()=>setPage(page-1)}><ChevronLeft size={16}/></button><button className="ow-primary">{page}</button><button aria-label="Next page" disabled={page>=(data?.last_page||1)} onClick={()=>setPage(page+1)}><ChevronRight size={16}/></button></div></section>
- <aside className="br-aside">{ring('pti')}{ring('ptt')}<section className="ow-panel ow-quick"><h2>Quick Actions</h2><button disabled={!canWrite} onClick={()=>open('permit')}><Plus size={15}/>Register New PTI</button><button disabled={!canWrite} onClick={()=>{open('permit');setForm({...blank,kind:'PTT'})}}><Plus size={15}/>Add Permit to Transmit</button><button disabled={!canWrite} onClick={()=>open('device')}><Radio size={15}/>Register Device to PTT</button><button onClick={()=>download('/api/taxpayer-authorizations/template','NUERS-permit-template.csv')}><Download size={15}/>Download Permit Template</button><button onClick={()=>open('guide')}><FileText size={15}/>View PTI / PTT Guidelines</button><button onClick={()=>{setTab('renewals');setPage(1)}}><ShieldCheck size={15}/>Check Recorded Validity</button><button disabled={!canWrite} onClick={()=>open('import')}><Upload size={15}/>Bulk Import CSV</button></section></aside></div>
- <div className="ow-statusbar"><span className={"ow-badge "+(error?"failed":"success")}>{error?"Refresh failed":data?"NUERS records available":"Loading records"}</span><span>BIR Gateway: Not verified</span><span>Last Sync: {data?.generated_at?new Date(data.generated_at).toLocaleTimeString('en-PH'): '—'} (PHT)</span><span>PTI / PTT authorities remain taxpayer-owned</span></div>
- <Dialog open={!!modal} onOpenChange={v=>{if(!v)closeModal()}}><DialogContent className="ow-dialog br-dialog"><DialogHeader><DialogTitle>{modal==='permit'?(selected?'Review / Renew Permit':'Register Taxpayer Authority'):modal==='device'?'Device Registration':modal==='observe'?'Record Connection Observation':modal==='import'?'Import Permit Register':modal==='guide'?'PTI / PTT Guidelines':modal==='event'?'Event Details':'Permit Details'}</DialogTitle><DialogDescription>Changes require evidence, a reason, and a current record revision. No permit is issued by this form.</DialogDescription></DialogHeader>{error&&<div className="ow-error" role="alert">{error}</div>}
- {modal==='permit'&&<form className="br-form" onSubmit={save}><div className="br-form-grid">{select('Taxpayer *',form.merchant_id,v=>setForm({...form,merchant_id:v}),Object.fromEntries((data?.options.businesses||[]).map(b=>[b.id,b.business_name+' · '+formatTin(b.tin)])),!!selected)}{select('Authorization Type *',form.kind,v=>setForm({...form,kind:v}),{PTI:'PTI — Permit to Issue',PTT:'PTT — Permit to Transmit'},!!selected)}{field('Approved system reference',form.system_reference,v=>setForm({...form,system_reference:v}),'text',false)}{field('Branch notification / coverage evidence',form.branch_notification_reference,v=>setForm({...form,branch_notification_reference:v}),'text',false)}{field('BIR Permit Reference',form.reference,v=>setForm({...form,reference:v}),'text',true,!!selected)}{select('Environment *',form.environment,v=>setForm({...form,environment:v}),{certification:'Certification / Test',production:'Production'},!!selected)}{field('Issued Date',form.issued_at,v=>setForm({...form,issued_at:v}),'date')}{field('Valid Until (only if stated on authority)',form.valid_until,v=>setForm({...form,valid_until:v}),'date',false)}{select('Documentary Review Status',form.status,v=>setForm({...form,status:v}),{pending:'Pending review',active:'Active — evidence reviewed',suspended:'Suspended',revoked:'Revoked'})}{field('BIR Branch Code (five digits)',form.branch_code,v=>setForm({...form,branch_code:v}))}{field('Scope / Approved System and Branch',form.scope,v=>setForm({...form,scope:v}))}</div>{field('Evidence / BIR Document Reference',form.evidence,v=>setForm({...form,evidence:v}))}{field('Reason / Renewal Evidence',form.reason,v=>setForm({...form,reason:v}))}<p className="br-warning">Record the dates stated by BIR. No default permit lifetime is assumed. For a new permit reference, register a replacement; history is retained. Active is an administrative evidence review, not a live BIR validation.</p><div className="ow-actions"><button type="button" disabled={busy} onClick={closeModal}>Cancel</button><button className="ow-primary" disabled={busy||!canWrite||!form.merchant_id||form.evidence.trim().length<10||form.reason.trim().length<10}>Save & Audit</button></div></form>}
- {modal==='device'&&<form className="br-form" onSubmit={save}><div className="br-form-grid">{select('Permit to Transmit *',device.authorization_id,v=>setDevice({...device,authorization_id:v}),Object.fromEntries((data?.options.permits||[]).map(p=>[p.id,p.reference+' · '+p.business_name+' · '+title(p.effective_status)])),!!selected)}{field('Device Name',device.name,v=>setDevice({...device,name:v}))}{field('Serial / Asset Identifier',device.serial_number,v=>setDevice({...device,serial_number:v}))}{field('Branch / Location',device.branch,v=>setDevice({...device,branch:v}))}{select('Device Type',device.device_type,v=>setDevice({...device,device_type:v}),{pos:'POS Terminal',server:'Server',workstation:'Workstation',cloud_connector:'Cloud Connector'})}{select('Device Status',device.status,v=>setDevice({...device,status:v}),{registered:'Registered',maintenance:'Maintenance',deactivated:'Deactivated'})}</div>{field('Reason / Evidence',device.reason,v=>setDevice({...device,reason:v}))}<p className="br-hint">Device registration does not establish network connectivity or BIR authorization. Registration requires a current PTT; an expired parent permit remains visible.</p><button className="ow-primary" disabled={busy||!device.authorization_id}>Save Device</button></form>}
- {modal==='observe'&&<form className="br-form" onSubmit={save}><p>Device: {selected?.name} · {selected?.serial_number}</p>{select('Observation',obs.status,v=>setObs({...obs,status:v}),{unverified:'Not verified',disconnected:'Observed disconnected',maintenance:'Maintenance'})}{field('Observed At',obs.observed_at,v=>setObs({...obs,observed_at:v}),'datetime-local')}{field('Evidence',obs.evidence,v=>setObs({...obs,evidence:v}))}{field('Reason',obs.reason,v=>setObs({...obs,reason:v}))}<p className="br-hint">An append-only manual observation cannot mark a device connected. Verified transport telemetry is required.</p><button className="ow-primary" disabled={busy}>Record Observation</button></form>}
- {modal==='view'&&(detail?<><div className="ow-detail-grid">{Object.entries(detail.record).map(([k,v])=><div key={k}><dt>{title(k)}</dt><dd>{v==null?'—':String(v)}</dd></div>)}</div><h3>Audit History</h3><div className="br-history">{detail.history.map((h,i)=><article key={i}>{h.event}<time>{h.occurred_at}</time><pre>{h.details}</pre></article>)}</div></>:<p>Loading permit…</p>)}
- {modal==='event'&&<pre className="pt-event">{JSON.stringify(selected,null,2)}</pre>}
- {modal==='import'&&<div className="br-form"><p>Use merchant IDs from the business register. Imports create pending-review records only. A preview lasts one hour; the commit revalidates the entire file atomically.</p><button onClick={()=>download('/api/taxpayer-authorizations/template','NUERS-permit-template.csv')}>Download CSV Template</button><input aria-label="Permit CSV" type="file" accept=".csv,text/csv" onChange={e=>{setFile(e.target.files?.[0]||null);setPreview(null)}}/><button disabled={busy||!file} onClick={importFile}>Validate & Preview</button>{preview&&<><p>{preview.rows} rows · {preview.errors.length} errors</p><div className="br-import-preview">{preview.errors.map((x,i)=><div key={i}>Row {x.row}: {x.message}</div>)}</div><button className="ow-primary" disabled={busy||!preview.id||!!preview.errors.length} onClick={commit}>Import All as Pending Review</button></>}</div>}
- {modal==='guide'&&<div className="br-guide"><ol><li><b>PTI — Permit to Issue.</b> BIR authority for taxpayer electronic invoices. CAS PTU / AC is a separate requirement and cannot substitute for PTI.</li><li><b>PTT — Permit to Transmit.</b> Separate taxpayer authorization to transmit sales data. It is not a primary or secondary terminal designation.</li><li><b>Documentary review.</b> Match taxpayer, approved system, environment, scope, reference, evidence and dates. Record the authority’s actual validity; the ESP’s five-year accreditation term does not set the lifetime of every taxpayer permit.</li><li><b>Production controls.</b> PTI, written authorization, taxpayer certification, PTT, solution accreditation and verified transport remain separate gates. This register does not automatically satisfy them.</li><li><b>Renewal.</b> Review the 30-day operational reminder, retain previous evidence, and create a new record for a replacement reference. Suspension and revocation retain history.</li></ol><p>Source: saved NUERS Functional Specification §3.4 and ESP Accreditation deck, slides 9–14.</p><Link to="/super-admin/eis-readiness">Open EIS Readiness</Link></div>}
- </DialogContent></Dialog></div>
+function PermitRegister() {
+  const location = useLocation();
+  const [tab, setTab] = useState("pti"),
+    [data, setData] = useState<Payload | null>(null),
+    [page, setPage] = useState(1),
+    [size, setSize] = useState("10"),
+    [more, setMore] = useState(false),
+    [busy, setBusy] = useState(false),
+    [loading, setLoading] = useState(true),
+    [error, setError] = useState(""),
+    [notice, setNotice] = useState("");
+  const initial = {
+    search: new URLSearchParams(location.search).get("search") || "",
+    status: "all",
+    rdo_code: "all",
+    environment: "all",
+    merchant_id: "all",
+    validity: "all",
+    from: "",
+    to: "",
+    sort: "newest",
+  };
+  const [filters, setFilters] = useState(initial),
+    [applied, setApplied] = useState(initial),
+    [modal, setModal] = useState(""),
+    [selected, setSelected] = useState<Row | null>(null),
+    [form, setForm] = useState(blank),
+    [device, setDevice] = useState(blankDevice),
+    [detail, setDetail] = useState<{
+      record: Row;
+      history: { event: string; occurred_at: string; details: string }[];
+    } | null>(null),
+    [selectedIds, setSelectedIds] = useState<string[]>([]),
+    [file, setFile] = useState<File | null>(null),
+    [preview, setPreview] = useState<{
+      id: string | null;
+      rows: number;
+      errors: { row: number; message: string }[];
+    } | null>(null),
+    [obs, setObs] = useState({ status: "unverified", evidence: "", reason: "", observed_at: "" });
+  const [dirty, setDirty] = useState(false);
+  const requestId = useRef(crypto.randomUUID()),
+    seq = useRef(0);
+  const query = () =>
+    new URLSearchParams({
+      ...applied,
+      tab,
+      kind: tab === "pti" ? "PTI" : tab === "ptt" ? "PTT" : "all",
+      page: String(page),
+      per_page: size,
+    }).toString();
+  async function load(quiet = false) {
+    const n = ++seq.current;
+    if (!quiet) setLoading(true);
+    try {
+      const d = await registryApi("/api/taxpayer-authorizations?" + query());
+      if (n === seq.current) {
+        setData(d);
+        setError("");
+      }
+    } catch (e) {
+      if (n === seq.current) setError((e as Error).message);
+    } finally {
+      if (n === seq.current) setLoading(false);
+    }
+  }
+  useEffect(() => {
+    load();
+    return () => {
+      seq.current++;
+    };
+  }, [tab, page, size, applied]);
+  useRealtimeRefresh(() => load(true), !busy && !modal && !dirty);
+  useEffect(() => {
+    const s = new URLSearchParams(location.search).get("search") || "";
+    setFilters((f) => ({ ...f, search: s }));
+    setApplied((f) => ({ ...f, search: s }));
+    setPage(1);
+  }, [location.search]);
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [tab, page, applied]);
+  useEffect(() => {
+    if (!modal) return;
+    const h = (e: BeforeUnloadEvent) => {
+      if (dirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", h);
+    return () => window.removeEventListener("beforeunload", h);
+  }, [modal, dirty]);
+  const rows = data?.data || [],
+    summary = data?.summary || {},
+    canWrite = !!data?.can_write;
+  function open(kind: string, row?: Row) {
+    setDirty(false);
+    setError("");
+    setSelected(row || null);
+    requestId.current = crypto.randomUUID();
+    setForm(
+      row
+        ? (Object.fromEntries(
+            Object.keys(blank).map((k) => [k, (row as unknown as Record<string, string>)[k] || ""]),
+          ) as typeof blank)
+        : { ...blank, kind: tab === "ptt" ? "PTT" : "PTI" },
+    );
+    setDevice(
+      row
+        ? {
+            authorization_id: row.authorization_id,
+            name: row.name,
+            serial_number: row.serial_number,
+            branch: row.branch,
+            device_type: row.device_type,
+            status: row.status,
+            reason: "",
+          }
+        : blankDevice,
+    );
+    setObs({
+      status: "unverified",
+      evidence: "",
+      reason: "",
+      observed_at: new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 16),
+    });
+    setPreview(null);
+    setFile(null);
+    setDetail(null);
+    setModal(kind);
+    if (kind === "view" && row)
+      registryApi("/api/taxpayer-authorizations/" + row.id)
+        .then(setDetail)
+        .catch((e) => setError(e.message));
+  }
+  async function save(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      if (modal === "permit")
+        await registryApi(
+          "/api/taxpayer-authorizations" + (selected ? "/" + selected.id : ""),
+          req(selected ? "PUT" : "POST", {
+            ...form,
+            valid_until: form.valid_until || null,
+            ...(selected ? { revision: selected.revision } : { request_id: requestId.current }),
+          }),
+        );
+      else if (modal === "device")
+        await registryApi(
+          "/api/taxpayer-devices" + (selected ? "/" + selected.id : ""),
+          req(selected ? "PUT" : "POST", {
+            ...device,
+            revision: selected?.revision || 0,
+            request_id: requestId.current,
+          }),
+        );
+      else
+        await registryApi(
+          "/api/taxpayer-devices/" + selected?.id + "/observations",
+          req("POST", {
+            ...obs,
+            observed_at: new Date(obs.observed_at).toISOString(),
+            request_id: requestId.current,
+          }),
+        );
+      setModal("");
+      setNotice(
+        "Record saved with audit history. BIR connectivity remains subject to verified transport.",
+      );
+      await load();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function download(path: string, name: string) {
+    if (path.includes("/export?")) {
+      await openReportExport({
+        path,
+        title: name.replace(/NUERS-|\.csv/g, ""),
+        filename: name,
+        scope: "All matching records within your authorized registry",
+        filters: Object.fromEntries(new URLSearchParams(path.split("?")[1])),
+      });
+      return;
+    }
+    try {
+      setBusy(true);
+      const r = await apiFetch(path);
+      if (!r.ok) throw new Error("Download failed");
+      const u = URL.createObjectURL(await r.blob());
+      const a = document.createElement("a");
+      a.href = u;
+      a.download = name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(u), 1000);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function importFile() {
+    setBusy(true);
+    try {
+      const f = new FormData();
+      if (!file) return;
+      f.set("file", file);
+      setPreview(
+        await registryApi("/api/taxpayer-authorizations/import", { method: "POST", body: f }),
+      );
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function commit() {
+    setBusy(true);
+    try {
+      const d = await registryApi(
+        "/api/taxpayer-authorizations/import/" + preview?.id,
+        req("POST", {}),
+      );
+      setNotice(d.imported + " permits imported as pending review.");
+      setModal("");
+      await load();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  function closeModal() {
+    if (!busy && (!dirty || window.confirm("Discard unsaved changes?"))) {
+      setModal("");
+      setDirty(false);
+    }
+  }
+  function select(
+    label: string,
+    value: string,
+    onChange: (v: string) => void,
+    items: Record<string, string>,
+    disabled = false,
+  ) {
+    return (
+      <div className="ow-field">
+        <SearchableSelect
+          label={label.replace(/\s*\*/g, "")}
+          required={label.includes("*")}
+          value={value}
+          onChange={(v) => {
+            if (modal) setDirty(true);
+            onChange(v);
+          }}
+          items={Object.entries(items).map(([value, label]) => ({ value, label }))}
+          disabled={disabled}
+        />
+      </div>
+    );
+  }
+  function field(
+    label: string,
+    value: string,
+    onChange: (v: string) => void,
+    type = "text",
+    required = true,
+    disabled = false,
+  ) {
+    return (
+      <label className="ow-field">
+        <span>
+          {label}
+          {required ? " *" : ""}
+        </span>
+        <input
+          value={value}
+          onChange={(e) => {
+            if (modal) setDirty(true);
+            onChange(e.target.value);
+          }}
+          type={type}
+          required={required}
+          disabled={disabled}
+          maxLength={3000}
+        />
+      </label>
+    );
+  }
+  function ring(kind: string) {
+    const values = data?.charts[kind] || [],
+      total = values.reduce((a, x) => a + x.value, 0);
+    return (
+      <section className="ow-panel br-chart">
+        <h2>{kind.toUpperCase()} Status Distribution</h2>
+        <div className="pt-distribution">
+          <div className="br-ring">
+            <ResponsiveContainer width="100%" height={155}>
+              <PieChart>
+                <Pie
+                  data={values.length ? values : [{ name: "No records", value: 1 }]}
+                  dataKey="value"
+                  innerRadius={47}
+                  outerRadius={65}
+                  isAnimationActive={false}
+                >
+                  {(values.length ? values : [{ name: "none", value: 1 }]).map((x) => (
+                    <Cell
+                      key={x.name}
+                      fill={
+                        x.name === "active"
+                          ? "#00ad74"
+                          : x.name === "expiring_soon"
+                            ? "#ffbc00"
+                            : x.name === "pending" || x.name === "none"
+                              ? "#dce6f6"
+                              : "#ff2a46"
+                      }
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <div>
+              <b>{total}</b>
+              <small>Total {kind.toUpperCase()}s</small>
+            </div>
+          </div>
+          <div>
+            {values.map((x) => (
+              <p key={x.name}>
+                <span>{title(x.name)}</span>
+                <b>
+                  {x.value} ({total ? ((x.value / total) * 100).toFixed(1) : 0}%)
+                </b>
+              </p>
+            ))}
+            {!values.length && <p>No permits recorded</p>}
+          </div>
+        </div>
+      </section>
+    );
+  }
+  const metrics: [string, string, ElementType, string][] = [
+    ["Total PTIs", "pti", Building2, "blue"],
+    ["Active PTIs", "active", CheckCircle2, "green"],
+    ["Total PTTs", "ptt", Radio, "purple"],
+    ["Verified Connections", "connected", Radio, "green"],
+    ["Expiring Soon (30 days)", "expiring", Clock3, "yellow"],
+    ["Expired / Inactive", "inactive", CircleX, "red"],
+  ];
+  return (
+    <div className="ow-page br-page pt-page">
+      <div className="ow-hero">
+        <div className="ow-breadcrumb">
+          <Link to="/super-admin">Dashboard</Link>
+          <ChevronRight size={13} />
+          <span>PTI / PTT Management</span>
+          <time>{new Date().toLocaleDateString("en-PH", { dateStyle: "full" })}</time>
+        </div>
+        <div className="ow-heading">
+          <span className="ow-title-icon">
+            <Settings2 size={28} />
+          </span>
+          <div>
+            <h1>PTI / PTT Management</h1>
+            <p>
+              Manage taxpayer permits to issue and transmit, validity, supporting evidence, device
+              registration and connection records.
+            </p>
+          </div>
+          <div className="ow-bir">
+            <img
+              src="/auth-assets/bir-official-seal.png"
+              alt="Bureau of Internal Revenue official seal"
+            />
+            <div>
+              <b>BUREAU OF INTERNAL REVENUE</b>
+              <span>REPUBLIC OF THE PHILIPPINES</span>
+              <small>Working together for a fair and progressive tax system.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      {notice && (
+        <div className="br-notice" role="status">
+          {notice}
+          <button onClick={() => setNotice("")}>Dismiss</button>
+        </div>
+      )}
+      {error && !modal && (
+        <div className="ow-error" role="alert">
+          {error}
+        </div>
+      )}
+      <div className="ow-metrics">
+        {metrics.map(([label, key, Icon, color]) => (
+          <section key={key}>
+            <span className={"ow-metric-icon " + color}>
+              <Icon size={29} />
+            </span>
+            <div>
+              <h2>{label}</h2>
+              <strong>{summary[key] || 0}</strong>
+              <p>Recorded evidence</p>
+            </div>
+          </section>
+        ))}
+      </div>
+      <div className="br-toolbar">
+        <div className="ow-tabs">
+          {Object.entries(tabs).map(([k, v]) => (
+            <button
+              className={tab === k ? "active" : ""}
+              key={k}
+              onClick={() => {
+                setTab(k);
+                setPage(1);
+                setFilters((f) => ({ ...f, status: "all" }));
+                setApplied((f) => ({ ...f, status: "all" }));
+              }}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+        <div className="ow-actions">
+          <button className="ow-primary" disabled={!canWrite} onClick={() => open("permit")}>
+            <Plus size={16} />
+            Register New PTI
+          </button>
+          <button
+            disabled={!canWrite}
+            onClick={() => {
+              open("permit");
+              setForm({ ...blank, kind: "PTT" });
+            }}
+          >
+            <Plus size={16} />
+            Add PTT
+          </button>
+          <button
+            disabled={busy}
+            onClick={() =>
+              download("/api/taxpayer-authorizations/export?" + query(), "NUERS-permits.csv")
+            }
+          >
+            <Download size={16} />
+            Export PDF / CSV
+          </button>
+        </div>
+      </div>
+      <form
+        className="ow-filters"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setApplied({ ...filters });
+          setPage(1);
+        }}
+      >
+        <label className="ow-field ow-search">
+          <span>Search</span>
+          <div>
+            <Search size={15} />
+            <input
+              placeholder="TIN, business name, PTI / PTT reference…"
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+            />
+          </div>
+        </label>
+        {select(
+          "Type / Environment",
+          filters.environment,
+          (v) => setFilters({ ...filters, environment: v }),
+          { all: "All Environments", production: "Production", certification: "Certification" },
+        )}
+        {select(
+          "Status",
+          filters.status,
+          (v) => setFilters({ ...filters, status: v }),
+          tab === "devices"
+            ? {
+                all: "All device statuses",
+                registered: "Registered",
+                maintenance: "Maintenance",
+                deactivated: "Deactivated",
+              }
+            : tab === "logs"
+              ? {
+                  all: "All observations",
+                  unverified: "Not verified",
+                  disconnected: "Disconnected",
+                  maintenance: "Maintenance",
+                }
+              : statuses,
+        )}
+        {select("Validity", filters.validity, (v) => setFilters({ ...filters, validity: v }), {
+          all: "All Validity",
+          current: "Current",
+          expiring: "Expiring in 30 days",
+          expired: "Expired",
+        })}
+        <div className="ow-field ow-dates">
+          <span>Issued Date Range</span>
+          <div>
+            <input
+              aria-label="From date"
+              type="date"
+              value={filters.from}
+              onChange={(e) => setFilters({ ...filters, from: e.target.value })}
+            />
+            <input
+              aria-label="To date"
+              type="date"
+              value={filters.to}
+              onChange={(e) => setFilters({ ...filters, to: e.target.value })}
+            />
+          </div>
+        </div>
+        <button className="ow-primary">
+          <Search size={16} />
+          Search
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setFilters(initial);
+            setApplied(initial);
+            setPage(1);
+          }}
+        >
+          Reset
+        </button>
+        <button type="button" onClick={() => setMore(!more)}>
+          <Filter size={16} />
+          More Filters
+        </button>
+        {more && (
+          <div className="ow-advanced">
+            {select(
+              "Taxpayer",
+              filters.merchant_id,
+              (v) => setFilters({ ...filters, merchant_id: v }),
+              {
+                all: "All Businesses",
+                ...Object.fromEntries(
+                  (data?.options.businesses || []).map((b) => [
+                    b.id,
+                    b.business_name + " · " + formatTin(b.tin),
+                  ]),
+                ),
+              },
+            )}
+            {select("RDO", filters.rdo_code, (v) => setFilters({ ...filters, rdo_code: v }), {
+              all: "All RDOs",
+              ...Object.fromEntries(
+                (data?.options.rdos || []).map((r) => [
+                  r.rdo_code,
+                  r.rdo_code + " — " + r.rdo_name,
+                ]),
+              ),
+            })}
+            {select("Sort", filters.sort, (v) => setFilters({ ...filters, sort: v }), {
+              newest: "Newest first",
+              oldest: "Oldest first",
+            })}
+            <span>
+              Search applies filters. Connection indicators require measured transport evidence.
+            </span>
+          </div>
+        )}
+      </form>
+      <div className="br-layout">
+        <section className="ow-panel br-list">
+          <div className="ow-table-title">
+            <div>
+              <h2>
+                {tab === "pti"
+                  ? "Permit to Issue (PTI)"
+                  : tab === "ptt"
+                    ? "Permit to Transmit (PTT)"
+                    : tabs[tab as keyof typeof tabs]}
+              </h2>
+              <p>
+                {tab === "logs"
+                  ? "Append-only operational observations; manual notes cannot certify a live connection."
+                  : "Taxpayer authorities and supporting records. PTU / AC is distinct from PTI."}
+              </p>
+            </div>
+            <button aria-label="Refresh permit records" onClick={() => load()}>
+              <RefreshCw size={16} />
+            </button>
+          </div>
+          {selectedIds.length > 0 && (
+            <div className="ow-selection">
+              {selectedIds.length} selected{" "}
+              <button
+                onClick={() =>
+                  void openReportExport({
+                    title: "Selected Permits",
+                    scope: selectedIds.length + " selected permit records on the current page",
+                    data: rows.filter((x) => selectedIds.includes(x.id)),
+                    filters: applied,
+                  })
+                }
+              >
+                Export selected PDF / CSV
+              </button>
+              <button onClick={() => setSelectedIds([])}>Clear</button>
+            </div>
+          )}
+          <div className="ow-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  {!["logs", "audit"].includes(tab) && (
+                    <th>
+                      <input
+                        aria-label="Select all visible permits"
+                        type="checkbox"
+                        checked={!!rows.length && rows.every((x) => selectedIds.includes(x.id))}
+                        onChange={(e) =>
+                          setSelectedIds(e.target.checked ? rows.map((x) => x.id) : [])
+                        }
+                      />
+                    </th>
+                  )}
+                  {tab === "devices" ? (
+                    <>
+                      <th>Device Name</th>
+                      <th>Serial / Asset ID</th>
+                      <th>Taxpayer</th>
+                      <th>PTT Reference</th>
+                      <th>Branch</th>
+                      <th>Device Status</th>
+                      <th>Connection</th>
+                      <th>Permit Status</th>
+                    </>
+                  ) : tab === "logs" ? (
+                    <>
+                      <th>Device</th>
+                      <th>Serial</th>
+                      <th>Observed At</th>
+                      <th>Observation</th>
+                      <th>Evidence</th>
+                      <th>Reason</th>
+                    </>
+                  ) : tab === "audit" ? (
+                    <>
+                      <th>Event</th>
+                      <th>Time</th>
+                      <th>Details</th>
+                    </>
+                  ) : (
+                    <>
+                      <th>{tab === "pti" ? "PTI" : tab === "ptt" ? "PTT" : "Permit"} Reference</th>
+                      <th>TIN</th>
+                      <th>Business Name</th>
+                      <th>RDO</th>
+                      <th>Environment</th>
+                      <th>Issued Date</th>
+                      <th>Valid Until</th>
+                      <th>Status</th>
+                      <th>Device Count</th>
+                    </>
+                  )}
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => (
+                  <tr key={r.id}>
+                    <td>{(page - 1) * Number(size) + i + 1}</td>
+                    {!["logs", "audit"].includes(tab) && (
+                      <td>
+                        <input
+                          aria-label={"Select " + (r.reference || r.name)}
+                          type="checkbox"
+                          checked={selectedIds.includes(r.id)}
+                          onChange={(e) =>
+                            setSelectedIds((v) =>
+                              e.target.checked ? [...v, r.id] : v.filter((x) => x !== r.id),
+                            )
+                          }
+                        />
+                      </td>
+                    )}
+                    {tab === "devices" ? (
+                      <>
+                        <td>{r.name}</td>
+                        <td>{r.serial_number}</td>
+                        <td>{r.business_name}</td>
+                        <td>{r.reference}</td>
+                        <td>{r.branch}</td>
+                        <td>
+                          <span className={"ow-badge " + r.status}>{title(r.status)}</span>
+                        </td>
+                        <td>Not verified</td>
+                        <td>{title(r.permit_status)}</td>
+                      </>
+                    ) : tab === "logs" ? (
+                      <>
+                        <td>{r.name}</td>
+                        <td>{r.serial_number}</td>
+                        <td>{date(r.observed_at)}</td>
+                        <td>{title(r.status)}</td>
+                        <td>{r.evidence}</td>
+                        <td>{r.reason}</td>
+                      </>
+                    ) : tab === "audit" ? (
+                      <>
+                        <td>{r.event}</td>
+                        <td>{date(r.occurred_at)}</td>
+                        <td>
+                          <pre>{r.details}</pre>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td>{r.reference}</td>
+                        <td>{formatTin(r.tin)}</td>
+                        <td>{r.business_name}</td>
+                        <td>{r.rdo_code || "—"}</td>
+                        <td>{title(r.environment)}</td>
+                        <td>{date(r.issued_at)}</td>
+                        <td>{date(r.valid_until)}</td>
+                        <td>
+                          <span className={"ow-badge " + r.effective_status}>
+                            {statuses[r.effective_status as keyof typeof statuses] ||
+                              title(r.effective_status)}
+                          </span>
+                        </td>
+                        <td>{r.device_count}</td>
+                      </>
+                    )}
+                    <td>
+                      <div className="ow-row-actions">
+                        {["logs", "audit"].includes(tab) ? (
+                          <button
+                            aria-label="View event details"
+                            onClick={() => {
+                              setSelected(r);
+                              setModal("event");
+                            }}
+                          >
+                            <Eye size={16} />
+                          </button>
+                        ) : (
+                          <>
+                            {tab !== "devices" && (
+                              <button
+                                aria-label={"View " + r.reference}
+                                onClick={() => open("view", r)}
+                              >
+                                <Eye size={16} />
+                              </button>
+                            )}
+                            <button
+                              disabled={!canWrite}
+                              aria-label={"Edit " + (r.name || r.reference)}
+                              onClick={() => open(tab === "devices" ? "device" : "permit", r)}
+                            >
+                              <Pencil size={16} />
+                            </button>
+                            {tab === "devices" && (
+                              <button
+                                disabled={!canWrite}
+                                title="Record observation"
+                                onClick={() => open("observe", r)}
+                              >
+                                <Radio size={16} />
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {!rows.length && (
+                  <tr>
+                    <td colSpan={15} className="ow-empty">
+                      {loading
+                        ? "Loading records…"
+                        : "No records match these filters. Register a BIR-issued authority to begin."}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div data-slot="table-pagination" className="ow-pagination">
+            <span>
+              Showing {data?.total ? (page - 1) * Number(size) + 1 : 0} to{" "}
+              {Math.min(page * Number(size), data?.total || 0)} of {data?.total || 0} entries
+            </span>
+            {select(
+              "Per page",
+              size,
+              (v) => {
+                setSize(v);
+                setPage(1);
+              },
+              { 10: "10 per page", 25: "25 per page", 50: "50 per page", 100: "100 per page" },
+            )}
+            <button
+              aria-label="Previous page"
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button className="ow-primary">{page}</button>
+            <button
+              aria-label="Next page"
+              disabled={page >= (data?.last_page || 1)}
+              onClick={() => setPage(page + 1)}
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </section>
+        <aside className="br-aside">
+          {ring("pti")}
+          {ring("ptt")}
+          <section className="ow-panel ow-quick">
+            <h2>Quick Actions</h2>
+            <button disabled={!canWrite} onClick={() => open("permit")}>
+              <Plus size={15} />
+              Register New PTI
+            </button>
+            <button
+              disabled={!canWrite}
+              onClick={() => {
+                open("permit");
+                setForm({ ...blank, kind: "PTT" });
+              }}
+            >
+              <Plus size={15} />
+              Add Permit to Transmit
+            </button>
+            <button disabled={!canWrite} onClick={() => open("device")}>
+              <Radio size={15} />
+              Register Device to PTT
+            </button>
+            <button
+              onClick={() =>
+                download("/api/taxpayer-authorizations/template", "NUERS-permit-template.csv")
+              }
+            >
+              <Download size={15} />
+              Download Permit Template
+            </button>
+            <button onClick={() => open("guide")}>
+              <FileText size={15} />
+              View PTI / PTT Guidelines
+            </button>
+            <button
+              onClick={() => {
+                setTab("renewals");
+                setPage(1);
+              }}
+            >
+              <ShieldCheck size={15} />
+              Check Recorded Validity
+            </button>
+            <button disabled={!canWrite} onClick={() => open("import")}>
+              <Upload size={15} />
+              Bulk Import CSV
+            </button>
+          </section>
+        </aside>
+      </div>
+      <div className="ow-statusbar">
+        <span className={"ow-badge " + (error ? "failed" : "success")}>
+          {error ? "Refresh failed" : data ? "NUERS records available" : "Loading records"}
+        </span>
+        <span>BIR Gateway: Not verified</span>
+        <span>
+          Last Sync:{" "}
+          {data?.generated_at ? new Date(data.generated_at).toLocaleTimeString("en-PH") : "—"} (PHT)
+        </span>
+        <span>PTI / PTT authorities remain taxpayer-owned</span>
+      </div>
+      <Dialog
+        open={!!modal}
+        onOpenChange={(v) => {
+          if (!v) closeModal();
+        }}
+      >
+        <DialogContent className="ow-dialog br-dialog">
+          <DialogHeader>
+            <DialogTitle>
+              {modal === "permit"
+                ? selected
+                  ? "Review / Renew Permit"
+                  : "Register Taxpayer Authority"
+                : modal === "device"
+                  ? "Device Registration"
+                  : modal === "observe"
+                    ? "Record Connection Observation"
+                    : modal === "import"
+                      ? "Import Permit Register"
+                      : modal === "guide"
+                        ? "PTI / PTT Guidelines"
+                        : modal === "event"
+                          ? "Event Details"
+                          : "Permit Details"}
+            </DialogTitle>
+            <DialogDescription>
+              Changes require evidence, a reason, and a current record revision. No permit is issued
+              by this form.
+            </DialogDescription>
+          </DialogHeader>
+          {error && (
+            <div className="ow-error" role="alert">
+              {error}
+            </div>
+          )}
+          {modal === "permit" && (
+            <form className="br-form" onSubmit={save}>
+              <div className="br-form-grid">
+                {select(
+                  "Taxpayer *",
+                  form.merchant_id,
+                  (v) => setForm({ ...form, merchant_id: v }),
+                  Object.fromEntries(
+                    (data?.options.businesses || []).map((b) => [
+                      b.id,
+                      b.business_name + " · " + formatTin(b.tin),
+                    ]),
+                  ),
+                  !!selected,
+                )}
+                {select(
+                  "Authorization Type *",
+                  form.kind,
+                  (v) => setForm({ ...form, kind: v }),
+                  { PTI: "PTI — Permit to Issue", PTT: "PTT — Permit to Transmit" },
+                  !!selected,
+                )}
+                {field(
+                  "Approved system reference",
+                  form.system_reference,
+                  (v) => setForm({ ...form, system_reference: v }),
+                  "text",
+                  false,
+                )}
+                {field(
+                  "Branch notification / coverage evidence",
+                  form.branch_notification_reference,
+                  (v) => setForm({ ...form, branch_notification_reference: v }),
+                  "text",
+                  false,
+                )}
+                {field(
+                  "BIR Permit Reference",
+                  form.reference,
+                  (v) => setForm({ ...form, reference: v }),
+                  "text",
+                  true,
+                  !!selected,
+                )}
+                {select(
+                  "Environment *",
+                  form.environment,
+                  (v) => setForm({ ...form, environment: v }),
+                  { certification: "Certification / Test", production: "Production" },
+                  !!selected,
+                )}
+                {field(
+                  "Issued Date",
+                  form.issued_at,
+                  (v) => setForm({ ...form, issued_at: v }),
+                  "date",
+                )}
+                {field(
+                  "Valid Until (only if stated on authority)",
+                  form.valid_until,
+                  (v) => setForm({ ...form, valid_until: v }),
+                  "date",
+                  false,
+                )}
+                {select(
+                  "Documentary Review Status",
+                  form.status,
+                  (v) => setForm({ ...form, status: v }),
+                  {
+                    pending: "Pending review",
+                    active: "Active — evidence reviewed",
+                    suspended: "Suspended",
+                    revoked: "Revoked",
+                  },
+                )}
+                {field("BIR Branch Code (five digits)", form.branch_code, (v) =>
+                  setForm({ ...form, branch_code: v }),
+                )}
+                {field("Scope / Approved System and Branch", form.scope, (v) =>
+                  setForm({ ...form, scope: v }),
+                )}
+              </div>
+              {field("Evidence / BIR Document Reference", form.evidence, (v) =>
+                setForm({ ...form, evidence: v }),
+              )}
+              {field("Reason / Renewal Evidence", form.reason, (v) =>
+                setForm({ ...form, reason: v }),
+              )}
+              <p className="br-warning">
+                Record the dates stated by BIR. No default permit lifetime is assumed. For a new
+                permit reference, register a replacement; history is retained. Active is an
+                administrative evidence review, not a live BIR validation.
+              </p>
+              <div className="ow-actions">
+                <button type="button" disabled={busy} onClick={closeModal}>
+                  Cancel
+                </button>
+                <button
+                  className="ow-primary"
+                  disabled={
+                    busy ||
+                    !canWrite ||
+                    !form.merchant_id ||
+                    form.evidence.trim().length < 10 ||
+                    form.reason.trim().length < 10
+                  }
+                >
+                  Save & Audit
+                </button>
+              </div>
+            </form>
+          )}
+          {modal === "device" && (
+            <form className="br-form" onSubmit={save}>
+              <div className="br-form-grid">
+                {select(
+                  "Permit to Transmit *",
+                  device.authorization_id,
+                  (v) => setDevice({ ...device, authorization_id: v }),
+                  Object.fromEntries(
+                    (data?.options.permits || []).map((p) => [
+                      p.id,
+                      p.reference + " · " + p.business_name + " · " + title(p.effective_status),
+                    ]),
+                  ),
+                  !!selected,
+                )}
+                {field("Device Name", device.name, (v) => setDevice({ ...device, name: v }))}
+                {field("Serial / Asset Identifier", device.serial_number, (v) =>
+                  setDevice({ ...device, serial_number: v }),
+                )}
+                {field("Branch / Location", device.branch, (v) =>
+                  setDevice({ ...device, branch: v }),
+                )}
+                {select(
+                  "Device Type",
+                  device.device_type,
+                  (v) => setDevice({ ...device, device_type: v }),
+                  {
+                    pos: "POS Terminal",
+                    server: "Server",
+                    workstation: "Workstation",
+                    cloud_connector: "Cloud Connector",
+                  },
+                )}
+                {select(
+                  "Device Status",
+                  device.status,
+                  (v) => setDevice({ ...device, status: v }),
+                  {
+                    registered: "Registered",
+                    maintenance: "Maintenance",
+                    deactivated: "Deactivated",
+                  },
+                )}
+              </div>
+              {field("Reason / Evidence", device.reason, (v) =>
+                setDevice({ ...device, reason: v }),
+              )}
+              <p className="br-hint">
+                Device registration does not establish network connectivity or BIR authorization.
+                Registration requires a current PTT; an expired parent permit remains visible.
+              </p>
+              <button className="ow-primary" disabled={busy || !device.authorization_id}>
+                Save Device
+              </button>
+            </form>
+          )}
+          {modal === "observe" && (
+            <form className="br-form" onSubmit={save}>
+              <p>
+                Device: {selected?.name} · {selected?.serial_number}
+              </p>
+              {select("Observation", obs.status, (v) => setObs({ ...obs, status: v }), {
+                unverified: "Not verified",
+                disconnected: "Observed disconnected",
+                maintenance: "Maintenance",
+              })}
+              {field(
+                "Observed At",
+                obs.observed_at,
+                (v) => setObs({ ...obs, observed_at: v }),
+                "datetime-local",
+              )}
+              {field("Evidence", obs.evidence, (v) => setObs({ ...obs, evidence: v }))}
+              {field("Reason", obs.reason, (v) => setObs({ ...obs, reason: v }))}
+              <p className="br-hint">
+                An append-only manual observation cannot mark a device connected. Verified transport
+                telemetry is required.
+              </p>
+              <button className="ow-primary" disabled={busy}>
+                Record Observation
+              </button>
+            </form>
+          )}
+          {modal === "view" &&
+            (detail ? (
+              <>
+                <div className="ow-detail-grid">
+                  {Object.entries(detail.record).map(([k, v]) => (
+                    <div key={k}>
+                      <dt>{title(k)}</dt>
+                      <dd>{v == null ? "—" : String(v)}</dd>
+                    </div>
+                  ))}
+                </div>
+                <h3>Audit History</h3>
+                <div className="br-history">
+                  {detail.history.map((h, i) => (
+                    <article key={i}>
+                      {h.event}
+                      <time>{h.occurred_at}</time>
+                      <pre>{h.details}</pre>
+                    </article>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p>Loading permit…</p>
+            ))}
+          {modal === "event" && <pre className="pt-event">{JSON.stringify(selected, null, 2)}</pre>}
+          {modal === "import" && (
+            <div className="br-form">
+              <p>
+                Use merchant IDs from the business register. Imports create pending-review records
+                only. A preview lasts one hour; the commit revalidates the entire file atomically.
+              </p>
+              <button
+                onClick={() =>
+                  download("/api/taxpayer-authorizations/template", "NUERS-permit-template.csv")
+                }
+              >
+                Download CSV Template
+              </button>
+              <input
+                aria-label="Permit CSV"
+                type="file"
+                accept=".csv,text/csv"
+                onChange={(e) => {
+                  setFile(e.target.files?.[0] || null);
+                  setPreview(null);
+                }}
+              />
+              <button disabled={busy || !file} onClick={importFile}>
+                Validate & Preview
+              </button>
+              {preview && (
+                <>
+                  <p>
+                    {preview.rows} rows · {preview.errors.length} errors
+                  </p>
+                  <div className="br-import-preview">
+                    {preview.errors.map((x, i) => (
+                      <div key={i}>
+                        Row {x.row}: {x.message}
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    className="ow-primary"
+                    disabled={busy || !preview.id || !!preview.errors.length}
+                    onClick={commit}
+                  >
+                    Import All as Pending Review
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+          {modal === "guide" && (
+            <div className="br-guide">
+              <ol>
+                <li>
+                  <b>PTI — Permit to Issue.</b> BIR authority for taxpayer electronic invoices. CAS
+                  PTU / AC is a separate requirement and cannot substitute for PTI.
+                </li>
+                <li>
+                  <b>PTT — Permit to Transmit.</b> Separate taxpayer authorization to transmit sales
+                  data. It is not a primary or secondary terminal designation.
+                </li>
+                <li>
+                  <b>Documentary review.</b> Match taxpayer, approved system, environment, scope,
+                  reference, evidence and dates. Record the authority’s actual validity; the ESP’s
+                  five-year accreditation term does not set the lifetime of every taxpayer permit.
+                </li>
+                <li>
+                  <b>Production controls.</b> PTI, written authorization, taxpayer certification,
+                  PTT, solution accreditation and verified transport remain separate gates. This
+                  register does not automatically satisfy them.
+                </li>
+                <li>
+                  <b>Renewal.</b> Review the 30-day operational reminder, retain previous evidence,
+                  and create a new record for a replacement reference. Suspension and revocation
+                  retain history.
+                </li>
+              </ol>
+              <p>
+                Source: saved NUERS Functional Specification §3.4 and ESP Accreditation deck, slides
+                9–14.
+              </p>
+              <Link to="/super-admin/eis-readiness">Open EIS Readiness</Link>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }

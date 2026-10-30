@@ -21,7 +21,7 @@ class Totp
             $out .= 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'[bindec(str_pad($part, 5, '0'))];
         }
 
-return $out;
+        return $out;
     }
 
     private function decode(string $secret): string
@@ -38,7 +38,7 @@ return $out;
             }
         }
 
-return $out;
+        return $out;
     }
 
     public function code(string $secret, int $counter, int $digits = 6): string
@@ -56,7 +56,7 @@ return $out;
             return null;
         }$now = intdiv(now()->timestamp, 30);
         foreach ([$now, $now - 1, $now + 1] as $counter) {
-            if ($counter > ($last ?? -1) && hash_equals($this->code($secret,$counter),$code)) {
+            if ($counter > ($last ?? -1) && hash_equals($this->code($secret, $counter), $code)) {
                 return $counter;
             }
         }

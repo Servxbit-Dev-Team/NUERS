@@ -143,6 +143,6 @@ class AdminAccountProfileTest extends TestCase
     {
         $this->post('/api/admin/account-profile/avatar', ['avatar' => UploadedFile::fake()->createWithContent('photo.svg', '<svg onload="alert(1)"></svg>'), 'revision' => 0], ['Accept' => 'application/json'])->assertUnprocessable();
         $this->putJson('/api/admin/account-profile', $this->payload())->assertOk();
-        $this->post('/api/admin/account-profile/avatar',['avatar' => UploadedFile::fake()->image('face.png',30,30), 'revision' => 0],['Accept' => 'application/json'])->assertConflict();
+        $this->post('/api/admin/account-profile/avatar', ['avatar' => UploadedFile::fake()->image('face.png', 30, 30), 'revision' => 0], ['Accept' => 'application/json'])->assertConflict();
     }
 }

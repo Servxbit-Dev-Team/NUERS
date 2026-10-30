@@ -121,7 +121,9 @@ class AdminBusinessWalletController
         abort_unless(DB::table('merchants')->where('id', $merchant)->exists(), 404);
         $q = $this->query($r, $merchant);
         abort_if((clone $q)->count() > 5000, 422, 'Narrow the date range to at most 5,000 entries.');
-        if ($r->has('report_limit')) \App\Services\ReportCsv::limit($r,(clone $q)->count());
+        if ($r->has('report_limit')) {
+            \App\Services\ReportCsv::limit($r, (clone $q)->count());
+        }
         $rows = $this->details($q->orderBy('sequence')->get());
 
         return response()->streamDownload(function () use ($rows) {

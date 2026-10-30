@@ -13,11 +13,19 @@ class OperationsSalesQuery
     /** Resolve selective text filters once; never hydrate more than 5,001 narrow IDs. */
     public function narrow(Builder $q, array $filters): Builder
     {
-        if (empty($filters['search']) && empty($filters['customer'])) return $q;
+        if (empty($filters['search']) && empty($filters['customer'])) {
+            return $q;
+        }
         unset($filters['page'], $filters['per_page'], $filters['sort'], $filters['format']);
-        $ids = app(ReportingSnapshotCache::class)->remember('operations-sales-matches-v1', 'authorized-administrators', $filters,
-            fn () => (clone $q)->where('status','success')->limit(5001)->pluck('projection_id')->all());
-        if (count($ids)>5000) return $q;
+        $ids = app(ReportingSnapshotCache::class)->remember(
+            'operations-sales-matches-v1',
+            'authorized-administrators',
+            $filters,
+            fn () => (clone $q)->where('status', 'success')->limit(5001)->pluck('projection_id')->all()
+        );
+        if (count($ids) > 5000) {
+            return $q;
+        }
         // Keep every original predicate as a second authorization/filter boundary.
         return (clone $q)->whereIn('projection_id', $ids);
     }
@@ -42,8 +50,12 @@ class OperationsSalesQuery
     public function summary(Builder $q, array $filters, string $group, int $groupPage): array
     {
         unset($filters['page'], $filters['per_page'], $filters['sort'], $filters['format']);
-        return app(ReportingSnapshotCache::class)->remember('operations-sales-v2', 'authorized-administrators',
-            [...$filters, 'group' => $group, 'group_page' => $groupPage], fn () => $this->calculate($q, $group, $groupPage));
+        return app(ReportingSnapshotCache::class)->remember(
+            'operations-sales-v2',
+            'authorized-administrators',
+            [...$filters, 'group' => $group, 'group_page' => $groupPage],
+            fn () => $this->calculate($q, $group, $groupPage)
+        );
     }
 
     private function calculate(Builder $q, string $group, int $groupPage): array
@@ -66,7 +78,8 @@ class OperationsSalesQuery
         // COALESCE/NULLIF expression inside a derived aggregate's GROUP BY.
         $groupQuery = (clone $included)->selectRaw("$groupExpression as label,$aggregate")->groupBy('label');
         $groupTotal = DB::query()->fromSub(clone $groupQuery, 'groups')->count();
-        $groupLast = max(1, (int) ceil($groupTotal / 50)); $groupPage = min($groupPage, $groupLast);
+        $groupLast = max(1, (int) ceil($groupTotal / 50));
+        $groupPage = min($groupPage, $groupLast);
         $groups = $groupQuery->orderBy('label', in_array($group, ['daily','monthly']) ? 'desc' : 'asc')->offset(($groupPage - 1) * 50)->limit(50)->get();
         $trend = (clone $included)->selectRaw('SUBSTR(created_at,1,10) as date,SUM('.$this->signed('amount').') as amount')->groupByRaw('SUBSTR(created_at,1,10)')->orderByDesc('date')->limit(7)->get()->reverse()->values();
         $breakdown = (clone $included)->selectRaw('document_type as name,SUM('.$this->signed('amount').') as value')->groupBy('document_type')->orderByDesc('value')->limit(50)->get();
@@ -79,14 +92,18 @@ class OperationsSalesQuery
 
     public function page(Builder $q, array $v, int $total): array
     {
-        $size = (int) ($v['per_page'] ?? 10); $last = max(1, (int) ceil($total / $size));
+        $size = (int) ($v['per_page'] ?? 10);
+        $last = max(1, (int) ceil($total / $size));
         $page = min((int) ($v['page'] ?? 1), $last);
         // Sort narrow IDs, then hydrate only the requested page, including deep pagination.
-        $offset = ($page - 1) * $size; $take = min($size, max(0, $total-$offset));
-        $readSort=$v;
-        if ($offset > $total/2) {
-            $readSort['sort']=match($v['sort']??'newest') {'oldest'=>'newest','amount_asc'=>'amount_desc','amount_desc'=>'amount_asc',default=>'oldest'};
-            $offset=max(0,$total-$offset-$take);
+        $offset = ($page - 1) * $size;
+        $take = min($size, max(0, $total - $offset));
+        $readSort = $v;
+        if ($offset > $total / 2) {
+            $readSort['sort'] = match($v['sort'] ?? 'newest') {
+                'oldest' => 'newest','amount_asc' => 'amount_desc','amount_desc' => 'amount_asc',default => 'oldest'
+            };
+            $offset = max(0, $total - $offset - $take);
         }
         $ids = $this->sort($this->included($q), $readSort)->select('projection_id')->offset($offset)->limit($take)->pluck('projection_id');
         $rows = $ids->isEmpty() ? collect() : $this->sort((clone $q)->whereIn('projection_id', $ids), $v)->get();

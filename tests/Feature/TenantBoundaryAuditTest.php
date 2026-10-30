@@ -92,7 +92,9 @@ class TenantBoundaryAuditTest extends TestCase
         $checked = 0;
         foreach (app('router')->getRoutes() as $route) {
             // This public callback authenticates BIR signatures, not human portal roles.
-            if (Str::is('api/bir-eis/receive_invoice_result/*', $route->uri())) continue;
+            if (Str::is('api/bir-eis/receive_invoice_result/*', $route->uri())) {
+                continue;
+            }
             if (! Str::is($patterns, $route->uri())) {
                 continue;
             }

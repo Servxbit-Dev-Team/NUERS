@@ -21,10 +21,16 @@ class ApiCustomerReceipt
             'encrypted_recipient' => Crypt::encryptString($email), 'request_hash' => hash('sha256', 'receipt|'.$receiptId.'|'.$email),
             'purpose' => 'api_customer_receipt', 'state' => 'queued', 'created_at' => now(), 'updated_at' => now(),
         ]);
-        $outbox = app(PlatformNotifications::class)->queue($email, 'document.customer_copy', $id,
+        $outbox = app(PlatformNotifications::class)->queue(
+            $email,
+            'document.customer_copy',
+            $id,
             'Your e-receipt from '.$merchant->business_name,
             'Thank you for your purchase from '.$merchant->business_name.'. Your electronic document copy is attached as a PDF. Keep this copy for your records.',
-            'customer_copy', merchantId: (string) $merchant->id, context: ['delivery_id' => $id]);
+            'customer_copy',
+            merchantId: (string) $merchant->id,
+            context: ['delivery_id' => $id]
+        );
         DB::table('document_email_deliveries')->where('id', $id)->update([
             'outbox_id' => $outbox, 'state' => $outbox ? 'queued' : 'failed', 'error_code' => $outbox ? null : 'queue_unavailable',
         ]);

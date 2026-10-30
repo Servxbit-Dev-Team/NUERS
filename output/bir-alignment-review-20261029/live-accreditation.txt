@@ -1,3 +1,0 @@
-Browser tab: 16, Title: "NUERS | Electronic Invoicing & Digital Receipts", URL: "https://nuers.net/accreditation".
-There has been no change in the accessibility tree.
-The focused UI element is 0 AXWebArea NUERS | Electronic Invoicing & Digital Receipts, URL: nuers.net/accreditation

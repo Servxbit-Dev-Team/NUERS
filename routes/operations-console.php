@@ -32,7 +32,14 @@ Artisan::command('operations:backup', function () {
         return 1;
     }
 })->purpose('Create an encrypted local recovery archive with a separately provisioned key; opt-in only');
-Schedule::command('operations:backup')->dailyAt('02:30')->when(fn () => config('operations.backup.enabled'))->withoutOverlapping(120);
+Schedule::command('operations:backup')->dailyAt('02:30')->when(fn () => config('operations.backup.enabled') && config('operations.backup.application_scheduler_enabled'))->withoutOverlapping(120);
+
+Artisan::command('operations:database-privileges', function () {
+    $result = app(\App\Services\RuntimeDatabasePrivileges::class)->inspect();
+    app(OperationsHealth::class)->record('database_privileges', $result);
+    $this->line(json_encode($result, JSON_THROW_ON_ERROR));
+    return $result['least_privilege_passed'] ? 0 : 1;
+})->purpose('Inspect runtime grants without exposing authentication hashes or modifying permissions');
 
 Artisan::command('operations:verify-backup {archive_id}', function () {
     try {

@@ -68,9 +68,9 @@ class BirCallbackController extends Controller
             }, 3);
 
             // The specification's worked example uses an object; the conflicting encryption note is listed in the certification checklist.
-            return response()->json(['status' => '1', 'data' => ['accreditationId' => $p->accreditation_id, 'userId' => $c['user_id'], 'refSubmitId' => $b->submit_id, 'taxpayerAckId' => $ack, 'description' => 'Callback received. Final status is reconciled through the BIR inquiry API.']])->header('Cache-Control','no-store');
+            return response()->json(['status' => '1', 'data' => ['accreditationId' => $p->accreditation_id, 'userId' => $c['user_id'], 'refSubmitId' => $b->submit_id, 'taxpayerAckId' => $ack, 'description' => 'Callback received. Final status is reconciled through the BIR inquiry API.']])->header('Cache-Control', 'no-store');
         } catch (\Throwable) {
-            return $this->failure('E31',400);
+            return $this->failure('E31', 400);
         }
     }
 }

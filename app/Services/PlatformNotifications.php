@@ -174,7 +174,10 @@ class PlatformNotifications
             }
             if ($job->event === 'merchant.team.invitation') {
                 $invite = DB::table('merchant_team_members')->where('id', $p['context']['member_id'] ?? '')->where('merchant_id', $job->merchant_id)->where('status', 'invited')->where('invite_hash', $p['context']['token_hash'] ?? '')->where('expires_at', '>', now())->first();
-                if (!$invite || !DB::table('merchants')->where('id', $job->merchant_id)->whereNotIn('status', ['suspended','inactive'])->exists()) { $this->finish($job, 'cancelled'); return true; }
+                if (!$invite || !DB::table('merchants')->where('id', $job->merchant_id)->whereNotIn('status', ['suspended','inactive'])->exists()) {
+                    $this->finish($job, 'cancelled');
+                    return true;
+                }
             }
             if ($job->event === 'business.invitation') {
                 $invite = DB::table('business_registry_requests')->where('id', $p['context']['invitation_id'] ?? '')->whereNull('completed_at')->whereNull('revoked_at')->where('expires_at', '>', now())->first();

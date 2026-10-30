@@ -21,7 +21,7 @@ class RecoveryArchive
         }
         $temp = $output.'.'.bin2hex(random_bytes(8)).'.partial.zip';
         $mask = umask(0077);
-        $zip = new ZipArchive;
+        $zip = new ZipArchive();
         $manifest = ['format' => 'NUERS-recovery-1', 'created_at' => now()->toIso8601String(), 'context' => $context, 'files' => []];
         try {
             if ($zip->open($temp, ZipArchive::CREATE | ZipArchive::EXCL) !== true) {
@@ -74,7 +74,7 @@ class RecoveryArchive
             throw new RuntimeException('Cannot create private recovery directory.');
         }
         $temp = $target.'/.authenticated.zip';
-        $zip = new ZipArchive;
+        $zip = new ZipArchive();
         try {
             $this->decrypt($archive, $temp, $key);
             if ($zip->open($temp) !== true || $zip->numFiles > 100001) {

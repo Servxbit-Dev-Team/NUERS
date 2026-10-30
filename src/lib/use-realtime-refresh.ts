@@ -7,7 +7,9 @@ let timer: ReturnType<typeof setInterval> | undefined;
 const tick = () => void realtime.tick(document.visibilityState === "visible" && navigator.onLine);
 let revision = "";
 realtime.probe = async () => {
-  const result = await apiJson<{ revision: string }>("/api/dashboard-revision", { timeoutMs: 10000 });
+  const result = await apiJson<{ revision: string }>("/api/dashboard-revision", {
+    timeoutMs: 10000,
+  });
   const changed = revision !== result.revision;
   revision = result.revision;
   return changed;

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class () extends Migration {
     public function up(): void
     {
         Schema::create('integration_source_profiles', function (Blueprint $t) {
@@ -38,5 +38,8 @@ return new class extends Migration {
             $t->uuid('source_profile_id')->nullable();
         });
     }
-    public function down(): void { throw new RuntimeException('Forward-only: preserve source and financial evidence.'); }
+    public function down(): void
+    {
+        throw new RuntimeException('Forward-only: preserve source and financial evidence.');
+    }
 };

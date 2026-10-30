@@ -186,7 +186,9 @@ class TableController extends Controller
                 User::where('id', $target->id)->update(['name' => $payload['full_name']]);
             }
             if ($roleChangedIds) {
-                foreach ($roleChangedIds as $changedId) app(\App\Services\PlatformNotifications::class)->user($changedId,'security.role.changed',(string)\Illuminate\Support\Str::uuid(),'Account access changed','An administrator changed your NUERS account permissions. Existing application sessions were revoked. If you were not expecting this change, contact NUERS support.','security');
+                foreach ($roleChangedIds as $changedId) {
+                    app(\App\Services\PlatformNotifications::class)->user($changedId, 'security.role.changed', (string)\Illuminate\Support\Str::uuid(), 'Account access changed', 'An administrator changed your NUERS account permissions. Existing application sessions were revoked. If you were not expecting this change, contact NUERS support.', 'security');
+                }
                 User::whereIn('id', $roleChangedIds)->update(app(ApiAccess::class)->revocation());
             }
             app(BirCompliance::class)->audit('account.table.updated', $model, (string) $request->attributes->get('table_actor')->id, ['fields' => array_keys($payload), 'count' => $affected]);
@@ -281,7 +283,9 @@ class TableController extends Controller
 
     private function notifyRemoval(array $ids): void
     {
-        foreach(User::whereIn('id',$ids)->get() as $u) app(\App\Services\PlatformNotifications::class)->queue($u->email,'security.account.removed',(string)\Illuminate\Support\Str::uuid(),'NUERS account removed','An administrator removed your NUERS account. If this was unexpected, contact NUERS support.','security');
+        foreach (User::whereIn('id', $ids)->get() as $u) {
+            app(\App\Services\PlatformNotifications::class)->queue($u->email, 'security.account.removed', (string)\Illuminate\Support\Str::uuid(), 'NUERS account removed', 'An administrator removed your NUERS account. If this was unexpected, contact NUERS support.', 'security');
+        }
     }
 
     private function scope(Builder $query, Request $request, string $model): void

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -16,7 +17,7 @@ class SubscriptionPlanController extends Controller
     public function index(TransactionPricing $pricing)
     {
         $offer = $pricing->offer();
-        return response()->json(['pricing'=>$offer, 'plans'=>[$offer]]);
+        return response()->json(['pricing' => $offer, 'plans' => [$offer]]);
     }
     public function manage(Request $request, TransactionPricing $pricing)
     {

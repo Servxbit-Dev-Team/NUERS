@@ -21,10 +21,14 @@ class MailConfigurationController extends Controller
         $settings = app(PlatformMail::class)->settings();
         $public = $settings ?? ['host' => '', 'port' => 587, 'encryption' => 'starttls', 'username' => '', 'from_address' => '', 'from_name' => 'NUERS', 'enabled' => false];
         $public['from_name'] = 'NUERS';
-        $public['has_password'] = !empty($public['password']); unset($public['password']);
+        $public['has_password'] = !empty($public['password']);
+        unset($public['password']);
         return response()->json(['smtp' => $public, 'revision' => $row?->revision ?? 0, 'tested' => $row && $row->tested_hash === $row->connection_hash, 'tested_at' => $row?->tested_at ? CarbonImmutable::parse($row->tested_at, config('app.timezone'))->toIso8601String() : null,
             'environment' => app()->environment(), 'mail_counts' => DB::table('document_email_deliveries')->selectRaw('state, COUNT(*) as total')->groupBy('state')->get(),
-            'changes' => DB::table('platform_configuration_changes as c')->leftJoin('users as u', 'u.id', '=', 'c.actor_id')->orderByDesc('c.created_at')->limit(20)->get(['c.id', 'c.module', 'c.action', 'c.revision', 'c.changed_fields', 'c.created_at', 'u.name as actor'])->map(function ($change) { $change->created_at = CarbonImmutable::parse($change->created_at, config('app.timezone'))->toIso8601String(); return $change; }),
+            'changes' => DB::table('platform_configuration_changes as c')->leftJoin('users as u', 'u.id', '=', 'c.actor_id')->orderByDesc('c.created_at')->limit(20)->get(['c.id', 'c.module', 'c.action', 'c.revision', 'c.changed_fields', 'c.created_at', 'u.name as actor'])->map(function ($change) {
+                $change->created_at = CarbonImmutable::parse($change->created_at, config('app.timezone'))->toIso8601String();
+                return $change;
+            }),
             'system' => ['timezone' => config('app.timezone'), 'queue' => config('queue.default'), 'eis_transport' => (bool) config('bir_compliance.transport_implemented'), 'maintenance' => app()->isDownForMaintenance(), 'release_reference' => config('security.release_evidence_reference')]])->header('Cache-Control', 'private, no-store');
     }
 
@@ -40,7 +44,9 @@ class MailConfigurationController extends Controller
             $row = DB::table('platform_mail_settings')->where('id', 1)->lockForUpdate()->first();
             abort_unless(($row?->revision ?? 0) === $v['revision'], 409, 'Configuration changed. Refresh before saving.');
             $old = app(PlatformMail::class)->settings() ?? [];
-            $settings = $v; unset($settings['revision']); $settings['from_name'] = 'NUERS';
+            $settings = $v;
+            unset($settings['revision']);
+            $settings['from_name'] = 'NUERS';
             $settings['host'] = strtolower($settings['host']);
             $settings['password'] = $settings['password'] ?? $old['password'] ?? '';
             abort_if($settings['password'] === '', 422, 'An SMTP password or app password is required.');
@@ -61,8 +67,11 @@ class MailConfigurationController extends Controller
         $v = $r->validate(['email' => 'required|email:rfc|max:254', 'revision' => 'required|integer|min:1']);
         $row = DB::table('platform_mail_settings')->where('id', 1)->first();
         abort_unless($row && $row->revision === $v['revision'], 409, 'Save and refresh the configuration before testing.');
-        $store = config('cache.default'); $limiter = new RateLimiter(Cache::store($store === 'array' ? 'database' : $store)); $budget = 'smtp-test:'.$actor->id;
-        abort_if($limiter->tooManyAttempts($budget, 5), 429, 'SMTP test budget reached. Try again in a minute.'); $limiter->hit($budget, 60);
+        $store = config('cache.default');
+        $limiter = new RateLimiter(Cache::store($store === 'array' ? 'database' : $store));
+        $budget = 'smtp-test:'.$actor->id;
+        abort_if($limiter->tooManyAttempts($budget, 5), 429, 'SMTP test budget reached. Try again in a minute.');
+        $limiter->hit($budget, 60);
         try {
             app(PlatformMail::class)->send(json_decode(Crypt::decryptString($row->encrypted_settings), true, flags: JSON_THROW_ON_ERROR), $v['email'], 'NUERS SMTP configuration test', 'This is a NUERS SMTP test. If you received this email, outbound delivery reached this mailbox. No BIR transmission or financial record was changed.');
         } catch (\Throwable $e) {

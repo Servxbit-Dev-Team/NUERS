@@ -52,9 +52,13 @@ class InvoiceCalculator
             }
             $discount = intdiv($gross * (int) round((float) $pct * 100) + 5000, 10000);
             if (isset($line['fixed_discount_amount'])) {
-                if ((float)$pct !== 0.0) $this->fail($field.'.fixed_discount_amount', 'Choose one discount method per line.');
+                if ((float)$pct !== 0.0) {
+                    $this->fail($field.'.fixed_discount_amount', 'Choose one discount method per line.');
+                }
                 $discount = $this->cents($line['fixed_discount_amount'], $field.'.fixed_discount_amount', true);
-                if ($discount > $gross) $this->fail($field.'.fixed_discount_amount', 'Discount cannot exceed the original line price.');
+                if ($discount > $gross) {
+                    $this->fail($field.'.fixed_discount_amount', 'Discount cannot exceed the original line price.');
+                }
             }
             $net = $gross - $discount;
             $tax = $line['tax_type'] ?? ($vatRegistered ? 'vatable' : 'non_vat');
@@ -73,9 +77,15 @@ class InvoiceCalculator
             $statutoryDiscount = $vatRelief = 0;
             $benefitDetails = null;
             if (!empty($line['benefit_eligible'])) {
-                if (!$benefit) $this->fail($field.'.benefit_eligible', 'Provide verified sales-benefit details before marking an eligible line.');
-                if ((float)$pct !== 0.0 || $discount !== 0) $this->fail($field.'.discount_pct', 'Do not stack promotional and statutory discounts on the same line. Use the applicable benefit and separate non-eligible items.');
-                if ($tax === 'zero_rated') $this->fail($field.'.tax_type', 'Do not combine a zero-rated export classification with a personal statutory benefit.');
+                if (!$benefit) {
+                    $this->fail($field.'.benefit_eligible', 'Provide verified sales-benefit details before marking an eligible line.');
+                }
+                if ((float)$pct !== 0.0 || $discount !== 0) {
+                    $this->fail($field.'.discount_pct', 'Do not stack promotional and statutory discounts on the same line. Use the applicable benefit and separate non-eligible items.');
+                }
+                if ($tax === 'zero_rated') {
+                    $this->fail($field.'.tax_type', 'Do not combine a zero-rated export classification with a personal statutory benefit.');
+                }
                 $eligibleCount++;
                 $originalTax = $tax;
                 $originalBase = $tax === 'vatable' && $pricesIncludeVat ? intdiv($gross * 100 + 56, 112) : $gross;
@@ -84,7 +94,9 @@ class InvoiceCalculator
                 $discount = $statutoryDiscount = intdiv($originalBase * $rate + 50, 100);
                 $discountedBase = $originalBase - $discount;
                 $exempt = $benefit['category'] !== 'national_athlete_coach';
-                if ($exempt && $tax === 'vatable') $tax = 'vat_exempt';
+                if ($exempt && $tax === 'vatable') {
+                    $tax = 'vat_exempt';
+                }
                 $base = $tax === 'vatable' ? $discountedBase : 0;
                 $vat = $tax === 'vatable' ? intdiv($base * 12 + 50, 100) : 0;
                 $lineTotal = $discountedBase + $vat;
@@ -113,7 +125,9 @@ class InvoiceCalculator
                 $s['vat_exempt_amount'] += $net;
             }
         }
-        if ($benefit && !$eligibleCount) $this->fail('sales_benefit', 'Mark at least one eligible line. Split shared or partly eligible purchases into separate lines.');
+        if ($benefit && !$eligibleCount) {
+            $this->fail('sales_benefit', 'Mark at least one eligible line. Split shared or partly eligible purchases into separate lines.');
+        }
         $total = array_sum(array_column($items, 'line_total'));
         if ($total > self::MAX_CENTS || $withholding < 0 || $withholding > $total) {
             $this->fail('total_amount', 'Invalid total or withholding amount.');

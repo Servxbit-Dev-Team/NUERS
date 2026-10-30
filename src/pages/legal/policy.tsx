@@ -1,15 +1,207 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, FileCheck2, ShieldCheck, Mail, Printer } from 'lucide-react';
-import { apiJson } from '@/lib/api-url';
-import { pesos, storageLabel, type SubscriptionPlan } from '@/components/subscriptions/pricing';
-import './policy.css';
-type Section={id:string;title:string;paragraphs:string[]};
-type Policies={version:string;effective_date:string;operator:string;contact_email:string;terms:Section[];privacy:Section[];references:{title:string;url:string}[]};
-export function LegalPolicyPage({kind}:{kind:'terms'|'privacy'}){
- const [data,setData]=useState<Policies|null>(null),[plans,setPlans]=useState<SubscriptionPlan[]>([]),[error,setError]=useState(''),[retry,setRetry]=useState(0);
- useEffect(()=>{const controller=new AbortController();setError('');apiJson<Policies>('/api/legal/policies',{signal:controller.signal}).then(setData).catch(e=>{if(e.name!=='AbortError')setError(e.message);});apiJson<{plans:SubscriptionPlan[]}>('/api/pricing',{signal:controller.signal}).then(r=>setPlans(r.plans)).catch(()=>{});return()=>controller.abort();},[retry]);
- const title=kind==='terms'?'Terms of Service':'Privacy Notice';const sections=data?.[kind]||[];
- useEffect(()=>{const old=document.title;document.title=`${title} | NUERS`;window.scrollTo(0,0);return()=>{document.title=old;};},[title]);
- return <div className="legal-page"><header><div><Link to="/" aria-label="NUERS home"><img src="/brand/nuers-official-logo.png" alt="NUERS"/></Link><nav aria-label="Legal navigation"><Link to="/terms-of-service" aria-current={kind==='terms'?'page':undefined}>Terms of Service</Link><Link to="/privacy-notice" aria-current={kind==='privacy'?'page':undefined}>Privacy Notice</Link><Link className="legal-register" to="/register">Registration</Link></nav></div></header><div className="legal-hero"><span>{kind==='terms'?<FileCheck2/>:<ShieldCheck/>}NUERS · TRUST & TRANSPARENCY</span><h1>{title}</h1><p>{kind==='terms'?'Your account, electronic documents, transaction fees and use of NUERS.':'What the system collects, why it is used, and how to exercise your privacy rights.'}</p>{data&&<div>Effective {data.effective_date}<i/>Version {data.version}<i/>Operator: {data.operator}</div>}</div>{error?<div className="legal-error" role="alert">{error}<button onClick={()=>setRetry(x=>x+1)}>Retry</button></div>:!data?<p className="legal-loading">Loading policy…</p>:<main className="legal-layout"><aside><strong>On this page</strong><nav aria-label="Policy contents">{sections.map((s,i)=><a href={`#${s.id}`} key={s.id}>{i+1}. {s.title}</a>)}</nav><a className="legal-contact" href={`mailto:${data.contact_email}?subject=NUERS%20${kind==='privacy'?'privacy%20request':'service%20question'}`}><Mail size={16}/>Contact NUERS<span>{data.contact_email}</span></a><button onClick={()=>window.print()}><Printer size={15}/>Print this policy</button></aside><article><div className="legal-summary"><strong>{kind==='terms'?'Service scope':'Your information, handled for a defined purpose'}</strong><p>{kind==='terms'?'Registration remains pending review. Registration does not process payment. A saved invoice or QR code does not establish BIR acceptance.':'Registration and support data are used for the workflows described here. Privacy acknowledgment is separate from permission for unrelated marketing.'}</p></div>{sections.map((s,i)=><section key={s.id} id={s.id}><h2><span>{String(i+1).padStart(2,'0')}</span>{s.title}</h2>{s.paragraphs.map((p,j)=><p key={j}>{p}</p>)}{kind==='terms'&&s.id==='pricing'&&plans.length>0&&<div className="legal-plans"><h3>Current transaction pricing</h3><p>One pricing model for all NUERS business accounts.</p><div className="legal-table-scroll"><table><thead><tr><th>Service</th><th>Fee per eligible transaction</th><th>Minimum transaction</th><th>Storage offer</th></tr></thead><tbody>{plans.map(p=><tr key={p.id}><td>{p.name}</td><td>{pesos(p.fee_centavos)}</td><td>{p.minimum_transaction_centavos===0?'None — every finalized sale':pesos(p.minimum_transaction_centavos)}</td><td>{storageLabel(p)}{p.retention_years?` · ${p.retention_years} years`:''}</td></tr>)}</tbody></table></div></div>}</section>)}{kind==='privacy'&&<section id="references"><h2>Official privacy resources</h2><ul>{data.references.map(r=><li key={r.url}><a href={r.url} target="_blank" rel="noopener noreferrer">{r.title} ↗</a></li>)}</ul></section>}<footer><Link to="/register"><ArrowLeft size={15}/>Back to registration</Link><Link to={kind==='terms'?'/privacy-notice':'/terms-of-service'}>{kind==='terms'?'Read the Privacy Notice':'Read the Terms of Service'} →</Link></footer></article></main>}<footer className="legal-footer"><span>© {new Date().getFullYear()} NUERS</span><a href="mailto:nuersofficial@gmail.com">nuersofficial@gmail.com</a><span>Digital transactions. A stronger Philippines.</span></footer></div>;
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowLeft, FileCheck2, ShieldCheck, Mail, Printer } from "lucide-react";
+import { apiJson } from "@/lib/api-url";
+import { pesos, storageLabel, type SubscriptionPlan } from "@/components/subscriptions/pricing";
+import "./policy.css";
+type Section = { id: string; title: string; paragraphs: string[] };
+type Policies = {
+  version: string;
+  effective_date: string;
+  operator: string;
+  contact_email: string;
+  terms: Section[];
+  privacy: Section[];
+  references: { title: string; url: string }[];
+};
+export function LegalPolicyPage({ kind }: { kind: "terms" | "privacy" }) {
+  const [data, setData] = useState<Policies | null>(null),
+    [plans, setPlans] = useState<SubscriptionPlan[]>([]),
+    [error, setError] = useState(""),
+    [retry, setRetry] = useState(0);
+  useEffect(() => {
+    const controller = new AbortController();
+    setError("");
+    apiJson<Policies>("/api/legal/policies", { signal: controller.signal })
+      .then(setData)
+      .catch((e) => {
+        if (e.name !== "AbortError") setError(e.message);
+      });
+    apiJson<{ plans: SubscriptionPlan[] }>("/api/pricing", { signal: controller.signal })
+      .then((r) => setPlans(r.plans))
+      .catch(() => {});
+    return () => controller.abort();
+  }, [retry]);
+  const title = kind === "terms" ? "Terms of Service" : "Privacy Notice";
+  const sections = data?.[kind] || [];
+  useEffect(() => {
+    const old = document.title;
+    document.title = `${title} | NUERS`;
+    window.scrollTo(0, 0);
+    return () => {
+      document.title = old;
+    };
+  }, [title]);
+  return (
+    <div className="legal-page">
+      <header>
+        <div>
+          <Link to="/" aria-label="NUERS home">
+            <img src="/brand/nuers-official-logo.png" alt="NUERS" />
+          </Link>
+          <nav aria-label="Legal navigation">
+            <Link to="/terms-of-service" aria-current={kind === "terms" ? "page" : undefined}>
+              Terms of Service
+            </Link>
+            <Link to="/privacy-notice" aria-current={kind === "privacy" ? "page" : undefined}>
+              Privacy Notice
+            </Link>
+            <Link className="legal-register" to="/register">
+              Registration
+            </Link>
+          </nav>
+        </div>
+      </header>
+      <div className="legal-hero">
+        <span>
+          {kind === "terms" ? <FileCheck2 /> : <ShieldCheck />}NUERS · TRUST & TRANSPARENCY
+        </span>
+        <h1>{title}</h1>
+        <p>
+          {kind === "terms"
+            ? "Your account, electronic documents, transaction fees and use of NUERS."
+            : "What the system collects, why it is used, and how to exercise your privacy rights."}
+        </p>
+        {data && (
+          <div>
+            Effective {data.effective_date}
+            <i />
+            Version {data.version}
+            <i />
+            Operator: {data.operator}
+          </div>
+        )}
+      </div>
+      {error ? (
+        <div className="legal-error" role="alert">
+          {error}
+          <button onClick={() => setRetry((x) => x + 1)}>Retry</button>
+        </div>
+      ) : !data ? (
+        <p className="legal-loading">Loading policy…</p>
+      ) : (
+        <main className="legal-layout">
+          <aside>
+            <strong>On this page</strong>
+            <nav aria-label="Policy contents">
+              {sections.map((s, i) => (
+                <a href={`#${s.id}`} key={s.id}>
+                  {i + 1}. {s.title}
+                </a>
+              ))}
+            </nav>
+            <a
+              className="legal-contact"
+              href={`mailto:${data.contact_email}?subject=NUERS%20${kind === "privacy" ? "privacy%20request" : "service%20question"}`}
+            >
+              <Mail size={16} />
+              Contact NUERS<span>{data.contact_email}</span>
+            </a>
+            <button onClick={() => window.print()}>
+              <Printer size={15} />
+              Print this policy
+            </button>
+          </aside>
+          <article>
+            <div className="legal-summary">
+              <strong>
+                {kind === "terms"
+                  ? "Service scope"
+                  : "Your information, handled for a defined purpose"}
+              </strong>
+              <p>
+                {kind === "terms"
+                  ? "Registration remains pending review. Registration does not process payment. A saved invoice or QR code does not establish BIR acceptance."
+                  : "Registration and support data are used for the workflows described here. Privacy acknowledgment is separate from permission for unrelated marketing."}
+              </p>
+            </div>
+            {sections.map((s, i) => (
+              <section key={s.id} id={s.id}>
+                <h2>
+                  <span>{String(i + 1).padStart(2, "0")}</span>
+                  {s.title}
+                </h2>
+                {s.paragraphs.map((p, j) => (
+                  <p key={j}>{p}</p>
+                ))}
+                {kind === "terms" && s.id === "pricing" && plans.length > 0 && (
+                  <div className="legal-plans">
+                    <h3>Current transaction pricing</h3>
+                    <p>One pricing model for all NUERS business accounts.</p>
+                    <div className="legal-table-scroll">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Service</th>
+                            <th>Fee per eligible transaction</th>
+                            <th>Minimum transaction</th>
+                            <th>Storage offer</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {plans.map((p) => (
+                            <tr key={p.id}>
+                              <td>{p.name}</td>
+                              <td>{pesos(p.fee_centavos)}</td>
+                              <td>
+                                {p.minimum_transaction_centavos === 0
+                                  ? "None — every finalized sale"
+                                  : pesos(p.minimum_transaction_centavos)}
+                              </td>
+                              <td>
+                                {storageLabel(p)}
+                                {p.retention_years ? ` · ${p.retention_years} years` : ""}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </section>
+            ))}
+            {kind === "privacy" && (
+              <section id="references">
+                <h2>Official privacy resources</h2>
+                <ul>
+                  {data.references.map((r) => (
+                    <li key={r.url}>
+                      <a href={r.url} target="_blank" rel="noopener noreferrer">
+                        {r.title} ↗
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            <footer>
+              <Link to="/register">
+                <ArrowLeft size={15} />
+                Back to registration
+              </Link>
+              <Link to={kind === "terms" ? "/privacy-notice" : "/terms-of-service"}>
+                {kind === "terms" ? "Read the Privacy Notice" : "Read the Terms of Service"} →
+              </Link>
+            </footer>
+          </article>
+        </main>
+      )}
+      <footer className="legal-footer">
+        <span>© {new Date().getFullYear()} NUERS</span>
+        <a href="mailto:nuersofficial@gmail.com">nuersofficial@gmail.com</a>
+        <span>Digital transactions. A stronger Philippines.</span>
+      </footer>
+    </div>
+  );
 }

@@ -9,9 +9,28 @@ export function SoftwareIdentity() {
   const [identity, setIdentity] = useState<Identity | null>(null);
   useEffect(() => {
     let active = true;
-    identityRequest ??= apiJson<{ solution: Identity }>("/api/health").then(value => value.solution).catch(error => { identityRequest = undefined; throw error; });
-    identityRequest.then(value => { if (active) setIdentity(value); }).catch(() => {});
-    return () => { active = false; };
+    identityRequest ??= apiJson<{ solution: Identity }>("/api/health")
+      .then((value) => value.solution)
+      .catch((error) => {
+        identityRequest = undefined;
+        throw error;
+      });
+    identityRequest
+      .then((value) => {
+        if (active) setIdentity(value);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
   }, []);
-  return <span className="ne-software-identity" aria-label="Software name and version" title="National Unified Electronic Receipt System">{identity ? `${identity.name} · Version ${identity.version}` : "NUERS · Version unavailable"}</span>;
+  return (
+    <span
+      className="ne-software-identity"
+      aria-label="Software name and version"
+      title="National Unified Electronic Receipt System"
+    >
+      {identity ? `${identity.name} · Version ${identity.version}` : "NUERS · Version unavailable"}
+    </span>
+  );
 }

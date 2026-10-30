@@ -1,7 +1,0 @@
-{
-    "collation_parity": true,
-    "raw_write_invalidation": true,
-    "delete_repair": true,
-    "rollback_preserved": true,
-    "source_records_unchanged": true
-}

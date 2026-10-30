@@ -21,7 +21,9 @@ class DashboardRevision
 
     public function changed(): void
     {
-        if ($this->publishing) return;
+        if ($this->publishing) {
+            return;
+        }
         $this->publishing = true;
         try {
             Cache::put($this->key(), (string) Str::uuid(), 86400);
@@ -32,7 +34,9 @@ class DashboardRevision
 
     public function publishIfChanged(): void
     {
-        if (!$this->dirty) return;
+        if (!$this->dirty) {
+            return;
+        }
         $this->dirty = false;
         $this->changed();
     }
@@ -40,9 +44,15 @@ class DashboardRevision
     /** Worker changes (mail/export/telemetry) are published only after commit. */
     public function observe(QueryExecuted $event): void
     {
-        if ($this->publishing) return;
-        if (!preg_match('/^\s*(?:insert(?:\s+or\s+\w+|\s+ignore)?\s+into|update|delete\s+from)\s+[`"]?([a-z_]+)/i', $event->sql, $match)) return;
-        if (in_array(strtolower($match[1]), ['cache', 'cache_locks', 'sessions', 'jobs', 'job_batches', 'migrations', 'ledger_documents', 'ledger_dirty_documents', 'ledger_projection_state'], true)) return;
+        if ($this->publishing) {
+            return;
+        }
+        if (!preg_match('/^\s*(?:insert(?:\s+or\s+\w+|\s+ignore)?\s+into|update|delete\s+from)\s+[`"]?([a-z_]+)/i', $event->sql, $match)) {
+            return;
+        }
+        if (in_array(strtolower($match[1]), ['cache', 'cache_locks', 'sessions', 'jobs', 'job_batches', 'migrations', 'ledger_documents', 'ledger_dirty_documents', 'ledger_projection_state'], true)) {
+            return;
+        }
         if (!app()->runningInConsole()) {
             $this->dirty = true;
             return;

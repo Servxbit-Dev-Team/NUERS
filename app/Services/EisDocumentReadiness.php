@@ -91,7 +91,9 @@ class EisDocumentReadiness
         if (! $row->business_date) {
             $errors[] = 'Original document date is unverified.';
         }
-        if ($numberError = app(InvoiceDocumentRules::class)->numberError((string)$row->receipt_number)) $errors[] = $numberError;
+        if ($numberError = app(InvoiceDocumentRules::class)->numberError((string)$row->receipt_number)) {
+            $errors[] = $numberError;
+        }
         if (! in_array($row->record_status, ['issued', 'sent', 'paid', 'partially_paid', 'validated', 'completed', 'settled', 'verified', 'valid', 'overdue', 'cancelled', 'voided', 'void', 'refunded', 'refund'], true)) {
             $errors[] = 'The source is not an issued document.';
         }
@@ -124,7 +126,7 @@ class EisDocumentReadiness
             $errors[] = 'Tax classifications plus VAT do not reconcile to the document total.';
         }
         $model = ['schema' => self::INTERNAL_SCHEMA, 'official_bir_schema_verified' => false,
-            'source' => ['type' => $source, 'id' => $id], 'seller' => ['vat_registered' => $source === 'invoice' ? (bool)$originalRecord->vat_registered : (trim((string)($originalRecord->merchant_vat_reg??'')) !== '' ? trim($originalRecord->merchant_vat_reg)==='VAT Registered' : null), 'name' => $row->business, 'tin' => $row->tin, 'taxpayer_tin' => $identity['tin'], 'branch_code_source' => $identity['branch_source'], 'address' => $row->seller_address, 'branch_code' => $row->branch_code, 'rdo_code' => $row->rdo_code],
+            'source' => ['type' => $source, 'id' => $id], 'seller' => ['vat_registered' => $source === 'invoice' ? (bool)$originalRecord->vat_registered : (trim((string)($originalRecord->merchant_vat_reg ?? '')) !== '' ? trim($originalRecord->merchant_vat_reg) === 'VAT Registered' : null), 'name' => $row->business, 'tin' => $row->tin, 'taxpayer_tin' => $identity['tin'], 'branch_code_source' => $identity['branch_source'], 'address' => $row->seller_address, 'branch_code' => $row->branch_code, 'rdo_code' => $row->rdo_code],
             'number' => $row->receipt_number, 'document_type' => $row->document_type, 'issue_date' => $row->business_date,
             'record_mode' => $sourceCopy ? 'source_capture' : 'nuers_issuance',
             'source_profile_id' => $originalRecord->source_profile_id ?? null,
@@ -135,7 +137,9 @@ class EisDocumentReadiness
         if ($reviewValid) {
             $model['historical_branch_evidence'] = ['revision' => $branchReview->revision, 'evidence_reference' => $branchReview->evidence_reference, 'source_fingerprint' => $branchReview->source_fingerprint, 'reviewed_by' => $branchReview->reviewed_by, 'reviewed_at' => $branchReview->reviewed_at];
         }
-        if (!empty($originalRecord->sales_benefit)) $model['sales_benefit'] = ['eligibility' => json_decode($originalRecord->sales_benefit, true), 'statutory_discount_centavos' => (int)round($originalRecord->statutory_discount_amount * 100), 'vat_adjustment_centavos' => (int)round($originalRecord->vat_relief_amount * 100)];
+        if (!empty($originalRecord->sales_benefit)) {
+            $model['sales_benefit'] = ['eligibility' => json_decode($originalRecord->sales_benefit, true), 'statutory_discount_centavos' => (int)round($originalRecord->statutory_discount_amount * 100), 'vat_adjustment_centavos' => (int)round($originalRecord->vat_relief_amount * 100)];
+        }
         $canonical = json_encode($model, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
         $blockers = $errors;
         if ($sourceCopy) {

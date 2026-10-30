@@ -28,7 +28,8 @@ class IssuedDocumentLedger
             $bbranch = "COALESCE($bbranch,(SELECT br.branch_code FROM eis_document_branch_reviews br WHERE br.document_source='invoice' AND br.document_id=b.id ORDER BY br.revision DESC LIMIT 1))";
         }
         $benefitCols = fn ($table, $alias) => implode(',', array_map(fn ($c) => $this->col($table, $alias, $c, $c === 'sale_category' ? "'regular'" : '0').' as '.$c, ['sale_category', 'statutory_discount_amount', 'vat_relief_amount', 'discount_amount']));
-        $rb = $benefitCols('transaction_receipts', 'r'); $bb = $benefitCols('business_invoices', 'b');
+        $rb = $benefitCols('transaction_receipts', 'r');
+        $bb = $benefitCols('business_invoices', 'b');
         $sspt = $this->col('transaction_receipts', 'r', 'sspt_sales', '0');
         $brdo = $this->col('business_invoices', 'b', 'seller_rdo_code');
         // At most one representative payment per receipt. All payment events remain in merchant_transactions.
@@ -62,8 +63,12 @@ class IssuedDocumentLedger
             1 as payment_count,t.amount as payment_amount");
 
         foreach ([['receipt', $receipts, 'r'], ['invoice', $invoices, 'b'], ['transaction', $orphans, 't']] as [$source, $q, $alias]) {
-            if ($merchantId !== null) $q->where($alias.'.merchant_id', $merchantId);
-            if ($targets !== null) $q->whereIn($alias.'.id', $targets[$source] ?? []);
+            if ($merchantId !== null) {
+                $q->where($alias.'.merchant_id', $merchantId);
+            }
+            if ($targets !== null) {
+                $q->whereIn($alias.'.id', $targets[$source] ?? []);
+            }
         }
 
         return DB::query()->fromSub($receipts->unionAll($invoices)->unionAll($orphans), 'documents');
@@ -84,7 +89,9 @@ class IssuedDocumentLedger
 
     public function query(?string $merchantId = null): Builder
     {
-        if (app(LedgerProjection::class)->ready()) return app(LedgerProjection::class)->query($merchantId);
+        if (app(LedgerProjection::class)->ready()) {
+            return app(LedgerProjection::class)->query($merchantId);
+        }
 
         return $this->legacyQuery($merchantId);
     }

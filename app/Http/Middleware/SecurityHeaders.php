@@ -9,7 +9,12 @@ class SecurityHeaders
 {
     public function handle(Request $r, Closure $next)
     {
-        $response = $next($r);
+        return self::apply($r, $next($r));
+    }
+
+    /** Also apply to exception responses that bypass the middleware return path. */
+    public static function apply(Request $r, \Symfony\Component\HttpFoundation\Response $response)
+    {
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('Referrer-Policy', 'no-referrer');

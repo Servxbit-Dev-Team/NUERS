@@ -91,8 +91,11 @@ class MerchantVerificationDocumentController
         abort_unless(DB::table('merchants')->where('id', $merchant)->exists(), 404);
         $v = $r->validate(['kind' => ['required', Rule::in(array_keys(MerchantVerificationDocuments::KINDS))], 'page' => 'sometimes|integer|min:1|max:10000']);
         $q = DB::table('merchant_verification_documents')->where('merchant_id', $merchant)->where('kind', $v['kind']);
-        $total = (clone $q)->count(); $page = $r->integer('page', 1); $offset = ($page - 1) * 20;
-        $current = (clone $q)->max('id'); $rows = $q->orderByDesc('id')->offset($offset)->limit(20)->get();
+        $total = (clone $q)->count();
+        $page = $r->integer('page', 1);
+        $offset = ($page - 1) * 20;
+        $current = (clone $q)->max('id');
+        $rows = $q->orderByDesc('id')->offset($offset)->limit(20)->get();
         $names = $this->service()->actorNames($rows);
         return response()->json(['data' => $rows->values()->map(fn ($d, $i) => [...$this->service()->presentRow($d, $names), 'version' => $total - $offset - $i, 'is_current' => (int) $d->id === (int) $current]), 'page' => $page, 'last_page' => max(1, (int) ceil($total / 20)), 'total' => $total])->header('Cache-Control', 'private, no-store');
     }
@@ -112,9 +115,12 @@ class MerchantVerificationDocumentController
         $d = DB::table('merchant_verification_documents')->where('document_id', $id)->whereNotNull('merchant_id')->when($m, fn ($q) => $q->where('merchant_id', $m->id))->first();
         abort_unless($d, 404);
         abort_unless(in_array($d->mime, ['application/pdf', 'image/png', 'image/jpeg'], true), 415, 'This file type cannot be previewed.');
-        try { $stream = app(\App\Services\PrivateDocumentStream::class)->verified($d); }
-        catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
-            if (! $inline || $e->getStatusCode() !== 409) throw $e;
+        try {
+            $stream = app(\App\Services\PrivateDocumentStream::class)->verified($d);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            if (! $inline || $e->getStatusCode() !== 409) {
+                throw $e;
+            }
             app(BirCompliance::class)->audit('business.verification.document_preview_failed', $d->merchant_id, (string) $r->attributes->get('api_actor')->id, ['document_id' => $d->document_id, 'document_sha256' => $d->sha256]);
             return response()->json(['message' => $e->getMessage(), 'preview_token' => $this->previewProof($r, $d, false), 'sha256' => $d->sha256], 409)->header('Cache-Control', 'private, no-store');
         }
@@ -123,10 +129,21 @@ class MerchantVerificationDocumentController
         };
         app(BirCompliance::class)->audit($inline ? 'business.verification.document_viewed' : 'business.verification.document_downloaded', $d->merchant_id, (string) $r->attributes->get('api_actor')->id, ['document_id' => $d->document_id, 'document_sha256' => $d->sha256]);
         $headers = ['Content-Type' => $d->mime, 'Content-Length' => (string) $d->bytes, 'Content-Disposition' => ($inline ? 'inline' : 'attachment').'; filename="NUERS-verification-'.$d->kind.'.'.$ext.'"', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff', 'X-Document-SHA256' => $d->sha256];
-        if ($inline) $headers['X-Verification-Preview'] = $this->previewProof($r, $d, true);
+        if ($inline) {
+            $headers['X-Verification-Preview'] = $this->previewProof($r, $d, true);
+        }
 
-        return response()->stream(function () use ($stream) { try { fpassthru($stream); } finally { fclose($stream); } }, 200,
-            $headers);
+        return response()->stream(
+            function () use ($stream) {
+                try {
+                    fpassthru($stream);
+                } finally {
+                    fclose($stream);
+                }
+            },
+            200,
+            $headers
+        );
     }
 
     public function review(Request $r, string $id)
@@ -144,8 +161,11 @@ class MerchantVerificationDocumentController
             $latest = DB::table('merchant_verification_documents')->where('merchant_id', $m->id)->where('kind', $d->kind)->orderByDesc('id')->first();
             abort_unless($latest->id === $d->id, 409, 'A newer file has been uploaded. Refresh before reviewing.');
             abort_unless(hash_equals($d->sha256, $v['expected_sha256']), 409, 'The document version changed. Reopen its preview.');
-            try { $proof = json_decode(Crypt::decryptString($v['preview_token']), true, flags: JSON_THROW_ON_ERROR); }
-            catch (\Throwable) { abort(422, 'Open the document preview again before reviewing.'); }
+            try {
+                $proof = json_decode(Crypt::decryptString($v['preview_token']), true, flags: JSON_THROW_ON_ERROR);
+            } catch (\Throwable) {
+                abort(422, 'Open the document preview again before reviewing.');
+            }
             abort_unless(($proof['actor'] ?? null) === (string) $u->id && ($proof['document'] ?? null) === $d->document_id
                 && hash_equals($d->sha256, (string) ($proof['sha256'] ?? '')) && hash_equals(hash('sha256', (string) $r->bearerToken()), (string) ($proof['session'] ?? ''))
                 && (int) ($proof['expires'] ?? 0) > now()->timestamp, 422, 'Your preview expired or belongs to another session. Reopen this document.');

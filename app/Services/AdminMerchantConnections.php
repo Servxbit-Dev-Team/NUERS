@@ -29,8 +29,18 @@ class AdminMerchantConnections
             ->leftJoinSub($requests, 'r', function ($join) {
                 $join->on('r.merchant_id', '=', 'k.merchant_id')->on('r.environment', '=', 'k.environment');
             })
-            ->select('m.id as merchant_id', 'm.business_name', 'm.tin', 'm.logo_url', 'm.status as business_status',
-                'k.environment', 'k.active_keys', 'k.total_keys', 'r.last_request_at', 'r.last_success_at')
+            ->select(
+                'm.id as merchant_id',
+                'm.business_name',
+                'm.tin',
+                'm.logo_url',
+                'm.status as business_status',
+                'k.environment',
+                'k.active_keys',
+                'k.total_keys',
+                'r.last_request_at',
+                'r.last_success_at'
+            )
             ->selectRaw('COALESCE(r.requests, 0) as requests, COALESCE(r.successful_requests, 0) as successful_requests')
             ->selectRaw("CASE WHEN m.status <> 'active' THEN 'account_inactive' WHEN k.active_keys = 0 THEN 'no_active_keys' WHEN r.last_success_at IS NOT NULL THEN 'connected' ELSE 'awaiting_connection' END as connection_status");
         if (in_array($filters['environment'] ?? '', ['live', 'sandbox'], true)) {
@@ -56,11 +66,15 @@ class AdminMerchantConnections
         $data = $rows->orderByRaw('CASE WHEN last_success_at IS NULL THEN 1 ELSE 0 END')->orderByDesc('last_success_at')
             ->orderBy('business_name')->orderBy('merchant_id')->orderBy('environment')->forPage($page, $perPage)->get()
             ->map(function ($row) {
-                foreach (['active_keys', 'total_keys', 'requests', 'successful_requests'] as $field) $row->$field = (int) $row->$field;
+                foreach (['active_keys', 'total_keys', 'requests', 'successful_requests'] as $field) {
+                    $row->$field = (int) $row->$field;
+                }
                 // Query-builder timestamps follow the application's database write timezone.
                 // Send an explicit offset so the browser does not assume they are UTC.
                 foreach (['last_request_at', 'last_success_at'] as $field) {
-                    if ($row->$field) $row->$field = Carbon::parse($row->$field, config('app.timezone'))->toIso8601String();
+                    if ($row->$field) {
+                        $row->$field = Carbon::parse($row->$field, config('app.timezone'))->toIso8601String();
+                    }
                 }
                 return $row;
             });

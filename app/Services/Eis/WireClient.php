@@ -154,6 +154,6 @@ class WireClient
             throw new RuntimeException('BIR inquiry data must be a JSON object.');
         }
 
-        return app(ResultVerifier::class)->verify($r['data'],(object) ['accreditation_id' => $profile->accreditation_id, 'user_id' => $c['user_id']],$batch->submit_id,$uids,$batch->ack_id) + ['ack_id' => $r['data']['ackId'], 'attempt_id' => $r['attempt_id'], 'response_hash' => $r['response_hash']];
+        return app(ResultVerifier::class)->verify($r['data'], (object) ['accreditation_id' => $profile->accreditation_id, 'user_id' => $c['user_id']], $batch->submit_id, $uids, $batch->ack_id) + ['ack_id' => $r['data']['ackId'], 'attempt_id' => $r['attempt_id'], 'response_hash' => $r['response_hash']];
     }
 }

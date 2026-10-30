@@ -11,8 +11,11 @@ export function verificationNeedsRenewal(error: unknown) {
 export class RegistrationVerificationError extends Error {}
 export async function checkRegistrationResponse(response: Response) {
   if (!response.ok) {
-    const payload = await response.clone().json().catch(() => null);
-    if (payload?.code === 'REGISTRATION_VERIFICATION_REQUIRED') {
+    const payload = await response
+      .clone()
+      .json()
+      .catch(() => null);
+    if (payload?.code === "REGISTRATION_VERIFICATION_REQUIRED") {
       throw new RegistrationVerificationError(payload.message);
     }
   }

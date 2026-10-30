@@ -54,9 +54,15 @@ class SalesReportExport
         $footer = array_pop($skeleton);
         $write = static fn ($row) => fputcsv($handle, array_map(static fn ($value) => is_string($value) && preg_match('/^[\s\x00-\x1f]*[=+\-@]/u', $value) ? "'".$value : $value, $row), escape: '');
         fwrite($handle, "\xEF\xBB\xBF");
-        foreach ($skeleton as $row) $write($row);
+        foreach ($skeleton as $row) {
+            $write($row);
+        }
         $count = 0;
-        foreach ($records as $row) { if ($write($this->detailRow($row)) === false) throw new \RuntimeException('Export storage is full.'); $count++; }
+        foreach ($records as $row) {
+            if ($write($this->detailRow($row)) === false) {
+                throw new \RuntimeException('Export storage is full.');
+            } $count++;
+        }
         $write($footer);
         return $count;
     }
@@ -81,7 +87,7 @@ class SalesReportExport
                 $xml .= '</row>';
             }
             $xml .= '</sheetData><autoFilter ref="A9:X'.(count($rows) - 1).'"/></worksheet>';
-            $zip = new ZipArchive;
+            $zip = new ZipArchive();
             abort_unless($zip->open($dir.'/report.xlsx', ZipArchive::CREATE) === true, 503, 'Excel export could not be created.');
             $zip->addFromString('[Content_Types].xml', '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>');
             $zip->addFromString('_rels/.rels', '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>');

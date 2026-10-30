@@ -1,5 +1,0 @@
-[
-  "src/components/invoices/official-receipt.tsx",
-  "scripts/document-renderer.tsx",
-  "tests/js/document-renderer.test.mjs"
-]

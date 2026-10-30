@@ -232,16 +232,14 @@ class PlatformNotificationsTest extends TestCase
 
     public function test_sender_and_multipart_template_are_nuers_and_escape_untrusted_content(): void
     {
-        $fake = new class
-        {
+        $fake = new class () {
             public $html;
 
             public $message;
 
             public function getSymfonyTransport()
             {
-                return new class
-                {
+                return new class () {
                     public function getStream()
                     {
                         return null;
@@ -252,7 +250,7 @@ class PlatformNotificationsTest extends TestCase
             public function html($html, $callback)
             {
                 $this->html = $html;
-                $this->message = new Message(new Email);
+                $this->message = new Message(new Email());
                 $callback($this->message);
             }
         };

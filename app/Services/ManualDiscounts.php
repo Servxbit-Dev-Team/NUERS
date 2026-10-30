@@ -20,7 +20,9 @@ class ManualDiscounts
             if ($header !== null && ($discount !== null || (float)($line['discount_pct'] ?? 0) !== 0.0)) {
                 $this->fail('manual_discount', 'Use either one document discount or line discounts, not both.');
             }
-            if ($discount === null) continue;
+            if ($discount === null) {
+                continue;
+            }
             if ((float)($line['discount_pct'] ?? 0) !== 0.0 || !empty($line['benefit_eligible'])) {
                 $this->fail("items.$i.manual_discount", 'Do not combine manual, legacy percentage and statutory discounts on the same line.');
             }
@@ -33,7 +35,9 @@ class ManualDiscounts
             $line['discount_reason'] = trim($discount['reason']);
         }
         unset($line);
-        if ($header === null) return $lines;
+        if ($header === null) {
+            return $lines;
+        }
         $this->validate($header, 'manual_discount');
         // Validate quantities/prices before calculating weights; ignore final-total assertions here.
         $weights = array_column($calculator->calculate(array_map(function ($line) {
@@ -44,7 +48,9 @@ class ManualDiscounts
         $discount = $header['type'] === 'amount'
             ? $calculator->cents($header['value'], 'manual_discount.value')
             : intdiv($total * (int)round((float)$header['value'] * 100) + 5000, 10000);
-        if ($discount > $total) $this->fail('manual_discount.value', 'Discount cannot exceed the original document price.');
+        if ($discount > $total) {
+            $this->fail('manual_discount.value', 'Discount cannot exceed the original document price.');
+        }
         $allocated = $remainders = [];
         foreach ($weights as $i => $weight) {
             // BigInteger avoids overflowing PHP integers for large, valid invoice amounts.
@@ -56,7 +62,9 @@ class ManualDiscounts
         $order = array_keys($weights);
         usort($order, fn ($a, $b) => ($remainders[$b] <=> $remainders[$a]) ?: ($a <=> $b));
         $remaining = $discount - array_sum($allocated);
-        foreach (array_slice($order, 0, $remaining) as $i) $allocated[$i]++;
+        foreach (array_slice($order, 0, $remaining) as $i) {
+            $allocated[$i]++;
+        }
         foreach ($lines as $i => &$line) {
             $line['fixed_discount_amount'] = $allocated[$i];
             $line['discount_reason'] = trim($header['reason']);
@@ -73,7 +81,9 @@ class ManualDiscounts
             $this->fail($field, 'Provide type (amount or percentage), value and a reason of 1–500 characters.');
         }
         $value = app(InvoiceCalculator::class)->cents($discount['value'] ?? null, $field.'.value');
-        if ($discount['type'] === 'percentage' && $value > 10000) $this->fail($field.'.value', 'Percentage must be between 0 and 100, with at most two decimals.');
+        if ($discount['type'] === 'percentage' && $value > 10000) {
+            $this->fail($field.'.value', 'Percentage must be between 0 and 100, with at most two decimals.');
+        }
     }
 
     private function fail(string $field, string $message): never

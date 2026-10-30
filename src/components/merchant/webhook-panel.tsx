@@ -1,43 +1,946 @@
 import { useRealtimeRefresh } from "@/lib/use-realtime-refresh";
-import {useEffect,useRef,useState,type FormEvent} from 'react';
-import {CheckCircle2,Copy,FileText,Info,Loader2,Plus,RefreshCw,Webhook} from 'lucide-react';
-import {Dialog,DialogContent,DialogDescription,DialogHeader,DialogTitle} from '@/components/ui/dialog';
-import {apiJson} from '@/lib/api-url';
-import './webhook-panel.css';
-type Endpoint={id:string;name:string;environment:'live'|'sandbox';url:string;host:string;events:string[];status:string;revision:number;secret_version:number;secret_hint:string;verified_at:string|null;created_at:string};
-type Delivery={id:string;endpoint_id:string;environment:string;event_type:string;subject_id:string;state:string;attempts:number;manual_retries:number;last_http_status:number|null;last_error:string|null;available_at:string;delivered_at:string|null;created_at:string};
-type Meta={environment:string;can_manage:boolean;delivery_enabled:boolean;worker:{state:string;last_seen_at:string|null};events:Record<string,string>;endpoints:Endpoint[];summary:{active:number;pending:number;delivered:number;dead_letter:number};notice:string};
-type Logs={data:Delivery[];total:number;current_page:number;last_page:number};
-type Detail={delivery:Delivery;body:unknown;attempts:{id:string;number:number;state:string;http_status:number|null;error_code:string|null;latency_ms:number|null;started_at:string;finished_at:string|null}[]};
-type Action={kind:'verify'|'test'|'rotate'|'revoke'|'enable'|'pause'|'retry';endpoint:Endpoint;delivery?:Delivery};
-const date=(v:string|null)=>v?new Date(v.includes('T')?v:v.replace(' ','T')+'+08:00').toLocaleString('en-PH',{timeZone:'Asia/Manila',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'—';
-function Badge({value}:{value:string}){return <span className={'mi-badge '+(['active','delivered','responding'].includes(value)?'good':['dead_letter','revoked','not_observed'].includes(value)?'bad':'neutral')}>{value.replaceAll('_',' ')}</span>}
-export function MerchantWebhookPanel({environment,onChanged}:{environment:'live'|'sandbox';onChanged?:()=>void}){
- const[data,setData]=useState<Meta|null>(null),[logs,setLogs]=useState<Logs|null>(null),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[page,setPage]=useState(1),[endpointFilter,setEndpointFilter]=useState(''),[stateFilter,setStateFilter]=useState(''),[formOpen,setFormOpen]=useState(false),[edit,setEdit]=useState<Endpoint|null>(null),[name,setName]=useState(''),[url,setUrl]=useState(''),[events,setEvents]=useState<string[]>(['transaction.accepted']),[owned,setOwned]=useState(false),[requestId,setRequestId]=useState(()=>crypto.randomUUID()),[secret,setSecret]=useState(''),[action,setAction]=useState<Action|null>(null),[detail,setDetail]=useState<Detail|null>(null),[detailOpen,setDetailOpen]=useState(false),[endpointPage,setEndpointPage]=useState(1);
- const ticket=useRef(0),detailTicket=useRef(0);const blocked=busy||!data?.can_manage;
- async function load(quiet=false){const n=++ticket.current;if(!quiet)setLoading(true);try{const q=new URLSearchParams({environment,page:String(page),endpoint:endpointFilter,state:stateFilter});const[m,l]=await Promise.all([apiJson<Meta>('/api/merchant/webhooks?environment='+environment),apiJson<Logs>('/api/merchant/webhooks/deliveries?'+q)]);if(n===ticket.current){setData(m);setLogs(l);setError('')}}catch(e){if(n===ticket.current)setError((e as Error).message)}finally{if(n===ticket.current)setLoading(false)}}
- useEffect(()=>{void load();return()=>{ticket.current++}},[environment,page,endpointFilter,stateFilter]);
- useRealtimeRefresh(()=>load(true),!formOpen&&!action&&!secret);
- useEffect(()=>()=>{detailTicket.current++},[]);
- function open(p:Endpoint|null=null){setEdit(p);setName(p?.name||'');setUrl(p?.url||'');setEvents(p?.events||['transaction.accepted']);setOwned(!!p);setRequestId(crypto.randomUUID());setError('');setFormOpen(true)}
- async function copy(value:string){try{await navigator.clipboard.writeText(value);setNotice('Copied.')}catch{setError('Clipboard unavailable. Select and copy the text manually.')}}
- async function save(e:FormEvent){e.preventDefault();if(blocked)return;setBusy(true);setError('');try{const r=await apiJson<{secret?:string;message?:string}>('/api/merchant/webhooks'+(edit?'/'+edit.id:''),{method:edit?'PATCH':'POST',body:JSON.stringify(edit?{revision:edit.revision,name:name.trim(),events,status:edit.status==='active'?'active':'paused'}:{request_id:requestId,name:name.trim(),url,environment,events,ownership_confirmed:owned})});setFormOpen(false);setSecret(r.secret||'');setNotice(r.message||'Endpoint saved.');await load();onChanged?.()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
- async function perform(){if(!action||blocked)return;setBusy(true);setError('');try{const a=action,p=a.endpoint;let path='/api/merchant/webhooks/'+p.id;let method='POST',body:Record<string,unknown>={revision:p.revision};if(a.kind==='retry'){path='/api/merchant/webhooks/deliveries/'+a.delivery!.id+'/retry';body={environment}}else if(a.kind==='revoke')method='DELETE';else if(a.kind==='rotate')path+='/rotate';else if(a.kind==='verify'||a.kind==='test'){path+='/test';body.kind=a.kind}else{method='PATCH';body={revision:p.revision,name:p.name,events:p.events,status:a.kind==='enable'?'active':'paused'}}const r=await apiJson<{secret?:string;message?:string}>(path,{method,body:JSON.stringify(body)});setAction(null);setSecret(r.secret||'');setNotice(r.message||'Configuration updated.');await load();onChanged?.()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
- async function inspect(d:Delivery){const n=++detailTicket.current;setDetail(null);setDetailOpen(true);setError('');try{const v=await apiJson<Detail>('/api/merchant/webhooks/deliveries/'+d.id+'?environment='+environment);if(n===detailTicket.current)setDetail(v)}catch(e){if(n===detailTicket.current)setError((e as Error).message)}}
- const endPage=Math.min(endpointPage,Math.max(1,Math.ceil((data?.endpoints.length||0)/10)));const rows=data?.endpoints.slice((endPage-1)*10,endPage*10)||[];
- return <div className="mw-workspace"><section className="mi-panel"><header><span className="mi-icon"><Webhook size={24}/></span><div><h2>Webhook Configuration</h2><p>Receive signed {environment==='live'?'Live':'Sandbox'} callbacks in your own ERP, POS or ecommerce backend.</p></div><div className="mi-toolbar"><button className="mi-outline" disabled={loading||busy} onClick={()=>void load()}><RefreshCw size={15}/>Refresh</button><button className="mi-primary" disabled={blocked} onClick={()=>open()}><Plus size={16}/>Add Endpoint</button></div></header>
- {error&&<div className="mi-feedback bad" role="alert"><Info size={17}/>{error}</div>}{notice&&<div className="mi-feedback" role="status"><CheckCircle2 size={17}/>{notice}</div>}
- {loading&&!data?<div className="mi-empty"><Loader2 className="mi-spin"/>Loading webhook workspace…</div>:data&&<><div className="mw-health"><div><span>Environment</span><strong>{environment==='live'?'Live':'Sandbox'}</strong></div><div><span>Dispatcher</span><Badge value={!data.delivery_enabled?'paused':data.worker.state}/><small>Last observed {date(data.worker.last_seen_at)}</small></div><div><span>Verified active endpoints</span><strong>{data.summary.active} / 5</strong></div><div><span>Queued / retrying</span><strong>{data.summary.pending}</strong></div><div><span>Needs attention</span><strong>{data.summary.dead_letter}</strong></div></div>
- {(!data.delivery_enabled||data.worker.state==='not_observed')&&<div className="mi-note"><Info size={18}/><p>{!data.delivery_enabled?'The platform has paused merchant dispatch. Saved endpoints do not send callbacks until dispatch resumes.':'The worker has not reported in the last three minutes. New events remain queued. Use API status polling and contact support if this continues.'}</p></div>}
- <div className="mw-steps"><p><b>1. Save endpoint & secret</b>Use a public HTTPS URL you control. The signing secret appears once.</p><p><b>2. Verify receiver ownership</b>Install the signature verifier and echo the signed challenge.</p><p><b>3. Enable & test</b>Enable the verified endpoint, then send a synthetic event.</p></div>
- <div className="mi-scroll"><table><thead><tr><th>Endpoint</th><th>Events</th><th>Signing Key</th><th>Status</th><th>Verified (PHT)</th><th>Actions</th></tr></thead><tbody>{rows.map(p=><tr key={p.id}><td><strong>{p.name}</strong><small className="mi-cell-sub">{p.url}</small></td><td>{p.events.map(e=><code className="mw-event" key={e}>{e}</code>)}</td><td><code>{p.secret_hint}</code><small className="mi-cell-sub">Version {p.secret_version}</small></td><td><Badge value={p.status}/></td><td>{date(p.verified_at)}</td><td><div className="mw-actions"><button className="mi-text" disabled={blocked||p.status==='revoked'} onClick={()=>open(p)}>Edit</button>{p.status!=='revoked'&&<><button className="mi-text" disabled={blocked||!data.delivery_enabled} onClick={()=>setAction({kind:'verify',endpoint:p})}>Verify receiver</button>{p.verified_at&&<button className="mi-text" disabled={blocked} onClick={()=>setAction({kind:p.status==='active'?'pause':'enable',endpoint:p})}>{p.status==='active'?'Pause':'Enable'}</button>}<button className="mi-text" disabled={blocked||p.status!=='active'||!p.verified_at||!data.delivery_enabled} onClick={()=>setAction({kind:'test',endpoint:p})}>Send test</button><button className="mi-text" disabled={blocked} onClick={()=>setAction({kind:'rotate',endpoint:p})}>Rotate secret</button><button className="mi-text mw-danger" disabled={blocked} onClick={()=>setAction({kind:'revoke',endpoint:p})}>Revoke</button></>}</div></td></tr>)}{!rows.length&&<tr><td colSpan={6}><div className="mi-empty"><Webhook size={28}/><strong>No {environment} endpoints yet</strong><p>Add your receiver when it is ready. Saving an endpoint does not send transaction data.</p></div></td></tr>}</tbody></table></div><footer data-slot="table-pagination" className="mi-pagination"><span>{data.endpoints.length} endpoints · retained audit history</span><button className="mi-outline" disabled={endPage===1} onClick={()=>setEndpointPage(endPage-1)}>Previous</button><span>{endPage} / {Math.max(1,Math.ceil(data.endpoints.length/10))}</span><button className="mi-outline" disabled={endPage*10>=data.endpoints.length} onClick={()=>setEndpointPage(endPage+1)}>Next</button></footer></>}
- </section>
- <section className="mi-panel"><header><span className="mi-icon"><FileText size={23}/></span><div><h2>Delivery Logs</h2><p>Attempt history is preserved. Manual retry keeps the same event ID and signed body.</p></div></header><div className="mw-log-filters"><label>Endpoint<select value={endpointFilter} onChange={e=>{setEndpointFilter(e.target.value);setPage(1)}}><option value="">All endpoints</option>{data?.endpoints.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label><label>Delivery state<select value={stateFilter} onChange={e=>{setStateFilter(e.target.value);setPage(1)}}><option value="">All states</option>{['pending','sending','retry','delivered','dead_letter','cancelled'].map(s=><option key={s} value={s}>{s.replaceAll('_',' ')}</option>)}</select></label><span>{loading?'Refreshing…':`${logs?.total||0} matching deliveries`}</span></div>
- <div className="mi-scroll"><table><thead><tr><th>Event / Delivery ID</th><th>Endpoint</th><th>Status</th><th>Attempts</th><th>HTTP / Error</th><th>Next Attempt / Delivered</th><th>Actions</th></tr></thead><tbody>{logs?.data.map(d=>{const p=data?.endpoints.find(p=>p.id===d.endpoint_id);return <tr key={d.id}><td><strong>{d.event_type}</strong><small className="mi-cell-sub"><code>{d.id}</code></small></td><td>{p?.name||d.endpoint_id}</td><td><Badge value={d.state}/></td><td>{d.attempts}</td><td>{d.last_http_status||'—'}<small className="mi-cell-sub">{d.last_error?.replaceAll('_',' ')}</small></td><td>{date(d.state==='delivered'?d.delivered_at:['pending','retry','sending'].includes(d.state)?d.available_at:null)}</td><td><div className="mw-actions"><button className="mi-text" onClick={()=>void inspect(d)}>Details</button>{p&&d.event_type!=='webhook.endpoint_challenge'&&['dead_letter','cancelled'].includes(d.state)&&<button className="mi-text" disabled={blocked||p.status!=='active'||!p.verified_at||d.manual_retries>=3} onClick={()=>setAction({kind:'retry',endpoint:p,delivery:d})}>Retry same event</button>}</div></td></tr>})}{!logs?.data.length&&<tr><td colSpan={7}>No deliveries match these filters.</td></tr>}</tbody></table></div><footer data-slot="table-pagination" className="mi-pagination"><span>{logs?.total||0} deliveries</span><button className="mi-outline" disabled={page<=1||loading} onClick={()=>setPage(page-1)}>Previous</button><span>{page} / {logs?.last_page||1}</span><button className="mi-outline" disabled={!logs||page>=logs.last_page||loading} onClick={()=>setPage(page+1)}>Next</button></footer></section>
- <section className="mi-panel mw-guide"><h2>Receiver Requirements</h2><p>Use a separate endpoint and signing secret per environment. Verify <code>X-NUERS-Signature</code> using HMAC-SHA256 over <code>timestamp + "." + event_id + "." + raw_body</code>. Allow at most five minutes of timestamp drift, compare signatures in constant time, and durably deduplicate the event ID before returning 2xx. Delivery order is not guaranteed.</p><p>Verification events use <code>webhook.endpoint_challenge</code>. After verifying the signature, respond with <code>{'{"nuers_challenge":"the data.challenge value"}'}</code>. Verification leaves the endpoint paused until you explicitly enable it.</p><p>Callbacks contain NUERS record IDs and status metadata. Read the original transaction through your authenticated status endpoint. No API secret, buyer details, invoice image or BIR acceptance is sent in the callback.</p><p>Automatic retries use exponential backoff, up to 12 attempts within 24 hours. Redirects and permanent receiver errors stop retries. A delivery can be manually retried up to three times; the original ID/body stays unchanged. Pause or rotate before maintenance; already in-flight requests may still arrive.</p><a className="mi-outline" href="/guides/NUERS-Webhook-Connection-Guide.pdf?v=brand-fc40dead1e2c" target="_blank" rel="noreferrer">Open Webhook Receiver Guide</a></section>
- <Dialog open={formOpen} onOpenChange={v=>{if(!busy)setFormOpen(v)}}><DialogContent className="mi-dialog"><DialogHeader><DialogTitle>{edit?'Edit Webhook Endpoint':'Add Webhook Endpoint'}</DialogTitle><DialogDescription>{environment==='live'?'Live callbacks':'Sandbox callbacks'} · URL and environment stay fixed. Create a replacement to change the destination.</DialogDescription></DialogHeader>{error&&<p role="alert" className="mi-feedback bad">{error}</p>}<form className="mi-form" onSubmit={save}><label>Endpoint name<input required maxLength={120} disabled={busy} value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. ERP order sync"/></label><label>HTTPS callback URL<input required type="url" maxLength={500} disabled={!!edit||busy} value={url} onChange={e=>setUrl(e.target.value)} placeholder="https://erp.your-domain.com/nuers/webhook"/></label><fieldset><legend>Subscribe to events</legend>{Object.entries(data?.events||{}).map(([id,label])=><label className="mi-checkbox" key={id}><input type="checkbox" disabled={busy} checked={events.includes(id)} onChange={e=>setEvents(s=>e.target.checked?[...s,id]:s.filter(x=>x!==id))}/><span><strong>{id}</strong><small>{label}</small></span></label>)}</fieldset>{!edit&&<label className="mi-checkbox"><input required type="checkbox" checked={owned} disabled={busy} onChange={e=>setOwned(e.target.checked)}/><span>I control this receiver and authorize NUERS to send signed {environment} verification and subscribed event metadata to it after verification and activation.</span></label>}<button className="mi-primary" disabled={busy||!name.trim()||!events.length||!owned}>{busy?'Saving…':edit?'Save Endpoint':'Save & Generate Signing Secret'}</button></form></DialogContent></Dialog>
- <Dialog open={!!secret} onOpenChange={v=>{if(!v)setSecret('')}}><DialogContent className="mi-dialog"><DialogHeader><DialogTitle>Save Your Signing Secret</DialogTitle><DialogDescription>Shown once. Store it in your receiver backend secret manager; it is different from your NUERS API key.</DialogDescription></DialogHeader><div className="mi-secret"><code>{secret}</code></div><button className="mi-primary" onClick={()=>void copy(secret)}><Copy size={15}/>Copy Signing Secret</button><p>Install the receiver, then select Verify receiver. Closing this dialog clears the displayed secret. Rotation pauses delivery and requires verification again.</p><button className="mi-outline" onClick={()=>setSecret('')}>I have saved the secret</button></DialogContent></Dialog>
- <Dialog open={!!action} onOpenChange={v=>{if(!v&&!busy)setAction(null)}}><DialogContent className="mi-dialog"><DialogHeader><DialogTitle>{action?.kind==='verify'?'Verify Receiver Ownership':action?.kind==='retry'?'Retry the Same Event':action?.kind==='rotate'?'Rotate Signing Secret':action?.kind==='revoke'?'Revoke Endpoint':action?.kind==='enable'?'Enable Delivery':action?.kind==='pause'?'Pause Delivery':'Send Synthetic Test'}</DialogTitle><DialogDescription>{action?.endpoint.name} · {environment} · {action?.endpoint.url}</DialogDescription></DialogHeader>{error&&<p role="alert" className="mi-feedback bad">{error}</p>}<p>{action?.kind==='verify'?'NUERS will queue a signed challenge to this URL. Your receiver must verify its signature and echo data.challenge in nuers_challenge. Successful verification leaves delivery paused until you enable it again. No financial event will be created.':action?.kind==='test'?'Queue a signed synthetic callback to this receiver. No sale or wallet debit will be created.':action?.kind==='rotate'?'This pauses delivery and replaces the signing secret. Update your receiver, verify again and enable. Existing events and attempt history remain.':action?.kind==='retry'?'Resend the immutable original callback to the same receiver. A previous attempt may have reached it; your receiver must deduplicate its event ID.':action?.kind==='enable'?'New subscribed events will be queued to this verified receiver. Callbacks may repeat or arrive out of order.':action?.kind==='revoke'?'Stop new delivery to this endpoint. History remains read-only. Create a new endpoint if needed. An in-flight callback may still arrive.':'Stop pending delivery. Already in-flight callbacks may still arrive.'}</p><div className="mi-toolbar"><button className="mi-outline" disabled={busy} onClick={()=>setAction(null)}>Cancel</button><button className="mi-primary" disabled={busy} onClick={()=>void perform()}>{busy?'Working…':'Confirm'}</button></div></DialogContent></Dialog>
- <Dialog open={detailOpen} onOpenChange={v=>{setDetailOpen(v);if(!v){detailTicket.current++;setDetail(null)}}}><DialogContent className="mi-dialog mw-detail"><DialogHeader><DialogTitle>Webhook Delivery Details</DialogTitle><DialogDescription>Immutable callback envelope and attempt history. Signing secrets and receiver response bodies are never shown.</DialogDescription></DialogHeader>{error&&<p role="alert" className="mi-feedback bad">{error}</p>}{!detail&&!error?<Loader2 className="mi-spin"/>:detail&&<><p><Badge value={detail.delivery.state}/> · {detail.delivery.environment} · {detail.delivery.id}</p><pre className="mi-guide">{JSON.stringify(detail.body,null,2)}</pre><div className="mi-scroll"><table><thead><tr><th>#</th><th>Started (PHT)</th><th>Result</th><th>HTTP</th><th>Duration</th></tr></thead><tbody>{detail.attempts.map(a=><tr key={a.id}><td>{a.number}</td><td>{date(a.started_at)}</td><td>{a.state}<small className="mi-cell-sub">{a.error_code}</small></td><td>{a.http_status||'—'}</td><td>{a.latency_ms==null?'Unknown':a.latency_ms+' ms'}</td></tr>)}</tbody></table></div></>}</DialogContent></Dialog>
- </div>
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  CheckCircle2,
+  Copy,
+  FileText,
+  Info,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Webhook,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { apiJson } from "@/lib/api-url";
+import "./webhook-panel.css";
+type Endpoint = {
+  id: string;
+  name: string;
+  environment: "live" | "sandbox";
+  url: string;
+  host: string;
+  events: string[];
+  status: string;
+  revision: number;
+  secret_version: number;
+  secret_hint: string;
+  verified_at: string | null;
+  created_at: string;
+};
+type Delivery = {
+  id: string;
+  endpoint_id: string;
+  environment: string;
+  event_type: string;
+  subject_id: string;
+  state: string;
+  attempts: number;
+  manual_retries: number;
+  last_http_status: number | null;
+  last_error: string | null;
+  available_at: string;
+  delivered_at: string | null;
+  created_at: string;
+};
+type Meta = {
+  environment: string;
+  can_manage: boolean;
+  delivery_enabled: boolean;
+  worker: { state: string; last_seen_at: string | null };
+  events: Record<string, string>;
+  endpoints: Endpoint[];
+  summary: { active: number; pending: number; delivered: number; dead_letter: number };
+  notice: string;
+};
+type Logs = { data: Delivery[]; total: number; current_page: number; last_page: number };
+type Detail = {
+  delivery: Delivery;
+  body: unknown;
+  attempts: {
+    id: string;
+    number: number;
+    state: string;
+    http_status: number | null;
+    error_code: string | null;
+    latency_ms: number | null;
+    started_at: string;
+    finished_at: string | null;
+  }[];
+};
+type Action = {
+  kind: "verify" | "test" | "rotate" | "revoke" | "enable" | "pause" | "retry";
+  endpoint: Endpoint;
+  delivery?: Delivery;
+};
+const date = (v: string | null) =>
+  v
+    ? new Date(v.includes("T") ? v : v.replace(" ", "T") + "+08:00").toLocaleString("en-PH", {
+        timeZone: "Asia/Manila",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      })
+    : "—";
+function Badge({ value }: { value: string }) {
+  return (
+    <span
+      className={
+        "mi-badge " +
+        (["active", "delivered", "responding"].includes(value)
+          ? "good"
+          : ["dead_letter", "revoked", "not_observed"].includes(value)
+            ? "bad"
+            : "neutral")
+      }
+    >
+      {value.replaceAll("_", " ")}
+    </span>
+  );
+}
+export function MerchantWebhookPanel({
+  environment,
+  onChanged,
+}: {
+  environment: "live" | "sandbox";
+  onChanged?: () => void;
+}) {
+  const [data, setData] = useState<Meta | null>(null),
+    [logs, setLogs] = useState<Logs | null>(null),
+    [loading, setLoading] = useState(true),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState(""),
+    [notice, setNotice] = useState(""),
+    [page, setPage] = useState(1),
+    [endpointFilter, setEndpointFilter] = useState(""),
+    [stateFilter, setStateFilter] = useState(""),
+    [formOpen, setFormOpen] = useState(false),
+    [edit, setEdit] = useState<Endpoint | null>(null),
+    [name, setName] = useState(""),
+    [url, setUrl] = useState(""),
+    [events, setEvents] = useState<string[]>(["transaction.accepted"]),
+    [owned, setOwned] = useState(false),
+    [requestId, setRequestId] = useState(() => crypto.randomUUID()),
+    [secret, setSecret] = useState(""),
+    [action, setAction] = useState<Action | null>(null),
+    [detail, setDetail] = useState<Detail | null>(null),
+    [detailOpen, setDetailOpen] = useState(false),
+    [endpointPage, setEndpointPage] = useState(1);
+  const ticket = useRef(0),
+    detailTicket = useRef(0);
+  const blocked = busy || !data?.can_manage;
+  async function load(quiet = false) {
+    const n = ++ticket.current;
+    if (!quiet) setLoading(true);
+    try {
+      const q = new URLSearchParams({
+        environment,
+        page: String(page),
+        endpoint: endpointFilter,
+        state: stateFilter,
+      });
+      const [m, l] = await Promise.all([
+        apiJson<Meta>("/api/merchant/webhooks?environment=" + environment),
+        apiJson<Logs>("/api/merchant/webhooks/deliveries?" + q),
+      ]);
+      if (n === ticket.current) {
+        setData(m);
+        setLogs(l);
+        setError("");
+      }
+    } catch (e) {
+      if (n === ticket.current) setError((e as Error).message);
+    } finally {
+      if (n === ticket.current) setLoading(false);
+    }
+  }
+  useEffect(() => {
+    void load();
+    return () => {
+      ticket.current++;
+    };
+  }, [environment, page, endpointFilter, stateFilter]);
+  useRealtimeRefresh(() => load(true), !formOpen && !action && !secret);
+  useEffect(
+    () => () => {
+      detailTicket.current++;
+    },
+    [],
+  );
+  function open(p: Endpoint | null = null) {
+    setEdit(p);
+    setName(p?.name || "");
+    setUrl(p?.url || "");
+    setEvents(p?.events || ["transaction.accepted"]);
+    setOwned(!!p);
+    setRequestId(crypto.randomUUID());
+    setError("");
+    setFormOpen(true);
+  }
+  async function copy(value: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setNotice("Copied.");
+    } catch {
+      setError("Clipboard unavailable. Select and copy the text manually.");
+    }
+  }
+  async function save(e: FormEvent) {
+    e.preventDefault();
+    if (blocked) return;
+    setBusy(true);
+    setError("");
+    try {
+      const r = await apiJson<{ secret?: string; message?: string }>(
+        "/api/merchant/webhooks" + (edit ? "/" + edit.id : ""),
+        {
+          method: edit ? "PATCH" : "POST",
+          body: JSON.stringify(
+            edit
+              ? {
+                  revision: edit.revision,
+                  name: name.trim(),
+                  events,
+                  status: edit.status === "active" ? "active" : "paused",
+                }
+              : {
+                  request_id: requestId,
+                  name: name.trim(),
+                  url,
+                  environment,
+                  events,
+                  ownership_confirmed: owned,
+                },
+          ),
+        },
+      );
+      setFormOpen(false);
+      setSecret(r.secret || "");
+      setNotice(r.message || "Endpoint saved.");
+      await load();
+      onChanged?.();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function perform() {
+    if (!action || blocked) return;
+    setBusy(true);
+    setError("");
+    try {
+      const a = action,
+        p = a.endpoint;
+      let path = "/api/merchant/webhooks/" + p.id;
+      let method = "POST",
+        body: Record<string, unknown> = { revision: p.revision };
+      if (a.kind === "retry") {
+        path = "/api/merchant/webhooks/deliveries/" + a.delivery!.id + "/retry";
+        body = { environment };
+      } else if (a.kind === "revoke") method = "DELETE";
+      else if (a.kind === "rotate") path += "/rotate";
+      else if (a.kind === "verify" || a.kind === "test") {
+        path += "/test";
+        body.kind = a.kind;
+      } else {
+        method = "PATCH";
+        body = {
+          revision: p.revision,
+          name: p.name,
+          events: p.events,
+          status: a.kind === "enable" ? "active" : "paused",
+        };
+      }
+      const r = await apiJson<{ secret?: string; message?: string }>(path, {
+        method,
+        body: JSON.stringify(body),
+      });
+      setAction(null);
+      setSecret(r.secret || "");
+      setNotice(r.message || "Configuration updated.");
+      await load();
+      onChanged?.();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function inspect(d: Delivery) {
+    const n = ++detailTicket.current;
+    setDetail(null);
+    setDetailOpen(true);
+    setError("");
+    try {
+      const v = await apiJson<Detail>(
+        "/api/merchant/webhooks/deliveries/" + d.id + "?environment=" + environment,
+      );
+      if (n === detailTicket.current) setDetail(v);
+    } catch (e) {
+      if (n === detailTicket.current) setError((e as Error).message);
+    }
+  }
+  const endPage = Math.min(
+    endpointPage,
+    Math.max(1, Math.ceil((data?.endpoints.length || 0) / 10)),
+  );
+  const rows = data?.endpoints.slice((endPage - 1) * 10, endPage * 10) || [];
+  return (
+    <div className="mw-workspace">
+      <section className="mi-panel">
+        <header>
+          <span className="mi-icon">
+            <Webhook size={24} />
+          </span>
+          <div>
+            <h2>Webhook Configuration</h2>
+            <p>
+              Receive signed {environment === "live" ? "Live" : "Sandbox"} callbacks in your own
+              ERP, POS or ecommerce backend.
+            </p>
+          </div>
+          <div className="mi-toolbar">
+            <button className="mi-outline" disabled={loading || busy} onClick={() => void load()}>
+              <RefreshCw size={15} />
+              Refresh
+            </button>
+            <button className="mi-primary" disabled={blocked} onClick={() => open()}>
+              <Plus size={16} />
+              Add Endpoint
+            </button>
+          </div>
+        </header>
+        {error && (
+          <div className="mi-feedback bad" role="alert">
+            <Info size={17} />
+            {error}
+          </div>
+        )}
+        {notice && (
+          <div className="mi-feedback" role="status">
+            <CheckCircle2 size={17} />
+            {notice}
+          </div>
+        )}
+        {loading && !data ? (
+          <div className="mi-empty">
+            <Loader2 className="mi-spin" />
+            Loading webhook workspace…
+          </div>
+        ) : (
+          data && (
+            <>
+              <div className="mw-health">
+                <div>
+                  <span>Environment</span>
+                  <strong>{environment === "live" ? "Live" : "Sandbox"}</strong>
+                </div>
+                <div>
+                  <span>Dispatcher</span>
+                  <Badge value={!data.delivery_enabled ? "paused" : data.worker.state} />
+                  <small>Last observed {date(data.worker.last_seen_at)}</small>
+                </div>
+                <div>
+                  <span>Verified active endpoints</span>
+                  <strong>{data.summary.active} / 5</strong>
+                </div>
+                <div>
+                  <span>Queued / retrying</span>
+                  <strong>{data.summary.pending}</strong>
+                </div>
+                <div>
+                  <span>Needs attention</span>
+                  <strong>{data.summary.dead_letter}</strong>
+                </div>
+              </div>
+              {(!data.delivery_enabled || data.worker.state === "not_observed") && (
+                <div className="mi-note">
+                  <Info size={18} />
+                  <p>
+                    {!data.delivery_enabled
+                      ? "The platform has paused merchant dispatch. Saved endpoints do not send callbacks until dispatch resumes."
+                      : "The worker has not reported in the last three minutes. New events remain queued. Use API status polling and contact support if this continues."}
+                  </p>
+                </div>
+              )}
+              <div className="mw-steps">
+                <p>
+                  <b>1. Save endpoint & secret</b>Use a public HTTPS URL you control. The signing
+                  secret appears once.
+                </p>
+                <p>
+                  <b>2. Verify receiver ownership</b>Install the signature verifier and echo the
+                  signed challenge.
+                </p>
+                <p>
+                  <b>3. Enable & test</b>Enable the verified endpoint, then send a synthetic event.
+                </p>
+              </div>
+              <div className="mi-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Endpoint</th>
+                      <th>Events</th>
+                      <th>Signing Key</th>
+                      <th>Status</th>
+                      <th>Verified (PHT)</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((p) => (
+                      <tr key={p.id}>
+                        <td>
+                          <strong>{p.name}</strong>
+                          <small className="mi-cell-sub">{p.url}</small>
+                        </td>
+                        <td>
+                          {p.events.map((e) => (
+                            <code className="mw-event" key={e}>
+                              {e}
+                            </code>
+                          ))}
+                        </td>
+                        <td>
+                          <code>{p.secret_hint}</code>
+                          <small className="mi-cell-sub">Version {p.secret_version}</small>
+                        </td>
+                        <td>
+                          <Badge value={p.status} />
+                        </td>
+                        <td>{date(p.verified_at)}</td>
+                        <td>
+                          <div className="mw-actions">
+                            <button
+                              className="mi-text"
+                              disabled={blocked || p.status === "revoked"}
+                              onClick={() => open(p)}
+                            >
+                              Edit
+                            </button>
+                            {p.status !== "revoked" && (
+                              <>
+                                <button
+                                  className="mi-text"
+                                  disabled={blocked || !data.delivery_enabled}
+                                  onClick={() => setAction({ kind: "verify", endpoint: p })}
+                                >
+                                  Verify receiver
+                                </button>
+                                {p.verified_at && (
+                                  <button
+                                    className="mi-text"
+                                    disabled={blocked}
+                                    onClick={() =>
+                                      setAction({
+                                        kind: p.status === "active" ? "pause" : "enable",
+                                        endpoint: p,
+                                      })
+                                    }
+                                  >
+                                    {p.status === "active" ? "Pause" : "Enable"}
+                                  </button>
+                                )}
+                                <button
+                                  className="mi-text"
+                                  disabled={
+                                    blocked ||
+                                    p.status !== "active" ||
+                                    !p.verified_at ||
+                                    !data.delivery_enabled
+                                  }
+                                  onClick={() => setAction({ kind: "test", endpoint: p })}
+                                >
+                                  Send test
+                                </button>
+                                <button
+                                  className="mi-text"
+                                  disabled={blocked}
+                                  onClick={() => setAction({ kind: "rotate", endpoint: p })}
+                                >
+                                  Rotate secret
+                                </button>
+                                <button
+                                  className="mi-text mw-danger"
+                                  disabled={blocked}
+                                  onClick={() => setAction({ kind: "revoke", endpoint: p })}
+                                >
+                                  Revoke
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {!rows.length && (
+                      <tr>
+                        <td colSpan={6}>
+                          <div className="mi-empty">
+                            <Webhook size={28} />
+                            <strong>No {environment} endpoints yet</strong>
+                            <p>
+                              Add your receiver when it is ready. Saving an endpoint does not send
+                              transaction data.
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <footer data-slot="table-pagination" className="mi-pagination">
+                <span>{data.endpoints.length} endpoints · retained audit history</span>
+                <button
+                  className="mi-outline"
+                  disabled={endPage === 1}
+                  onClick={() => setEndpointPage(endPage - 1)}
+                >
+                  Previous
+                </button>
+                <span>
+                  {endPage} / {Math.max(1, Math.ceil(data.endpoints.length / 10))}
+                </span>
+                <button
+                  className="mi-outline"
+                  disabled={endPage * 10 >= data.endpoints.length}
+                  onClick={() => setEndpointPage(endPage + 1)}
+                >
+                  Next
+                </button>
+              </footer>
+            </>
+          )
+        )}
+      </section>
+      <section className="mi-panel">
+        <header>
+          <span className="mi-icon">
+            <FileText size={23} />
+          </span>
+          <div>
+            <h2>Delivery Logs</h2>
+            <p>
+              Attempt history is preserved. Manual retry keeps the same event ID and signed body.
+            </p>
+          </div>
+        </header>
+        <div className="mw-log-filters">
+          <label>
+            Endpoint
+            <select
+              value={endpointFilter}
+              onChange={(e) => {
+                setEndpointFilter(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">All endpoints</option>
+              {data?.endpoints.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Delivery state
+            <select
+              value={stateFilter}
+              onChange={(e) => {
+                setStateFilter(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">All states</option>
+              {["pending", "sending", "retry", "delivered", "dead_letter", "cancelled"].map((s) => (
+                <option key={s} value={s}>
+                  {s.replaceAll("_", " ")}
+                </option>
+              ))}
+            </select>
+          </label>
+          <span>{loading ? "Refreshing…" : `${logs?.total || 0} matching deliveries`}</span>
+        </div>
+        <div className="mi-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Event / Delivery ID</th>
+                <th>Endpoint</th>
+                <th>Status</th>
+                <th>Attempts</th>
+                <th>HTTP / Error</th>
+                <th>Next Attempt / Delivered</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs?.data.map((d) => {
+                const p = data?.endpoints.find((p) => p.id === d.endpoint_id);
+                return (
+                  <tr key={d.id}>
+                    <td>
+                      <strong>{d.event_type}</strong>
+                      <small className="mi-cell-sub">
+                        <code>{d.id}</code>
+                      </small>
+                    </td>
+                    <td>{p?.name || d.endpoint_id}</td>
+                    <td>
+                      <Badge value={d.state} />
+                    </td>
+                    <td>{d.attempts}</td>
+                    <td>
+                      {d.last_http_status || "—"}
+                      <small className="mi-cell-sub">{d.last_error?.replaceAll("_", " ")}</small>
+                    </td>
+                    <td>
+                      {date(
+                        d.state === "delivered"
+                          ? d.delivered_at
+                          : ["pending", "retry", "sending"].includes(d.state)
+                            ? d.available_at
+                            : null,
+                      )}
+                    </td>
+                    <td>
+                      <div className="mw-actions">
+                        <button className="mi-text" onClick={() => void inspect(d)}>
+                          Details
+                        </button>
+                        {p &&
+                          d.event_type !== "webhook.endpoint_challenge" &&
+                          ["dead_letter", "cancelled"].includes(d.state) && (
+                            <button
+                              className="mi-text"
+                              disabled={
+                                blocked ||
+                                p.status !== "active" ||
+                                !p.verified_at ||
+                                d.manual_retries >= 3
+                              }
+                              onClick={() => setAction({ kind: "retry", endpoint: p, delivery: d })}
+                            >
+                              Retry same event
+                            </button>
+                          )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {!logs?.data.length && (
+                <tr>
+                  <td colSpan={7}>No deliveries match these filters.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <footer data-slot="table-pagination" className="mi-pagination">
+          <span>{logs?.total || 0} deliveries</span>
+          <button
+            className="mi-outline"
+            disabled={page <= 1 || loading}
+            onClick={() => setPage(page - 1)}
+          >
+            Previous
+          </button>
+          <span>
+            {page} / {logs?.last_page || 1}
+          </span>
+          <button
+            className="mi-outline"
+            disabled={!logs || page >= logs.last_page || loading}
+            onClick={() => setPage(page + 1)}
+          >
+            Next
+          </button>
+        </footer>
+      </section>
+      <section className="mi-panel mw-guide">
+        <h2>Receiver Requirements</h2>
+        <p>
+          Use a separate endpoint and signing secret per environment. Verify{" "}
+          <code>X-NUERS-Signature</code> using HMAC-SHA256 over{" "}
+          <code>timestamp + "." + event_id + "." + raw_body</code>. Allow at most five minutes of
+          timestamp drift, compare signatures in constant time, and durably deduplicate the event ID
+          before returning 2xx. Delivery order is not guaranteed.
+        </p>
+        <p>
+          Verification events use <code>webhook.endpoint_challenge</code>. After verifying the
+          signature, respond with <code>{'{"nuers_challenge":"the data.challenge value"}'}</code>.
+          Verification leaves the endpoint paused until you explicitly enable it.
+        </p>
+        <p>
+          Callbacks contain NUERS record IDs and status metadata. Read the original transaction
+          through your authenticated status endpoint. No API secret, buyer details, invoice image or
+          BIR acceptance is sent in the callback.
+        </p>
+        <p>
+          Automatic retries use exponential backoff, up to 12 attempts within 24 hours. Redirects
+          and permanent receiver errors stop retries. A delivery can be manually retried up to three
+          times; the original ID/body stays unchanged. Pause or rotate before maintenance; already
+          in-flight requests may still arrive.
+        </p>
+        <a
+          className="mi-outline"
+          href="/guides/NUERS-Webhook-Connection-Guide.pdf?v=brand-fc40dead1e2c"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Open Webhook Receiver Guide
+        </a>
+      </section>
+      <Dialog
+        open={formOpen}
+        onOpenChange={(v) => {
+          if (!busy) setFormOpen(v);
+        }}
+      >
+        <DialogContent className="mi-dialog">
+          <DialogHeader>
+            <DialogTitle>{edit ? "Edit Webhook Endpoint" : "Add Webhook Endpoint"}</DialogTitle>
+            <DialogDescription>
+              {environment === "live" ? "Live callbacks" : "Sandbox callbacks"} · URL and
+              environment stay fixed. Create a replacement to change the destination.
+            </DialogDescription>
+          </DialogHeader>
+          {error && (
+            <p role="alert" className="mi-feedback bad">
+              {error}
+            </p>
+          )}
+          <form className="mi-form" onSubmit={save}>
+            <label>
+              Endpoint name
+              <input
+                required
+                maxLength={120}
+                disabled={busy}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. ERP order sync"
+              />
+            </label>
+            <label>
+              HTTPS callback URL
+              <input
+                required
+                type="url"
+                maxLength={500}
+                disabled={!!edit || busy}
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="https://erp.your-domain.com/nuers/webhook"
+              />
+            </label>
+            <fieldset>
+              <legend>Subscribe to events</legend>
+              {Object.entries(data?.events || {}).map(([id, label]) => (
+                <label className="mi-checkbox" key={id}>
+                  <input
+                    type="checkbox"
+                    disabled={busy}
+                    checked={events.includes(id)}
+                    onChange={(e) =>
+                      setEvents((s) => (e.target.checked ? [...s, id] : s.filter((x) => x !== id)))
+                    }
+                  />
+                  <span>
+                    <strong>{id}</strong>
+                    <small>{label}</small>
+                  </span>
+                </label>
+              ))}
+            </fieldset>
+            {!edit && (
+              <label className="mi-checkbox">
+                <input
+                  required
+                  type="checkbox"
+                  checked={owned}
+                  disabled={busy}
+                  onChange={(e) => setOwned(e.target.checked)}
+                />
+                <span>
+                  I control this receiver and authorize NUERS to send signed {environment}{" "}
+                  verification and subscribed event metadata to it after verification and
+                  activation.
+                </span>
+              </label>
+            )}
+            <button
+              className="mi-primary"
+              disabled={busy || !name.trim() || !events.length || !owned}
+            >
+              {busy ? "Saving…" : edit ? "Save Endpoint" : "Save & Generate Signing Secret"}
+            </button>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={!!secret}
+        onOpenChange={(v) => {
+          if (!v) setSecret("");
+        }}
+      >
+        <DialogContent className="mi-dialog">
+          <DialogHeader>
+            <DialogTitle>Save Your Signing Secret</DialogTitle>
+            <DialogDescription>
+              Shown once. Store it in your receiver backend secret manager; it is different from
+              your NUERS API key.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mi-secret">
+            <code>{secret}</code>
+          </div>
+          <button className="mi-primary" onClick={() => void copy(secret)}>
+            <Copy size={15} />
+            Copy Signing Secret
+          </button>
+          <p>
+            Install the receiver, then select Verify receiver. Closing this dialog clears the
+            displayed secret. Rotation pauses delivery and requires verification again.
+          </p>
+          <button className="mi-outline" onClick={() => setSecret("")}>
+            I have saved the secret
+          </button>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={!!action}
+        onOpenChange={(v) => {
+          if (!v && !busy) setAction(null);
+        }}
+      >
+        <DialogContent className="mi-dialog">
+          <DialogHeader>
+            <DialogTitle>
+              {action?.kind === "verify"
+                ? "Verify Receiver Ownership"
+                : action?.kind === "retry"
+                  ? "Retry the Same Event"
+                  : action?.kind === "rotate"
+                    ? "Rotate Signing Secret"
+                    : action?.kind === "revoke"
+                      ? "Revoke Endpoint"
+                      : action?.kind === "enable"
+                        ? "Enable Delivery"
+                        : action?.kind === "pause"
+                          ? "Pause Delivery"
+                          : "Send Synthetic Test"}
+            </DialogTitle>
+            <DialogDescription>
+              {action?.endpoint.name} · {environment} · {action?.endpoint.url}
+            </DialogDescription>
+          </DialogHeader>
+          {error && (
+            <p role="alert" className="mi-feedback bad">
+              {error}
+            </p>
+          )}
+          <p>
+            {action?.kind === "verify"
+              ? "NUERS will queue a signed challenge to this URL. Your receiver must verify its signature and echo data.challenge in nuers_challenge. Successful verification leaves delivery paused until you enable it again. No financial event will be created."
+              : action?.kind === "test"
+                ? "Queue a signed synthetic callback to this receiver. No sale or wallet debit will be created."
+                : action?.kind === "rotate"
+                  ? "This pauses delivery and replaces the signing secret. Update your receiver, verify again and enable. Existing events and attempt history remain."
+                  : action?.kind === "retry"
+                    ? "Resend the immutable original callback to the same receiver. A previous attempt may have reached it; your receiver must deduplicate its event ID."
+                    : action?.kind === "enable"
+                      ? "New subscribed events will be queued to this verified receiver. Callbacks may repeat or arrive out of order."
+                      : action?.kind === "revoke"
+                        ? "Stop new delivery to this endpoint. History remains read-only. Create a new endpoint if needed. An in-flight callback may still arrive."
+                        : "Stop pending delivery. Already in-flight callbacks may still arrive."}
+          </p>
+          <div className="mi-toolbar">
+            <button className="mi-outline" disabled={busy} onClick={() => setAction(null)}>
+              Cancel
+            </button>
+            <button className="mi-primary" disabled={busy} onClick={() => void perform()}>
+              {busy ? "Working…" : "Confirm"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={detailOpen}
+        onOpenChange={(v) => {
+          setDetailOpen(v);
+          if (!v) {
+            detailTicket.current++;
+            setDetail(null);
+          }
+        }}
+      >
+        <DialogContent className="mi-dialog mw-detail">
+          <DialogHeader>
+            <DialogTitle>Webhook Delivery Details</DialogTitle>
+            <DialogDescription>
+              Immutable callback envelope and attempt history. Signing secrets and receiver response
+              bodies are never shown.
+            </DialogDescription>
+          </DialogHeader>
+          {error && (
+            <p role="alert" className="mi-feedback bad">
+              {error}
+            </p>
+          )}
+          {!detail && !error ? (
+            <Loader2 className="mi-spin" />
+          ) : (
+            detail && (
+              <>
+                <p>
+                  <Badge value={detail.delivery.state} /> · {detail.delivery.environment} ·{" "}
+                  {detail.delivery.id}
+                </p>
+                <pre className="mi-guide">{JSON.stringify(detail.body, null, 2)}</pre>
+                <div className="mi-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Started (PHT)</th>
+                        <th>Result</th>
+                        <th>HTTP</th>
+                        <th>Duration</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detail.attempts.map((a) => (
+                        <tr key={a.id}>
+                          <td>{a.number}</td>
+                          <td>{date(a.started_at)}</td>
+                          <td>
+                            {a.state}
+                            <small className="mi-cell-sub">{a.error_code}</small>
+                          </td>
+                          <td>{a.http_status || "—"}</td>
+                          <td>{a.latency_ms == null ? "Unknown" : a.latency_ms + " ms"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }

@@ -1,11 +1,32 @@
 import {
-  Activity, AlertTriangle, Building2, Download,
-  FileText, Filter, Globe, Landmark, Receipt, RefreshCw, Search, ShieldCheck, TrendingUp, UserCheck,
+  Activity,
+  AlertTriangle,
+  Building2,
+  Download,
+  FileText,
+  Filter,
+  Globe,
+  Landmark,
+  Receipt,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  TrendingUp,
+  UserCheck,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
-  Area, AreaChart, Bar, BarChart, CartesianGrid, Line, LineChart,
-  ResponsiveContainer, Tooltip, XAxis, YAxis,
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +34,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -31,23 +58,60 @@ const iconMap = {
 
 const AUTO_REFRESH_MS = 5000;
 const birCommandModules = [
-  { title: "RDO Setup", subtitle: "Office registration and jurisdiction coverage", href: "/bir/rdo-registration", icon: Landmark },
-  { title: "VAT Reconciliation", subtitle: "Output VAT, input VAT, and variance monitoring", href: "/bir/vat-reconciliation", icon: ShieldCheck },
-  { title: "Invoice Matching", subtitle: "Seller and buyer invoice matching queue", href: "/bir/invoice-matching", icon: Receipt },
-  { title: "B2B Network", subtitle: "Supplier and customer relationship review", href: "/bir/network", icon: Globe },
-  { title: "Risk Scoring", subtitle: "Taxpayer risk prioritization and exposure", href: "/bir/risk-scoring", icon: AlertTriangle },
-  { title: "AI Audit", subtitle: "Audit leads, evidence summary, and recommendations", href: "/bir/ai-audit", icon: TrendingUp },
-  { title: "Forecasts", subtitle: "Revenue pace and projected collection movement", href: "/bir/forecasts", icon: Activity },
+  {
+    title: "RDO Setup",
+    subtitle: "Office registration and jurisdiction coverage",
+    href: "/bir/rdo-registration",
+    icon: Landmark,
+  },
+  {
+    title: "VAT Reconciliation",
+    subtitle: "Output VAT, input VAT, and variance monitoring",
+    href: "/bir/vat-reconciliation",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Invoice Matching",
+    subtitle: "Seller and buyer invoice matching queue",
+    href: "/bir/invoice-matching",
+    icon: Receipt,
+  },
+  {
+    title: "B2B Network",
+    subtitle: "Supplier and customer relationship review",
+    href: "/bir/network",
+    icon: Globe,
+  },
+  {
+    title: "Risk Scoring",
+    subtitle: "Taxpayer risk prioritization and exposure",
+    href: "/bir/risk-scoring",
+    icon: AlertTriangle,
+  },
+  {
+    title: "AI Audit",
+    subtitle: "Audit leads, evidence summary, and recommendations",
+    href: "/bir/ai-audit",
+    icon: TrendingUp,
+  },
+  {
+    title: "Forecasts",
+    subtitle: "Revenue pace and projected collection movement",
+    href: "/bir/forecasts",
+    icon: Activity,
+  },
 ];
 
 function initialsFor(value?: string | null) {
-  return (value || "BA")
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase() || "BA";
+  return (
+    (value || "BA")
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "BA"
+  );
 }
 
 function metaText(item: DashboardListItem, key: string, fallback = "") {
@@ -86,9 +150,16 @@ export function BirDashboard() {
   const reports = data.lists.reports ?? [];
   const receiptVerification = data.lists.receipt_verification?.[0];
   const forecastCards = data.lists.forecast_cards ?? [];
-  const liveReportCount = reports.reduce((total, report) => total + Number(report.metadata.record_count ?? 0), 0);
+  const liveReportCount = reports.reduce(
+    (total, report) => total + Number(report.metadata.record_count ?? 0),
+    0,
+  );
   const lastUpdatedLabel = lastUpdatedAt
-    ? new Intl.DateTimeFormat("en-PH", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(lastUpdatedAt))
+    ? new Intl.DateTimeFormat("en-PH", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      }).format(new Date(lastUpdatedAt))
     : "Waiting";
   const regionOptions = jurisdictionFilters.filter((item) => metaText(item, "type") === "region");
   const rdoOptions = jurisdictionFilters.filter((item) => metaText(item, "type") === "rdo");
@@ -111,22 +182,34 @@ export function BirDashboard() {
         region,
         rdoCode,
         metaText(item, "rdo_name"),
-      ].join(" ").toLowerCase();
+      ]
+        .join(" ")
+        .toLowerCase();
 
-      return (regionFilter === "all" || region === regionFilter)
-        && (rdoFilter === "all" || rdoCode === rdoFilter)
-        && (statusFilter === "all" || status === statusFilter.toLowerCase())
-        && (!query || searchable.includes(query));
+      return (
+        (regionFilter === "all" || region === regionFilter) &&
+        (rdoFilter === "all" || rdoCode === rdoFilter) &&
+        (statusFilter === "all" || status === statusFilter.toLowerCase()) &&
+        (!query || searchable.includes(query))
+      );
     });
   }, [rdoFilter, regionFilter, statusFilter, transactionSearch, transactionWatchlist]);
-  const filteredRevenue = filteredTransactions.reduce((total, item) => total + numberValue(item.primary_value), 0);
-  const filteredVat = filteredTransactions.reduce((total, item) => total + numberValue(item.secondary_value), 0);
+  const filteredRevenue = filteredTransactions.reduce(
+    (total, item) => total + numberValue(item.primary_value),
+    0,
+  );
+  const filteredVat = filteredTransactions.reduce(
+    (total, item) => total + numberValue(item.secondary_value),
+    0,
+  );
   const filteredComplianceCount = merchantCompliance.filter((item) => {
     const region = metaText(item, "region", "");
     const rdoCode = metaText(item, "rdo_code", "");
 
-    return (regionFilter === "all" || region === regionFilter)
-      && (rdoFilter === "all" || rdoCode === rdoFilter);
+    return (
+      (regionFilter === "all" || region === regionFilter) &&
+      (rdoFilter === "all" || rdoCode === rdoFilter)
+    );
   }).length;
 
   return (
@@ -134,7 +217,9 @@ export function BirDashboard() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold text-foreground">BIR Revenue and Compliance Dashboard</h1>
+            <h1 className="text-2xl font-bold text-foreground">
+              BIR Revenue and Compliance Dashboard
+            </h1>
             <Badge variant="secondary" className="gap-1.5 text-xs">
               <Landmark className="h-3 w-3" /> Authorized Regulator View
             </Badge>
@@ -144,15 +229,23 @@ export function BirDashboard() {
             </Badge>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            National and regional monitoring for electronic official receipts, business account compliance, tax collections, and audit investigation.
+            National and regional monitoring for electronic official receipts, business account
+            compliance, tax collections, and audit investigation.
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
             Last database sync: {lastUpdatedLabel}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" className="gap-2 text-xs" onClick={reload} disabled={loading || refreshing}>
-            <RefreshCw className={cn("h-3.5 w-3.5", (loading || refreshing) && "animate-spin")} /> Sync Now
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 text-xs"
+            onClick={reload}
+            disabled={loading || refreshing}
+          >
+            <RefreshCw className={cn("h-3.5 w-3.5", (loading || refreshing) && "animate-spin")} />{" "}
+            Sync Now
           </Button>
           <Button asChild variant="outline" size="sm" className="gap-2 text-xs">
             <Link to="/bir/rdo-registration">
@@ -175,7 +268,9 @@ export function BirDashboard() {
 
       {loading && (
         <Card>
-          <CardContent className="p-4 text-sm text-muted-foreground">Loading dashboard data from MySQL...</CardContent>
+          <CardContent className="p-4 text-sm text-muted-foreground">
+            Loading dashboard data from MySQL...
+          </CardContent>
         </Card>
       )}
 
@@ -252,7 +347,9 @@ export function BirDashboard() {
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-lg border bg-secondary/30 p-3">
               <p className="text-[10px] uppercase text-muted-foreground">Filtered Transactions</p>
-              <p className="mt-1 text-lg font-bold text-foreground">{filteredTransactions.length.toLocaleString("en-PH")}</p>
+              <p className="mt-1 text-lg font-bold text-foreground">
+                {filteredTransactions.length.toLocaleString("en-PH")}
+              </p>
             </div>
             <div className="rounded-lg border bg-secondary/30 p-3">
               <p className="text-[10px] uppercase text-muted-foreground">Filtered Revenue</p>
@@ -263,8 +360,12 @@ export function BirDashboard() {
               <p className="mt-1 text-lg font-bold text-foreground">{peso(filteredVat)}</p>
             </div>
             <div className="rounded-lg border bg-secondary/30 p-3">
-              <p className="text-[10px] uppercase text-muted-foreground">Compliance Rows In Scope</p>
-              <p className="mt-1 text-lg font-bold text-foreground">{filteredComplianceCount.toLocaleString("en-PH")}</p>
+              <p className="text-[10px] uppercase text-muted-foreground">
+                Compliance Rows In Scope
+              </p>
+              <p className="mt-1 text-lg font-bold text-foreground">
+                {filteredComplianceCount.toLocaleString("en-PH")}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -286,7 +387,9 @@ export function BirDashboard() {
                 </div>
                 <div className="min-w-0">
                   <p className="truncate text-xs font-semibold text-foreground">{module.title}</p>
-                  <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-muted-foreground">{module.subtitle}</p>
+                  <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-muted-foreground">
+                    {module.subtitle}
+                  </p>
                 </div>
               </div>
             </Link>
@@ -318,9 +421,13 @@ export function BirDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-sm">Collection Trends</CardTitle>
-                <p className="text-xs text-muted-foreground">Live revenue, VAT, and receipt volume from the database, shown in PHP thousands.</p>
+                <p className="text-xs text-muted-foreground">
+                  Live revenue, VAT, and receipt volume from the database, shown in PHP thousands.
+                </p>
               </div>
-              <Badge variant="outline" className="text-xs">Real-time tracking</Badge>
+              <Badge variant="outline" className="text-xs">
+                Real-time tracking
+              </Badge>
             </div>
           </CardHeader>
           <CardContent>
@@ -335,9 +442,33 @@ export function BirDashboard() {
                   <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
                   <YAxis tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
                   <Tooltip />
-                  <Area type="monotone" dataKey="revenue" name="Revenue" stroke="var(--chart-1)" fill="var(--chart-1)" fillOpacity={0.14} strokeWidth={2} />
-                  <Area type="monotone" dataKey="tax" name="VAT" stroke="var(--chart-2)" fill="var(--chart-2)" fillOpacity={0.18} strokeWidth={2} />
-                  <Area type="monotone" dataKey="receipts" name="Receipts" stroke="var(--chart-3)" fill="var(--chart-3)" fillOpacity={0.12} strokeWidth={2} />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    name="Revenue"
+                    stroke="var(--chart-1)"
+                    fill="var(--chart-1)"
+                    fillOpacity={0.14}
+                    strokeWidth={2}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="tax"
+                    name="VAT"
+                    stroke="var(--chart-2)"
+                    fill="var(--chart-2)"
+                    fillOpacity={0.18}
+                    strokeWidth={2}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="receipts"
+                    name="Receipts"
+                    stroke="var(--chart-3)"
+                    fill="var(--chart-3)"
+                    fillOpacity={0.12}
+                    strokeWidth={2}
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             )}
@@ -347,7 +478,9 @@ export function BirDashboard() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">Receipt Verification</CardTitle>
-            <p className="text-xs text-muted-foreground">Latest verification event from the live verification ledger.</p>
+            <p className="text-xs text-muted-foreground">
+              Latest verification event from the live verification ledger.
+            </p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="relative">
@@ -366,15 +499,26 @@ export function BirDashboard() {
                     <ShieldCheck className="h-5 w-5 text-success" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-foreground">{receiptVerification.title}</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {receiptVerification.title}
+                    </p>
                     <p className="text-xs text-muted-foreground">{receiptVerification.subtitle}</p>
                   </div>
                 </div>
                 <Separator className="my-3" />
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <span className="text-muted-foreground">Business Account</span><span className="text-right font-medium text-foreground">{receiptVerification.metadata.merchant}</span>
-                  <span className="text-muted-foreground">Status</span><span className="text-right font-medium text-success">{receiptVerification.status}</span>
-                  <span className="text-muted-foreground">Method</span><span className="text-right font-medium text-foreground">{receiptVerification.metadata.method}</span>
+                  <span className="text-muted-foreground">Business Account</span>
+                  <span className="text-right font-medium text-foreground">
+                    {receiptVerification.metadata.merchant}
+                  </span>
+                  <span className="text-muted-foreground">Status</span>
+                  <span className="text-right font-medium text-success">
+                    {receiptVerification.status}
+                  </span>
+                  <span className="text-muted-foreground">Method</span>
+                  <span className="text-right font-medium text-foreground">
+                    {receiptVerification.metadata.method}
+                  </span>
                 </div>
               </div>
             ) : (
@@ -393,7 +537,9 @@ export function BirDashboard() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">Regional Revenue Overview</CardTitle>
-            <p className="text-xs text-muted-foreground">Live regional revenue and VAT by recorded transaction region.</p>
+            <p className="text-xs text-muted-foreground">
+              Live regional revenue and VAT by recorded transaction region.
+            </p>
           </CardHeader>
           <CardContent>
             {revenueByRegion.length === 0 ? (
@@ -405,10 +551,19 @@ export function BirDashboard() {
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={revenueByRegion}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                    <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 11 }}
+                      stroke="var(--muted-foreground)"
+                    />
                     <YAxis tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
                     <Tooltip />
-                    <Bar dataKey="revenue" name="Revenue" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
+                    <Bar
+                      dataKey="revenue"
+                      name="Revenue"
+                      fill="var(--chart-1)"
+                      radius={[4, 4, 0, 0]}
+                    />
                     <Bar dataKey="tax" name="VAT" fill="var(--chart-2)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -431,7 +586,9 @@ export function BirDashboard() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">Collection Pace</CardTitle>
-            <p className="text-xs text-muted-foreground">Month-over-month revenue and VAT derived from the live transaction ledger.</p>
+            <p className="text-xs text-muted-foreground">
+              Month-over-month revenue and VAT derived from the live transaction ledger.
+            </p>
           </CardHeader>
           <CardContent>
             {collectionTrend.length === 0 ? (
@@ -445,8 +602,21 @@ export function BirDashboard() {
                   <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
                   <YAxis tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
                   <Tooltip />
-                  <Line type="monotone" dataKey="revenue" name="Revenue" stroke="var(--chart-1)" strokeWidth={2} />
-                  <Line type="monotone" dataKey="tax" name="VAT" stroke="var(--chart-2)" strokeWidth={2} strokeDasharray="5 5" />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    name="Revenue"
+                    stroke="var(--chart-1)"
+                    strokeWidth={2}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="tax"
+                    name="VAT"
+                    stroke="var(--chart-2)"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                  />
                 </LineChart>
               </ResponsiveContainer>
             )}
@@ -454,10 +624,14 @@ export function BirDashboard() {
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 {forecastCards.map((item) => (
                   <div key={item.title} className="rounded-lg border p-3 text-center">
-                    <p className="text-lg font-bold text-foreground">{item.metadata.display ?? item.primary_value}</p>
+                    <p className="text-lg font-bold text-foreground">
+                      {item.metadata.display ?? item.primary_value}
+                    </p>
                     <p className="text-[10px] text-muted-foreground">{item.title}</p>
                     {typeof item.metadata.trend === "string" && item.metadata.trend && (
-                      <p className="mt-1 text-[10px] text-muted-foreground">{item.metadata.trend}</p>
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        {item.metadata.trend}
+                      </p>
                     )}
                   </div>
                 ))}
@@ -477,9 +651,14 @@ export function BirDashboard() {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="text-sm">BIR Transaction Watchlist</CardTitle>
-                <p className="text-xs text-muted-foreground">Latest live ledger rows filtered by Region, RDO, transaction status, TIN, receipt, or business account.</p>
+                <p className="text-xs text-muted-foreground">
+                  Latest live ledger rows filtered by Region, RDO, transaction status, TIN, receipt,
+                  or business account.
+                </p>
               </div>
-              <Badge variant="outline" className="w-fit text-xs">{filteredTransactions.length} shown</Badge>
+              <Badge variant="outline" className="w-fit text-xs">
+                {filteredTransactions.length} shown
+              </Badge>
             </div>
           </CardHeader>
           <CardContent>
@@ -492,40 +671,78 @@ export function BirDashboard() {
                 <table className="w-full min-w-[980px]">
                   <thead>
                     <tr className="border-b">
-                      <th className="pb-3 text-left text-xs font-medium text-muted-foreground">Reference</th>
-                      <th className="pb-3 text-left text-xs font-medium text-muted-foreground">Business / Buyer</th>
-                      <th className="pb-3 text-left text-xs font-medium text-muted-foreground">Jurisdiction</th>
-                      <th className="pb-3 text-left text-xs font-medium text-muted-foreground">Channel</th>
-                      <th className="pb-3 text-right text-xs font-medium text-muted-foreground">Amount</th>
-                      <th className="pb-3 text-right text-xs font-medium text-muted-foreground">VAT</th>
-                      <th className="pb-3 text-left text-xs font-medium text-muted-foreground">Status</th>
+                      <th className="pb-3 text-left text-xs font-medium text-muted-foreground">
+                        Reference
+                      </th>
+                      <th className="pb-3 text-left text-xs font-medium text-muted-foreground">
+                        Business / Buyer
+                      </th>
+                      <th className="pb-3 text-left text-xs font-medium text-muted-foreground">
+                        Jurisdiction
+                      </th>
+                      <th className="pb-3 text-left text-xs font-medium text-muted-foreground">
+                        Channel
+                      </th>
+                      <th className="pb-3 text-right text-xs font-medium text-muted-foreground">
+                        Amount
+                      </th>
+                      <th className="pb-3 text-right text-xs font-medium text-muted-foreground">
+                        VAT
+                      </th>
+                      <th className="pb-3 text-left text-xs font-medium text-muted-foreground">
+                        Status
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredTransactions.slice(0, 10).map((item) => (
-                      <tr key={`${item.title}-${metaText(item, "created_at")}`} className="border-b last:border-0">
+                      <tr
+                        key={`${item.title}-${metaText(item, "created_at")}`}
+                        className="border-b last:border-0"
+                      >
                         <td className="py-3">
                           <p className="text-xs font-semibold text-foreground">{item.title}</p>
-                          <p className="text-[10px] text-muted-foreground">{metaText(item, "transaction_type")} · {metaText(item, "document_type", "Sales document")}</p>
-                        </td>
-                        <td className="py-3">
-                          <p className="max-w-52 truncate text-xs font-medium text-foreground">{metaText(item, "merchant", item.subtitle ?? "")}</p>
                           <p className="text-[10px] text-muted-foreground">
-                            {metaText(item, "customer_tin") || metaText(item, "merchant_tin") || "No taxpayer TIN"}
+                            {metaText(item, "transaction_type")} ·{" "}
+                            {metaText(item, "document_type", "Sales document")}
                           </p>
                         </td>
                         <td className="py-3">
-                          <p className="text-xs text-foreground">{metaText(item, "region", "Unclassified")}</p>
-                          <p className="text-[10px] text-muted-foreground">{metaText(item, "rdo_name", "Unassigned RDO")}</p>
+                          <p className="max-w-52 truncate text-xs font-medium text-foreground">
+                            {metaText(item, "merchant", item.subtitle ?? "")}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {metaText(item, "customer_tin") ||
+                              metaText(item, "merchant_tin") ||
+                              "No taxpayer TIN"}
+                          </p>
                         </td>
                         <td className="py-3">
-                          <p className="text-xs text-foreground">{metaText(item, "channel", "Channel")}</p>
-                          <p className="text-[10px] text-muted-foreground">{metaText(item, "payment_method", "Payment method")}</p>
+                          <p className="text-xs text-foreground">
+                            {metaText(item, "region", "Unclassified")}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {metaText(item, "rdo_name", "Unassigned RDO")}
+                          </p>
                         </td>
-                        <td className="py-3 text-right text-xs font-semibold text-foreground">{metaText(item, "amount_display", peso(numberValue(item.primary_value)))}</td>
-                        <td className="py-3 text-right text-xs text-foreground">{metaText(item, "vat_display", peso(numberValue(item.secondary_value)))}</td>
                         <td className="py-3">
-                          <Badge variant="outline" className="text-[10px]">{item.status}</Badge>
+                          <p className="text-xs text-foreground">
+                            {metaText(item, "channel", "Channel")}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {metaText(item, "payment_method", "Payment method")}
+                          </p>
+                        </td>
+                        <td className="py-3 text-right text-xs font-semibold text-foreground">
+                          {metaText(item, "amount_display", peso(numberValue(item.primary_value)))}
+                        </td>
+                        <td className="py-3 text-right text-xs text-foreground">
+                          {metaText(item, "vat_display", peso(numberValue(item.secondary_value)))}
+                        </td>
+                        <td className="py-3">
+                          <Badge variant="outline" className="text-[10px]">
+                            {item.status}
+                          </Badge>
                         </td>
                       </tr>
                     ))}
@@ -539,7 +756,9 @@ export function BirDashboard() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">RDO Coverage</CardTitle>
-            <p className="text-xs text-muted-foreground">Registered RDO offices and live transaction volume mapped to each office.</p>
+            <p className="text-xs text-muted-foreground">
+              Registered RDO offices and live transaction volume mapped to each office.
+            </p>
           </CardHeader>
           <CardContent className="space-y-3">
             {rdoCoverage.length === 0 ? (
@@ -554,16 +773,22 @@ export function BirDashboard() {
                       <p className="text-xs font-semibold text-foreground">{rdo.title}</p>
                       <p className="truncate text-[10px] text-muted-foreground">{rdo.subtitle}</p>
                     </div>
-                    <Badge variant="secondary" className="text-[10px]">{rdo.status}</Badge>
+                    <Badge variant="secondary" className="text-[10px]">
+                      {rdo.status}
+                    </Badge>
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                     <div className="rounded-md bg-secondary/40 p-2">
                       <p className="text-[10px] uppercase text-muted-foreground">Transactions</p>
-                      <p className="font-semibold text-foreground">{numberValue(rdo.primary_value).toLocaleString("en-PH")}</p>
+                      <p className="font-semibold text-foreground">
+                        {numberValue(rdo.primary_value).toLocaleString("en-PH")}
+                      </p>
                     </div>
                     <div className="rounded-md bg-secondary/40 p-2">
                       <p className="text-[10px] uppercase text-muted-foreground">Revenue</p>
-                      <p className="font-semibold text-foreground">{metaText(rdo, "amount_display", peso(numberValue(rdo.secondary_value)))}</p>
+                      <p className="font-semibold text-foreground">
+                        {metaText(rdo, "amount_display", peso(numberValue(rdo.secondary_value)))}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -577,7 +802,9 @@ export function BirDashboard() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">Business Account Compliance Scoring</CardTitle>
-            <p className="text-xs text-muted-foreground">EOR compliance, filing status, and audit readiness</p>
+            <p className="text-xs text-muted-foreground">
+              EOR compliance, filing status, and audit readiness
+            </p>
           </CardHeader>
           <CardContent className="space-y-3">
             {merchantCompliance.length === 0 ? (
@@ -590,19 +817,30 @@ export function BirDashboard() {
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
                       <Avatar className="h-9 w-9 shrink-0 rounded-lg border bg-secondary">
-                        {typeof merchant.metadata.logo_url === "string" && merchant.metadata.logo_url && (
-                          <AvatarImage src={merchant.metadata.logo_url} alt={`${merchant.title} logo`} className="object-cover" />
-                        )}
+                        {typeof merchant.metadata.logo_url === "string" &&
+                          merchant.metadata.logo_url && (
+                            <AvatarImage
+                              src={merchant.metadata.logo_url}
+                              alt={`${merchant.title} logo`}
+                              className="object-cover"
+                            />
+                          )}
                         <AvatarFallback className="rounded-lg bg-secondary text-[10px] font-bold">
                           {initialsFor(merchant.title)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
-                        <p className="truncate text-xs font-medium text-foreground">{merchant.title}</p>
-                        <p className="truncate text-[10px] text-muted-foreground">{merchant.subtitle}</p>
+                        <p className="truncate text-xs font-medium text-foreground">
+                          {merchant.title}
+                        </p>
+                        <p className="truncate text-[10px] text-muted-foreground">
+                          {merchant.subtitle}
+                        </p>
                       </div>
                     </div>
-                    <span className="text-sm font-bold text-foreground">{merchant.primary_value}</span>
+                    <span className="text-sm font-bold text-foreground">
+                      {merchant.primary_value}
+                    </span>
                   </div>
                   <Progress value={merchant.primary_value ?? 0} className="mt-2 h-1.5" />
                 </div>
@@ -614,7 +852,9 @@ export function BirDashboard() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">Audit Queue</CardTitle>
-            <p className="text-xs text-muted-foreground">Investigation, validation, and exception reporting</p>
+            <p className="text-xs text-muted-foreground">
+              Investigation, validation, and exception reporting
+            </p>
           </CardHeader>
           <CardContent className="space-y-3">
             {auditQueue.length === 0 ? (
@@ -630,7 +870,16 @@ export function BirDashboard() {
                       <p className="mt-1 text-xs font-medium text-foreground">{audit.subtitle}</p>
                       <p className="text-[10px] text-muted-foreground">{audit.metadata.scope}</p>
                     </div>
-                    <Badge variant={audit.status === "High" || audit.status === "Critical" ? "destructive" : "secondary"} className="text-[10px]">{audit.status}</Badge>
+                    <Badge
+                      variant={
+                        audit.status === "High" || audit.status === "Critical"
+                          ? "destructive"
+                          : "secondary"
+                      }
+                      className="text-[10px]"
+                    >
+                      {audit.status}
+                    </Badge>
                   </div>
                 </div>
               ))
@@ -641,7 +890,9 @@ export function BirDashboard() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">Report Center</CardTitle>
-            <p className="text-xs text-muted-foreground">Live export targets derived from the current database tables.</p>
+            <p className="text-xs text-muted-foreground">
+              Live export targets derived from the current database tables.
+            </p>
           </CardHeader>
           <CardContent>
             {reports.length === 0 ? (
@@ -651,7 +902,12 @@ export function BirDashboard() {
             ) : (
               <div className="grid grid-cols-2 gap-2">
                 {reports.map((report) => (
-                  <Button key={report.title} variant="outline" size="sm" className="justify-start gap-2 text-xs">
+                  <Button
+                    key={report.title}
+                    variant="outline"
+                    size="sm"
+                    className="justify-start gap-2 text-xs"
+                  >
                     <FileText className="h-3.5 w-3.5" /> {report.title}
                   </Button>
                 ))}
@@ -660,7 +916,8 @@ export function BirDashboard() {
             <Separator className="my-4" />
             <div className="rounded-lg border bg-secondary/40 p-3">
               <p className="flex items-center gap-2 text-xs font-medium text-foreground">
-                <Activity className="h-3.5 w-3.5 text-success" /> {reports.length} live report source{reports.length === 1 ? "" : "s"} available
+                <Activity className="h-3.5 w-3.5 text-success" /> {reports.length} live report
+                source{reports.length === 1 ? "" : "s"} available
               </p>
               <p className="mt-1 text-[10px] text-muted-foreground">
                 {liveReportCount > 0

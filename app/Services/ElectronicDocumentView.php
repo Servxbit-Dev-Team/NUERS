@@ -39,7 +39,7 @@ class ElectronicDocumentView
         $registration = json_decode($row->document_registration ?? 'null', true) ?: ($payload['document_registration'] ?? null);
         $withholdingDetails = json_decode($row->withholding_details ?? 'null', true) ?: ($payload['withholding_details'] ?? null);
         $identity = app(SellerIdentity::class)->parse($row->merchant_tin, $row->seller_branch_code ?? null);
-        $original = !empty($row->original_invoice_id) ? DB::table('business_invoices')->where('merchant_id',$row->merchant_id)->where('id',$row->original_invoice_id)->value('invoice_number') : null;
+        $original = !empty($row->original_invoice_id) ? DB::table('business_invoices')->where('merchant_id', $row->merchant_id)->where('id', $row->original_invoice_id)->value('invoice_number') : null;
         $invoiceReference = $original ?: ($payload['invoice_reference'] ?? null) ?: ($payload['manual_invoice_number'] ?? null) ?: ($row->reference_number ?? null);
         $amount = (float) ($invoice ? $row->total_amount : $row->total_due);
         $withholding = (float) ($row->withholding_tax ?? 0);
