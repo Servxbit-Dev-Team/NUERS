@@ -305,3 +305,14 @@ Detail in `docs/refactor-plan.md` under "Step 5 findings and changes". Committed
 - **The merchant webhook claim could not run in parallel:** with 8 or 16 workers, 7 of 8 and 15 of 16 crashed on MySQL deadlocks, and each claim cost as much as the whole backlog. New claim: 110 claims/s with 1 worker, 538 with 8, 733 with 16, all correctness checks passing. Added `merchant-webhooks:work --watch` and a supervisor program (4 workers, off until egress is approved). Never showed in production because only one worker ever ran.
 - Not done: the same claim pattern in `SignedWebhook`, `EisDelivery` and `PlatformNotifications` (not scheduled or blocked today); the per-request request-log transaction and `AtomicQuota` (about 5 ms each, both under or near the merchant lock) are carried into step 3.
 - To confirm on the live host: its `.env` may use `QUEUE_CONNECTION=sync` and file sessions/cache (from the example file); with the scheduler as the only worker, that does not affect these outboxes, but check.
+
+## Step 8a: generic table endpoint review (branch `table-endpoint-review`, 2026-11-03)
+
+Not a hosting-sizing change, but it blocks go-live: before real taxpayer data goes in, the `/api/tables/*` endpoint had holes that a single admin session (or a stolen one) could use. Details and the full table are in `docs/refactor-plan.md` step 8a.
+
+- Reproduced, then fixed: an admin could make themselves `super_admin`, could demote a `super_admin`, and one unfiltered `PATCH` rewrote every profile.
+- Also fixed: admin could change `profiles.email` without `users.email`; merchants could read internal audit columns of their registry row; malformed input crashed with 500; the audit entry did not say which records changed.
+- Removed the unreachable create/delete code from the controller. POST is now refused for all tables.
+- 9 new tests assert each role against each table and verb.
+- Deployment impact: no migration, no config. Behavioural change for the admin UI: bulk profile or client-account changes without a record filter are refused (the UI always filters).
+- To check on the live data before go-live: any `super_admin` or `admin` accounts that should not exist, and any `profiles.email` that differs from `users.email`.

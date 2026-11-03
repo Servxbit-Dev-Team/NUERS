@@ -41,6 +41,8 @@ class TableController extends Controller
         $request->attributes->set('table_role', $actorRole);
         if ($request->method() !== 'GET') {
             abort_if($request->method() === 'DELETE', 409, 'Records and linked identities are preserved. Use controlled deactivation instead.');
+            abort_if($request->method() === 'POST', 409, 'Records are created only by their verified workflows (registration, provisioning, issuance).');
+            abort_unless(is_array($request->input('values', [])), 422, 'values must be an object.');
             if ($table === 'client_accounts') {
                 abort_unless(in_array($request->method(), ['PATCH', 'PUT'], true), 409, 'Use the verified registration workflow to create accounts.');
                 $allowed = in_array($actorRole, ['admin', 'super_admin'], true) ? ['status', 'full_name', 'mobile', 'notification_preferences'] : ['full_name', 'mobile', 'notification_preferences'];
@@ -79,9 +81,11 @@ class TableController extends Controller
             }
             $values = $request->input('values', []);
             foreach (Arr::isList($values) ? $values : [$values] as $value) {
+                abort_unless(is_array($value), 422, 'values must be an object.');
                 abort_if(array_diff(array_keys($value), ['id', 'role', 'email', 'full_name', 'organization']), 403, 'Use the verified identity workflow for TIN and security changes.');
                 // BIR review authority requires a separately verified staff provisioning process.
                 abort_if(($value['role'] ?? null) === 'bir', 403, 'BIR review authority cannot be self-assigned through the generic profile endpoint.');
+                abort_if(($value['role'] ?? null) === 'super_admin' && $role !== 'super_admin', 403, 'Only a super administrator can grant super administrator access.');
             }
         }
 
@@ -89,9 +93,7 @@ class TableController extends Controller
 
         return match ($request->method()) {
             'GET' => $this->index($request, self::TABLES[$table]),
-            'POST' => $this->store($request, self::TABLES[$table]),
             'PUT', 'PATCH' => $this->update($request, self::TABLES[$table]),
-            'DELETE' => $this->destroy($request, self::TABLES[$table]),
             default => abort(405),
         };
     }
@@ -119,24 +121,11 @@ class TableController extends Controller
 
         $single = $request->boolean('single') || $request->boolean('maybeSingle');
         $data = $single ? $query->first() : $query->get();
+        if ($hide = $this->internalColumns($model, $request->attributes->get('table_role'))) {
+            $data instanceof \Illuminate\Support\Collection ? $data->each->makeHidden($hide) : $data?->makeHidden($hide);
+        }
 
         return response()->json(['data' => $data, 'count' => $count]);
-    }
-
-    private function store(Request $request, string $model): JsonResponse
-    {
-        $values = $request->input('values', []);
-        $isList = Arr::isList($values);
-        $rows = $isList ? $values : [$values];
-
-        $created = collect($rows)
-            ->map(fn (array $row) => $model::create($this->normalizePayload($row)))
-            ->values();
-
-        return response()->json([
-            'data' => $isList ? $created : $created->first(),
-            'count' => $created->count(),
-        ], 201);
     }
 
     private function update(Request $request, string $model): JsonResponse
@@ -150,16 +139,18 @@ class TableController extends Controller
         if ($model === Profile::class && $request->attributes->has('profile_scope_id')) {
             $query->where('id', $request->attributes->get('profile_scope_id'));
         }
+        $this->guardUpdate($request, $query, $model);
         $request->validate(['values' => 'required|array', 'values.full_name' => 'sometimes|string|max:255', 'values.organization' => 'sometimes|string|max:255', 'values.email' => 'sometimes|email|max:255', 'values.mobile' => 'sometimes|nullable|string|max:80', 'values.is_read' => 'sometimes|boolean', 'values.role' => 'sometimes|in:admin,super_admin,merchant,client,consumer', 'values.status' => 'sometimes|in:pending,under_review,suspended,inactive,rejected']);
         $payload = $this->normalizePayload($request->input('values', []));
-        $affected = DB::transaction(function () use ($query, $payload, $request, $model) {
+        $targetIds = (clone $query)->limit(500)->pluck('id')->all();
+        $affected = DB::transaction(function () use ($query, $payload, $request, $model, $targetIds) {
             $roleChangedIds = $model === Profile::class && isset($payload['role']) ? (clone $query)->where('role', '!=', $payload['role'])->pluck('id')->all() : [];
             $affected = (clone $query)->update($payload);
             if ($roleChangedIds) {
                 foreach ($roleChangedIds as $changedId) app(\App\Services\PlatformNotifications::class)->user($changedId,'security.role.changed',(string)\Illuminate\Support\Str::uuid(),'Account access changed','An administrator changed your NUERS account permissions. Existing application sessions were revoked. If you were not expecting this change, contact NUERS support.','security');
                 User::whereIn('id', $roleChangedIds)->update(app(ApiAccess::class)->revocation());
             }
-            app(BirCompliance::class)->audit('account.table.updated', $model, (string) $request->attributes->get('table_actor')->id, ['fields' => array_keys($payload), 'count' => $affected]);
+            app(BirCompliance::class)->audit('account.table.updated', $model, (string) $request->attributes->get('table_actor')->id, ['fields' => array_keys($payload), 'count' => $affected, 'target_ids' => array_slice($targetIds, 0, 50), 'role_to' => $payload['role'] ?? null]);
 
             return $affected;
         });
@@ -170,88 +161,41 @@ class TableController extends Controller
         ]);
     }
 
-    private function destroy(Request $request, string $model): JsonResponse
+    /** Update-time rules that depend on which rows the filters actually matched. */
+    private function guardUpdate(Request $request, Builder $query, string $model): void
     {
-        /** @var Builder $query */
-        $query = $model::query();
-        $this->scope($query, $request, $model);
-        $this->validateQuery($query, $request);
-        $this->applyFilters($query, $request);
-
-        if ($model === Profile::class) {
-            return $this->destroyProfiles($request, $query);
+        $role = $request->attributes->get('table_role');
+        $administrator = in_array($role, ['admin', 'super_admin'], true);
+        if ($administrator && in_array($model, [Profile::class, ClientAccount::class], true)) {
+            $filtered = $this->jsonQuery($request, 'eq') || $this->jsonQuery($request, 'in') || $request->filled('or');
+            abort_unless($filtered, 422, 'Specify which records to change; unfiltered bulk changes are not accepted.');
         }
-
-        if ($model === ClientAccount::class) {
-            return $this->destroyClientAccounts($request, $query);
+        if ($model !== Profile::class) {
+            return;
         }
-
-        $affected = $query->delete();
-
-        return response()->json([
-            'data' => null,
-            'count' => $affected,
-        ]);
-    }
-
-    private function destroyProfiles(Request $request, Builder $query): JsonResponse
-    {
-        $profiles = (clone $query)->get(['id']);
-        $ids = $profiles->pluck('id')->map(fn ($id) => (int) $id)->filter()->values();
-
-        if ($ids->isEmpty()) {
-            return response()->json(['data' => null, 'count' => 0]);
+        $values = $request->input('values', []);
+        if ($role !== 'super_admin') {
+            abort_if((clone $query)->where('role', 'super_admin')->exists(), 403, 'Only a super administrator can change a super administrator account.');
         }
-
-        if ($currentUser = $this->userFromRequest($request)) {
-            abort_if($ids->contains((int) $currentUser->id), 422, 'You cannot delete your own active admin account.');
-        }
-
-        DB::transaction(function () use ($ids, $query): void {
-            $this->notifyRemoval($ids->all());
-            $query->delete();
-            User::whereIn('id', $ids)->delete();
-        });
-
-        return response()->json([
-            'data' => null,
-            'count' => $ids->count(),
-        ]);
-    }
-
-    private function destroyClientAccounts(Request $request, Builder $query): JsonResponse
-    {
-        $accounts = (clone $query)->get(['id', 'user_id']);
-        $ids = $accounts->pluck('id')->filter()->values();
-        $userIds = $accounts->pluck('user_id')->map(fn ($id) => $id ? (int) $id : null)->filter()->values();
-
-        if ($ids->isEmpty()) {
-            return response()->json(['data' => null, 'count' => 0]);
-        }
-
-        if ($currentUser = $this->userFromRequest($request)) {
-            abort_if($userIds->contains((int) $currentUser->id), 422, 'You cannot delete your own active account.');
-        }
-
-        DB::transaction(function () use ($query, $userIds): void {
-            $this->notifyRemoval($userIds->all());
-            $query->delete();
-
-            if ($userIds->isNotEmpty()) {
-                Profile::whereIn('id', $userIds)->delete();
-                User::whereIn('id', $userIds)->delete();
+        foreach (['id', 'email'] as $key) {
+            if (array_key_exists($key, $values)) {
+                abort_if((clone $query)->where($key, '!=', $values[$key])->exists(), 403, 'Identity and sign-in email changes require the verified identity workflow.');
             }
-        });
-
-        return response()->json([
-            'data' => null,
-            'count' => $ids->count(),
-        ]);
+        }
     }
 
-    private function notifyRemoval(array $ids): void
+    /** Internal columns a role must not read, filter or sort by through the generic endpoint. */
+    private function internalColumns(string $model, ?string $role): array
     {
-        foreach(User::whereIn('id',$ids)->get() as $u) app(\App\Services\PlatformNotifications::class)->queue($u->email,'security.account.removed',(string)\Illuminate\Support\Str::uuid(),'NUERS account removed','An administrator removed your NUERS account. If this was unexpected, contact NUERS support.','security');
+        if (in_array($role, ['admin', 'super_admin', 'bir'], true)) {
+            return [];
+        }
+
+        return match (true) {
+            $model === Merchant::class => ['notes', 'compliance_score', 'last_audit_date', 'next_audit_date'],
+            $model === MerchantTransaction::class => ['external_payload', 'source_api_key_id', 'source_request_hash'],
+            default => [],
+        };
     }
 
     private function scope(Builder $query, Request $request, string $model): void
@@ -305,7 +249,7 @@ class TableController extends Controller
     private function validateQuery(Builder $query, Request $request): void
     {
         $request->validate(['limit' => 'nullable|integer|min:1|max:500', 'order' => 'nullable|string|max:80', 'eq' => 'nullable', 'in' => 'nullable', 'or' => 'nullable|string|max:2000']);
-        $allowed = Schema::getColumnListing($query->getModel()->getTable());
+        $allowed = array_diff(Schema::getColumnListing($query->getModel()->getTable()), $this->internalColumns($query->getModel()::class, $request->attributes->get('table_role')));
         $columns = [...array_keys($this->jsonQuery($request, 'eq')), ...array_keys($this->jsonQuery($request, 'in'))];
         if ($request->filled('order')) {
             $columns[] = $request->query('order');

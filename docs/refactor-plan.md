@@ -326,6 +326,42 @@ Throughput note: these are claim-rate figures against a local database. Actual d
 ## 8. Hardening reviews
 
 - **`TableController`** (`app/Http/Controllers/Api/TableController.php`): the generic `/api/tables/*` endpoint relies on an allowlist plus hand-written per-role and per-column checks (lines 35-84). Review each table and role combination, add tests that assert denied access for every role, and plan to replace the generic endpoint with explicit endpoints for sensitive tables.
+### Step 8a: `TableController` review (branch `table-endpoint-review`, 2026-11-03)
+
+Method: read the controller, then probed it with a throwaway test per attack (admin, super_admin, client, merchant, BIR sessions on an in-memory schema). The frontend uses it only through `src/lib/supabase.ts`; the `admin/users`, `admin/client-accounts`, `admin/merchants`, `admin/notifications` pages are the writers.
+
+**Confirmed in the old code (each reproduced before fixing):**
+
+| # | Finding | Severity |
+|---|---|---|
+| 1 | A plain `admin` could set their own profile role to `super_admin` (HTTP 200). | High: privilege escalation |
+| 2 | An `admin` could change or demote any `super_admin` profile. | High |
+| 3 | `PATCH /api/tables/profiles` with no filter changed every profile in one call (7 of 7 rows, including all super admins). Same shape for `client_accounts`. | High: one request, platform-wide |
+| 4 | An admin could change `profiles.email` (or `id`) without touching `users.email`, leaving the two identities out of step. | Medium |
+| 5 | Merchants could read, filter and sort by internal columns on their own registry row: `notes`, `compliance_score`, `last_audit_date`, `next_audit_date`. Customers could read `external_payload`, `source_api_key_id`, `source_request_hash` on transactions matched to their TIN. | Medium: internal data exposure |
+| 6 | Malformed `values` (a string, or a non-object element) returned HTTP 500. | Low |
+| 7 | The `account.table.updated` audit entry recorded field names and a count, not which records changed or the new role. | Medium: weak evidence |
+| 8 | `store()`, `destroyProfiles()` and `destroyClientAccounts()` were unreachable (DELETE is refused earlier, POST was never used by the UI) but kept destructive code, including deleting users, one removed guard away from live. | Low: latent |
+
+Checked and found sound: unauthenticated access (all tables, all verbs: 401); cross-tenant reads (merchant A cannot see merchant B; a client sees only their own account and profile); client and merchant role escalation (refused); financial tables (read-only, refused with 409); the filter and sort allowlist (columns come from the table schema, so no SQL injection through column names); the `or` filter (wrapped, so it cannot escape the tenant scope).
+
+**Changes made:**
+- POST is refused (409) for every table: nothing in the product creates records through this endpoint. Removed the dead create and delete code paths.
+- Only a `super_admin` can grant `super_admin`, or change a profile that currently is one.
+- Admin changes to `profiles` and `client_accounts` must name their records (`eq`, `in` or `or`); an unfiltered change is a 422. Non-admin changes stay scoped to the caller's own row, so the portal's "save my profile" call is unaffected.
+- `id` and `email` on a profile cannot be changed through this endpoint. Sending the current value is still accepted (the admin Users screen does).
+- `values` must be an object (422 otherwise).
+- Merchants no longer receive, or can filter/sort by, the four internal registry columns. Merchants and customers no longer receive the three transaction-source columns. Admin, super admin and BIR are unchanged. No frontend page outside `pages/admin` reads these columns through this endpoint.
+- The audit entry now carries `target_ids` (first 50) and `role_to`.
+- 9 tests in `tests/Feature/TableEndpointSecurityTest.php` (145 assertions): every table and verb unauthenticated; POST and DELETE for every role and table; super-admin protection; unfiltered bulk changes; email and id; malformed values; internal columns and tenant isolation for merchants; client isolation and field limits; financial records.
+
+**Not changed, needs a decision or a separate piece of work:**
+- `admin/users` sends `tin` on every save, which the endpoint has always refused with 403 (TIN changes belong to the verified identity workflow), so saving a user from that screen fails today. Either stop sending `tin` from the UI or add an explicit admin endpoint.
+- `admin/merchants` still calls `update` and `delete` on `merchants`, which the endpoint refuses with 409 ("use the audited registry workflow"). Those buttons need to be pointed at the registry workflow or removed. Not a security issue; a functional gap.
+- `ApiBoundary` and `MerchantTeamAccess` call `json_decode` on `request->query('eq')`; a bracketed array parameter (`eq[id]=1`) would be a type error for a privileged session when MFA enforcement is on. Not exploitable; worth guarding.
+- Longer term the plan stands: explicit endpoints for sensitive tables and retire the generic one. This step makes the generic one safe to leave in place until then.
+- Whether the live `profiles` table already contains a role value or `profiles.email` that differs from `users.email`: check the live data before assuming the two are in step.
+
 - **Schema drift**: 166 `Schema::hasTable` and `hasColumn` calls suggest environments differ. Compare the live schema with migrations, bring every environment to the same state, then remove the checks (they cost queries on hot paths).
 - **Controller logic**: 1,010 `DB::` calls in controllers against 321 in services. Move logic into services as each controller is touched for the steps above; do not do a standalone rewrite.
 
