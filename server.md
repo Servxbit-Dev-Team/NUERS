@@ -328,3 +328,9 @@ Why: more than one web server cannot share one server's disk. Before this, a doc
 - Not verified: real S3 behaviour (no AWS account yet), and replication to `ap-east-1`. Tested against an in-memory adapter that has no local path.
 - Still to design: the audit-checkpoint bucket with Object Lock (nothing writes checkpoints today), and the Hong Kong replication.
 - Side finding: `composer audit` reports a medium advisory in `symfony/mime` (CVE-2026-45070); a patch update is due.
+
+## Dependency patch: symfony/mime 7.4.19 to 7.4.22 (branch `dependency-patches`, 2026-11-03)
+
+- `composer audit` reported CVE-2026-45070 (medium: email header injection through unsafe parameter names in MIME headers) in `symfony/mime`. The app sends mail (notifications, document copies), so this is on a live path.
+- Fixed by a patch-level update of that one package: `composer.lock` moves only `symfony/mime`; `composer audit` is now clean. The tracked `vendor/` carries the same update (nine library files plus `installed.json` and `installed.php`), so a deploy that uses the repository's `vendor/` gets the fix too. A deploy that runs `composer install` gets it from the lock.
+- No config or data change. Nothing else was upgraded.

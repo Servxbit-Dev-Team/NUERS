@@ -298,7 +298,7 @@ After the fix, two full runs passed every check, the application logged no error
 - Cross-region replication to Hong Kong and the 15-minute object RPO: infrastructure, depends on `ap-east-1` features.
 - The renderer bundle `bootstrap/ssr/document-renderer.mjs` and the Chrome binary for PDFs must exist on every server; that is build and image work, not storage.
 - Serving through the application costs one PHP request per uncached image; Cloudflare caching in front is assumed (the cache header allows it).
-- A pre-existing advisory in `symfony/mime` (CVE-2026-45070, medium, fixed in 7.4.22) shows in `composer audit`. Unrelated to this step; worth a separate patch update.
+- A pre-existing advisory in `symfony/mime` (CVE-2026-45070) showed in `composer audit`; fixed separately on branch `dependency-patches` (7.4.19 to 7.4.22).
 
 ## 5. Background workers (and, much less urgently, Redis)
 
