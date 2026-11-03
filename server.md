@@ -342,3 +342,7 @@ Why: more than one web server cannot share one server's disk. Before this, a doc
 - Performance: the 165 raw checks now use the cached lookup, so they no longer cost a catalogue query on every request (about 1.5 ms each on MySQL; some controllers had 11 to 22 per request).
 - Action for the launch checklist: run `php artisan schema:drift` against a staging copy of the live database before go-live, and apply any pending migrations there first. Only after live reports no drift should the checks themselves be removed.
 - Decision needed once live is known: `transaction_receipt_items` (delete the two guards if the live table does not exist; adopt it with a migration if it does).
+
+### Constraint recorded (2026-11-03): no access to the live site
+
+The project owner is not permitted to touch the live site or its database, so the live-schema check in step 8b cannot be run by them. It must be done by whoever administers the live host (a read-only check), or against a database export that person supplies. Until then nothing is known about the live schema: the migrations from this work are unapplied there, `transaction_receipt_items` is unresolved, and the schema checks in the code stay in place. The same applies to the other live-host items (remove `nuers-db-check.php`, rotate DB credentials, confirm `QUEUE_CONNECTION` and session settings): each needs the host owner.
