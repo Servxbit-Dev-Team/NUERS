@@ -2,15 +2,15 @@
 
 namespace App\Services;
 
+use App\Support\SchemaMap;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 /** All production acceptance readers share the same fail-closed evidence predicate. */
 class SubmissionEvidence
 {
     public function verified(string $transmission): bool
     {
-        if (! config('bir_compliance.transport_implemented') || ! config('bir_compliance.official_interface_verified') || ! config('bir_compliance.production_response_verification_implemented') || ! Schema::hasColumn('eis_acknowledgements', 'verified_at')) {
+        if (! config('bir_compliance.transport_implemented') || ! config('bir_compliance.official_interface_verified') || ! config('bir_compliance.production_response_verification_implemented') || ! SchemaMap::hasColumn('eis_acknowledgements', 'verified_at')) {
             return false;
         }
         $t = DB::table('eis_transmissions')->where('id', $transmission)->where('environment', 'production')->whereIn('status', ['accepted', 'acknowledged', 'success'])->first();

@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
+use App\Support\SchemaMap;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 /** One authentication and ownership boundary for all human API consumers. */
 class ApiAccess
@@ -16,7 +16,7 @@ class ApiAccess
         if (! $token || strlen($token) > 256) {
             return null;
         }
-        if (Schema::hasColumn('users', 'api_token_hash')) {
+        if (SchemaMap::hasColumn('users', 'api_token_hash')) {
             $user = User::where('api_token_hash', hash('sha256', $token))->first();
             if (! $user || ! $user->api_expires_at || now()->gte($user->api_expires_at)) {
                 return null;
@@ -83,7 +83,7 @@ class ApiAccess
 
     public function revocation(): array
     {
-        return ['api_token' => null] + (Schema::hasColumn('users', 'api_token_hash') ? ['api_token_hash' => null, 'api_expires_at' => null, 'api_mfa_verified_at' => null] : []);
+        return ['api_token' => null] + (SchemaMap::hasColumn('users', 'api_token_hash') ? ['api_token_hash' => null, 'api_expires_at' => null, 'api_mfa_verified_at' => null] : []);
     }
 
     public function taxpayerTin(object $user): ?string
@@ -93,7 +93,7 @@ class ApiAccess
         if (! $account?->tin) {
             return null;
         }
-        if (Schema::hasTable('taxpayer_identity_reviews')) {
+        if (SchemaMap::hasTable('taxpayer_identity_reviews')) {
             $claim = DB::table('taxpayer_identity_reviews')->where('user_id', (string) $user->id)->where('tin', preg_replace('/\D/', '', $account->tin))->where('status', 'approved')->whereNotNull('reviewed_by')->whereNotNull('reviewed_at')->first();
 
             return $claim ? $account->tin : null;

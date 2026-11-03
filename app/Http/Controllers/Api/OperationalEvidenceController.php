@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\SchemaMap;
 use App\Http\Controllers\Controller;
 use App\Services\ApiAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class OperationalEvidenceController extends Controller
 {
@@ -29,16 +29,16 @@ class OperationalEvidenceController extends Controller
             ['name' => 'BIR transport', 'state' => 'blocked', 'detail' => 'Official interface, authentic-response verifier and taxpayer authorization are required. No live connectivity claim.'],
             ['name' => 'HA, backup restore and DDoS protection', 'state' => 'not_verified', 'detail' => 'Requires provider configuration, restore evidence and authorized drills. Local source code cannot verify edge mitigation or failover.'],
         ];
-        $counts = fn ($table) => Schema::hasTable($table) ? DB::table($table)->count() : null;
+        $counts = fn ($table) => SchemaMap::hasTable($table) ? DB::table($table)->count() : null;
 
         return response()->json(['observed_at' => now()->toIso8601String(), 'checks' => $checks,
-            'outbox' => Schema::hasTable('eis_document_outbox') ? DB::table('eis_document_outbox')->select('status')->selectRaw('COUNT(*) as total')->groupBy('status')->get() : [],
-            'delivery' => Schema::hasTable('eis_delivery_jobs') ? DB::table('eis_delivery_jobs')->select('state')->selectRaw('COUNT(*) as total')->groupBy('state')->get() : [],
-            'pending_document_reviews' => Schema::hasTable('document_review_requests') ? DB::table('document_review_requests')->where('status', 'pending')->count() : 0,
+            'outbox' => SchemaMap::hasTable('eis_document_outbox') ? DB::table('eis_document_outbox')->select('status')->selectRaw('COUNT(*) as total')->groupBy('status')->get() : [],
+            'delivery' => SchemaMap::hasTable('eis_delivery_jobs') ? DB::table('eis_delivery_jobs')->select('state')->selectRaw('COUNT(*) as total')->groupBy('state')->get() : [],
+            'pending_document_reviews' => SchemaMap::hasTable('document_review_requests') ? DB::table('document_review_requests')->where('status', 'pending')->count() : 0,
             'legal_holds' => $counts('document_legal_holds'), 'queue_jobs' => $counts('jobs'), 'failed_jobs' => $counts('failed_jobs'),
-            'notifications' => Schema::hasTable('operational_notifications') ? DB::table('operational_notifications')->whereNull('acknowledged_at')->orderByDesc('created_at')->limit(50)->get() : [],
-            'review_requests' => Schema::hasTable('document_review_requests') ? DB::table('document_review_requests')->where('status', 'pending')->orderBy('created_at')->limit(50)->get() : [],
-            'identity_claims' => Schema::hasTable('taxpayer_identity_reviews') ? DB::table('taxpayer_identity_reviews')->where('status', 'pending')->orderBy('created_at')->limit(50)->get(['id', 'user_id', 'tin', 'evidence_reference', 'created_at']) : [],
+            'notifications' => SchemaMap::hasTable('operational_notifications') ? DB::table('operational_notifications')->whereNull('acknowledged_at')->orderByDesc('created_at')->limit(50)->get() : [],
+            'review_requests' => SchemaMap::hasTable('document_review_requests') ? DB::table('document_review_requests')->where('status', 'pending')->orderBy('created_at')->limit(50)->get() : [],
+            'identity_claims' => SchemaMap::hasTable('taxpayer_identity_reviews') ? DB::table('taxpayer_identity_reviews')->where('status', 'pending')->orderBy('created_at')->limit(50)->get(['id', 'user_id', 'tin', 'evidence_reference', 'created_at']) : [],
             'external_dependencies' => ['Authorized BIR API package and sandbox access', 'Real PTI/PTT, COR/branch and authorized document-series evidence', 'Independent security assessment and retest', 'Production WAF/origin/network configuration', 'Approved capacity, restore and failover tests'],
         ])->header('Cache-Control', 'private, no-store');
     }

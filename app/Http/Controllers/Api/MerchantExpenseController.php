@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\SchemaMap;
 use App\Http\Controllers\Controller;
 use App\Services\ApiAccess;
 use App\Services\BirCompliance;
@@ -11,14 +12,13 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class MerchantExpenseController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        abort_unless(Schema::hasTable('merchant_expenses'), 500, 'merchant_expenses table is not migrated.');
+        abort_unless(SchemaMap::hasTable('merchant_expenses'), 500, 'merchant_expenses table is not migrated.');
 
         $merchant = $this->resolveMerchant($request);
         // Reads never import or mutate financial records.
@@ -321,7 +321,7 @@ class MerchantExpenseController extends Controller
     {
         $normalizedTin = $this->normalizeTin($tin);
 
-        if ($normalizedTin === '' || ! Schema::hasTable('merchants')) {
+        if ($normalizedTin === '' || ! SchemaMap::hasTable('merchants')) {
             return null;
         }
 

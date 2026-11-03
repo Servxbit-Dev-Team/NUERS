@@ -334,3 +334,11 @@ Why: more than one web server cannot share one server's disk. Before this, a doc
 - `composer audit` reported CVE-2026-45070 (medium: email header injection through unsafe parameter names in MIME headers) in `symfony/mime`. The app sends mail (notifications, document copies), so this is on a live path.
 - Fixed by a patch-level update of that one package: `composer.lock` moves only `symfony/mime`; `composer audit` is now clean. The tracked `vendor/` carries the same update (nine library files plus `installed.json` and `installed.php`), so a deploy that uses the repository's `vendor/` gets the fix too. A deploy that runs `composer install` gets it from the lock.
 - No config or data change. Nothing else was upgraded.
+
+## Step 8b: schema drift (branch `schema-drift`, 2026-11-03)
+
+- The code has 183 "does this table or column exist?" checks. Measured against a database built from all 74 migrations, 165 of 166 fixed-name checks are satisfied; one (`transaction_receipt_items`) refers to a table no migration creates.
+- New read-only command `php artisan schema:drift` (safe on a live database or a copy): pending migrations, migrations recorded without a file, checks whose target is missing, and tables no migration creates. Exit 1 means drift.
+- Performance: the 165 raw checks now use the cached lookup, so they no longer cost a catalogue query on every request (about 1.5 ms each on MySQL; some controllers had 11 to 22 per request).
+- Action for the launch checklist: run `php artisan schema:drift` against a staging copy of the live database before go-live, and apply any pending migrations there first. Only after live reports no drift should the checks themselves be removed.
+- Decision needed once live is known: `transaction_receipt_items` (delete the two guards if the live table does not exist; adopt it with a migration if it does).

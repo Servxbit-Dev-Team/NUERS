@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Support\SchemaMap;
 use App\Http\Controllers\Controller;
 use App\Models\Profile;
 use App\Models\User;
@@ -12,7 +13,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\InvalidStateException;
@@ -66,7 +66,7 @@ class GoogleAuthController extends Controller
             return $this->loginRedirect('google_error', 'unverified');
         }
 
-        if (! Schema::hasColumn('users', 'google_id')) {
+        if (! SchemaMap::hasColumn('users', 'google_id')) {
             return $this->loginRedirect('google_error', 'not_configured');
         }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\SchemaMap;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Database\Query\Builder;
@@ -437,8 +438,8 @@ class DashboardController extends Controller
                     ));
                 });
 
-            if (Schema::hasColumn('merchant_transactions', 'rdo_code')) {
-                $rdoNameExpression = Schema::hasColumn('merchant_transactions', 'rdo_name')
+            if (SchemaMap::hasColumn('merchant_transactions', 'rdo_code')) {
+                $rdoNameExpression = SchemaMap::hasColumn('merchant_transactions', 'rdo_name')
                     ? "COALESCE(NULLIF(rdo_name, ''), CONCAT('RDO ', COALESCE(NULLIF(rdo_code, ''), 'Unassigned')))"
                     : "CONCAT('RDO ', COALESCE(NULLIF(rdo_code, ''), 'Unassigned'))";
 
@@ -504,10 +505,10 @@ class DashboardController extends Controller
             return [];
         }
 
-        $hasRdo = Schema::hasColumn('merchant_transactions', 'rdo_code');
-        $hasRdoName = Schema::hasColumn('merchant_transactions', 'rdo_name');
-        $hasSource = Schema::hasColumn('merchant_transactions', 'source_system');
-        $hasDocument = Schema::hasColumn('merchant_transactions', 'document_type');
+        $hasRdo = SchemaMap::hasColumn('merchant_transactions', 'rdo_code');
+        $hasRdoName = SchemaMap::hasColumn('merchant_transactions', 'rdo_name');
+        $hasSource = SchemaMap::hasColumn('merchant_transactions', 'source_system');
+        $hasDocument = SchemaMap::hasColumn('merchant_transactions', 'document_type');
 
         $select = [
             'transactions.transaction_ref',
@@ -604,7 +605,7 @@ class DashboardController extends Controller
                 'rdos.status',
             );
 
-        if ($this->tableExists('merchant_transactions') && Schema::hasColumn('merchant_transactions', 'rdo_code')) {
+        if ($this->tableExists('merchant_transactions') && SchemaMap::hasColumn('merchant_transactions', 'rdo_code')) {
             $query
                 ->leftJoin('merchant_transactions as transactions', function ($join): void {
                     $join->on('transactions.rdo_code', '=', 'rdos.rdo_code');
@@ -2088,7 +2089,7 @@ class DashboardController extends Controller
 
     private function merchantComplianceRows(): array
     {
-        $hasLogo = Schema::hasColumn('merchants', 'logo_url');
+        $hasLogo = SchemaMap::hasColumn('merchants', 'logo_url');
 
         return DB::table('merchants')
             ->orderByDesc('compliance_score')
@@ -2329,10 +2330,10 @@ class DashboardController extends Controller
             $exists = (bool) Cache::store('file')->remember(
                 "nuers.schema.table.{$table}",
                 now()->addMinutes(10),
-                fn () => Schema::hasTable($table),
+                fn () => SchemaMap::hasTable($table),
             );
         } catch (\Throwable) {
-            $exists = Schema::hasTable($table);
+            $exists = SchemaMap::hasTable($table);
         }
 
         return $this->tableExistsCache[$table] = $exists;
@@ -2390,7 +2391,7 @@ class DashboardController extends Controller
 
     private function mfaPendingLabel(string $table): string
     {
-        if (! $this->tableExists($table) || ! Schema::hasColumn($table, 'mfa_enabled')) {
+        if (! $this->tableExists($table) || ! SchemaMap::hasColumn($table, 'mfa_enabled')) {
             return 'MFA not tracked';
         }
 

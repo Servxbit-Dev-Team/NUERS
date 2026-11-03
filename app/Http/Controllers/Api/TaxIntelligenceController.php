@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\SchemaMap;
 use App\Http\Controllers\Controller;
 use App\Services\ApiAccess;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class TaxIntelligenceController extends Controller
 {
@@ -51,12 +51,12 @@ class TaxIntelligenceController extends Controller
     {
         $token = $request->bearerToken();
 
-        abort_unless($token && Schema::hasTable('users'), 401, 'Authenticated Business Account session is required.');
+        abort_unless($token && SchemaMap::hasTable('users'), 401, 'Authenticated Business Account session is required.');
 
         $user = app(ApiAccess::class)->user($request);
 
         abort_unless($user, 401, 'Authenticated Business Account session is required.');
-        abort_unless(Schema::hasTable('merchants'), 500, 'merchants table is not migrated.');
+        abort_unless(SchemaMap::hasTable('merchants'), 500, 'merchants table is not migrated.');
 
         $merchant = DB::table('merchants')
             ->where(function ($query) use ($user) {

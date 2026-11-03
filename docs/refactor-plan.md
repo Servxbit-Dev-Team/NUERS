@@ -408,7 +408,30 @@ Checked and found sound: unauthenticated access (all tables, all verbs: 401); cr
 - Longer term the plan stands: explicit endpoints for sensitive tables and retire the generic one. This step makes the generic one safe to leave in place until then.
 - Whether the live `profiles` table already contains a role value or `profiles.email` that differs from `users.email`: check the live data before assuming the two are in step.
 
-- **Schema drift**: 166 `Schema::hasTable` and `hasColumn` calls suggest environments differ. Compare the live schema with migrations, bring every environment to the same state, then remove the checks (they cost queries on hot paths).
+- **Schema drift**: see "Step 8b" below.
+### Step 8b: schema drift (branch `schema-drift`, 2026-11-03)
+
+**The question.** The code asks "does this table or column exist?" 183 times in 38 files (166 with a fixed name, 17 with a computed one). Each is a place written to survive a database that is behind the migrations. If the live database has run every migration, the checks are dead weight; if it has not, they are what keeps those pages working. Nobody could tell which from the code.
+
+**What the code says (measured, not guessed).** I built the full schema by running all 74 migrations on a clean database and checked every fixed-name guard against it:
+- 165 of 166 guards find exactly what they look for. So against a database that has run every migration, they never fire.
+- 1 guard looks for a table no migration creates: `transaction_receipt_items` (in `TenantPortability` and `LiveMonitoringController`). Nothing in the repository defines it. It can only be true on a database that has that table from an older schema or a hand import. It is the one place where "live may differ" is already visible in code.
+- 17 guards use a computed name (lists of tables looped over) and cannot be checked statically.
+- The reverse check (tables a migration does not create) finds none on a migrated database.
+
+**What I built.**
+- `php artisan schema:drift` (read-only; safe on the live database or a copy of it): lists migrations not yet run, migrations recorded as run with no file in this checkout, the schema checks whose target is missing here, and tables in the database that no migration creates. Exit code 1 if anything is found; `--json` for a machine-readable report. It uses `SchemaGuardScanner`, which reads the source for the checks.
+- `SchemaDriftTest` (5 tests) pins the finding above: a new check that refers to something no migration creates fails the test, as does a table made outside migrations.
+- All 165 raw `Schema::hasTable/hasColumn` calls in controllers, services, the User model and `routes/console.php` now go through `SchemaMap`, the cached lookup the intake path already uses (positives remembered, negatives re-checked after 60 s, flushed after migrations and in tests). Previously every one of them was a separate catalogue query on every request (about 1.5 ms each on MySQL); the dashboard, transaction and receipt controllers had 11 to 22 each. Behaviour is the same: a missing table still takes the fallback path. A test fails if a raw call is added again.
+
+**What I did not do, deliberately.** I did not delete the checks. Removing them is only safe once the live database is known to be fully migrated, and I cannot see the live database. The local workflow notes show it was behind by up to 12 migrations at one point (15 Oct 2026), so that is not a theoretical risk.
+
+**To close this out (needs access to a copy of the live database).**
+1. Take the usual backup and restore it to a staging database (or point at a read-only replica).
+2. Run `php artisan schema:drift` against it. Expect either "No drift" apart from `transaction_receipt_items`, or a list.
+3. If migrations are pending, rehearse and apply them on staging first (the migrations added by this effort, `document_number_key` and the `created_at` indexes from steps 1 and 5, will show as pending until applied).
+4. Once staging and live both report no drift, remove the checks in a follow-up change, file by file, starting with the files that have the most (`MerchantTransactionController`, `CitizenApprovalController`, `MerchantReceiptController`, `MerchantApiKeyController`, `DashboardController`). Decide what to do about `transaction_receipt_items`: if live has no such table, delete both guards; if it does, write the migration that adopts it.
+
 - **Controller logic**: 1,010 `DB::` calls in controllers against 321 in services. Move logic into services as each controller is touched for the steps above; do not do a standalone rewrite.
 
 ## 9. Launch infrastructure (after step 1)

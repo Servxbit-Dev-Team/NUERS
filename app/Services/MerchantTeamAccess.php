@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
+use App\Support\SchemaMap;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /** Human delegation is distinct from merchant ownership, API credentials and BIR authority. */
@@ -24,7 +24,7 @@ class MerchantTeamAccess
 
     public function ready(): bool
     {
-        return Schema::hasTable('merchant_team_members');
+        return SchemaMap::hasTable('merchant_team_members');
     }
 
     public function membership(string $user): ?object

@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\SchemaMap;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class MerchantTransactionController extends Controller
 {
@@ -20,7 +20,7 @@ class MerchantTransactionController extends Controller
     {
         $merchant = $this->currentMerchant($request);
 
-        abort_unless(Schema::hasTable('merchant_transactions'), 500, 'merchant_transactions table is not migrated.');
+        abort_unless(SchemaMap::hasTable('merchant_transactions'), 500, 'merchant_transactions table is not migrated.');
 
         $page = max(1, $request->integer('page', 1));
         $perPage = min(100, max(5, $request->integer('per_page', 15)));
@@ -65,12 +65,12 @@ class MerchantTransactionController extends Controller
     {
         $token = $request->bearerToken();
 
-        abort_unless($token && Schema::hasTable('users'), 401, 'Authenticated Business Account session is required.');
+        abort_unless($token && SchemaMap::hasTable('users'), 401, 'Authenticated Business Account session is required.');
 
         $user = app(\App\Services\ApiAccess::class)->user($request);
 
         abort_unless($user, 401, 'Authenticated Business Account session is required.');
-        abort_unless(Schema::hasTable('merchants'), 500, 'merchants table is not migrated.');
+        abort_unless(SchemaMap::hasTable('merchants'), 500, 'merchants table is not migrated.');
 
         $merchant = DB::table('merchants')
             ->where(function ($query) use ($user) {
@@ -98,17 +98,17 @@ class MerchantTransactionController extends Controller
             ->where(function (Builder $source) {
                 $hasApiIdentity = false;
 
-                if (Schema::hasColumn('merchant_transactions', 'source_api_key_id')) {
+                if (SchemaMap::hasColumn('merchant_transactions', 'source_api_key_id')) {
                     $source->orWhereNotNull('t.source_api_key_id');
                     $hasApiIdentity = true;
                 }
 
-                if (Schema::hasColumn('merchant_transactions', 'source_system')) {
+                if (SchemaMap::hasColumn('merchant_transactions', 'source_system')) {
                     $source->orWhereNotNull('t.source_system');
                     $hasApiIdentity = true;
                 }
 
-                if (Schema::hasTable('transaction_receipts')) {
+                if (SchemaMap::hasTable('transaction_receipts')) {
                     $source
                         ->orWhere('r.receipt_type', 'api_transaction_receipt')
                         ->orWhere('rt.receipt_type', 'api_transaction_receipt');
@@ -120,7 +120,7 @@ class MerchantTransactionController extends Controller
                 }
             });
 
-        if (Schema::hasTable('merchant_api_keys') && Schema::hasColumn('merchant_transactions', 'source_api_key_id')) {
+        if (SchemaMap::hasTable('merchant_api_keys') && SchemaMap::hasColumn('merchant_transactions', 'source_api_key_id')) {
             $query->leftJoin('merchant_api_keys as k', 't.source_api_key_id', '=', 'k.id');
         }
 
@@ -164,15 +164,15 @@ class MerchantTransactionController extends Controller
             'rdo_code',
             'rdo_name',
         ] as $column) {
-            if (Schema::hasColumn('merchant_transactions', $column)) {
+            if (SchemaMap::hasColumn('merchant_transactions', $column)) {
                 $columns[] = "t.{$column}";
             }
         }
 
-        $hasTransactionDocument = Schema::hasColumn('merchant_transactions', 'document_type');
-        $hasReceiptDocument = Schema::hasColumn('transaction_receipts', 'document_type');
-        $hasTransactionTemplate = Schema::hasColumn('merchant_transactions', 'bir_template_code');
-        $hasReceiptTemplate = Schema::hasColumn('transaction_receipts', 'bir_template_code');
+        $hasTransactionDocument = SchemaMap::hasColumn('merchant_transactions', 'document_type');
+        $hasReceiptDocument = SchemaMap::hasColumn('transaction_receipts', 'document_type');
+        $hasTransactionTemplate = SchemaMap::hasColumn('merchant_transactions', 'bir_template_code');
+        $hasReceiptTemplate = SchemaMap::hasColumn('transaction_receipts', 'bir_template_code');
 
         if ($hasTransactionDocument && $hasReceiptDocument) {
             $columns[] = DB::raw("COALESCE(NULLIF(r.document_type, ''), NULLIF(rt.document_type, ''), NULLIF(t.document_type, '')) as resolved_document_type");
@@ -194,10 +194,10 @@ class MerchantTransactionController extends Controller
             $columns[] = DB::raw("NULL as resolved_bir_template_code");
         }
 
-        if (Schema::hasColumn('transaction_receipts', 'rdo_code')) {
+        if (SchemaMap::hasColumn('transaction_receipts', 'rdo_code')) {
             $columns[] = DB::raw("COALESCE(NULLIF(t.rdo_code, ''), NULLIF(r.rdo_code, ''), NULLIF(rt.rdo_code, '')) as resolved_rdo_code");
             $columns[] = DB::raw("COALESCE(NULLIF(t.rdo_name, ''), NULLIF(r.rdo_name, ''), NULLIF(rt.rdo_name, '')) as resolved_rdo_name");
-        } elseif (Schema::hasColumn('merchant_transactions', 'rdo_code')) {
+        } elseif (SchemaMap::hasColumn('merchant_transactions', 'rdo_code')) {
             $columns[] = DB::raw("NULLIF(t.rdo_code, '') as resolved_rdo_code");
             $columns[] = DB::raw("NULLIF(t.rdo_name, '') as resolved_rdo_name");
         } else {
@@ -205,7 +205,7 @@ class MerchantTransactionController extends Controller
             $columns[] = DB::raw("NULL as resolved_rdo_name");
         }
 
-        if (Schema::hasTable('merchant_api_keys') && Schema::hasColumn('merchant_transactions', 'source_api_key_id')) {
+        if (SchemaMap::hasTable('merchant_api_keys') && SchemaMap::hasColumn('merchant_transactions', 'source_api_key_id')) {
             $columns[] = 'k.name as api_key_name';
             $columns[] = 'k.environment as api_environment';
             $columns[] = 'k.branch_name as api_branch_name';
@@ -236,11 +236,11 @@ class MerchantTransactionController extends Controller
                     ->orWhere('r.receipt_number', 'like', $like)
                     ->orWhere('rt.receipt_number', 'like', $like);
 
-                if (Schema::hasColumn('merchant_transactions', 'source_system')) {
+                if (SchemaMap::hasColumn('merchant_transactions', 'source_system')) {
                     $inner->orWhere('t.source_system', 'like', $like);
                 }
 
-                if (Schema::hasColumn('merchant_transactions', 'rdo_code')) {
+                if (SchemaMap::hasColumn('merchant_transactions', 'rdo_code')) {
                     $inner
                         ->orWhere('t.rdo_code', 'like', $like)
                         ->orWhere('t.rdo_name', 'like', $like);
@@ -261,7 +261,7 @@ class MerchantTransactionController extends Controller
         }
 
         if ($branch !== '' && $branch !== 'all') {
-            $branchExpression = Schema::hasTable('merchant_api_keys') && Schema::hasColumn('merchant_transactions', 'source_api_key_id')
+            $branchExpression = SchemaMap::hasTable('merchant_api_keys') && SchemaMap::hasColumn('merchant_transactions', 'source_api_key_id')
                 ? 'LOWER(COALESCE(k.branch_name, t.branch, "main office"))'
                 : 'LOWER(COALESCE(t.branch, "main office"))';
 
@@ -278,7 +278,7 @@ class MerchantTransactionController extends Controller
     private function applyChannelFilter(Builder $query, string $channel): void
     {
         $channel = strtolower($channel);
-        $hasSourceSystem = Schema::hasColumn('merchant_transactions', 'source_system');
+        $hasSourceSystem = SchemaMap::hasColumn('merchant_transactions', 'source_system');
 
         $query->where(function (Builder $inner) use ($channel, $hasSourceSystem) {
             $channelExpressions = ['LOWER(COALESCE(t.channel, ""))'];

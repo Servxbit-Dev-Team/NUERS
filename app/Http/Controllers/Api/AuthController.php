@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\SchemaMap;
 use App\Http\Controllers\Controller;
 use App\Models\Profile;
 use App\Models\User;
@@ -12,7 +13,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
@@ -76,7 +76,7 @@ class AuthController extends Controller
         $user = $this->userFromRequest($request);
         if ($user) {
             $updates = ['api_token' => null];
-            if (Schema::hasColumn('users', 'api_token_hash')) {
+            if (SchemaMap::hasColumn('users', 'api_token_hash')) {
                 $updates += ['api_token_hash' => null, 'api_expires_at' => null, 'api_mfa_verified_at' => null];
             }
             User::whereKey($user->id)->update($updates);

@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schedule;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 Artisan::command('inspire', function () {
@@ -95,8 +94,8 @@ Artisan::command('security:deployment-check', function () {
         'privileged_mfa' => config('security.enforce_privileged_mfa') === true,
         'checkpoint_key' => strlen((string) config('security.audit_checkpoint_key')) >= 32,
         'reviewed_release' => strlen((string) config('security.release_evidence_reference')) >= 10,
-        'session_schema' => Schema::hasColumn('users', 'api_token_hash'),
-        'durable_ingestion_schema' => Schema::hasTable('integration_inbox'),
+        'session_schema' => \App\Support\SchemaMap::hasColumn('users', 'api_token_hash'),
+        'durable_ingestion_schema' => \App\Support\SchemaMap::hasTable('integration_inbox'),
     ];
     foreach ($checks as $name => $passed) {
         $this->line(($passed ? 'PASS ' : 'BLOCK ').$name);
@@ -170,8 +169,8 @@ Schedule::command('notifications:reconcile')->hourly()->withoutOverlapping();
 
 // Unclaimed registration documents expire; claimed account evidence is retained.
 Artisan::command('registration:prune-staged-documents', function () {
-    if (!Schema::hasTable('merchant_verification_documents')) return;
-    if (Schema::hasTable('verification_upload_sessions')) {
+    if (!\App\Support\SchemaMap::hasTable('merchant_verification_documents')) return;
+    if (\App\Support\SchemaMap::hasTable('verification_upload_sessions')) {
         foreach (DB::table('verification_upload_sessions')->where('expires_at', '<', now())->limit(500)->get() as $upload) {
             DB::transaction(function () use ($upload) {
                 $current = DB::table('verification_upload_sessions')->where('id', $upload->id)->where('expires_at', '<', now())->lockForUpdate()->first();
@@ -200,7 +199,7 @@ Schedule::command('merchant-webhooks:work --limit=100 --max-seconds=45')->everyM
 
 // Erase expired unused authenticator setup secrets; active devices stay intact.
 Artisan::command('security:prune-mfa-setups', function () {
-    if (!Schema::hasTable('account_mfa_devices')) return;
+    if (!\App\Support\SchemaMap::hasTable('account_mfa_devices')) return;
     $count = DB::table('account_mfa_devices')->where('state', 'pending')->where('expires_at', '<=', now())
         ->update(['state'=>'expired', 'encrypted_secret'=>null, 'setup_binding'=>null, 'updated_at'=>now()]);
     $this->info("Expired {$count} unused authenticator setups.");

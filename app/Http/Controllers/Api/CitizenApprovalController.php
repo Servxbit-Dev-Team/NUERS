@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\SchemaMap;
 use App\Http\Controllers\Controller;
 use App\Services\ApiAccess;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -18,7 +18,7 @@ class CitizenApprovalController extends Controller
     public function index(Request $request): JsonResponse
     {
         $this->authorizeReviewer($request);
-        abort_unless(Schema::hasTable('client_accounts'), 500, 'client_accounts table is not migrated.');
+        abort_unless(SchemaMap::hasTable('client_accounts'), 500, 'client_accounts table is not migrated.');
 
         $status = strtolower((string) $request->query('status', 'all'));
         $search = trim((string) $request->query('search', ''));
@@ -66,7 +66,7 @@ class CitizenApprovalController extends Controller
     public function update(Request $request, string $id): JsonResponse
     {
         $this->authorizeReviewer($request);
-        abort_unless(Schema::hasTable('client_accounts'), 500, 'client_accounts table is not migrated.');
+        abort_unless(SchemaMap::hasTable('client_accounts'), 500, 'client_accounts table is not migrated.');
 
         $validated = $request->validate([
             'status' => ['required', Rule::in(['active', 'pending', 'under_review', 'rejected'])],
@@ -74,7 +74,7 @@ class CitizenApprovalController extends Controller
 
         if ($validated['status'] === 'active') {
             $subject = str_starts_with($id, 'profile:') ? (string) Str::after($id, 'profile:') : (string) DB::table('client_accounts')->where('id', $id)->value('user_id');
-            $review = Schema::hasTable('taxpayer_identity_reviews') ? DB::table('taxpayer_identity_reviews')->where('user_id', $subject)->where('status', 'approved')->whereNotNull('reviewed_at')->first() : null;
+            $review = SchemaMap::hasTable('taxpayer_identity_reviews') ? DB::table('taxpayer_identity_reviews')->where('user_id', $subject)->where('status', 'approved')->whereNotNull('reviewed_at')->first() : null;
             abort_unless($review, 409, 'Verify identity and taxpayer evidence through an independent identity review before activation.');
             DB::table('client_accounts')->where('user_id', $subject)->update(['tin' => $review->tin]);
         }
@@ -93,7 +93,7 @@ class CitizenApprovalController extends Controller
             'updated_at' => now(),
         ]);
 
-        if ($validated['status'] === 'active' && $account->user_id && Schema::hasTable('profiles')) {
+        if ($validated['status'] === 'active' && $account->user_id && SchemaMap::hasTable('profiles')) {
             DB::table('profiles')->where('id', $account->user_id)->update([
                 'role' => 'client',
                 'updated_at' => now(),
@@ -122,7 +122,7 @@ class CitizenApprovalController extends Controller
         $user = app(ApiAccess::class)->user($request);
         abort_unless($user, 401, 'Authenticated reviewer session is required.');
 
-        $role = Schema::hasTable('profiles')
+        $role = SchemaMap::hasTable('profiles')
             ? DB::table('profiles')->where('id', $user->id)->value('role')
             : null;
 
@@ -157,9 +157,9 @@ class CitizenApprovalController extends Controller
             'client_accounts.wallet_balance',
             'client_accounts.created_at',
             'client_accounts.updated_at',
-            Schema::hasColumn('client_accounts', 'tin') ? DB::raw('COALESCE(client_accounts.tin,profiles.tin) as tin') : DB::raw('NULL as tin'),
-            Schema::hasColumn('profiles', 'tin_bound_at') ? 'profiles.tin_bound_at' : DB::raw('NULL as tin_bound_at'),
-            Schema::hasColumn('profiles', 'profile_photo_url') ? 'profiles.profile_photo_url' : DB::raw('NULL as profile_photo_url'),
+            SchemaMap::hasColumn('client_accounts', 'tin') ? DB::raw('COALESCE(client_accounts.tin,profiles.tin) as tin') : DB::raw('NULL as tin'),
+            SchemaMap::hasColumn('profiles', 'tin_bound_at') ? 'profiles.tin_bound_at' : DB::raw('NULL as tin_bound_at'),
+            SchemaMap::hasColumn('profiles', 'profile_photo_url') ? 'profiles.profile_photo_url' : DB::raw('NULL as profile_photo_url'),
         ];
     }
 
@@ -190,7 +190,7 @@ class CitizenApprovalController extends Controller
             return collect();
         }
 
-        if (! Schema::hasTable('profiles')) {
+        if (! SchemaMap::hasTable('profiles')) {
             return collect();
         }
 
@@ -204,12 +204,12 @@ class CitizenApprovalController extends Controller
                     ->where('profiles.full_name', 'like', $like)
                     ->orWhere('profiles.email', 'like', $like);
 
-                if (Schema::hasTable('users')) {
+                if (SchemaMap::hasTable('users')) {
                     $nested->orWhere('users.email', 'like', $like)
                         ->orWhere('users.name', 'like', $like);
                 }
 
-                if (Schema::hasColumn('profiles', 'tin')) {
+                if (SchemaMap::hasColumn('profiles', 'tin')) {
                     $nested->orWhere('profiles.tin', 'like', $like);
                 }
             });
@@ -225,10 +225,10 @@ class CitizenApprovalController extends Controller
 
     private function createAccountFromProfile(int $profileId, string $status, ?string $verifiedTin = null): array
     {
-        abort_unless(Schema::hasTable('profiles'), 500, 'profiles table is not migrated.');
+        abort_unless(SchemaMap::hasTable('profiles'), 500, 'profiles table is not migrated.');
 
         $profile = DB::table('profiles')
-            ->when(Schema::hasTable('users'), fn ($query) => $query->leftJoin('users', 'users.id', '=', 'profiles.id'))
+            ->when(SchemaMap::hasTable('users'), fn ($query) => $query->leftJoin('users', 'users.id', '=', 'profiles.id'))
             ->select($this->profileCandidateSelectColumns())
             ->where('profiles.id', $profileId)
             ->first();
@@ -290,7 +290,7 @@ class CitizenApprovalController extends Controller
     private function baseProfileCandidateQuery()
     {
         return DB::table('profiles')
-            ->when(Schema::hasTable('users'), fn ($query) => $query->leftJoin('users', 'users.id', '=', 'profiles.id'))
+            ->when(SchemaMap::hasTable('users'), fn ($query) => $query->leftJoin('users', 'users.id', '=', 'profiles.id'))
             ->whereIn('profiles.role', self::CITIZEN_PROFILE_ROLES)
             ->whereNotExists(function ($subquery): void {
                 $subquery
@@ -303,7 +303,7 @@ class CitizenApprovalController extends Controller
 
     private function profileCandidateCount(): int
     {
-        if (! Schema::hasTable('profiles')) {
+        if (! SchemaMap::hasTable('profiles')) {
             return 0;
         }
 
@@ -319,11 +319,11 @@ class CitizenApprovalController extends Controller
             'profiles.role',
             'profiles.created_at',
             'profiles.updated_at',
-            Schema::hasTable('users') ? 'users.email as user_email' : DB::raw('NULL as user_email'),
-            Schema::hasTable('users') ? 'users.name as user_name' : DB::raw('NULL as user_name'),
-            Schema::hasColumn('profiles', 'tin') ? 'profiles.tin' : DB::raw('NULL as tin'),
-            Schema::hasColumn('profiles', 'tin_bound_at') ? 'profiles.tin_bound_at' : DB::raw('NULL as tin_bound_at'),
-            Schema::hasColumn('profiles', 'profile_photo_url') ? 'profiles.profile_photo_url' : DB::raw('NULL as profile_photo_url'),
+            SchemaMap::hasTable('users') ? 'users.email as user_email' : DB::raw('NULL as user_email'),
+            SchemaMap::hasTable('users') ? 'users.name as user_name' : DB::raw('NULL as user_name'),
+            SchemaMap::hasColumn('profiles', 'tin') ? 'profiles.tin' : DB::raw('NULL as tin'),
+            SchemaMap::hasColumn('profiles', 'tin_bound_at') ? 'profiles.tin_bound_at' : DB::raw('NULL as tin_bound_at'),
+            SchemaMap::hasColumn('profiles', 'profile_photo_url') ? 'profiles.profile_photo_url' : DB::raw('NULL as profile_photo_url'),
         ];
     }
 

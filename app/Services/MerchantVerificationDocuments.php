@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
+use App\Support\SchemaMap;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -22,7 +22,7 @@ class MerchantVerificationDocuments
 
     public function available(): bool
     {
-        return Schema::hasTable('merchant_verification_documents');
+        return SchemaMap::hasTable('merchant_verification_documents');
     }
 
     public function latest(string $merchant)
@@ -32,7 +32,7 @@ class MerchantVerificationDocuments
 
     public function required(string $merchant): bool
     {
-        return Schema::hasColumn('business_registrations', 'documents_required') && DB::table('business_registrations')->where('merchant_id', $merchant)->where('documents_required', true)->exists();
+        return SchemaMap::hasColumn('business_registrations', 'documents_required') && DB::table('business_registrations')->where('merchant_id', $merchant)->where('documents_required', true)->exists();
     }
 
     public function present(string $merchant): array

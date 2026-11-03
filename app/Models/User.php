@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Support\SchemaMap;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -14,7 +15,7 @@ class User extends Authenticatable
 
     public function setApiTokenAttribute(?string $value): void
     {
-        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'api_token_hash')) {
+        if (SchemaMap::hasColumn('users', 'api_token_hash')) {
             $this->issuedAccessToken = $value;
             $this->attributes['api_token'] = null;
             $this->attributes['api_token_hash'] = $value ? hash('sha256', $value) : null;

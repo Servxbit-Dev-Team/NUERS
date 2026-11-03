@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\SchemaMap;
 use App\Http\Controllers\Controller;
 use App\Services\ApiAccess;
 use App\Services\BirCompliance;
@@ -15,7 +16,6 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -56,7 +56,7 @@ class BusinessInvoiceController extends Controller
     {
         $merchant = $this->currentMerchant($request);
 
-        abort_unless(Schema::hasTable('business_invoices'), 500, 'business_invoices table is not migrated.');
+        abort_unless(SchemaMap::hasTable('business_invoices'), 500, 'business_invoices table is not migrated.');
 
         $query = DB::table('business_invoices')
             ->where('merchant_id', $merchant->id);
@@ -111,7 +111,7 @@ class BusinessInvoiceController extends Controller
     {
         $merchant = $this->currentMerchant($request);
 
-        abort_unless(Schema::hasTable('business_invoices'), 500, 'business_invoices table is not migrated.');
+        abort_unless(SchemaMap::hasTable('business_invoices'), 500, 'business_invoices table is not migrated.');
 
         $record = DB::table('business_invoices')
             ->where('merchant_id', $merchant->id)
@@ -136,7 +136,7 @@ class BusinessInvoiceController extends Controller
     {
         $merchant = $this->currentMerchant($request);
 
-        abort_unless(Schema::hasTable('business_invoices'), 500, 'business_invoices table is not migrated.');
+        abort_unless(SchemaMap::hasTable('business_invoices'), 500, 'business_invoices table is not migrated.');
 
         $validated = $request->validate([
             'invoice_number' => ['required', 'string', 'max:80'],
@@ -294,11 +294,11 @@ class BusinessInvoiceController extends Controller
                 'updated_at' => $now,
             ];
 
-            if (Schema::hasColumn('business_invoices', 'bir_template_code')) {
+            if (SchemaMap::hasColumn('business_invoices', 'bir_template_code')) {
                 $invoiceRow['bir_template_code'] = $templateCode;
             }
 
-            if (Schema::hasColumn('business_invoices', 'seller_branch_code')) {
+            if (SchemaMap::hasColumn('business_invoices', 'seller_branch_code')) {
                 $invoiceRow['seller_branch_code'] = $status === 'draft' ? null : app(BirCompliance::class)->integration((string) $merchant->id, null, 'production')?->branch_code;
                 $invoiceRow['seller_rdo_code'] = $merchant->rdo_code ?? null;
             }
@@ -333,7 +333,7 @@ class BusinessInvoiceController extends Controller
                 ]);
             }
 
-            if ($status !== 'draft' && Schema::hasTable('eis_document_outbox')) {
+            if ($status !== 'draft' && SchemaMap::hasTable('eis_document_outbox')) {
                 app(EisDocumentReadiness::class)->prepare('invoice', $invoiceId);
             }
             $validated['document_type'] = $documentType;
@@ -540,7 +540,7 @@ class BusinessInvoiceController extends Controller
 
     private function mirrorBuyerExpense(object $seller, string $invoiceId, array $validated, array $totals, Carbon $now): void
     {
-        if (! Schema::hasTable('merchant_expenses')) {
+        if (! SchemaMap::hasTable('merchant_expenses')) {
             return;
         }
 

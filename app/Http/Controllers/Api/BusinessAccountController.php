@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\SchemaMap;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class BusinessAccountController extends Controller
@@ -228,7 +228,7 @@ class BusinessAccountController extends Controller
 
     private function profileAuditEvents(object $merchant): array
     {
-        if (! Schema::hasTable('audit_events')) {
+        if (! SchemaMap::hasTable('audit_events')) {
             return [];
         }
 
@@ -277,7 +277,7 @@ class BusinessAccountController extends Controller
 
     private function audit(string $eventType, string $merchantId, object $user, Request $request, array $metadata): void
     {
-        if (! Schema::hasTable('audit_events')) {
+        if (! SchemaMap::hasTable('audit_events')) {
             return;
         }
 

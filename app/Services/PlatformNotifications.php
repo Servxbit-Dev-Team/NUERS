@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
+use App\Support\SchemaMap;
 use App\Models\User;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /** Transactional encrypted outbox. Network delivery is performed only by the worker. */
@@ -13,7 +13,7 @@ class PlatformNotifications
 {
     public function ready(): bool
     {
-        return Schema::hasTable('notification_outbox');
+        return SchemaMap::hasTable('notification_outbox');
     }
 
     public function failedSignIn(User $user): void

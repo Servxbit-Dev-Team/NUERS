@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\SchemaMap;
 use App\Http\Controllers\Controller;
 use App\Services\BirCompliance;
 use Carbon\CarbonImmutable;
@@ -9,7 +10,6 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class LiveMonitoringController extends Controller
 {
@@ -131,10 +131,10 @@ class LiveMonitoringController extends Controller
     private function activities(): array
     {
         $items = collect();
-        if (Schema::hasTable('eis_audit_events')) {
+        if (SchemaMap::hasTable('eis_audit_events')) {
             $items = DB::table('eis_audit_events')->orderByDesc('id')->limit(6)->get()->map(fn ($r) => ['id' => 'audit-'.$r->id, 'title' => str_replace(['eis.', '.'], ['', ' '], $r->event), 'detail' => $r->subject_id, 'at' => CarbonImmutable::parse($r->occurred_at, 'UTC')->toIso8601String(), 'kind' => str_contains($r->event, 'certification') ? 'test' : 'info']);
         }
-        if (Schema::hasTable('eis_operational_incidents')) {
+        if (SchemaMap::hasTable('eis_operational_incidents')) {
             foreach (DB::table('eis_operational_incidents')->orderByDesc('detected_at')->limit(6)->get() as $r) {
                 $due = $this->date($r->detected_at)->addHours(24);
                 $items->push(['id' => $r->id, 'title' => $r->title, 'detail' => $r->reported_at ? 'Incident report recorded' : ($r->severity === 'critical' ? 'Report due '.$due->format('M j, H:i').' PHT' : 'Incident review pending'), 'at' => $this->date($r->detected_at)->toIso8601String(), 'kind' => $r->severity === 'critical' ? 'danger' : 'warning']);
@@ -194,7 +194,7 @@ class LiveMonitoringController extends Controller
                 }
                 foreach (['acknowledgements' => 'eis_acknowledgements', 'retry_records' => 'eis_retry_queue', 'api_requests' => 'eis_api_request_logs', 'audit_events' => 'eis_audit_events', 'legacy_audit_events' => 'audit_events', 'source_transactions' => 'merchant_transactions', 'receipts' => 'transaction_receipts', 'receipt_items' => 'transaction_receipt_items', 'business_invoices' => 'business_invoices', 'business_invoice_items' => 'business_invoice_items', 'incidents' => 'eis_operational_incidents'] as $key => $table) {
                     fwrite($handle, '],'.json_encode($key).':['); $comma = '';
-                    if (! Schema::hasTable($table)) continue;
+                    if (! SchemaMap::hasTable($table)) continue;
                     foreach (DB::table($table)->orderBy('id')->cursor() as $row) { fwrite($handle, $comma.json_encode($row, JSON_THROW_ON_ERROR)); $comma = ','; }
                 }
                 fwrite($handle, ']}');

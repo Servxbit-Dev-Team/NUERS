@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\SchemaMap;
 use App\Http\Controllers\Controller;
 use App\Services\ApiAccess;
 use App\Services\SafeImage;
@@ -9,7 +10,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class ClientProfileController extends Controller
@@ -89,7 +89,7 @@ class ClientProfileController extends Controller
         $user = $this->userFromRequest($request);
 
         abort_unless($user, 401, 'Authenticated Client session is required.');
-        abort_unless(Schema::hasColumn('profiles', 'profile_photo_url'), 500, 'Citizen profile photo storage is not migrated yet.');
+        abort_unless(SchemaMap::hasColumn('profiles', 'profile_photo_url'), 500, 'Citizen profile photo storage is not migrated yet.');
 
         $request->validate([
             'avatar' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],

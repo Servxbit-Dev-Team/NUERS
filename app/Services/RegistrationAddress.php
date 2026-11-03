@@ -1,8 +1,8 @@
 <?php
 namespace App\Services;
 
+use App\Support\SchemaMap;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 class RegistrationAddress
@@ -36,7 +36,7 @@ class RegistrationAddress
         if(!$city)throw ValidationException::withMessages(['city_code'=>'Select a valid city or municipality.']);
         $barangay=$barangayCode?($this->geo['barangays'][$barangayCode]??null):null;
         if($barangayCode&&(!$barangay||$barangay['parent']!==$cityCode))throw ValidationException::withMessages(['barangay_code'=>'This barangay does not belong to the selected city.']);
-        if (Schema::hasTable('registration_rdo_mappings')) {
+        if (SchemaMap::hasTable('registration_rdo_mappings')) {
             $specific=$barangayCode?DB::table('registration_rdo_mappings')->where('scope','barangay:'.$barangayCode)->first():null;
             $managedCity=DB::table('registration_rdo_mappings')->where('scope','city:'.$cityCode)->first();
             $managed=$specific??(!isset($this->reference['barangay_rules'][$barangayCode??''])?$managedCity:null);
@@ -58,7 +58,7 @@ class RegistrationAddress
     public function merchantFormValue(object $merchant): array
     {
         $current = (json_decode($merchant->registry_details ?? '{}', true) ?: [])['address'] ?? [];
-        $saved = Schema::hasTable('business_registrations') ? DB::table('business_registrations')->where('merchant_id', $merchant->id)->orderByDesc('created_at')->value('address_details') : null;
+        $saved = SchemaMap::hasTable('business_registrations') ? DB::table('business_registrations')->where('merchant_id', $merchant->id)->orderByDesc('created_at')->value('address_details') : null;
         foreach ([$current, json_decode($saved ?? '{}', true) ?: []] as $candidate) {
             if (!$candidate) continue;
             $parts = [$candidate['street_address'] ?? '', $candidate['barangay']['name'] ?? '', $candidate['city']['name'] ?? ''];

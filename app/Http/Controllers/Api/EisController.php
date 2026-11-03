@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\SchemaMap;
 use App\Http\Controllers\Controller;
 use App\Services\BirCompliance;
 use Carbon\CarbonImmutable;
@@ -11,7 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -665,7 +665,7 @@ class EisController extends Controller
             ?? $payload['merchant_tin']
             ?? null;
 
-        if (! $sellerTin || ! Schema::hasTable('merchants')) {
+        if (! $sellerTin || ! SchemaMap::hasTable('merchants')) {
             return null;
         }
 
@@ -740,7 +740,7 @@ class EisController extends Controller
 
     private function count(string $table, array $where = []): int
     {
-        if (! Schema::hasTable($table)) {
+        if (! SchemaMap::hasTable($table)) {
             return 0;
         }
 
@@ -767,7 +767,7 @@ class EisController extends Controller
 
     private function logApiRequest(?string $integrationId, ?string $transmissionId, Request $request, int $statusCode, ?string $errorCode, ?string $message, int $requestSize): void
     {
-        if (! Schema::hasTable('eis_api_request_logs')) {
+        if (! SchemaMap::hasTable('eis_api_request_logs')) {
             return;
         }
 
@@ -794,7 +794,7 @@ class EisController extends Controller
     {
         $actor = $request->bearerToken() ? app(\App\Services\ApiAccess::class)->user($request)?->id : null;
         app(BirCompliance::class)->audit($eventType, $auditableId, (string) ($actor ?? 'system'), $metadata);
-        if (! Schema::hasTable('audit_events')) {
+        if (! SchemaMap::hasTable('audit_events')) {
             return;
         }
 

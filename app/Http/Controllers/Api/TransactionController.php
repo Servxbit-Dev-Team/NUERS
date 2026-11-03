@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\SchemaMap;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class TransactionController extends Controller
 {
@@ -20,7 +20,7 @@ class TransactionController extends Controller
     {
         ini_set('serialize_precision', '-1');
 
-        if (! Schema::hasTable('merchant_transactions')) {
+        if (! SchemaMap::hasTable('merchant_transactions')) {
             return response()->json($this->emptyPayload($request));
         }
 
@@ -267,7 +267,7 @@ class TransactionController extends Controller
         $lastMinute = (clone $query)
             ->where('t.created_at', '>=', now()->subMinute())
             ->count();
-        $receipts = Schema::hasTable('transaction_receipts')
+        $receipts = SchemaMap::hasTable('transaction_receipts')
             ? (clone $query)->whereIn('r.status', ['issued', 'verified'])->whereNotNull('r.id')->count('r.id')
             : 0;
 
@@ -275,7 +275,7 @@ class TransactionController extends Controller
             'throughput_tps' => round($lastMinute / 60, 2),
             'latest_transactions_60s' => $lastMinute,
             'avg_latency_ms' => $this->avgLatency(),
-            'latency_source' => Schema::hasTable('system_health_checks')
+            'latency_source' => SchemaMap::hasTable('system_health_checks')
                 ? 'Average of database-backed system health latency telemetry.'
                 : 'No system health telemetry table is available.',
             'queue_depth' => $pending,
@@ -291,7 +291,7 @@ class TransactionController extends Controller
 
     private function avgLatency(): ?float
     {
-        if (! Schema::hasTable('system_health_checks')) {
+        if (! SchemaMap::hasTable('system_health_checks')) {
             return null;
         }
 
@@ -402,7 +402,7 @@ class TransactionController extends Controller
 
     private function receiptsForTransactions($transactions): array
     {
-        if (! Schema::hasTable('transaction_receipts')) {
+        if (! SchemaMap::hasTable('transaction_receipts')) {
             return [];
         }
 

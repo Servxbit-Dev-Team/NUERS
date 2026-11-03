@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\SchemaMap;
 use App\Http\Controllers\Controller;
 use App\Mail\RegistrationCodeMail;
 use App\Models\Merchant;
@@ -22,7 +23,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -62,8 +62,8 @@ class BusinessRegistrationController extends Controller
         $key = 'registration-email:'.hash('sha256', $v['email']);
         abort_if(RateLimiter::tooManyAttempts($key, 1), 429, 'Please wait one minute before requesting another code.');
         $notifications = app(PlatformNotifications::class);
-        $savedSettings = Schema::hasTable('platform_mail_settings') ? app(PlatformMail::class)->settings() : null;
-        $configured = Schema::hasTable('platform_mail_settings') && ! empty(app(PlatformMail::class)->settings()['enabled']);
+        $savedSettings = SchemaMap::hasTable('platform_mail_settings') ? app(PlatformMail::class)->settings() : null;
+        $configured = SchemaMap::hasTable('platform_mail_settings') && ! empty(app(PlatformMail::class)->settings()['enabled']);
         $development = ! $savedSettings && app()->environment('local') && config('mail.default') === 'log';
         abort_if(! $configured && ! $development && ! (app()->environment('testing') && ! $notifications->ready()), 503, 'Email verification delivery is not configured. Please contact NUERS support.');
         abort_if($configured && ! $notifications->ready(), 503, 'Email notification schema is not available. Contact NUERS support.');
@@ -151,7 +151,7 @@ class BusinessRegistrationController extends Controller
         $v['address_details'] = $address['details'];
 
         return DB::transaction(function () use ($v) {
-            if (Schema::hasTable('business_registry_lock')) {
+            if (SchemaMap::hasTable('business_registry_lock')) {
                 DB::table('business_registry_lock')->where('id', 1)->lockForUpdate()->first();
             }
             $verification = DB::table('registration_email_verifications')->where('id', $v['challenge_id'])->lockForUpdate()->first();

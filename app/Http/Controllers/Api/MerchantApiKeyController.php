@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\SchemaMap;
 use App\Http\Controllers\Controller;
 use App\Services\ApiAccess;
 use App\Services\BirCompliance;
@@ -10,7 +11,6 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -26,7 +26,7 @@ class MerchantApiKeyController extends Controller
         $merchant = $this->currentMerchant($request);
         $environment=$request->validate(['environment'=>'nullable|in:live,sandbox'])['environment']??null;
 
-        abort_unless(Schema::hasTable('merchant_api_keys'), 500, 'merchant_api_keys table is not migrated.');
+        abort_unless(SchemaMap::hasTable('merchant_api_keys'), 500, 'merchant_api_keys table is not migrated.');
 
         $keys = DB::table('merchant_api_keys')
             ->where('merchant_id', $merchant->id)
@@ -96,7 +96,7 @@ class MerchantApiKeyController extends Controller
     {
         $merchant = $this->currentMerchant($request);
 
-        abort_unless(Schema::hasTable('merchant_api_keys'), 500, 'merchant_api_keys table is not migrated.');
+        abort_unless(SchemaMap::hasTable('merchant_api_keys'), 500, 'merchant_api_keys table is not migrated.');
 
         $keys = DB::table('merchant_api_keys')
             ->where('merchant_id', $merchant->id)
@@ -148,7 +148,7 @@ class MerchantApiKeyController extends Controller
     {
         $merchant = $this->currentMerchant($request);
 
-        abort_unless(Schema::hasTable('merchant_api_keys'), 500, 'merchant_api_keys table is not migrated.');
+        abort_unless(SchemaMap::hasTable('merchant_api_keys'), 500, 'merchant_api_keys table is not migrated.');
 
         $keys = DB::table('merchant_api_keys')
             ->where('merchant_id', $merchant->id)
@@ -193,7 +193,7 @@ class MerchantApiKeyController extends Controller
         $merchant = $this->currentMerchant($request);
         $user = $this->userFromRequest($request);
 
-        abort_unless(Schema::hasTable('merchant_api_keys'), 500, 'merchant_api_keys table is not migrated.');
+        abort_unless(SchemaMap::hasTable('merchant_api_keys'), 500, 'merchant_api_keys table is not migrated.');
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -410,7 +410,7 @@ class MerchantApiKeyController extends Controller
     {
         $keys = DB::table('merchant_api_keys')->where('merchant_id', $merchantId)->when($environment,fn($q)=>$q->where('environment',$environment));
 
-        if (! Schema::hasTable('merchant_api_request_logs')) {
+        if (! SchemaMap::hasTable('merchant_api_request_logs')) {
             return [
                 'active_keys' => (clone $keys)->where('status', 'active')->where('expires_at', '>', now())->count(),
                 'total_keys' => (clone $keys)->count(),
@@ -437,13 +437,13 @@ class MerchantApiKeyController extends Controller
 
     private function activeWebhookCount(string $merchantId,?string $environment): int
     {
-        if(!Schema::hasTable('merchant_webhook_endpoints'))return 0;
+        if(!SchemaMap::hasTable('merchant_webhook_endpoints'))return 0;
         return DB::table('merchant_webhook_endpoints')->where('merchant_id',$merchantId)->when($environment,fn($q)=>$q->where('environment',$environment))->where('status','active')->whereNotNull('verified_at')->count();
     }
 
     private function webhooks(string $merchantId): array
     {
-        if (! Schema::hasTable('merchant_webhooks')) {
+        if (! SchemaMap::hasTable('merchant_webhooks')) {
             return [];
         }
 
@@ -466,7 +466,7 @@ class MerchantApiKeyController extends Controller
 
     private function hourlyRequests(string $merchantId,?string $environment=null): array
     {
-        if (! Schema::hasTable('merchant_api_request_logs')) {
+        if (! SchemaMap::hasTable('merchant_api_request_logs')) {
             return [];
         }
 
@@ -489,7 +489,7 @@ class MerchantApiKeyController extends Controller
 
     private function latencyData(string $merchantId,?string $environment=null): array
     {
-        if (! Schema::hasTable('merchant_api_request_logs')) {
+        if (! SchemaMap::hasTable('merchant_api_request_logs')) {
             return [];
         }
 
@@ -512,7 +512,7 @@ class MerchantApiKeyController extends Controller
 
     private function requestCount(string $merchantId, string $keyId, mixed $from): int
     {
-        if (! Schema::hasTable('merchant_api_request_logs')) {
+        if (! SchemaMap::hasTable('merchant_api_request_logs')) {
             return 0;
         }
 
@@ -525,7 +525,7 @@ class MerchantApiKeyController extends Controller
 
     private function avgLatency(string $merchantId): float
     {
-        if (! Schema::hasTable('merchant_api_request_logs')) {
+        if (! SchemaMap::hasTable('merchant_api_request_logs')) {
             return 0;
         }
 
@@ -539,7 +539,7 @@ class MerchantApiKeyController extends Controller
     {
         $today = now()->startOfDay();
         $month = now()->startOfMonth();
-        $logs = Schema::hasTable('merchant_api_request_logs')
+        $logs = SchemaMap::hasTable('merchant_api_request_logs')
             ? DB::table('merchant_api_request_logs')->where('merchant_id', $merchantId)->where('merchant_api_key_id', $key->id)
             : null;
         $lastLog = $logs ? (clone $logs)->orderByDesc('created_at')->first() : null;
@@ -631,7 +631,7 @@ class MerchantApiKeyController extends Controller
         $transactionQuery = $this->branchTransactionQuery($merchant->id, $branchCode, $branchName);
         $monthQuery = (clone $transactionQuery)->where('created_at', '>=', now()->startOfMonth());
         $todayQuery = (clone $transactionQuery)->where('created_at', '>=', now()->startOfDay());
-        $last30Logs = Schema::hasTable('merchant_api_request_logs')
+        $last30Logs = SchemaMap::hasTable('merchant_api_request_logs')
             ? DB::table('merchant_api_request_logs')->whereIn('merchant_api_key_id', $keyIds)->where('created_at', '>=', now()->subDays(30))
             : null;
         $last30Count = $last30Logs ? (clone $last30Logs)->count() : 0;
@@ -675,7 +675,7 @@ class MerchantApiKeyController extends Controller
         $query = DB::table('merchant_transactions')->where('merchant_id', $merchantId);
 
         return $query->where(function ($filter) use ($branchCode, $branchName) {
-            if (Schema::hasColumn('merchant_transactions', 'branch_code')) {
+            if (SchemaMap::hasColumn('merchant_transactions', 'branch_code')) {
                 $filter->where('branch_code', $branchCode);
             }
 

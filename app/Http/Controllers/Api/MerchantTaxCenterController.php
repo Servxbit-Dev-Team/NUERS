@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\SchemaMap;
 use App\Http\Controllers\Controller;
 use App\Services\ApiAccess;
 use App\Services\EisDocumentReadiness;
@@ -12,7 +13,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class MerchantTaxCenterController extends Controller
 {
@@ -86,12 +86,12 @@ class MerchantTaxCenterController extends Controller
     {
         $token = $request->bearerToken();
 
-        abort_unless($token && Schema::hasTable('users'), 401, 'Authenticated Business Account session is required.');
+        abort_unless($token && SchemaMap::hasTable('users'), 401, 'Authenticated Business Account session is required.');
 
         $user = app(ApiAccess::class)->user($request);
 
         abort_unless($user, 401, 'Authenticated Business Account session is required.');
-        abort_unless(Schema::hasTable('merchants'), 500, 'merchants table is not migrated.');
+        abort_unless(SchemaMap::hasTable('merchants'), 500, 'merchants table is not migrated.');
 
         $merchant = DB::table('merchants')
             ->where(function ($query) use ($user) {
@@ -169,7 +169,7 @@ class MerchantTaxCenterController extends Controller
 
     private function applyExpenseCredits(object $merchant, Carbon $start, Carbon $end, array &$monthly, Collection $ledger): void
     {
-        if (! Schema::hasTable('merchant_expenses')) {
+        if (! SchemaMap::hasTable('merchant_expenses')) {
             return;
         }
 
@@ -253,7 +253,7 @@ class MerchantTaxCenterController extends Controller
     {
         $years = [$selectedYear, (int) now()->year];
 
-        if (Schema::hasTable('merchant_transactions')) {
+        if (SchemaMap::hasTable('merchant_transactions')) {
             $years = array_merge($years, DB::table('merchant_transactions')
                 ->where('merchant_id', $merchant->id)
                 ->whereNotNull('created_at')
@@ -264,7 +264,7 @@ class MerchantTaxCenterController extends Controller
                 ->all());
         }
 
-        if (Schema::hasTable('business_invoices')) {
+        if (SchemaMap::hasTable('business_invoices')) {
             $years = array_merge($years, DB::table('business_invoices')
                 ->where('merchant_id', $merchant->id)
                 ->selectRaw('YEAR(COALESCE(issue_date, DATE(created_at))) as year')
@@ -274,7 +274,7 @@ class MerchantTaxCenterController extends Controller
                 ->all());
         }
 
-        if (Schema::hasTable('merchant_expenses')) {
+        if (SchemaMap::hasTable('merchant_expenses')) {
             $years = array_merge($years, DB::table('merchant_expenses')
                 ->where('merchant_id', $merchant->id)
                 ->selectRaw('YEAR(COALESCE(issued_at, created_at)) as year')
@@ -299,7 +299,7 @@ class MerchantTaxCenterController extends Controller
             ['business_invoices', 'updated_at'],
             ['merchant_expenses', 'updated_at'],
         ] as [$table, $column]) {
-            if (Schema::hasTable($table) && Schema::hasColumn($table, $column)) {
+            if (SchemaMap::hasTable($table) && SchemaMap::hasColumn($table, $column)) {
                 $value = DB::table($table)->where('merchant_id', $merchant->id)->max($column);
 
                 if ($value) {
