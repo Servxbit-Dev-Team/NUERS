@@ -16,6 +16,13 @@ return [
     'default' => env('FILESYSTEM_DISK', 'local'),
 
     /*
+    | Where uploaded files live (see App\Support\UploadDisk). The defaults are the local directories the application
+    | has always used. For several web servers set both to object-store disks, e.g. s3_private and s3_images.
+    */
+    'private_disk' => env('NUERS_PRIVATE_DISK', 'local'),
+    'image_disk' => env('NUERS_IMAGE_DISK', 'uploads_public'),
+
+    /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
@@ -45,6 +52,42 @@ return [
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
+        ],
+
+        // Merchant logos and client avatars: the same folder the web server has always served as /uploads.
+        'uploads_public' => [
+            'driver' => 'local',
+            'root' => public_path('uploads'),
+            'throw' => false,
+            'report' => false,
+        ],
+
+        // Object-store disks for a multi-server deployment (requires league/flysystem-aws-s3-v3). Buckets stay private:
+        // images are served through the application, documents are additionally encrypted by the application.
+        's3_private' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('NUERS_PRIVATE_BUCKET'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => true,
+        ],
+
+        's3_images' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('NUERS_IMAGE_BUCKET'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => true,
         ],
 
         's3' => [

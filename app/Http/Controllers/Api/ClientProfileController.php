@@ -96,12 +96,9 @@ class ClientProfileController extends Controller
         ]);
 
         $file = $request->file('avatar');
-        $directory = public_path('uploads/client-avatars');
-        File::ensureDirectoryExists($directory);
-
         $profile = DB::table('profiles')->where('id', $user->id)->first();
         $displayName = $profile?->full_name ?: $user->email ?: 'client-account';
-        $fileName = app(SafeImage::class)->store($file, $directory);
+        $fileName = app(SafeImage::class)->storeOn($file, \App\Support\UploadDisk::images(), 'client-avatars');
 
         DB::table('profiles')->where('id', $user->id)->update([
             'profile_photo_url' => '/uploads/client-avatars/'.$fileName,

@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
+use App\Support\UploadDisk;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\Storage;
 
 /** Authenticated encryption in bounded frames; legacy small documents remain readable. */
 class PrivateDocumentStream
@@ -13,13 +13,14 @@ class PrivateDocumentStream
 
     public function store(string $source, string $path): void
     {
-        $disk = Storage::disk('local');
-        $disk->makeDirectory(dirname($path));
+        $name = UploadDisk::privateName();
+        $disk = UploadDisk::private();
+        // Frame the document in a temporary stream, then hand the finished object to the disk in one write:
+        // an object store has no local path to append to, and never exposes a half-written document.
         $in = fopen($source, 'rb');
-        $out = fopen($disk->path($path), 'wb');
+        $out = tmpfile();
         try {
             if (! $in || ! $out) throw new \RuntimeException('Private storage is unavailable.');
-            chmod($disk->path($path), 0600);
             $this->write($out, self::MAGIC);
             while (! feof($in)) {
                 $block = fread($in, self::BLOCK_BYTES);
@@ -28,6 +29,9 @@ class PrivateDocumentStream
                 $encrypted = Crypt::encryptString($block);
                 $this->write($out, pack('N', strlen($encrypted)).$encrypted);
             }
+            rewind($out);
+            if ($disk->writeStream($path, $out) === false) throw new \RuntimeException('Private storage is full or unavailable.');
+            UploadDisk::restrict($name, $path);
         } catch (\Throwable $e) {
             $disk->delete($path);
             throw $e;
@@ -49,7 +53,7 @@ class PrivateDocumentStream
     /** Verify every byte before exposing a plaintext stream to a reviewer. Caller closes the temporary stream. */
     public function verified(object $row)
     {
-        $disk = Storage::disk('local');
+        $disk = UploadDisk::private();
         abort_unless($disk->exists($row->private_path), 409, 'The private document is unavailable. Upload a new copy for review.');
         $in = $disk->readStream($row->private_path);
         $out = tmpfile();
@@ -80,7 +84,10 @@ class PrivateDocumentStream
                     $put($raw);
                 }
             } else {
-                rewind($in);
+                // Object-store streams cannot be rewound: read the small legacy file again from the start.
+                fclose($in);
+                $in = $disk->readStream($row->private_path);
+                if (! $in) throw new \RuntimeException('Storage unavailable.');
                 $legacy = stream_get_contents($in, 8 * self::BLOCK_BYTES + 1);
                 if (strlen($legacy) > 8 * self::BLOCK_BYTES) throw new \RuntimeException('Invalid legacy file.');
                 $raw = base64_decode(Crypt::decryptString($legacy), true);

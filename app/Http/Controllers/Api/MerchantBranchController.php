@@ -247,7 +247,7 @@ return $q;
                 $same = DB::table('merchant_branch_documents')->where('branch_id', $id)->where('kind', $v['kind'])->where('sha256', $sha)->first();
                 if ($same) {
                     return response()->json(['id' => $same->id]);
-                }abort_unless(Storage::disk('local')->put($path, Crypt::encryptString(base64_encode($raw))), 503, 'Evidence storage is unavailable. No document was recorded.');
+                }abort_unless(\App\Support\UploadDisk::private()->put($path, Crypt::encryptString(base64_encode($raw))), 503, 'Evidence storage is unavailable. No document was recorded.');
                 DB::table('merchant_branch_documents')->insert(['id' => $docId, 'merchant_id' => $m->id, 'branch_id' => $id, 'kind' => $v['kind'], 'filename_encrypted' => Crypt::encryptString(basename($f->getClientOriginalName())), 'mime' => $f->getMimeType(), 'bytes' => strlen($raw), 'sha256' => $sha, 'private_path' => $path, 'actor_id' => (string) $r->attributes->get('api_actor')->id, 'created_at' => now()]);
                 DB::table('merchant_branches')->where('id', $id)->update(['review_status' => 'draft', 'reviewed_by' => null, 'reviewed_at' => null, 'review_reference' => null, 'requested_at' => null, 'revision' => $b->revision + 1, 'updated_at' => now()]);
                 $this->registry()->event($m->id, $id, null, 'document_uploaded', (string) $r->attributes->get('api_actor')->id, ['document_id' => $docId, 'kind' => $v['kind'], 'sha256' => $sha, 'reason' => $v['reason']]);
@@ -255,7 +255,7 @@ return $q;
                 return response()->json(['id' => $docId], 201);
             });
         } catch (\Throwable$e) {
-            Storage::disk('local')->delete($path);
+            \App\Support\UploadDisk::private()->delete($path);
             throw $e;
         }
     }
@@ -268,7 +268,7 @@ return $q;
         }$m = $admin ? null : $this->member($r);
         $d = DB::table('merchant_branch_documents')->when(! $admin, fn ($q) => $q->where('merchant_id', $m->id))->where('id', $id)->first();
         abort_unless($d, 404, 'Document not found.');
-        $raw = base64_decode(Crypt::decryptString(Storage::disk('local')->get($d->private_path)), true);
+        $raw = base64_decode(Crypt::decryptString(\App\Support\UploadDisk::private()->get($d->private_path)), true);
         abort_unless($raw !== false && hash_equals($d->sha256, hash('sha256', $raw)), 409, 'Document integrity verification failed.');
 
         return response($raw)->header('Content-Type', $d->mime)->header('Content-Disposition', 'attachment; filename="NUERS-branch-evidence-'.substr($d->id, 0, 8).($d->mime === 'application/pdf' ? '.pdf' : ($d->mime === 'image/png' ? '.png' : '.jpg')).'"')->header('Cache-Control', 'private, no-store')->header('X-Content-Type-Options', 'nosniff');

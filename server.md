@@ -316,3 +316,15 @@ Not a hosting-sizing change, but it blocks go-live: before real taxpayer data go
 - 9 new tests assert each role against each table and verb.
 - Deployment impact: no migration, no config. Behavioural change for the admin UI: bulk profile or client-account changes without a record filter are refused (the UI always filters).
 - To check on the live data before go-live: any `super_admin` or `admin` accounts that should not exist, and any `profiles.email` that differs from `users.email`.
+
+## Step 4: uploads to S3, code ready (branch `s3-uploads`, 2026-11-03)
+
+Why: more than one web server cannot share one server's disk. Before this, a document or logo uploaded through server A was missing on server B, and the chunked upload failed whenever two parts landed on different servers.
+
+- Every place the app writes uploaded files is now behind two settings, `NUERS_PRIVATE_DISK` (encrypted documents, evidence, chunks, admin avatars) and `NUERS_IMAGE_DISK` (logos, client avatars). Defaults are the old local folders, so deploying the code changes nothing until those are set.
+- AWS pieces needed at launch: two private S3 buckets in `ap-southeast-1` (Block Public Access, versioning, default encryption), an instance role limited to them, and `composer install` on deploy (the S3 driver package is now in `composer.json` but not in the tracked `vendor/`).
+- Existing files are copied with `php artisan uploads:copy private|images` (checksum-verified, never deletes the source). The runbook is in `docs/refactor-plan.md` step 4.
+- Images are served through the app with a one-year immutable cache header; put Cloudflare in front so the app is not hit for every image.
+- Not verified: real S3 behaviour (no AWS account yet), and replication to `ap-east-1`. Tested against an in-memory adapter that has no local path.
+- Still to design: the audit-checkpoint bucket with Object Lock (nothing writes checkpoints today), and the Hong Kong replication.
+- Side finding: `composer audit` reports a medium advisory in `symfony/mime` (CVE-2026-45070); a patch update is due.

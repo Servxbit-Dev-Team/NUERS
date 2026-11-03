@@ -99,7 +99,7 @@ class MerchantVerificationDocuments
         try {
             $id = DB::table('merchant_verification_documents')->insertGetId(['document_id' => $uuid, 'merchant_id' => $merchant, 'challenge_id' => $challenge, 'kind' => $kind, 'status' => 'pending', 'filename_encrypted' => Crypt::encryptString(basename($file->getClientOriginalName())), 'private_path' => $path, 'sha256' => $sha, 'bytes' => $file->getSize(), 'mime' => $file->getMimeType(), 'uploaded_by' => $actor, 'created_at' => now(), 'claimed_at' => $merchant ? now() : null]);
         } catch (\Throwable$e) {
-            Storage::disk('local')->delete($path);
+            \App\Support\UploadDisk::private()->delete($path);
             throw $e;
         }
 

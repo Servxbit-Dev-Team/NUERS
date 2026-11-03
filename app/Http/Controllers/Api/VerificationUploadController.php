@@ -69,12 +69,12 @@ class VerificationUploadController
             abort_if($index > $u->next_index, 409, 'Upload parts must arrive in order.');
             $path = 'verification-uploads/'.$u->id.'/'.$index.'.enc';
             $raw = file_get_contents($r->file('file')->getRealPath());
-            $disk = Storage::disk('local');
+            $disk = \App\Support\UploadDisk::private();
             if ($index < $u->next_index) {
                 abort_unless($disk->exists($path) && hash_equals(hash('sha256', Crypt::decryptString($disk->get($path))), hash('sha256', $raw)), 409, 'A different upload part was already received.');
             } else {
                 abort_unless($disk->put($path, Crypt::encryptString($raw)), 503, 'Private upload storage is unavailable.');
-                chmod($disk->path($path), 0600);
+                \App\Support\UploadDisk::restrict(\App\Support\UploadDisk::privateName(), $path);
                 DB::table('verification_upload_sessions')->where('id', $id)->update(['next_index' => $index + 1]);
             }
             return response()->json(['next_index' => max($u->next_index, $index + 1)])->header('Cache-Control', 'private, no-store');
@@ -95,7 +95,7 @@ class VerificationUploadController
             try {
                 $bytes = 0;
                 for ($i = 0; $i < $count; $i++) {
-                    $raw = Crypt::decryptString(Storage::disk('local')->get('verification-uploads/'.$u->id.'/'.$i.'.enc'));
+                    $raw = Crypt::decryptString(\App\Support\UploadDisk::private()->get('verification-uploads/'.$u->id.'/'.$i.'.enc'));
                     abort_unless(strlen($raw) === min(PrivateDocumentStream::BLOCK_BYTES, $u->bytes - $bytes), 409, 'Upload part integrity check failed.');
                     abort_unless(fwrite($temp, $raw) === strlen($raw), 503, 'Temporary document storage is full.');
                     $bytes += strlen($raw);
@@ -110,7 +110,7 @@ class VerificationUploadController
                 $document = $u->merchant_id ? collect($payload['items'])->firstWhere('kind', $u->kind)['id'] : $payload['id'];
                 DB::table('verification_upload_sessions')->where('id', $id)->update(['document_id' => $document]);
                 // The committed document has its own encryption. Temporary encrypted parts can be retired after commit.
-                DB::afterCommit(fn () => Storage::disk('local')->deleteDirectory('verification-uploads/'.$id));
+                DB::afterCommit(fn () => \App\Support\UploadDisk::private()->deleteDirectory('verification-uploads/'.$id));
                 return $response;
             } finally { fclose($temp); }
         });

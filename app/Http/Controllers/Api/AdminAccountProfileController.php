@@ -155,10 +155,9 @@ class AdminAccountProfileController
     {
         $u = $this->actor($r);
         $r->validate(['avatar' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048', 'revision' => 'required|integer|min:0']);
-        $dir = storage_path('app/private/admin-avatars');
-        $file = app(SafeImage::class)->store($r->file('avatar'), $dir);
-        chmod($dir, 0700);
-        chmod($dir.'/'.$file, 0600);
+        $disk = \App\Support\UploadDisk::private();
+        $file = app(SafeImage::class)->storeOn($r->file('avatar'), $disk, 'admin-avatars');
+        \App\Support\UploadDisk::restrict(\App\Support\UploadDisk::privateName(), 'admin-avatars/'.$file);
         try {
             DB::transaction(function () use ($r, $file) {
                 $u = $this->lockedActor($r);
@@ -173,7 +172,7 @@ class AdminAccountProfileController
                 app(BirCompliance::class)->audit('account.photo.updated', (string) $u->id, (string) $u->id, ['role' => $r->attributes->get('api_role')]);
             }, 3);
         } catch (\Throwable$e) {
-            File::delete($dir.'/'.$file);
+            $disk->delete('admin-avatars/'.$file);
             throw $e;
         }
 
@@ -185,9 +184,9 @@ class AdminAccountProfileController
         $u = $this->actor($r);
         $name = DB::table('admin_account_profiles')->where('user_id',$u->id)->value('avatar_path');
         abort_unless($name && preg_match('/^[a-f0-9-]{36}\.png$/',$name),404);
-        $path = storage_path('app/private/admin-avatars/'.$name);
-        abort_unless(is_file($path),404);
+        $disk = \App\Support\UploadDisk::private();
+        abort_unless($disk->exists('admin-avatars/'.$name),404);
 
-        return response()->file($path,['Content-Type' => 'image/png', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff']);
+        return response($disk->get('admin-avatars/'.$name),200,['Content-Type' => 'image/png', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff']);
     }
 }

@@ -176,7 +176,7 @@ Artisan::command('registration:prune-staged-documents', function () {
             DB::transaction(function () use ($upload) {
                 $current = DB::table('verification_upload_sessions')->where('id', $upload->id)->where('expires_at', '<', now())->lockForUpdate()->first();
                 if (! $current) return;
-                \Illuminate\Support\Facades\Storage::disk('local')->deleteDirectory('verification-uploads/'.$current->id);
+                \App\Support\UploadDisk::private()->deleteDirectory('verification-uploads/'.$current->id);
                 DB::table('verification_upload_sessions')->where('id', $current->id)->delete();
             });
         }
@@ -188,7 +188,7 @@ Artisan::command('registration:prune-staged-documents', function () {
             DB::table('registration_email_verifications')->where('id',$row->challenge_id)->lockForUpdate()->first();
             $current=DB::table('merchant_verification_documents')->where('id',$row->id)->whereNull('merchant_id')->first();
             if(!$current)return;
-            if(\Illuminate\Support\Facades\Storage::disk('local')->exists($current->private_path) && !\Illuminate\Support\Facades\Storage::disk('local')->delete($current->private_path))throw new RuntimeException('Staged document cleanup failed.');
+            if(\App\Support\UploadDisk::private()->exists($current->private_path) && !\App\Support\UploadDisk::private()->delete($current->private_path))throw new RuntimeException('Staged document cleanup failed.');
             DB::table('merchant_verification_documents')->where('id',$current->id)->delete();$count++;
         });
     }

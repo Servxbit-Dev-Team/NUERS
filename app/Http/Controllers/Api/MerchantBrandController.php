@@ -32,11 +32,11 @@ class MerchantBrandController extends Controller
         ]);
         $column = $invoice ? 'invoice_logo_url' : 'logo_url';
         $folder = $invoice ? 'invoice-logos' : 'business-logos';
-        $directory = public_path('uploads/'.$folder);
+        $disk = \App\Support\UploadDisk::images();
         $name = null;
         $url = null;
         if (! $request->isMethod('DELETE')) {
-            $name = app(SafeImage::class)->store($request->file('logo'), $directory);
+            $name = app(SafeImage::class)->storeOn($request->file('logo'), $disk, $folder);
             $url = '/public/uploads/'.$folder.'/'.$name;
         }
         try {
@@ -61,7 +61,7 @@ class MerchantBrandController extends Controller
                 return response()->json(['logo' => $url, 'merchant_id' => $fresh->id, 'pending_approval' => false])->header('Cache-Control', 'private, no-store');
             });
         } catch (\Throwable $error) {
-            if ($name && is_file($directory.'/'.$name)) unlink($directory.'/'.$name);
+            if ($name) $disk->delete($folder.'/'.$name);
             throw $error;
         }
     }

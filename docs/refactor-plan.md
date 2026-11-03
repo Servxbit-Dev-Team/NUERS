@@ -254,6 +254,52 @@ After the fix, two full runs passed every check, the application logged no error
 - Migration of existing files: a one-off copy script, run after a backup, with a checksum comparison before cutover.
 - Object backup cadence of at most 5 minutes (15-minute RPO) is handled by S3 versioning and cross-region replication to Hong Kong, once availability of those features in `ap-east-1` is confirmed.
 
+### Step 4 status: code ready, not switched on (branch `s3-uploads`, 2026-11-03)
+
+**Why it matters.** Several web servers cannot share one server's disk. With the old code, a document uploaded through server A returned 409 "unavailable" when the reviewer's request landed on server B; a merchant logo uploaded on A was a 404 on B; the chunked upload (parts arrive as separate requests) failed whenever two parts hit different servers.
+
+**What wrote to local disk (full inventory).**
+
+| Data | Old location | Shared store needed? |
+|---|---|---|
+| Verification documents (encrypted) | `storage/app/private/merchant-verification/` | Yes |
+| Branch evidence (encrypted) | `.../branch-evidence/` | Yes |
+| Upload chunks (encrypted, temporary) | `.../verification-uploads/` | Yes (parts arrive on different requests) |
+| Admin avatars | `.../admin-avatars/` | Yes |
+| Client avatars, business and invoice logos | `public/uploads/*` (served by the web server) | Yes, plus a way to serve them |
+| PDF rendering and report export scratch folders | `storage/app/private/pdf-*`, `report-*` | No: created and deleted inside one request |
+| Sessions, cache | database tables (not files) | Already shared |
+| Audit checkpoints | no code writes them | Nothing to move (see below) |
+
+**What changed (defaults unchanged, so deploying this alters nothing until you set the two env values).**
+- `App\Support\UploadDisk` plus `filesystems.private_disk` / `filesystems.image_disk`, set by `NUERS_PRIVATE_DISK` (default `local`) and `NUERS_IMAGE_DISK` (default `uploads_public`, the old `public/uploads` folder, same files and URLs). Disks `s3_private` and `s3_images` are defined for the object store; credentials come from the instance role when no key is set.
+- `PrivateDocumentStream` no longer opens a local path or seeks inside the stored file: it frames the encrypted document in a temporary stream and writes the finished object in one call (an object store never shows a half-written document); the legacy-format read re-opens the stream instead of rewinding it. The encryption format is unchanged, so existing documents read as before.
+- Chunk upload, document cleanup, branch evidence and the pruning command use the private disk. Admin avatars are written and read through it. `SafeImage::storeOn()` re-encodes to PNG and writes to any disk; client avatars and logos use the image disk.
+- `UploadedImageController` replaces `BusinessLogoController` and serves `business-logos`, `invoice-logos`, `client-avatars` (UUID `.png` names only) at `/public/uploads/{folder}/{file}` and `/uploads/{folder}/{file}` with a one-year immutable cache header, so Cloudflare or CloudFront can cache them. With the default local disk the web server still serves existing files itself.
+- `php artisan uploads:copy {private|images}`: copies existing files to the new disk, verifies each by hashing the copy, skips files already present and identical, and exits non-zero on any mismatch. It never deletes or changes the source and has `--dry-run`. Upload chunks are not copied (temporary, safe to abandon).
+- `league/flysystem-aws-s3-v3` added to `composer.json` and `composer.lock` (also moves guzzle, psr7, promises, symfony/process, polyfill-mbstring by patch versions, a side effect of resolving it).
+- `.env.example` documents the new settings.
+
+**Tested.** 9 new tests (`tests/Feature/ObjectStoreUploadsTest.php`) run the document, legacy-document, tamper, image-serving and copy-command paths against a test adapter that has no local directory and no seeking (`tests/Support/MemoryAdapter.php`), plus a guard test that fails if `Storage::disk('local')`, `public_path('uploads')` or `$disk->path()` come back into application code. The existing document, branch and logo tests pass unchanged against the default disks.
+
+**Not tested, because there is no AWS account here.** Real S3: bucket policy, IAM permissions, latency of one PUT per 1 MiB part, behaviour of `deleteDirectory` on a large prefix, and `ap-east-1`. Rehearse in staging before the cutover.
+
+**Cutover runbook (do not run until the AWS account and buckets exist).**
+1. Back up the database and `storage/app/private` and `public/uploads`.
+2. Create two private buckets (Block Public Access on, versioning on, default encryption on). Suggested lifecycle rule: expire `verification-uploads/` after 2 days as a safety net. Give the web and worker role read, write and delete on those buckets only.
+3. Deploy this branch and run `composer install` (the tracked `vendor/` does not contain the S3 driver; see the open vendor question).
+4. Set `NUERS_PRIVATE_DISK=s3_private`, `NUERS_IMAGE_DISK=s3_images`, the two bucket names and the region, but do not reload PHP yet.
+5. `php artisan uploads:copy private --dry-run`, then without `--dry-run`, then the same for `images`. Expect exit code 0 and a "failed" count of 0.
+6. Reload PHP, then run both copy commands again (idempotent) to pick up files written during the switch.
+7. Open a known document as an admin and a known logo as a merchant. Keep the local files for at least a week.
+
+**Not done.**
+- Audit checkpoints and the separate Object-Lock bucket: nothing in the application writes checkpoints today, so there is nothing to move. The Object Lock bucket, its separate credentials and a job that writes to it remain part of the audit redesign (step 2) and the backup plan.
+- Cross-region replication to Hong Kong and the 15-minute object RPO: infrastructure, depends on `ap-east-1` features.
+- The renderer bundle `bootstrap/ssr/document-renderer.mjs` and the Chrome binary for PDFs must exist on every server; that is build and image work, not storage.
+- Serving through the application costs one PHP request per uncached image; Cloudflare caching in front is assumed (the cache header allows it).
+- A pre-existing advisory in `symfony/mime` (CVE-2026-45070, medium, fixed in 7.4.22) shows in `composer audit`. Unrelated to this step; worth a separate patch update.
+
 ## 5. Background workers (and, much less urgently, Redis)
 
 **Original plan, as first written (kept for the record):** set `CACHE_STORE`, `SESSION_DRIVER` and `QUEUE_CONNECTION` to Redis or SQS; make the scheduled workers long-running; share the rate limiter across nodes; run the scheduler on one node.
