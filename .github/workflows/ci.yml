@@ -1,0 +1,116 @@
+name: CI
+
+# Runs on pull requests and on pushes to main. No secrets are used or needed: tests run on in-memory SQLite and the
+# jobs never contact BIR, merchants' webhook receivers or any live service.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Actions are pinned to commit SHAs (the comment names the release) so a moved tag cannot change what runs here.
+env:
+  NODE_VERSION: '22'
+  PHP_VERSION: '8.4'
+
+jobs:
+  backend:
+    name: Backend tests (PHPUnit)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      # The PDF tests drive a real headless Chrome; GitHub's Ubuntu image ships it here.
+      NUERS_PDF_CHROME: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          # gd: the image-upload tests re-encode real images. intl, zip, sqlite: framework and tests.
+          extensions: mbstring, intl, gd, zip, pdo_sqlite, sqlite3, fileinfo, dom, xml, openssl
+          coverage: none
+          tools: composer:v2
+
+      - name: Composer cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/composer/files
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      # Install from the lock file, not from the committed vendor/ folder, so a lock that cannot be installed fails here.
+      - run: composer install --no-interaction --no-progress --prefer-dist
+
+      - run: npm ci --no-audit --no-fund
+
+      # The PDF and document tests call the server-side document renderer bundle (bootstrap/ssr/document-renderer.mjs).
+      - run: npm run build:document
+
+      - name: Framework directories the test run writes to
+        run: mkdir -p storage/framework/views storage/framework/cache/data storage/framework/sessions storage/framework/testing storage/logs bootstrap/cache
+
+      - name: PHPUnit
+        run: vendor/bin/phpunit --no-progress
+
+  frontend:
+    name: Frontend (types, build, unit tests)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      # `npm run typecheck` (tsc --noEmit) checks nothing here: the root tsconfig only references the real projects.
+      - name: TypeScript (project references)
+        run: npx tsc -b
+
+      - name: Build the application bundle
+        run: npx vite build
+
+      - run: npm run build:document
+
+      # A glob, not a directory: Node 22 treats a bare directory argument as a file to import.
+      - name: Unit tests (node:test)
+        run: node --test "tests/js/*.test.mjs"
+
+  dependency-audit:
+    name: Dependency advisories
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+          tools: composer:v2
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # Reads composer.lock only; nothing is installed.
+      - run: composer audit --no-interaction
+
+      # Production dependencies only (what ships to browsers).
+      - run: npm audit --omit=dev --audit-level=high

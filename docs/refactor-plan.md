@@ -365,7 +365,34 @@ Throughput note: these are claim-rate figures against a local database. Actual d
 
 **Not done, and why**
 - **Untracking `vendor/`, `dist/` and `public/build`.** `.gitignore` already lists `vendor/`, `node_modules/` and the build output, yet they are tracked, so the intent is clear. But the current host appears to deploy by pulling the repository (the notes in `deployment/` and `CLAUDE.md` describe `dist/` as committed "for hosting"), so removing them could break the live deploy. Needs a decision on how the live host gets its dependencies (a CI build artifact, or `composer install` and `npm run build` on the server) before the files are removed. Note the tracked `vendor/` is already incomplete and fails on PHP 8.5 (missing `bootstrap85.php`), so it cannot be relied on as is.
-- **CI.** A workflow for `php artisan test`, `tsc`, `node --test tests/js/` and `security:deployment-check` was not added: it could not be run here, and the suite has 20 failures that need headless Chrome, image libraries and the public asset folders, so a first CI run would fail until those are provided.
+- **CI.** Added in "Step 10: CI" below (branch `ci-workflow`). The earlier objection (20 failures needing Chrome, image libraries and the public asset folders) is handled by the workflow installing them.
+
+### Step 10: CI (branch `ci-workflow`, 2026-11-03)
+
+`.github/workflows/ci.yml`, three jobs on pull requests, pushes to `main` and manual runs. No secrets, read-only permissions, every action pinned to a commit SHA, in-memory SQLite, nothing contacts BIR, merchants or any live service.
+
+| Job | What it runs | Why |
+|---|---|---|
+| Backend tests | PHP 8.4 with gd/intl/zip/sqlite; `composer install` from the lock; `npm ci`; `npm run build:document`; Chrome path set; `vendor/bin/phpunit` | The PDF tests need the renderer bundle and Chrome; the image tests need GD |
+| Frontend | `npx tsc -b`; `npx vite build`; `npm run build:document`; `node --test "tests/js/*.test.mjs"` | See the two corrections below |
+| Dependency advisories | `composer audit`; `npm audit --omit=dev --audit-level=high` | Both were clean-able today; this keeps them clean |
+
+**Two corrections to commands in `CLAUDE.md` and this plan.**
+- `npm run typecheck` (`tsc --noEmit`) checks nothing: the root `tsconfig.json` has `"files": []` and only references the real projects. The real check is `tsc -b` (what `npm run build` uses). It passes cleanly (26 s).
+- `node --test tests/js/` fails on Node 22 (a bare directory is treated as a file to import). Use the glob `node --test "tests/js/*.test.mjs"`; 27 of 27 pass.
+
+**What was proven locally (not on GitHub, which cannot be run from here).** Each command was run in a clean copy after `npm ci`: `tsc -b` clean; `vite build` ok (17 s); renderer build ok; 27/27 JS tests; `composer audit` clean. The workflow file parses and every action is pinned. The PHP suite in that complete setup: 557 tests, the same 20 failures as before, none new. Their causes, from the failure messages: 8 need the GD extension, 3 need Chrome (503), about 8 hit pages whose Blade views and public folders are missing from my scratch copy, and 1 depended on the timezone (below). CI installs GD and Chrome and checks out the whole tree, so those should pass there, but this is a prediction: the first real run is the proof, and may show failures I could not reproduce.
+
+**Fixes made so CI is green rather than noisy.**
+- `phpunit.xml` now sets `APP_TIMEZONE=Asia/Manila`. `BackupRecoveryTest` asserts a `+08:00` timestamp but only passed on a machine whose `.env` already set Manila time; in a clean environment it failed. The product's legal day boundary is Manila midnight, so tests should run in it.
+- `zod` 4.3.6 to 4.6.7 (a high-severity advisory, memory exhaustion validating oversized collections, in a production dependency). Same major version; `tsc -b`, `vite build` and all JS tests pass. Only that package's three lock lines changed. The committed `dist/` bundle still contains the old copy until it is rebuilt.
+
+**Deliberately not in CI.**
+- Laravel Pint: 294 files need reformatting today, so a style gate would fail on day one. A separate, mechanical reformatting change would have to land first.
+- `security:deployment-check`: it deliberately fails unless production settings are present, so it belongs in a deployment pipeline against the real environment, not in CI.
+- Deploying anything. CI only checks.
+
+**To switch on.** After merging, mark the three jobs as required checks for `main` in the repository's branch protection settings (a GitHub setting that needs repository admin rights).
 - **Live-host checks.** `deployment/nuers-net-mysql.env.example` sets `CACHE_STORE=file`, `SESSION_DRIVER=file` and `QUEUE_CONNECTION=sync`. If the live `.env` follows it, queued work (webhook delivery, notifications) runs inside the request. Confirm the live values.
 - **Tracked-file breakdown (34,827 files).** Not done; mostly `vendor/`, `node_modules`-adjacent and `dist/`. Falls out of the decision above.
 

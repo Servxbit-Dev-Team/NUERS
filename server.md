@@ -346,3 +346,12 @@ Why: more than one web server cannot share one server's disk. Before this, a doc
 ### Constraint recorded (2026-11-03): no access to the live site
 
 The project owner is not permitted to touch the live site or its database, so the live-schema check in step 8b cannot be run by them. It must be done by whoever administers the live host (a read-only check), or against a database export that person supplies. Until then nothing is known about the live schema: the migrations from this work are unapplied there, `transaction_receipt_items` is unresolved, and the schema checks in the code stay in place. The same applies to the other live-host items (remove `nuers-db-check.php`, rotate DB credentials, confirm `QUEUE_CONNECTION` and session settings): each needs the host owner.
+
+## CI (branch `ci-workflow`, 2026-11-03)
+
+- Added `.github/workflows/ci.yml`: backend tests, frontend (types, build, unit tests) and dependency advisories, on pull requests and pushes to `main`. No secrets, no deployment, nothing contacts BIR or live services.
+- It can only be proven by running it on GitHub; locally every step was run and passes except the 19 PHP tests that need GD, Chrome or the views missing from my scratch copy, which the CI image provides. Treat the first CI run as the real test.
+- Corrections: `npm run typecheck` checks nothing (use `tsc -b`); `node --test tests/js/` fails on Node 22 (use the glob).
+- Two fixes for a clean first run: tests now run in Manila time (`phpunit.xml`), and `zod` is patched to 4.6.7 (high-severity advisory in a production dependency). The committed `dist/` bundle still has the old `zod` until rebuilt.
+- Not in CI: Pint (294 files need reformatting first) and `security:deployment-check` (belongs in a deployment pipeline).
+- Needs a repository admin: mark the three jobs as required checks on `main` in GitHub's branch protection.
