@@ -269,7 +269,7 @@ After the fix, two full runs passed every check, the application logged no error
 | Client avatars, business and invoice logos | `public/uploads/*` (served by the web server) | Yes, plus a way to serve them |
 | PDF rendering and report export scratch folders | `storage/app/private/pdf-*`, `report-*` | No: created and deleted inside one request |
 | Sessions, cache | database tables (not files) | Already shared |
-| Audit checkpoints | no code writes them | Nothing to move (see below) |
+| Audit checkpoints | `eis:audit-checkpoint` writes signed files to `storage/app/private/audit-checkpoints` (a manual command, not scheduled; correction to an earlier version of this table) | Yes, and they must go to a separate Object-Lock store (not changed in step 4) |
 
 **What changed (defaults unchanged, so deploying this alters nothing until you set the two env values).**
 - `App\Support\UploadDisk` plus `filesystems.private_disk` / `filesystems.image_disk`, set by `NUERS_PRIVATE_DISK` (default `local`) and `NUERS_IMAGE_DISK` (default `uploads_public`, the old `public/uploads` folder, same files and URLs). Disks `s3_private` and `s3_images` are defined for the object store; credentials come from the instance role when no key is set.
@@ -294,7 +294,7 @@ After the fix, two full runs passed every check, the application logged no error
 7. Open a known document as an admin and a known logo as a merchant. Keep the local files for at least a week.
 
 **Not done.**
-- Audit checkpoints and the separate Object-Lock bucket: nothing in the application writes checkpoints today, so there is nothing to move. The Object Lock bucket, its separate credentials and a job that writes to it remain part of the audit redesign (step 2) and the backup plan.
+- Audit checkpoints and the separate Object-Lock bucket. Correction: an earlier version of this note said nothing writes checkpoints. `eis:audit-checkpoint` does (in `routes/console.php`): it signs the chain head and saves it to local `storage/app/private/audit-checkpoints`, and it is not scheduled. It was not moved in step 4, and it must not simply follow `NUERS_PRIVATE_DISK`: the point of a checkpoint is that production credentials cannot rewrite it. It needs its own disk (own bucket, Object Lock, separate write-only credentials) and a schedule. The `UploadDisk` guard test does not catch it because it writes with `file_put_contents`. Proposed as a small follow-up change; the Object Lock bucket itself is infrastructure.
 - Cross-region replication to Hong Kong and the 15-minute object RPO: infrastructure, depends on `ap-east-1` features.
 - The renderer bundle `bootstrap/ssr/document-renderer.mjs` and the Chrome binary for PDFs must exist on every server; that is build and image work, not storage.
 - Serving through the application costs one PHP request per uncached image; Cloudflare caching in front is assumed (the cache header allows it).

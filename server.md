@@ -326,7 +326,7 @@ Why: more than one web server cannot share one server's disk. Before this, a doc
 - Existing files are copied with `php artisan uploads:copy private|images` (checksum-verified, never deletes the source). The runbook is in `docs/refactor-plan.md` step 4.
 - Images are served through the app with a one-year immutable cache header; put Cloudflare in front so the app is not hit for every image.
 - Not verified: real S3 behaviour (no AWS account yet), and replication to `ap-east-1`. Tested against an in-memory adapter that has no local path.
-- Still to design: the audit-checkpoint bucket with Object Lock (nothing writes checkpoints today), and the Hong Kong replication.
+- Still to design: the audit-checkpoint bucket with Object Lock, and the Hong Kong replication. Correction (2026-11-03): `eis:audit-checkpoint` does write signed checkpoint files, to local `storage/app/private/audit-checkpoints`, and is not scheduled. Step 4 did not move it; it needs its own disk and credentials, not the shared private disk. See `docs/refactor-plan.md` step 4.
 - Side finding: `composer audit` reports a medium advisory in `symfony/mime` (CVE-2026-45070); a patch update is due.
 
 ## Dependency patch: symfony/mime 7.4.19 to 7.4.22 (branch `dependency-patches`, 2026-11-03)
