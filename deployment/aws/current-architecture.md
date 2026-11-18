@@ -2,7 +2,7 @@
 
 Observed 2026-11-18 from read-only AWS CLI checks (CloudShell) and a read-only Session Manager shell on `nuers-weba`. This describes what is deployed; it supersedes the Stage 1 plan in `stage1-setup.md`. No secret values, `.env` contents or account credentials are recorded here.
 
-Not verified (needs someone with sudo or live-site access): the `.env` values, `php artisan security:deployment-check` output, Cloudflare settings, and the state of `nuers-webb` beyond what AWS reported.
+Not verified (needs someone with sudo or live-site access): the `.env` values, Cloudflare settings, and the state of `nuers-webb` beyond what AWS reported.
 
 ## 1. Topology
 
@@ -64,7 +64,7 @@ Region `ap-southeast-1`. Infrastructure is managed by CloudFormation stacks `nue
 
 ## 6. Known gaps
 
-1. `php artisan security:deployment-check` result not recorded. Run it as the `nuers` user from `/srv/nuers/current`.
+1. `php artisan security:deployment-check` passed 11/11 on `nuers-weba` on 2026-11-18 (run as the `nuers` user from `/srv/nuers/current`). The check itself cannot establish WAF effectiveness, least-privilege DB grants, key custody, HA, restore correctness, regulatory authority or measured capacity, so those remain open. It was not run on `nuers-webb`.
 2. Single scheduler node (web A).
 3. GuardDuty off; confirm alarm and budget notifications reach a monitored address.
 4. Backup retention is 7 days for the Backup plan; consider 30 days for financial records.
