@@ -1,0 +1,57 @@
+{
+  "tested_at": "2026-11-16T09:54:49.223506+08:00",
+  "source": "Fresh extraction of delivered ZIP; included PDF connection instructions",
+  "package_sha256": "b42350b553685652cd4ddd457a6575e7c647ddffa8f2d6bebf8ac7ff6baf16cf",
+  "checks": {
+    "ssh_terminal_login": {
+      "exit_code": 0,
+      "stdout": "uid=1001(vapt_auditor) gid=1001(vapt_auditor) groups=1001(vapt_auditor)\nip-10-85-0-70\nLinux 7.0.0-1014-aws",
+      "stderr": "Connection to ssh-vapt.nuers.net closed.",
+      "passed": true
+    },
+    "key_required": {
+      "exit_code": 255,
+      "stdout": "",
+      "stderr": "vapt_auditor@ssh-vapt.nuers.net: Permission denied (publickey).",
+      "passed": true
+    },
+    "other_forward_denied": {
+      "exit_code": 255,
+      "stdout": "",
+      "stderr": "channel 0: open failed: administratively prohibited: open failed\nstdio forwarding failed",
+      "passed": true
+    },
+    "database_via_documented_forward": {
+      "identity": {
+        "success": true,
+        "rows": [
+          [
+            "nuers_vapt_multi",
+            "vapt_reader@10.85.0.70",
+            10
+          ]
+        ]
+      },
+      "read": {
+        "success": true,
+        "rows": [
+          [
+            16
+          ]
+        ]
+      },
+      "write_denial": {
+        "success": false,
+        "error_code": 1142
+      },
+      "system_schema_denial": {
+        "success": false,
+        "error_code": 1142
+      },
+      "passed": true
+    }
+  },
+  "database_client": "Existing PHP PDO/mysqlnd; MariaDB CLI and Windows clients were not exercised.",
+  "passed": true,
+  "cleanup": "Retest SSH sessions and DB forward closed; no database rows changed."
+}
