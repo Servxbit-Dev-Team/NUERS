@@ -1,5 +1,7 @@
 # NUERS on AWS Singapore (ap-southeast-1): Stage 1 setup
 
+> **Superseded 2026-11-18:** the deployed system differs from this plan (ALB with two nodes, MariaDB, EFS, Sydney backup copy). See `current-architecture.md` for what is actually running. This file is kept for the security and compliance notes below.
+
 Written 2026-10-26. This is a plan and runbook, not a tested deployment. Nothing here has been run. Instance sizes and prices are starting estimates; check them in the AWS console and pricing calculator before buying.
 
 Stage 1 goal: a production-grade single-site system with real backups and a separate database. It is not the accreditation-scale design (see "What Stage 1 does not give you").
