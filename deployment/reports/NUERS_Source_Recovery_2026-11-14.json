@@ -1,0 +1,93 @@
+{
+  "checked_on": "2026-11-14",
+  "source_scan_commands": [
+    "12e4b807-5b66-4f28-a48c-3cfba1bb4c5e",
+    "53641a9f-102e-4acc-851c-fb6a61f5925f"
+  ],
+  "web_nodes": [
+    "i-0694f0738afd178ce",
+    "i-0fe793f3af7b0c49b"
+  ],
+  "live_search_roots": [
+    "/srv",
+    "/opt",
+    "/var/www",
+    "/home",
+    "/root",
+    "/tmp",
+    "/mnt"
+  ],
+  "complete_frontend_found": false,
+  "s3_archives_inspected": [
+    {
+      "bucket": "nuers-289829301267-prod-documents-sg",
+      "key": "migration/cutover-20261106/application.tar.gz",
+      "bytes": 118590628,
+      "ts_sources": 0,
+      "test_files": 0
+    },
+    {
+      "bucket": "nuers-289829301267-prod-documents-sg",
+      "key": "migration/cutover-20261106/vapt1-staging-code.tar.gz",
+      "bytes": 126418954,
+      "ts_sources": 0,
+      "test_files": 0
+    }
+  ],
+  "cloudshell_archives": "12 tar.gz patch archives, three AWS setup/verification zip archives; no complete source project",
+  "codebuild_projects": [],
+  "codepipeline_pipelines": [],
+  "stopped_staging_host": "i-0e6855ba7eb969f92 (inspected via read-only temporary snapshot clone; original instance remained stopped)",
+  "missing_imported_modules": [
+    "src/pages/infrastructure/fleet-monitoring.tsx",
+    "src/pages/infrastructure/capacity.tsx"
+  ],
+  "additional_mismatch": "Infrastructure Node and Overview types do not match deployed component imports",
+  "source_map_references_in_deployed_js": 0,
+  "reconstruction_status": "Quarantined typecheck failed; no frontend bundle replacement",
+  "live_deployment_performed": false,
+  "stopped_staging_inspection": {
+    "source_volume": "vol-053aafb4c17efd171",
+    "snapshot": "snap-0a5d500748a36eed2",
+    "clone_volume": "vol-0857a106a1e624b4e",
+    "mount_flags": [
+      "ro",
+      "nosuid",
+      "nodev",
+      "noexec",
+      "norecovery"
+    ],
+    "source_scan_command": "73e63e27-ff75-468b-afc7-d461f1ebc6ef",
+    "archive_scan_command": "cab99e18-2905-40ed-b471-58b29cd9529f",
+    "unmount_command": "da023653-da96-4ffe-8a29-6d719bc265c7",
+    "unpacked_ts_tsx_files": 0,
+    "git_roots": [],
+    "releases": [
+      "staging-20261106",
+      "staging-20261106-vapt1",
+      "staging-20261106-vapt2"
+    ],
+    "live_entry_found_in_staging_releases": false,
+    "archives": [
+      {
+        "path": "/var/lib/nuers-staging/vapt1-code.tar.gz",
+        "members": 13601,
+        "source_files": 0,
+        "source_maps": 0,
+        "test_members": 0
+      },
+      {
+        "path": "/var/lib/nuers-staging/code.tar.gz",
+        "members": 12058,
+        "source_files": 0,
+        "source_maps": 0,
+        "test_members": 0
+      }
+    ],
+    "original_disk_contents_modified": false,
+    "cleanup_verified": true,
+    "temporary_volumes_remaining": 0,
+    "temporary_snapshots_remaining": 0,
+    "original_staging_state_after": "stopped"
+  }
+}

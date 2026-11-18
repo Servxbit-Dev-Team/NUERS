@@ -1,0 +1,109 @@
+{
+  "roles": [
+    "admin",
+    "bir",
+    "client",
+    "consumer",
+    "merchant",
+    "rdo",
+    "super_admin"
+  ],
+  "probes_per_engine": 8491,
+  "status_counts": {
+    "200": 1214,
+    "422": 1553,
+    "404": 1148,
+    "401": 112,
+    "410": 4,
+    "403": 4243,
+    "201": 6,
+    "409": 168,
+    "503": 14,
+    "302": 28,
+    "202": 1
+  },
+  "role_denial_assertions": 753,
+  "local_test_gate": {
+    "created_at": "2026-11-15T02:40:55.669610+00:00",
+    "full": {
+      "tests": 819,
+      "assertions": 11207,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "evidence_sha256": "b04953259b7471bbd461fe9561c1b790db73f06a606cda92f5f680d73b1324bd"
+    },
+    "mariadb": {
+      "tests": 9,
+      "assertions": 1145,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "evidence_sha256": "77cac90a898be5b9a4c98fa3e570b20def7b151df12be092f51fd2c046044eed"
+    },
+    "artifact": {
+      "runtime_files": 10,
+      "files": 12,
+      "bytes": 51339,
+      "sha256": "edca95f1e73b2529071de3b3a8bca71f645b67635e75a461f05290f003297d41"
+    }
+  },
+  "production_status": "deployed_verified",
+  "release": "production-20261115-auth1",
+  "rollout_completed_at": "2026-11-15T02:44:45.854395+00:00",
+  "production_verification": {
+    "verified_at": "2026-11-15T02:45:04.057963+00:00",
+    "release": "production-20261115-auth1",
+    "targets": {
+      "i-0fe793f3af7b0c49b": "healthy",
+      "i-0694f0738afd178ce": "healthy"
+    },
+    "nodes": {
+      "i-0694f0738afd178ce": {
+        "release": "production-20261115-auth1",
+        "patch_files_verified": 261,
+        "env_unchanged": true,
+        "env_mode": "0640",
+        "code_root_owned": true,
+        "runtime_archive_access": "denied"
+      },
+      "i-0fe793f3af7b0c49b": {
+        "release": "production-20261115-auth1",
+        "patch_files_verified": 261,
+        "env_unchanged": true,
+        "env_mode": "0640",
+        "code_root_owned": true,
+        "runtime_archive_access": "denied"
+      }
+    },
+    "public_http": {
+      "/": 200,
+      "/login": 200,
+      "/api/health": 200
+    },
+    "public_assets_verified": [
+      "/build/assets/main-CSHsCHiG.css",
+      "/build/assets/main-CtvHtHrq.js"
+    ],
+    "temporary_staging": {
+      "i-0c1a905d6656ce491": "stopped",
+      "i-0fd5169e6c271bf76": "stopped"
+    }
+  },
+  "public_probe_summary": {
+    "started_at": "2026-11-15T02:45:03.648858+00:00",
+    "finished_at": "2026-11-15T02:45:49.648261+00:00",
+    "scope": "https://nuers.net",
+    "completed": true,
+    "request_count": 59,
+    "passed": 59,
+    "failed": 0,
+    "edge_blocked": 7,
+    "limits": [
+      "No live authenticated customer mutation or brute-force stress test",
+      "Edge-blocked requests do not establish backend payload coverage",
+      "Local suites cover authenticated tenant, upload, replay and mutation cases"
+    ]
+  },
+  "cloud_zip_sha256": "4c956eaaabedb47d60504370843c41b55279b42622097a0d9900c8ca94ab9d1a"
+}

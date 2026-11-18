@@ -11,7 +11,27 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory;
+    use Notifiable;
+    private ?string $issuedAccessToken = null;
+
+    public function setApiTokenAttribute(?string $value): void
+    {
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'api_token_hash')) {
+            $this->issuedAccessToken = $value;
+            $this->attributes['api_token'] = null;
+            $this->attributes['api_token_hash'] = $value ? hash('sha256', $value) : null;
+            $this->attributes['api_expires_at'] = $value ? now()->addMinutes(min(config('security.token_minutes'), config('security.session_absolute_minutes')))->toDateTimeString() : null;
+            $this->attributes['api_authenticated_at'] = $value ? now()->toDateTimeString() : null;
+        } else {
+            abort_unless(app()->environment('testing'), 503, 'Apply the security migration first.');
+            $this->attributes['api_token'] = $value;
+        }
+    }
+    public function getApiTokenAttribute(?string $value): ?string
+    {
+        return $this->issuedAccessToken ?? $value;
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -33,8 +53,10 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'mfa_disabled_at',
         'api_device_hash',
-        'api_token',
+        'api_last_activity_at', 'api_mfa_challenged_at',
+        'api_token', 'api_token_hash', 'api_expires_at', 'api_authenticated_at', 'api_mfa_verified_at', 'mfa_secret', 'mfa_pending_secret', 'mfa_pending_at', 'mfa_last_counter', 'mfa_recovery_hashes',
     ];
 
     /**
@@ -46,7 +68,10 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'mfa_disabled_at' => 'datetime',
             'password' => 'hashed',
+            'api_last_activity_at' => 'datetime', 'api_mfa_challenged_at' => 'datetime',
+            'api_expires_at' => 'datetime','api_authenticated_at' => 'datetime','api_mfa_verified_at' => 'datetime','mfa_pending_at' => 'datetime',
         ];
     }
 }

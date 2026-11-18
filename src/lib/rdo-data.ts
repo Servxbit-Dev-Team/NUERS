@@ -97,7 +97,10 @@ export function useRdoOffices(refreshKey = 0) {
 
       try {
         const response = await apiFetch("/api/rdos", { headers: authHeaders() });
-        const payload = await readJsonResponse<{ data?: RdoOffice[] }>(response, "Unable to load RDO offices.");
+        const payload = await readJsonResponse<{ data?: RdoOffice[] }>(
+          response,
+          "Unable to load RDO offices.",
+        );
         if (!cancelled) setOffices(payload.data ?? []);
       } catch (err) {
         if (!cancelled) {
@@ -134,7 +137,10 @@ export function useRdoDashboard(code?: string) {
       try {
         const query = code ? `?code=${encodeURIComponent(code)}` : "";
         const response = await apiFetch(`/api/rdo/dashboard${query}`, { headers: authHeaders() });
-        const payload = await readJsonResponse<RdoDashboardPayload>(response, "Unable to load RDO dashboard.");
+        const payload = await readJsonResponse<RdoDashboardPayload>(
+          response,
+          "Unable to load RDO dashboard.",
+        );
         if (!cancelled) setData(payload);
       } catch (err) {
         if (!cancelled) {
@@ -165,7 +171,10 @@ export async function registerRdoOffice(payload: Record<string, unknown>) {
     },
     body: JSON.stringify(payload),
   });
-  const body = await readJsonResponse<{ success: boolean; office: RdoOffice }>(response, "Unable to register RDO office.");
+  const body = await readJsonResponse<{ success: boolean; office: RdoOffice }>(
+    response,
+    "Unable to register RDO office.",
+  );
 
   return body;
 }

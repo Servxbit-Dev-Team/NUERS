@@ -1,0 +1,161 @@
+{
+  "verified_at": "2026-11-15T14:47:50.138845+00:00",
+  "rollout_complete": true,
+  "delivery": {
+    "observed_at": "2026-11-15T14:47:49.847692+00:00",
+    "alb/": {
+      "objects": 2,
+      "traffic_log_objects": 1,
+      "bytes": 801,
+      "latest": "2026-11-15 14:42:31+00:00"
+    },
+    "flow/": {
+      "objects": 6,
+      "traffic_log_objects": 5,
+      "bytes": 31509,
+      "latest": "2026-11-15 14:47:32+00:00"
+    },
+    "flow": [
+      {
+        "FlowLogId": "fl-039b8d5a5fb354d7c",
+        "FlowLogStatus": "ACTIVE",
+        "DeliverLogsStatus": "SUCCESS",
+        "DeliverLogsErrorMessage": null,
+        "LogDestination": "arn:aws:s3:::nuers-289829301267-network-audit-sg/flow"
+      }
+    ],
+    "policy_exact": true,
+    "cloudtrail": {
+      "IsLogging": true,
+      "LatestDeliveryTime": "2026-11-15 14:45:29.894000+00:00",
+      "StartLoggingTime": "2026-11-06 10:17:02.903000+00:00",
+      "LatestDigestDeliveryTime": "2026-11-15 14:39:52.269000+00:00",
+      "LatestDeliveryAttemptTime": "2026-11-15T14:45:29Z",
+      "LatestNotificationAttemptTime": "",
+      "LatestNotificationAttemptSucceeded": "",
+      "LatestDeliveryAttemptSucceeded": "2026-11-15T14:45:29Z",
+      "TimeLoggingStarted": "2026-11-06T10:17:02Z",
+      "TimeLoggingStopped": "",
+      "ResponseMetadata": {
+        "RequestId": "9d0f6e83-f002-4688-8bd0-071e941b8b97",
+        "HTTPStatusCode": 200,
+        "HTTPHeaders": {
+          "x-amzn-requestid": "9d0f6e83-f002-4688-8bd0-071e941b8b97",
+          "content-type": "application/x-amz-json-1.1",
+          "content-length": "386",
+          "date": "Sun, 15 Nov 2026 14:47:50 GMT"
+        },
+        "RetryAttempts": 0
+      }
+    },
+    "targets": [
+      {
+        "id": "i-0fe793f3af7b0c49b",
+        "state": "healthy"
+      },
+      {
+        "id": "i-0694f0738afd178ce",
+        "state": "healthy"
+      }
+    ],
+    "complete": true
+  },
+  "native": {
+    "post_os_i-0694f0738afd178ce": {
+      "command_status": "Success",
+      "probe": {
+        "native_authenticated_probe": "passed",
+        "php": "8.4.27",
+        "database": ":memory:",
+        "stateful_regressions": 52,
+        "financial_race_regressions": 18,
+        "readiness_regressions": 29,
+        "checks": 8372,
+        "explicit_admin_denials": 906,
+        "roles": [
+          "super_admin",
+          "admin",
+          "bir",
+          "rdo",
+          "merchant",
+          "client",
+          "consumer"
+        ],
+        "unavailable": {
+          "api/bir-eis/receive_invoice_result/{id}": 14,
+          "api/auth/resend-verification": 14
+        }
+      },
+      "canonical": {
+        "num_esm_apps_packages": 0,
+        "num_esm_apps_updates": 0,
+        "num_esm_infra_packages": 0,
+        "num_esm_infra_updates": 0,
+        "num_installed_packages": 895,
+        "num_main_packages": 848,
+        "num_multiverse_packages": 0,
+        "num_restricted_packages": 0,
+        "num_standard_security_updates": 0,
+        "num_third_party_packages": 30,
+        "num_universe_packages": 15,
+        "num_unknown_packages": 2,
+        "reboot_required": "no",
+        "ua": {
+          "attached": false,
+          "enabled_services": [],
+          "entitled_services": []
+        }
+      },
+      "pdf": true,
+      "environment_preserved": true
+    },
+    "post_os_i-0fe793f3af7b0c49b": {
+      "command_status": "Success",
+      "probe": {
+        "native_authenticated_probe": "passed",
+        "php": "8.4.27",
+        "database": ":memory:",
+        "stateful_regressions": 52,
+        "financial_race_regressions": 18,
+        "readiness_regressions": 29,
+        "checks": 8372,
+        "explicit_admin_denials": 906,
+        "roles": [
+          "super_admin",
+          "admin",
+          "bir",
+          "rdo",
+          "merchant",
+          "client",
+          "consumer"
+        ],
+        "unavailable": {
+          "api/bir-eis/receive_invoice_result/{id}": 14,
+          "api/auth/resend-verification": 14
+        }
+      },
+      "canonical": {
+        "num_esm_apps_packages": 0,
+        "num_esm_apps_updates": 0,
+        "num_esm_infra_packages": 0,
+        "num_esm_infra_updates": 0,
+        "num_installed_packages": 895,
+        "num_main_packages": 848,
+        "num_multiverse_packages": 0,
+        "num_restricted_packages": 0,
+        "num_standard_security_updates": 0,
+        "num_third_party_packages": 30,
+        "num_universe_packages": 15,
+        "num_unknown_packages": 2,
+        "reboot_required": "no",
+        "ua": {
+          "attached": false,
+          "enabled_services": [],
+          "entitled_services": []
+        }
+      },
+      "pdf": true,
+      "environment_preserved": true
+    }
+  }
+}

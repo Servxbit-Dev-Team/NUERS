@@ -1,0 +1,33 @@
+{
+  "host": "nuers.net",
+  "tls": {
+    "TLS1.2": {
+      "negotiated": "TLSv1.2",
+      "cipher": "ECDHE-ECDSA-CHACHA20-POLY1305",
+      "certificate_verified": true,
+      "not_after": "Dec 23 08:49:26 2026 GMT"
+    },
+    "TLS1.3": {
+      "negotiated": "TLSv1.3",
+      "cipher": "TLS_AES_256_GCM_SHA384",
+      "certificate_verified": true,
+      "not_after": "Dec 23 08:49:26 2026 GMT"
+    }
+  },
+  "cookies": [
+    {
+      "name": "XSRF-TOKEN",
+      "secure": true,
+      "httponly": false,
+      "samesite": "lax"
+    },
+    {
+      "name": "nuers-session",
+      "secure": true,
+      "httponly": true,
+      "samesite": "lax"
+    }
+  ],
+  "hsts": "max-age=15552000",
+  "scope_note": "Modern TLS handshake/certificate checks, not exhaustive cipher enumeration or downgrade testing; XSRF cookie is intentionally readable by client code."
+}

@@ -21,3 +21,72 @@ storage/framework/views/*
 .local/
 /public/uploads/
 .phpunit.result.cache
+
+# Runtime document storage copied from live; never commit user records.
+/storage/app/
+# Local performance databases and runtime state; keep lab scripts and results.
+/output/**/lab/mysql/
+/output/**/lab/cache/
+/output/**/*.sqlite
+/output/**/*.sqlite-*
+/output/**/*.db
+/output/**/*.db-*
+/output/**/*.log
+/output/**/*.pid
+/output/**/*.sock
+# Local deployment packages and pre-change source archives.
+# Published NUERS documents and evidence bundles remain trackable.
+/output/**/nuers-*.zip
+/output/**/before-source.zip
+!/output/pdf/*.zip
+!/output/principal-supplementary/*.zip
+!/output/system-documentation/*.zip
+!/output/backup-dr/*.zip
+# Rendered document previews and other temporary PDF work files.
+/tmp/pdfs/
+# Generated artifacts and private evidence are stored outside the source handoff.
+/dist/
+/public/build/
+/bootstrap/ssr/
+/bootstrap/cache/*.php
+/output/
+/outputs/
+/tmp/
+/database/*.sqlite*
+*.tsbuildinfo
+
+# Runtime document storage and private tester materials.
+/storage/app/
+__pycache__/
+*.py[cod]
+# Static release copies at repository root (sources live in public/ and src/).
+/assets/
+/auth-assets/
+/brand/
+/dashboard-assets/
+/guides/
+/media/
+/pdf-assets/
+/website-assets/
+/release-manifest.json
+
+# Duplicate public assets from the local static release.
+/icon.png
+/favicon.ico
+/app-icon-512.png
+/site.webmanifest.json
+/apple-touch-icon.png
+/NUERS.png
+/NUERSLOGO.png
+/NUERS_WHITE.png
+/app-icon-192.png
+/site.webmanifest
+/NUERS copy.png
+/robots.txt
+/nuers-favicon.png
+/NUERSLOGOWHITE.png
+/nuers_wBG.jpg
+
+# Private operational screenshots are retained locally.
+/deployment/**/*.png
+/deployment/**/*.jpg

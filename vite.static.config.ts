@@ -7,6 +7,12 @@ import { defineConfig } from "vite"
 const staticAssets = [
   "icon.png",
   "nuers-favicon.png",
+  "favicon.ico",
+  "apple-touch-icon.png",
+  "app-icon-192.png",
+  "app-icon-512.png",
+  "site.webmanifest",
+  "site.webmanifest.json",
   "nuers_wBG.jpg",
   "NUERSLOGO.png",
   "NUERSLOGOWHITE.png",
@@ -15,8 +21,12 @@ const staticAssets = [
   "NUERS_WHITE.png",
   "robots.txt",
   "vite.svg",
+  "brand",
   "auth-assets",
   "dashboard-assets",
+  "website-assets",
+  "pdf-assets",
+  "guides",
 ]
 
 const liveApiBaseUrl = (process.env.VITE_API_BASE_URL ?? "https://nuers.net/public").replace(/\/$/, "")

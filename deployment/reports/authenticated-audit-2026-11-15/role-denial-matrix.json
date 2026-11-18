@@ -1,0 +1,4520 @@
+[
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/bir-wire",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/bir-wire",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "PUT",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/credentials",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/pause",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/resume",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/authenticate",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/authority",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/authority",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/authority",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/candidates",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/candidates",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/prepare",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/fixture",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/bir-wire\/batches\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/bir-wire\/batches\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/batches\/{id}\/release",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/batches\/{id}\/cancel",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/batches\/{id}\/inquire",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/support",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/support",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/support\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/support\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/support\/{id}\/messages",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/support\/{id}\/read",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "PATCH",
+        "uri": "api\/admin\/support\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "DELETE",
+        "uri": "api\/admin\/support\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/support\/{id}\/restore",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "DELETE",
+        "uri": "api\/admin\/support\/{id}\/permanent",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/subscription-plans",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/subscription-plans",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "PUT",
+        "uri": "api\/admin\/subscription-plans\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/configuration\/notifications",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/configuration\/notifications",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/configuration",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/configuration",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "PUT",
+        "uri": "api\/admin\/configuration\/smtp",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/configuration\/smtp\/test",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/submission-attempts",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/submission-attempts",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/live-monitoring",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/live-monitoring",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/live-monitoring\/audit",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/live-monitoring\/audit",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/live-monitoring\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/live-monitoring\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/esp-compliance",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/esp-compliance",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/esp-compliance\/applications",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/esp-compliance\/applications\/{id}\/evidence",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/esp-compliance\/applications\/{id}\/reviews",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/esp-compliance\/applications\/{id}\/certificate",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/esp-compliance\/incidents",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "PATCH",
+        "uri": "api\/esp-compliance\/incidents\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/rdo-mappings",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/rdo-mappings",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/rdo-mappings",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/business-registry\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/business-registry\/template",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/template",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/business-registry\/tin",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/tin",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/business-registry\/import",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/business-registry\/import\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/business-registry",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/business-registry",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/business-registry",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/business-registry\/{registryMerchant}\/transactions\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{registryMerchant}\/transactions\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/business-registry\/{registryMerchant}\/transactions",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{registryMerchant}\/transactions",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/business-registry\/{registryMerchant}\/transactions\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{registryMerchant}\/transactions\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/business-registry\/{registryMerchant}\/sandbox-records\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{registryMerchant}\/sandbox-records\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/business-registry\/{registryMerchant}\/sandbox-records",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{registryMerchant}\/sandbox-records",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/business-registry\/{registryMerchant}\/sandbox-records\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{registryMerchant}\/sandbox-records\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/business-registry\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "PUT",
+        "uri": "api\/business-registry\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/business-registry\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/business-registry\/{id}\/invitation",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/analytics\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/analytics\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/analytics",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/analytics",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/operations-report\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/operations-report\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/operations-report",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/operations-report",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/operations-report\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/eis-readiness\/coverage",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/eis-readiness\/{source}\/{id}\/branch-review",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/transaction-workspace\/exports\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/transaction-workspace\/exports\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/transaction-workspace\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/transaction-workspace\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/transaction-workspace",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/transaction-workspace",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/transaction-workspace\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/transaction-workspace\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/transactions\/overview",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/transactions\/overview",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/eis-center",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/eis-center",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/eis-center\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/eis-center\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/eis-center\/preview",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/eis-center\/batches",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/eis-center\/batches",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/eis-center\/batches",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/eis-center\/batches\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/eis-center\/batches\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/eis-center\/batches\/{id}\/release",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/eis-center\/documents\/{source}\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/eis-center\/documents\/{source}\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/bir-eis\/readiness",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/bir-eis\/readiness",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/bir-eis\/transmissions",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/bir-eis\/transmissions",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/bir-eis\/validate",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/bir-eis\/transmissions",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/bir-eis\/transmissions\/{id}\/retry",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/bir-eis\/transmissions\/{id}\/acknowledge",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/rdos",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/rdos",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/rdos",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/rdo\/dashboard",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/rdo\/dashboard",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/taxpayer-authorizations\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/taxpayer-authorizations\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/taxpayer-authorizations\/template",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/taxpayer-authorizations\/template",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/taxpayer-authorizations\/import",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/taxpayer-authorizations\/import\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/taxpayer-authorizations",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/taxpayer-authorizations",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/taxpayer-authorizations",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/taxpayer-devices",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "PUT",
+        "uri": "api\/taxpayer-devices\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/taxpayer-devices\/{id}\/observations",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/taxpayer-authorizations\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/taxpayer-authorizations\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "PUT",
+        "uri": "api\/taxpayer-authorizations\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/integration-workspace",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/integration-workspace",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/integration-workspace\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/integration-workspace\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/integration-workspace\/connections",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "PUT",
+        "uri": "api\/integration-workspace\/connections\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/integration-workspace\/connections\/{id}\/credential",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/integration-workspace\/connections\/{id}\/certificate",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/integration-workspace\/connections\/{id}\/diagnostics",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/integration-workspace\/endpoints",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "PUT",
+        "uri": "api\/integration-workspace\/endpoints\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/integration-workspace\/webhooks",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "PUT",
+        "uri": "api\/integration-workspace\/webhooks\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/operations\/readiness",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/operations\/readiness",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/backups",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/backups",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/backups\/records",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/backups\/records",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/backups\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/backups\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/backups\/{type}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/backups\/{type}\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/branch-reviews",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/branch-reviews",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/branch-reviews\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/branch-reviews\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/branch-documents\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/branch-documents\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/branch-reviews\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/businesses\/{merchant}\/verification-documents",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/businesses\/{merchant}\/verification-documents",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/businesses\/{merchant}\/review-notifications",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/businesses\/{merchant}\/review-notifications",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/businesses\/{merchant}\/review-notifications\/preview",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/businesses\/{merchant}\/review-notifications",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/businesses\/{merchant}\/verification-document-history",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/businesses\/{merchant}\/verification-document-history",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/verification-documents\/{id}\/preview",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/verification-documents\/{id}\/preview",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/verification-documents\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/verification-documents\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/verification-documents\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/wallets",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/wallets",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/wallets\/{merchant}\/statement",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/wallets\/{merchant}\/statement",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/wallets\/{merchant}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/wallets\/{merchant}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/wallets\/{merchant}\/adjustments",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "PUT",
+        "uri": "api\/admin\/wallets\/pricing",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/wallets\/topups\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/wallets\/{merchant}\/audit",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/wallets\/{merchant}\/audit",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/account-profile",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/account-profile",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "PUT",
+        "uri": "api\/admin\/account-profile",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/account-profile\/avatar",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/account-profile\/avatar",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/account-profile\/avatar",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "PUT",
+        "uri": "api\/admin\/account-profile\/notifications",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/merchant-connections",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/merchant-connections",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/integration-source-profiles",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/integration-source-profiles",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/integration-source-profiles",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "DELETE",
+        "uri": "api\/admin\/integration-source-profiles\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/sandbox-records\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/sandbox-records\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/sandbox-records",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/sandbox-records",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/sandbox-records\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/sandbox-records\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/profile-changes",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/profile-changes",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/profile-changes\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/backups",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/backups",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/backups\/prepare",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/backups\/confirm",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/monitoring",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/monitoring",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/servers",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/servers",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/servers\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/servers\/{id}",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/servers",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/servers\/{id}\/maintenance",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/step-up",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/power\/prepare",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/power\/confirm",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/preflight",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/actions",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/actions",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/actions",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/actions\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/events",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/events",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/expansions",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/expansions",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/expansions",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/export",
+        "status": 403
+    },
+    {
+        "role": "merchant",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/bir-wire",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/bir-wire",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "PUT",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/credentials",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/pause",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/resume",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/authenticate",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/authority",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/authority",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/authority",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/candidates",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/candidates",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/prepare",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/fixture",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/bir-wire\/batches\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/bir-wire\/batches\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/batches\/{id}\/release",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/batches\/{id}\/cancel",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/batches\/{id}\/inquire",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/support",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/support",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/support\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/support\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/support\/{id}\/messages",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/support\/{id}\/read",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "PATCH",
+        "uri": "api\/admin\/support\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "DELETE",
+        "uri": "api\/admin\/support\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/support\/{id}\/restore",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "DELETE",
+        "uri": "api\/admin\/support\/{id}\/permanent",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/subscription-plans",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/subscription-plans",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "PUT",
+        "uri": "api\/admin\/subscription-plans\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/configuration\/notifications",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/configuration\/notifications",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/configuration",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/configuration",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "PUT",
+        "uri": "api\/admin\/configuration\/smtp",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/configuration\/smtp\/test",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/submission-attempts",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/submission-attempts",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/live-monitoring",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/live-monitoring",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/live-monitoring\/audit",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/live-monitoring\/audit",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/live-monitoring\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/live-monitoring\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/esp-compliance",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/esp-compliance",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/esp-compliance\/applications",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/esp-compliance\/applications\/{id}\/evidence",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/esp-compliance\/applications\/{id}\/reviews",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/esp-compliance\/applications\/{id}\/certificate",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/esp-compliance\/incidents",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "PATCH",
+        "uri": "api\/esp-compliance\/incidents\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/rdo-mappings",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/rdo-mappings",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/rdo-mappings",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/business-registry\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/business-registry\/template",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/template",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/business-registry\/tin",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/tin",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/business-registry\/import",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/business-registry\/import\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/business-registry",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/business-registry",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/business-registry",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/business-registry\/{registryMerchant}\/transactions\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{registryMerchant}\/transactions\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/business-registry\/{registryMerchant}\/transactions",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{registryMerchant}\/transactions",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/business-registry\/{registryMerchant}\/transactions\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{registryMerchant}\/transactions\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/business-registry\/{registryMerchant}\/sandbox-records\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{registryMerchant}\/sandbox-records\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/business-registry\/{registryMerchant}\/sandbox-records",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{registryMerchant}\/sandbox-records",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/business-registry\/{registryMerchant}\/sandbox-records\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{registryMerchant}\/sandbox-records\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/business-registry\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "PUT",
+        "uri": "api\/business-registry\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/business-registry\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/business-registry\/{id}\/invitation",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/analytics\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/analytics\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/analytics",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/analytics",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/operations-report\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/operations-report\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/operations-report",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/operations-report",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/operations-report\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/eis-readiness\/coverage",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/eis-readiness\/{source}\/{id}\/branch-review",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/transaction-workspace\/exports\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/transaction-workspace\/exports\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/transaction-workspace\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/transaction-workspace\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/transaction-workspace",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/transaction-workspace",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/transaction-workspace\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/transaction-workspace\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/transactions\/overview",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/transactions\/overview",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/eis-center",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/eis-center",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/eis-center\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/eis-center\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/eis-center\/preview",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/eis-center\/batches",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/eis-center\/batches",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/eis-center\/batches",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/eis-center\/batches\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/eis-center\/batches\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/eis-center\/batches\/{id}\/release",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/eis-center\/documents\/{source}\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/eis-center\/documents\/{source}\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/bir-eis\/readiness",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/bir-eis\/readiness",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/bir-eis\/transmissions",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/bir-eis\/transmissions",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/bir-eis\/validate",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/bir-eis\/transmissions",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/bir-eis\/transmissions\/{id}\/retry",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/bir-eis\/transmissions\/{id}\/acknowledge",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/rdos",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/rdos",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/rdos",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/rdo\/dashboard",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/rdo\/dashboard",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/taxpayer-authorizations\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/taxpayer-authorizations\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/taxpayer-authorizations\/template",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/taxpayer-authorizations\/template",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/taxpayer-authorizations\/import",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/taxpayer-authorizations\/import\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/taxpayer-authorizations",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/taxpayer-authorizations",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/taxpayer-authorizations",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/taxpayer-devices",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "PUT",
+        "uri": "api\/taxpayer-devices\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/taxpayer-devices\/{id}\/observations",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/taxpayer-authorizations\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/taxpayer-authorizations\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "PUT",
+        "uri": "api\/taxpayer-authorizations\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/integration-workspace",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/integration-workspace",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/integration-workspace\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/integration-workspace\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/integration-workspace\/connections",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "PUT",
+        "uri": "api\/integration-workspace\/connections\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/integration-workspace\/connections\/{id}\/credential",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/integration-workspace\/connections\/{id}\/certificate",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/integration-workspace\/connections\/{id}\/diagnostics",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/integration-workspace\/endpoints",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "PUT",
+        "uri": "api\/integration-workspace\/endpoints\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/integration-workspace\/webhooks",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "PUT",
+        "uri": "api\/integration-workspace\/webhooks\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/operations\/readiness",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/operations\/readiness",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/backups",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/backups",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/backups\/records",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/backups\/records",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/backups\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/backups\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/backups\/{type}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/backups\/{type}\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/branch-reviews",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/branch-reviews",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/branch-reviews\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/branch-reviews\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/branch-documents\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/branch-documents\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/branch-reviews\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/businesses\/{merchant}\/verification-documents",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/businesses\/{merchant}\/verification-documents",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/businesses\/{merchant}\/review-notifications",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/businesses\/{merchant}\/review-notifications",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/businesses\/{merchant}\/review-notifications\/preview",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/businesses\/{merchant}\/review-notifications",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/businesses\/{merchant}\/verification-document-history",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/businesses\/{merchant}\/verification-document-history",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/verification-documents\/{id}\/preview",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/verification-documents\/{id}\/preview",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/verification-documents\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/verification-documents\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/verification-documents\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/wallets",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/wallets",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/wallets\/{merchant}\/statement",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/wallets\/{merchant}\/statement",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/wallets\/{merchant}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/wallets\/{merchant}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/wallets\/{merchant}\/adjustments",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "PUT",
+        "uri": "api\/admin\/wallets\/pricing",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/wallets\/topups\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/wallets\/{merchant}\/audit",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/wallets\/{merchant}\/audit",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/account-profile",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/account-profile",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "PUT",
+        "uri": "api\/admin\/account-profile",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/account-profile\/avatar",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/account-profile\/avatar",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/account-profile\/avatar",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "PUT",
+        "uri": "api\/admin\/account-profile\/notifications",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/merchant-connections",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/merchant-connections",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/integration-source-profiles",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/integration-source-profiles",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/integration-source-profiles",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "DELETE",
+        "uri": "api\/admin\/integration-source-profiles\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/sandbox-records\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/sandbox-records\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/sandbox-records",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/sandbox-records",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/sandbox-records\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/sandbox-records\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/profile-changes",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/profile-changes",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/profile-changes\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/backups",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/backups",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/backups\/prepare",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/backups\/confirm",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/monitoring",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/monitoring",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/servers",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/servers",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/servers\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/servers\/{id}",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/servers",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/servers\/{id}\/maintenance",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/step-up",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/power\/prepare",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/power\/confirm",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/preflight",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/actions",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/actions",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/actions",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/actions\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/events",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/events",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/expansions",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/expansions",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/expansions",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/export",
+        "status": 403
+    },
+    {
+        "role": "client",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/bir-wire",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/bir-wire",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "PUT",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/credentials",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/pause",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/resume",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/authenticate",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/authority",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/authority",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/authority",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/candidates",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/candidates",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/prepare",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/profiles\/{id}\/fixture",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/bir-wire\/batches\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/bir-wire\/batches\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/batches\/{id}\/release",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/batches\/{id}\/cancel",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/bir-wire\/batches\/{id}\/inquire",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/support",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/support",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/support\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/support\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/support\/{id}\/messages",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/support\/{id}\/read",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "PATCH",
+        "uri": "api\/admin\/support\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "DELETE",
+        "uri": "api\/admin\/support\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/support\/{id}\/restore",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "DELETE",
+        "uri": "api\/admin\/support\/{id}\/permanent",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/subscription-plans",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/subscription-plans",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "PUT",
+        "uri": "api\/admin\/subscription-plans\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/configuration\/notifications",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/configuration\/notifications",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/configuration",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/configuration",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "PUT",
+        "uri": "api\/admin\/configuration\/smtp",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/configuration\/smtp\/test",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/submission-attempts",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/submission-attempts",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/live-monitoring",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/live-monitoring",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/live-monitoring\/audit",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/live-monitoring\/audit",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/live-monitoring\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/live-monitoring\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/esp-compliance",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/esp-compliance",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/esp-compliance\/applications",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/esp-compliance\/applications\/{id}\/evidence",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/esp-compliance\/applications\/{id}\/reviews",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/esp-compliance\/applications\/{id}\/certificate",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/esp-compliance\/incidents",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "PATCH",
+        "uri": "api\/esp-compliance\/incidents\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/rdo-mappings",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/rdo-mappings",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/rdo-mappings",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/business-registry\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/business-registry\/template",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/template",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/business-registry\/tin",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/tin",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/business-registry\/import",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/business-registry\/import\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/business-registry",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/business-registry",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/business-registry",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/business-registry\/{registryMerchant}\/transactions\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{registryMerchant}\/transactions\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/business-registry\/{registryMerchant}\/transactions",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{registryMerchant}\/transactions",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/business-registry\/{registryMerchant}\/transactions\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{registryMerchant}\/transactions\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/business-registry\/{registryMerchant}\/sandbox-records\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{registryMerchant}\/sandbox-records\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/business-registry\/{registryMerchant}\/sandbox-records",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{registryMerchant}\/sandbox-records",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/business-registry\/{registryMerchant}\/sandbox-records\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{registryMerchant}\/sandbox-records\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/business-registry\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/business-registry\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "PUT",
+        "uri": "api\/business-registry\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/business-registry\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/business-registry\/{id}\/invitation",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/analytics\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/analytics\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/analytics",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/analytics",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/operations-report\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/operations-report\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/operations-report",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/operations-report",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/operations-report\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/eis-readiness\/coverage",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/eis-readiness\/{source}\/{id}\/branch-review",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/transaction-workspace\/exports\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/transaction-workspace\/exports\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/transaction-workspace\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/transaction-workspace\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/transaction-workspace",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/transaction-workspace",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/transaction-workspace\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/transaction-workspace\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/transactions\/overview",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/transactions\/overview",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/eis-center",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/eis-center",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/eis-center\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/eis-center\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/eis-center\/preview",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/eis-center\/batches",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/eis-center\/batches",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/eis-center\/batches",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/eis-center\/batches\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/eis-center\/batches\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/eis-center\/batches\/{id}\/release",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/eis-center\/documents\/{source}\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/eis-center\/documents\/{source}\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/bir-eis\/readiness",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/bir-eis\/readiness",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/bir-eis\/transmissions",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/bir-eis\/transmissions",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/bir-eis\/validate",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/bir-eis\/transmissions",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/bir-eis\/transmissions\/{id}\/retry",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/bir-eis\/transmissions\/{id}\/acknowledge",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/rdos",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/rdos",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/rdos",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/rdo\/dashboard",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/rdo\/dashboard",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/taxpayer-authorizations\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/taxpayer-authorizations\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/taxpayer-authorizations\/template",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/taxpayer-authorizations\/template",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/taxpayer-authorizations\/import",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/taxpayer-authorizations\/import\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/taxpayer-authorizations",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/taxpayer-authorizations",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/taxpayer-authorizations",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/taxpayer-devices",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "PUT",
+        "uri": "api\/taxpayer-devices\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/taxpayer-devices\/{id}\/observations",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/taxpayer-authorizations\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/taxpayer-authorizations\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "PUT",
+        "uri": "api\/taxpayer-authorizations\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/integration-workspace",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/integration-workspace",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/integration-workspace\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/integration-workspace\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/integration-workspace\/connections",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "PUT",
+        "uri": "api\/integration-workspace\/connections\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/integration-workspace\/connections\/{id}\/credential",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/integration-workspace\/connections\/{id}\/certificate",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/integration-workspace\/connections\/{id}\/diagnostics",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/integration-workspace\/endpoints",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "PUT",
+        "uri": "api\/integration-workspace\/endpoints\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/integration-workspace\/webhooks",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "PUT",
+        "uri": "api\/integration-workspace\/webhooks\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/operations\/readiness",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/operations\/readiness",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/backups",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/backups",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/backups\/records",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/backups\/records",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/backups\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/backups\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/backups\/{type}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/backups\/{type}\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/branch-reviews",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/branch-reviews",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/branch-reviews\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/branch-reviews\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/branch-documents\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/branch-documents\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/branch-reviews\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/businesses\/{merchant}\/verification-documents",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/businesses\/{merchant}\/verification-documents",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/businesses\/{merchant}\/review-notifications",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/businesses\/{merchant}\/review-notifications",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/businesses\/{merchant}\/review-notifications\/preview",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/businesses\/{merchant}\/review-notifications",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/businesses\/{merchant}\/verification-document-history",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/businesses\/{merchant}\/verification-document-history",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/verification-documents\/{id}\/preview",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/verification-documents\/{id}\/preview",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/verification-documents\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/verification-documents\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/verification-documents\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/wallets",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/wallets",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/wallets\/{merchant}\/statement",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/wallets\/{merchant}\/statement",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/wallets\/{merchant}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/wallets\/{merchant}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/wallets\/{merchant}\/adjustments",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "PUT",
+        "uri": "api\/admin\/wallets\/pricing",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/wallets\/topups\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/wallets\/{merchant}\/audit",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/wallets\/{merchant}\/audit",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/account-profile",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/account-profile",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "PUT",
+        "uri": "api\/admin\/account-profile",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/account-profile\/avatar",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/account-profile\/avatar",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/account-profile\/avatar",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "PUT",
+        "uri": "api\/admin\/account-profile\/notifications",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/merchant-connections",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/merchant-connections",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/integration-source-profiles",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/integration-source-profiles",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/integration-source-profiles",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "DELETE",
+        "uri": "api\/admin\/integration-source-profiles\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/sandbox-records\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/sandbox-records\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/sandbox-records",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/sandbox-records",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/sandbox-records\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/sandbox-records\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/profile-changes",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/profile-changes",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/profile-changes\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/backups",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/backups",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/backups\/prepare",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/backups\/confirm",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/monitoring",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/monitoring",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/servers",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/servers",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/servers\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/servers\/{id}",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/servers",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/servers\/{id}\/maintenance",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/step-up",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/power\/prepare",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/power\/confirm",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/preflight",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/actions",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/actions",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/actions",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/actions\/{id}\/review",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/events",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/events",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/expansions",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/expansions",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "POST",
+        "uri": "api\/admin\/infrastructure\/expansions",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "GET",
+        "uri": "api\/admin\/infrastructure\/export",
+        "status": 403
+    },
+    {
+        "role": "consumer",
+        "method": "HEAD",
+        "uri": "api\/admin\/infrastructure\/export",
+        "status": 403
+    }
+]

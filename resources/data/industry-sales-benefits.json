@@ -1,0 +1,388 @@
+{
+  "version": "2026-11-03.2",
+  "interpretation": "NUERS entry mapping to statutory covered goods/services. PSIC is not a BIR eligibility whitelist; evidence for the actual item and beneficiary is always required. Separate 5% BNPC, utility, free-service and local-government schemes are not enabled by the 20%/10% categories.",
+  "sources": {
+    "senior": "https://elibrary.judiciary.gov.ph/thebookshelf/showdocs/10/55830",
+    "pwd": "https://ncda.gov.ph/disability-laws/implementing-rules-and-regulations-irr/revenue-regulations-no-5-2017-rules-and-regulations-implementing-republic-act-no-10754/",
+    "athlete": "https://elibrary.judiciary.gov.ph/thebookshelf/showdocs/2/65644",
+    "solo_parent": "https://bir-cdn.bir.gov.ph/local/pdf/RR%20No.%201-2023.pdf",
+    "bnpc": "https://ncda.gov.ph/2024-revised-rules-on-granting-special-discounts-to-senior-citizens-and-persons-with-disability-on-purchase-of-basic-necessities-and-prime-commodities-joint-administrative-order-no-24-02-series-of-2/"
+  },
+  "legacy_aliases": {
+    "restaurant": "56101",
+    "food_services": "56101",
+    "pharmacy": "47721"
+  },
+  "review_codes": [
+    "47199",
+    "47722",
+    "47738",
+    "47739",
+    "47911",
+    "47912",
+    "47913",
+    "47993",
+    "47999",
+    "49204",
+    "49329",
+    "50111",
+    "50113",
+    "51103",
+    "55105",
+    "55901",
+    "55909",
+    "56210",
+    "56290",
+    "56301",
+    "56302",
+    "56309",
+    "93190"
+  ],
+  "rules": [
+    {
+      "id": "prepared_meals",
+      "codes": [
+        "56101",
+        "56102",
+        "56103",
+        "56104",
+        "56105",
+        "56109",
+        "56303"
+      ],
+      "grants": {
+        "senior_citizen": [
+          "restaurant"
+        ],
+        "pwd": [
+          "restaurant"
+        ],
+        "national_athlete_coach": [
+          "restaurant"
+        ]
+      },
+      "sources": [
+        "senior",
+        "pwd",
+        "athlete"
+      ],
+      "note": "Only the beneficiary’s covered meal or drink portion. Shared orders and unrelated retail items must be separated."
+    },
+    {
+      "id": "transient_accommodation",
+      "codes": [
+        "55101",
+        "55102",
+        "55103",
+        "55104",
+        "55109"
+      ],
+      "grants": {
+        "senior_citizen": [
+          "hotel",
+          "restaurant",
+          "recreation"
+        ],
+        "pwd": [
+          "hotel",
+          "restaurant",
+          "recreation"
+        ],
+        "national_athlete_coach": [
+          "hotel",
+          "restaurant",
+          "recreation"
+        ]
+      },
+      "sources": [
+        "senior",
+        "pwd",
+        "athlete"
+      ],
+      "note": "Transient lodging and qualifying hotel amenities only. Long-term residential rent is excluded."
+    },
+    {
+      "id": "recreation_facilities",
+      "codes": [
+        "93110",
+        "93120",
+        "93210",
+        "93291",
+        "93292",
+        "93299",
+        "96103"
+      ],
+      "grants": {
+        "senior_citizen": [
+          "recreation",
+          "admission"
+        ],
+        "pwd": [
+          "recreation",
+          "admission"
+        ],
+        "national_athlete_coach": [
+          "recreation",
+          "admission"
+        ]
+      },
+      "sources": [
+        "senior",
+        "pwd",
+        "athlete"
+      ],
+      "note": "Qualifying recreation facility fees, rentals or admission. Retail merchandise is a separate sale."
+    },
+    {
+      "id": "cultural_admission",
+      "codes": [
+        "59140",
+        "90001",
+        "90002",
+        "90006",
+        "91020",
+        "91030"
+      ],
+      "grants": {
+        "senior_citizen": [
+          "admission"
+        ],
+        "pwd": [
+          "admission"
+        ],
+        "national_athlete_coach": [
+          "admission"
+        ]
+      },
+      "sources": [
+        "senior",
+        "pwd",
+        "athlete"
+      ],
+      "note": "Admission fees only; do not include merchandise, production contracts or unrelated services."
+    },
+    {
+      "id": "passenger_transport",
+      "codes": [
+        "49111",
+        "49112",
+        "49201",
+        "49202",
+        "49203",
+        "49205",
+        "49209",
+        "49310",
+        "49321",
+        "49322",
+        "49323",
+        "50112",
+        "50210",
+        "51101"
+      ],
+      "grants": {
+        "senior_citizen": [
+          "domestic_transport"
+        ],
+        "pwd": [
+          "domestic_transport"
+        ],
+        "national_athlete_coach": [
+          "domestic_transport"
+        ]
+      },
+      "sources": [
+        "senior",
+        "pwd",
+        "athlete"
+      ],
+      "note": "Actual eligible passenger fare only. Confirm public-service eligibility and domestic travel; exclude freight and private vehicle rental."
+    },
+    {
+      "id": "private_medical",
+      "codes": [
+        "86121",
+        "86122",
+        "86123",
+        "86129",
+        "86221",
+        "86222",
+        "86223",
+        "86229",
+        "86900",
+        "87100"
+      ],
+      "grants": {
+        "senior_citizen": [
+          "medical_dental"
+        ],
+        "pwd": [
+          "medical_dental"
+        ]
+      },
+      "sources": [
+        "senior",
+        "pwd"
+      ],
+      "note": "Covered medical, dental, diagnostic and professional health-care charges only; exclude residential board, cosmetic and unrelated services."
+    },
+    {
+      "id": "public_medical",
+      "codes": [
+        "86111",
+        "86112",
+        "86113",
+        "86119",
+        "86211",
+        "86212",
+        "86219"
+      ],
+      "grants": {
+        "pwd": [
+          "medical_dental"
+        ]
+      },
+      "sources": [
+        "pwd"
+      ],
+      "note": "PWD-covered medical charges in government facilities. Free-service entitlements are not represented as a 20% senior or athlete sale."
+    },
+    {
+      "id": "pharmacy",
+      "codes": [
+        "47721"
+      ],
+      "grants": {
+        "senior_citizen": [
+          "medicine"
+        ],
+        "pwd": [
+          "medicine"
+        ],
+        "national_athlete_coach": [
+          "medicine"
+        ],
+        "solo_parent": [
+          "baby_milk",
+          "baby_food",
+          "micronutrient_supplements",
+          "diapers",
+          "medicine",
+          "vaccines",
+          "medical_supplements"
+        ]
+      },
+      "sources": [
+        "senior",
+        "pwd",
+        "athlete",
+        "solo_parent"
+      ],
+      "note": "Qualified medicines require applicable prescription and purchase evidence. Other pharmacy merchandise does not automatically qualify."
+    },
+    {
+      "id": "funeral",
+      "codes": [
+        "96300"
+      ],
+      "grants": {
+        "senior_citizen": [
+          "funeral"
+        ],
+        "pwd": [
+          "funeral"
+        ]
+      },
+      "sources": [
+        "senior",
+        "pwd"
+      ],
+      "note": "Covered funeral/burial charges for the deceased beneficiary, with identification and death evidence; exclude memorial lots and obituary publication."
+    },
+    {
+      "id": "sports_equipment",
+      "codes": [
+        "47631",
+        "47633",
+        "47191"
+      ],
+      "grants": {
+        "national_athlete_coach": [
+          "sports_equipment"
+        ]
+      },
+      "sources": [
+        "athlete"
+      ],
+      "note": "Qualifying sports equipment for the national athlete or coach only; exclude general clothing and unrelated camping merchandise."
+    },
+    {
+      "id": "child_necessities_retail",
+      "codes": [
+        "47111",
+        "47112",
+        "47113",
+        "47114",
+        "47191"
+      ],
+      "grants": {
+        "solo_parent": [
+          "baby_milk",
+          "baby_food",
+          "micronutrient_supplements",
+          "diapers"
+        ]
+      },
+      "sources": [
+        "solo_parent"
+      ],
+      "note": "Only listed child necessities with SPIC, booklet, age and income eligibility. Ordinary groceries do not qualify for 20% senior/PWD treatment."
+    },
+    {
+      "id": "dairy_retail",
+      "codes": [
+        "47212"
+      ],
+      "grants": {
+        "solo_parent": [
+          "baby_milk"
+        ]
+      },
+      "sources": [
+        "solo_parent"
+      ],
+      "note": "Baby’s milk for an eligible child only; eggs, ordinary adult dairy and unrelated goods are excluded."
+    },
+    {
+      "id": "food_supplement_retail",
+      "codes": [
+        "47219"
+      ],
+      "grants": {
+        "solo_parent": [
+          "baby_milk",
+          "baby_food",
+          "micronutrient_supplements"
+        ]
+      },
+      "sources": [
+        "solo_parent"
+      ],
+      "note": "Qualifying child milk and food/micronutrient supplements only; ordinary food purchases are excluded."
+    },
+    {
+      "id": "sanitary_products_retail",
+      "codes": [
+        "47723"
+      ],
+      "grants": {
+        "solo_parent": [
+          "diapers"
+        ]
+      },
+      "sources": [
+        "solo_parent"
+      ],
+      "note": "Sanitary diapers for an eligible child only. Cosmetics, toiletries and adult products are excluded."
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "release": "admin-financial-widgets-20261018",
+  "scope": ["Admin dashboard", "Live Transaction Monitor"],
+  "metrics": {
+    "Total Transaction Amount": "Sum of amount in the Live merchant transaction store; all recorded statuses, no recent-row or table-page limit.",
+    "Total NUERS Charged": "Negative signed sum of posted fee entries in the merchant wallet ledger. Actual historical rates, not transaction count multiplied by current pricing.",
+    "Total Merchant Wallet": "Sum of current available_centavos across merchant wallets.",
+    "Total Merchant Deposit": "Positive posted topup ledger entries across all merchants. Pending requests, rejected requests and withdrawals are excluded.",
+    "Registered Merchants": "Count of businesses in the merchant registry. Citizen accounts and profile TINs do not contribute."
+  },
+  "periods": {"dashboard": "All time; wallet is current balance. Chart period changes only the chart.", "monitor": "Today in Asia/Manila through response generation. Database bounds respect the configured application timezone. Stream filters and pagination do not change Today cards."},
+  "security": "Financial summary is available only to admin/super_admin. BIR monitor users retain existing access without platform fee totals. Merchant/citizen dashboards return no global financial summary.",
+  "environment": "Live only. Separate sandbox events do not contribute to financial widgets.",
+  "mutations": "None. No repricing, backfill, fee debit, wallet credit, schema change or test sale.",
+  "verification": {"tests": 26, "assertions": 228, "build": "Laravel, document renderer and static builds passed", "visual": "Actual dashboard and monitor components checked with synthetic fixtures before deployment"}
+}

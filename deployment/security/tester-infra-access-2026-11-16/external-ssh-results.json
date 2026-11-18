@@ -1,0 +1,22 @@
+{
+  "key_login": {
+    "returncode": 0,
+    "stdout": "uid=1001(vapt_auditor) gid=1001(vapt_auditor) groups=1001(vapt_auditor)",
+    "stderr": ""
+  },
+  "no_key_denied": {
+    "returncode": 255,
+    "stdout": "",
+    "stderr": "vapt_auditor@ssh-vapt.nuers.net: Permission denied (publickey)."
+  },
+  "other_forward_denied": {
+    "returncode": 255,
+    "stdout": "",
+    "stderr": "channel 0: open failed: administratively prohibited: open failed\nstdio forwarding failed"
+  },
+  "database_forward_handshake": {
+    "protocol_10": true,
+    "server_version": "5.5.5-10.11.19-MariaDB-ubu2204"
+  },
+  "passed": true
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "at": "2026-11-23T08:59:59+00:00",
+    "returncode": 0,
+    "passed": true
+  },
+  {
+    "at": "2026-11-23T09:00:00+00:00",
+    "returncode": 1,
+    "passed": true
+  },
+  {
+    "at": "2026-11-24T09:00:00+00:00",
+    "returncode": 1,
+    "passed": true
+  }
+]

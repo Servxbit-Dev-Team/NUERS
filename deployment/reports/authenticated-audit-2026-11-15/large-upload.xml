@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Recovered\Feature\MerchantVerificationDocumentTest" file="/Users/marksioson/Desktop/NUERS/tests/Recovered/Feature/MerchantVerificationDocumentTest.php" tests="1" assertions="219" errors="0" failures="0" skipped="0" time="18.703397">
+    <testcase name="test_full_100_mb_document_upload_download_retry_and_independent_review" file="/Users/marksioson/Desktop/NUERS/tests/Recovered/Feature/MerchantVerificationDocumentTest.php" line="253" class="Tests\Recovered\Feature\MerchantVerificationDocumentTest" classname="Tests.Recovered.Feature.MerchantVerificationDocumentTest" assertions="219" time="18.703397"/>
+  </testsuite>
+</testsuites>

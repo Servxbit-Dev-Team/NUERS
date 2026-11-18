@@ -1,0 +1,64 @@
+{
+  "release": "production-20261115-readiness1",
+  "complete": true,
+  "targets": {
+    "i-0694f0738afd178ce": "healthy",
+    "i-0fe793f3af7b0c49b": "healthy"
+  },
+  "full_local": {
+    "tests": 941,
+    "assertions": 13529,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "frontend_tests": 23,
+    "reconstruction_tests": 13,
+    "real_browser_queue_cases": 4,
+    "source_hashes": {
+      "app/Services/MfaSession.php": "3bda19876bf81a7b52234aa6ebe557ef6864c87f8872594f15934aa2b776d45c",
+      "app/Http/Controllers/Auth/GoogleAuthController.php": "518b1851ec459c85ea7d7f79b5ccaf62237fbe60da09eb0be313af9caee12667",
+      "src/lib/integrations/offline-outbox.ts": "5fd6d84824d00a42001e7219c0d0ddb2e25c3e955fb6926afcc25c24a42c3407"
+    }
+  },
+  "public": {
+    "request_count": 79,
+    "passed": 79,
+    "failed": 0,
+    "edge_blocked": 7,
+    "finished_at": "2026-11-15T14:18:05.401308+00:00"
+  },
+  "public_assets": {
+    "observed_at": "2026-11-15T14:17:03.193846+00:00",
+    "homepage_references_new_entry": true,
+    "assets": [
+      {
+        "asset": "assets/main-CcJSmUbm.js",
+        "status": 200,
+        "matches_local": true
+      },
+      {
+        "asset": "assets/main-CNB6Vj-P.css",
+        "status": 200,
+        "matches_local": true
+      },
+      {
+        "asset": "assets/client-queue-DJpmSJ6E.js",
+        "status": 200,
+        "matches_local": true
+      }
+    ]
+  },
+  "closed_findings": [
+    "nested-format-http500",
+    "google-mfa-policy-consistency",
+    "offline-accepted-state-race"
+  ],
+  "open_gaps": [
+    "ALB access/VPC flow telemetry",
+    "OS vulnerability/patch assessment",
+    "Cloudflare policy and origin controls",
+    "exhaustive browser/device/lifecycle coverage",
+    "provider sandbox, restore and alert evidence",
+    "independent VAPT sign-off"
+  ]
+}

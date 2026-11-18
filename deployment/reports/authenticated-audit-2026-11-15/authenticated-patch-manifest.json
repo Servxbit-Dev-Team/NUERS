@@ -1,0 +1,30 @@
+{
+  "base_release": "production-20261115-input1",
+  "release": "production-20261115-auth1",
+  "baseline_hashes": {
+    "app/Services/MerchantTeamAccess.php": "9b75dfb76610a6300086670996b09eb4bba975cbea2ef0397b4fe0e0300808d7",
+    "app/Http/Controllers/Api/TableController.php": "b082e880522f44c448655aef32a170e3af7fa6be31968d68d6131dc2cde6fa2d",
+    "app/Http/Controllers/Api/MerchantCustomerController.php": "4ac81a4cfcb312dbab28127b447edeb2be00fbc5922b97142a4ab96670e2eb42",
+    "app/Http/Controllers/Api/LiveMonitoringController.php": "79d8f472bb22edae7d46995f5ad4f22f24c060e6b93ec9d4da7bf81ac62ef177",
+    "app/Http/Controllers/Api/CitizenApprovalController.php": "340376454d521ab089d88ef2b93053df062202d3cc964374331995b86ea562c7",
+    "app/Http/Controllers/Api/TransactionController.php": "5e7c4881054aa721705d691593d27e3ac15e68a049afeabce1a76bb6ff640ffc",
+    "app/Http/Controllers/Api/MerchantTransactionController.php": "6ac8129bdb41e0fdc98978705d422991354cf6362fbe237d6958e4488905d477",
+    "app/Http/Controllers/Api/BusinessInvoiceController.php": "62e6ab811ee2c9ef4c6fa3b131e60639f0213a145246ac913b356c0a331f9a4b",
+    "app/Http/Controllers/Api/MerchantReceiptController.php": "adb4d2a182d18c12da25fb468d752b52807867a029876f658aa9ad439219dbc0",
+    "app/Http/Controllers/Api/MerchantExpenseController.php": "173e6300568331ebf10b6256aa2e4dc13cb396d1897a0e25bbce9a4392e1d922"
+  },
+  "file_hashes": {
+    "app/Services/MerchantTeamAccess.php": "deab49cb45fd5a617db719067488f620003e76f4ace65dbb8d24de17ee635922",
+    "app/Http/Controllers/Api/TableController.php": "2a74250c6928aabececff8575b7a1cc8f38162862a6c040cee8d5c78156acaa9",
+    "app/Http/Controllers/Api/MerchantCustomerController.php": "5f070851ae88e497b49fe7ccdc866a6d9947866012095cb402c7642a22985bee",
+    "app/Http/Controllers/Api/LiveMonitoringController.php": "e19ac6b14e57119eb38d84a9c37088f2581cb05777635647add6158abbbf5126",
+    "app/Http/Controllers/Api/CitizenApprovalController.php": "b4fb7f26a3922794628c842b332117cc52d5b8a10da53a45b1639be89c8dc155",
+    "app/Http/Controllers/Api/TransactionController.php": "143da6d010409e479b3fe63a839f0de48a7515689bbb7ded6e64068f37a752ad",
+    "app/Http/Controllers/Api/MerchantTransactionController.php": "e45daae667d5a0ccbd144384431e4e03ac36d124339c6bb6ede8f61c0d3692ab",
+    "app/Http/Controllers/Api/BusinessInvoiceController.php": "cbaa0c1acc4b02846587258d278b2375520fd2c0f901ee046871be92277b5639",
+    "app/Http/Controllers/Api/MerchantReceiptController.php": "f3584696feb33ee44c93209a688d61034a88d2199954f233f9c242923f0cf79e",
+    "app/Http/Controllers/Api/MerchantExpenseController.php": "28ed3fb56fc407c7ae1570ab500bd0c71d40d4dfaaacf84280b0352d96714d7b",
+    "tests/Feature/AuthenticatedEndpointMatrixTest.php": "4e0bc1fa1cc1625d3003eccb2a8b453ffd78928a8c7b9a96e882e89eb53d0af3",
+    "tests/Feature/AuthenticatedRoleIsolationTest.php": "63f880457cd9491fd4d35c221b3b71fe7e3d9f2416424a7b1bdece4eb568d79b"
+  }
+}

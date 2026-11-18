@@ -22,7 +22,7 @@ use Illuminate\Validation\ValidationException;
 
 class BusinessRegistryController extends Controller
 {
-    const CSV = ['business_name', 'tin', 'owner_name', 'email', 'phone', 'business_type', 'sector', 'address', 'city', 'region', 'rdo_code', 'vat_registered', 'bir_registration_date'];
+    public const CSV = ['business_name', 'tin', 'owner_name', 'email', 'phone', 'business_type', 'sector', 'address', 'city', 'region', 'rdo_code', 'vat_registered', 'bir_registration_date'];
 
     private function actor(Request $r, bool $write = false)
     {
@@ -54,7 +54,7 @@ class BusinessRegistryController extends Controller
     private function duplicate(string $tin, ?string $except = null): bool
     {
         $digits = $this->tin($tin);
-        $q = DB::table('merchants')->whereIn(DB::raw("REPLACE(REPLACE(tin,'-',''),' ','')"), str_ends_with($digits, '000') ? [$digits, substr($digits, 0, 9)] : [$digits]);
+        $q = DB::table('merchants')->whereIn(DB::raw("REPLACE(REPLACE(tin,'-',''),' ','')"), \App\Services\RegisteredTin::variants($digits));
         if ($except) {
             $q->where('id', '<>', $except);
         }
@@ -90,14 +90,14 @@ class BusinessRegistryController extends Controller
         return [$q, $v];
     }
 
-    private function present($m): array
+    private function present($m, bool $loadIntegration = true): array
     {
         $x = (array) $m;
         $meta = json_decode($x['registry_details'] ?? '{}', true) ?: [];
-        $e = DB::table('eis_integrations')->where('merchant_id', $m->id)->orderByDesc('updated_at')->first();
+        $e = $loadIntegration ? DB::table('eis_integrations')->where('merchant_id', $m->id)->orderByDesc('updated_at')->orderByDesc('id')->first() : null;
         $eis = ! $e ? 'not_connected' : ($e->environment !== 'production' ? 'certification' : (in_array($e->status, ['error', 'failed', 'rejected']) ? 'error' : 'pending'));
         $x['details'] = $meta;
-        $x['eis_status'] = $eis;
+        $x['eis_status'] = $x['registry_eis_status'] ?? $eis;
         $x['eis_environment'] = $e?->environment;
         $x['integration'] = $e ? ['id' => $e->id, 'environment' => $e->environment, 'status' => $e->status, 'certification_status' => $e->certification_status, 'ptt_status' => $e->ptt_status, 'permit_to_transmit_number' => $e->permit_to_transmit_number, 'eis_certificate_number' => $e->eis_certificate_number] : null;
         $x['stage'] = $meta['stage'] ?? ($m->status === 'active' ? 'onboarded' : 'evaluation');
@@ -105,9 +105,9 @@ class BusinessRegistryController extends Controller
         $x['vat_registered'] = (bool) $m->vat_registered;
         $x['account_linked'] = (bool) $m->merchant_account_id;
         $x['registry_revision'] = (int) $m->registry_revision;
-        unset($x['registry_details']);
+        unset($x['registry_details'], $x['registry_eis_status']);
         foreach (['created_at', 'updated_at'] as $k) {
-            if ($x[$k]) {
+            if ($x[$k] ?? null) {
                 $x[$k] = Carbon::parse($x[$k], config('app.timezone'))->toIso8601String();
             }
         }
@@ -115,48 +115,91 @@ class BusinessRegistryController extends Controller
         return $x;
     }
 
-    private function filtered(Request $r): array
+    private function metadata(string $field): string
     {
-        [$q,$v] = $this->query($r);
-        $rows = $q->orderBy('m.business_name')->get()->map(fn ($x) => $this->present($x));
-        if (($v['eis'] ?? 'all') !== 'all') {
-            $rows = $rows->where('eis_status', $v['eis']);
-        }if (($v['stage'] ?? 'all') !== 'all') {
-            $rows = $rows->where('stage', $v['stage']);
-        }if (($v['application_type'] ?? 'all') !== 'all') {
-            $rows = $rows->where('application_type', $v['application_type']);
-        }
+        $json = "CASE WHEN JSON_VALID(m.registry_details) THEN m.registry_details ELSE '{}' END";
+        $value = DB::getDriverName() === 'mysql' ? "NULLIF(JSON_UNQUOTE(JSON_EXTRACT($json, '$.$field')), 'null')" : "JSON_EXTRACT($json, '$.$field')";
+        $fallback = $field === 'stage' ? "CASE WHEN m.status='active' THEN 'onboarded' ELSE 'evaluation' END" : "'new'";
+        return "COALESCE($value, $fallback)";
+    }
 
-        return [$rows->values(), $v];
+    private function filteredQuery(Request $r): array
+    {
+        $scope = $r->validate(['workspace' => ['nullable', Rule::in(['registry', 'onboarding'])]]);
+        [$q, $v] = $this->query($r);
+        if (($scope['workspace'] ?? 'registry') === 'onboarding') {
+            $q->where('m.status', 'pending')
+                ->whereRaw($this->metadata('stage').' IN (?, ?, ?)', ['evaluation', 'bir_validation', 'eis_setup']);
+        }
+        foreach (['stage', 'application_type'] as $field) {
+            if (($v[$field] ?? 'all') !== 'all') {
+                $q->whereRaw($this->metadata($field).' = ?', [$v[$field]]);
+            }
+        }
+        $eis = "COALESCE((SELECT CASE WHEN ei.environment<>'production' THEN 'certification' WHEN ei.status IN ('error','failed','rejected') THEN 'error' ELSE 'pending' END FROM eis_integrations ei WHERE ei.merchant_id=m.id ORDER BY ei.updated_at DESC,ei.id DESC LIMIT 1),'not_connected')";
+        if (($v['eis'] ?? 'all') !== 'all') {
+            $q->whereRaw("$eis = ?", [$v['eis']]);
+        }
+        return [$q, $v, $eis];
+    }
+
+    private function ordered($q, array $v)
+    {
+        return match ($v['sort'] ?? 'newest') {
+            'name' => $q->orderBy('m.business_name')->orderBy('m.id'),
+            'oldest' => $q->orderBy('m.created_at')->orderBy('m.id'),
+            default => $q->orderByDesc('m.created_at')->orderBy('m.id'),
+        };
     }
 
     public function index(Request $r)
     {
         $u = $this->actor($r);
-        [$rows,$v] = $this->filtered($r);
-        $counts = fn ($key) => $rows->groupBy($key)->map(fn ($g, $k) => ['name' => $k, 'value' => $g->count()])->values();
-        $summary = ['total' => $rows->count(), 'active' => $rows->where('status', 'active')->count(), 'pending' => $rows->where('status', 'pending')->count(), 'suspended' => $rows->whereIn('status', ['suspended', 'inactive'])->count(), 'connected' => 0];
+        [$q, $v, $eis] = $this->filteredQuery($r);
+        $statuses = (clone $q)->select('m.status')->selectRaw('COUNT(*) as total')->groupBy('m.status')->pluck('total', 'status');
+        $stageExpression = $this->metadata('stage');
+        // A derived column keeps MariaDB's ONLY_FULL_GROUP_BY validation independent
+        // of the JSON expression and its status fallback.
+        $stages = DB::query()->fromSub((clone $q)->selectRaw("$stageExpression as registry_stage"), 'registry_stages')
+            ->select('registry_stage')->selectRaw('COUNT(*) as total')->groupBy('registry_stage')->pluck('total', 'registry_stage');
+        $summary = ['total' => (int) $statuses->sum(), 'active' => (int) ($statuses['active'] ?? 0), 'pending' => (int) ($statuses['pending'] ?? 0),
+            'suspended' => (int) ($statuses['suspended'] ?? 0) + (int) ($statuses['inactive'] ?? 0), 'connected' => 0];
         foreach (['evaluation', 'bir_validation', 'eis_setup', 'onboarded', 'rejected'] as $stage) {
-            $summary[$stage] = $rows->where('stage', $stage)->count();
-        }$sort = $v['sort'] ?? 'newest';
-        $rows = $sort === 'name' ? $rows->sortBy('business_name', SORT_NATURAL | SORT_FLAG_CASE) : ($sort === 'oldest' ? $rows->sortBy('created_at') : $rows->sortByDesc('created_at'));
+            $summary[$stage] = (int) ($stages[$stage] ?? 0);
+        }
         $size = (int) ($v['per_page'] ?? 10);
-        $page = (int) ($v['page'] ?? 1);
-
-        return response()->json(['data' => $rows->values()->slice(($page - 1) * $size, $size)->values(), 'summary' => $summary, 'total' => $rows->count(), 'last_page' => max(1, (int) ceil($rows->count() / $size)), 'charts' => ['registration' => $counts('status'), 'eis' => $counts('eis_status')], 'options' => ['types' => BusinessRegistrationController::BUSINESS_TYPES, 'industries' => app(RegistrationIndustry::class)->options(), 'rdos' => app(RegistrationAddress::class)->offices(), 'regions' => DB::table('merchants')->distinct()->pluck('region'), 'cities' => DB::table('merchants')->whereNotNull('city')->distinct()->pluck('city')], 'can_write' => in_array(DB::table('profiles')->where('id', $u->id)->value('role'), ['admin', 'super_admin']), 'generated_at' => now()->toIso8601String(), 'gateway' => 'not_verified']);
+        $lastPage = max(1, (int) ceil($summary['total'] / $size));
+        $page = min($lastPage, (int) ($v['page'] ?? 1));
+        $rows = $this->ordered((clone $q)->select('m.*')->selectRaw("$eis as registry_eis_status"), $v)
+            ->forPage($page, $size)->get()->map(fn ($m) => $this->present($m, false));
+        $canWrite = in_array(DB::table('profiles')->where('id', $u->id)->value('role'), ['admin', 'super_admin']);
+        $overview = app(\App\Services\RegistryMerchantOverview::class);
+        $finances = $canWrite ? $overview->rows($rows->pluck('id')->all()) : [];
+        $rows = $rows->map(fn ($row) => $row + ['overview' => $finances[$row['id']] ?? null]);
+        return response()->json(['data' => $rows, 'summary' => $summary, 'financial_summary' => $canWrite ? $overview->summary($q) : null,
+            'total' => $summary['total'], 'page' => $page, 'last_page' => $lastPage,
+            'charts' => ['registration' => $statuses->map(fn ($n, $name) => ['name' => $name, 'value' => (int) $n])->values(), 'eis' => []],
+            'options' => ['types' => BusinessRegistrationController::BUSINESS_TYPES, 'industries' => app(RegistrationIndustry::class)->options(), 'rdos' => app(RegistrationAddress::class)->offices(),
+                'regions' => DB::table('merchants')->distinct()->pluck('region'), 'cities' => DB::table('merchants')->whereNotNull('city')->distinct()->pluck('city')],
+            'can_write' => $canWrite, 'can_view_financial' => $canWrite && $overview->available(), 'generated_at' => now()->toIso8601String(), 'gateway' => 'not_verified'])
+            ->header('Cache-Control', 'private, no-store');
     }
 
     public function show(Request $r, string $id)
     {
-        $this->actor($r);
+        $u = $this->actor($r);
         $m = DB::table('merchants')->where('id', $id)->first();
         abort_unless($m, 404);
         $x = $this->present($m);
         $x['history'] = DB::table('eis_audit_events')->where('subject_id', $id)->orderByDesc('id')->limit(30)->get(['event', 'actor_id', 'occurred_at', 'details']);
         $x['documents'] = DB::table('transaction_receipts')->where('merchant_id', $id)->count();
+        $x['verification_documents'] = app(\App\Services\MerchantVerificationDocuments::class)->present($id)['uploaded'];
         $x['transactions'] = DB::table('merchant_transactions')->where('merchant_id', $id)->count();
         $account = $m->merchant_account_id ? DB::table('users')->where('id', $m->merchant_account_id)->first(['email', 'email_verified_at', 'created_at']) : null;
         $x['account'] = $account;
+        if (in_array(DB::table('profiles')->where('id', $u->id)->value('role'), ['admin', 'super_admin'])) {
+            $x['overview'] = app(\App\Services\RegistryMerchantOverview::class)->rows([$id])[$id] ?? null;
+        }
 
         return response()->json(['business' => $x]);
     }
@@ -166,8 +209,8 @@ class BusinessRegistryController extends Controller
         abort_unless(preg_match('/^[0-9\s-]+$/', (string) ($data['tin'] ?? '')), 422, 'TIN must contain digits, spaces or hyphens only.');
         $data['tin'] = $this->tin($data['tin'] ?? '');
         $data['email'] = strtolower(trim($data['email'] ?? ''));
-        $r = Validator::make($data, ['tin' => 'required|digits:12', 'business_name' => 'required|string|max:255', 'owner_name' => 'required|string|max:255', 'email' => 'required|email|max:255', 'phone' => 'nullable|string|max:80', 'business_type' => ['required', Rule::in(array_keys(BusinessRegistrationController::BUSINESS_TYPES))], 'sector' => 'required|string|max:120', 'industry_other' => 'nullable|string|max:255', 'address' => 'required|string|max:1000', 'city' => 'required|string|max:255', 'region' => 'required|string|max:150', 'rdo_code' => ['required', Rule::in(array_column(app(RegistrationAddress::class)->offices(), 'rdo_code'))], 'vat_registered' => 'required|boolean', 'bir_registration_date' => 'nullable|date_format:Y-m-d|before_or_equal:today', 'website' => 'nullable|url:http,https|max:255', 'notes' => 'nullable|string|max:3000', 'application_type' => ['nullable', Rule::in(['new', 'migration'])], 'structured_address' => 'nullable|array'])->validate();
-        abort_if($r['tin'] === '000000000000', 422, 'TIN cannot be all zeros.');
+        $r = Validator::make($data, ['tin' => ['required', 'regex:/^\d{9}(?:\d{3}|\d{5})$/'], 'business_name' => 'required|string|max:255', 'owner_name' => 'required|string|max:255', 'email' => 'required|email|max:255', 'phone' => 'nullable|string|max:80', 'business_type' => ['required', Rule::in(array_keys(BusinessRegistrationController::BUSINESS_TYPES))], 'sector' => 'required|string|max:120', 'industry_other' => 'nullable|string|max:255', 'address' => 'required|string|max:1000', 'city' => 'required|string|max:255', 'region' => 'required|string|max:150', 'rdo_code' => ['required', Rule::in(array_column(app(RegistrationAddress::class)->offices(), 'rdo_code'))], 'vat_registered' => 'required|boolean', 'bir_registration_date' => 'nullable|date_format:Y-m-d|before_or_equal:today', 'website' => 'nullable|url:http,https|max:255', 'notes' => 'nullable|string|max:3000', 'application_type' => ['nullable', Rule::in(['new', 'migration'])], 'structured_address' => 'nullable|array'])->validate();
+        abort_if(preg_match('/^0+$/', $r['tin']), 422, 'TIN cannot be all zeros.');
         if ($this->duplicate($r['tin'], $id)) {
             throw ValidationException::withMessages(['tin' => 'This TIN and branch are already in the registry.']);
         }$industry = app(RegistrationIndustry::class)->options();
@@ -232,6 +275,15 @@ class BusinessRegistryController extends Controller
             [$v,$meta] = $this->validated($r->all(), $id);
             $meta = array_replace(json_decode($old->registry_details ?? '{}', true) ?: [], $meta);
             DB::table('merchants')->where('id', $id)->update($v + ['registry_revision' => $old->registry_revision + 1, 'registry_details' => json_encode($meta), 'updated_at' => now()]);
+            $identityChanged = false;
+            foreach (['business_name','tin','vat_registered','address','rdo_code','branch_count'] as $field) {
+                if (array_key_exists($field, $v) && (string)($v[$field] ?? '') !== (string)($old->$field ?? '')) {
+                    $identityChanged = true;
+                }
+            }
+            if ($identityChanged) {
+                DB::table('eis_integrations')->where('merchant_id', $id)->update(['pti_status' => 'pending','ptt_status' => 'pending','certification_status' => 'pending','updated_at' => now()]);
+            }
             $this->audit('updated', $id, $u, ['reason' => $r->input('reason'), 'before' => array_intersect_key((array) $old, $v), 'after' => $v]);
 
             return response()->json(['business' => $this->present(DB::table('merchants')->where('id', $id)->first())]);
@@ -256,6 +308,7 @@ class BusinessRegistryController extends Controller
                 foreach (['registration_certificate', 'identity', 'business_information', 'representative_authority', 'contact_verification'] as $key) {
                     abort_unless($meta['checks'][$key] ?? false, 422, 'Complete all five document-review checks before onboarding.');
                 }abort_unless(! empty($v['evidence']), 422, 'An evidence/reference is required before onboarding.');
+                app(\App\Services\MerchantVerificationDocuments::class)->assertActivation($id);
                 $status = 'active';
             }if ($stage === 'rejected') {
                 $status = 'inactive';
@@ -264,9 +317,16 @@ class BusinessRegistryController extends Controller
             }$meta['stage'] = $stage;
             $meta['evidence'] = $v['evidence'] ?? ($meta['evidence'] ?? null);
             DB::table('merchants')->where('id', $id)->update(['status' => $status, 'registry_details' => json_encode($meta), 'registry_revision' => $v['revision'] + 1, 'updated_at' => now()]);
+            if ($status === 'active') {
+                app(\App\Services\MerchantApiOnboarding::class)->prepare(
+                    DB::table('merchants')->where('id', $id)->first(),
+                    (string) $u->id,
+                    true
+                );
+            }
             if (in_array($status, ['suspended', 'inactive']) && $m->merchant_account_id) {
                 abort_unless(DB::table('profiles')->where('id', $m->merchant_account_id)->value('role') === 'merchant', 409, 'Linked account must be reviewed before changing access.');
-                DB::table('users')->where('id', $m->merchant_account_id)->update(['api_token' => null]);
+                DB::table('users')->where('id', $m->merchant_account_id)->update(app(\App\Services\ApiAccess::class)->revocation());
             }DB::table('business_registry_requests')->where('merchant_id', $id)->where('purpose', 'invitation')->whereNull('completed_at')->update(['revoked_at' => now()]);
             $this->audit('reviewed', $id, $u, ['reason' => $v['reason'], 'before_status' => $m->status, 'status' => $status, 'stage' => $stage, 'checks' => $meta['checks'], 'evidence' => $meta['evidence']]);
 
@@ -279,7 +339,7 @@ class BusinessRegistryController extends Controller
         $this->actor($r);
         $r->validate(['tin' => 'required|string|max:30']);
         $tin = $this->tin($r->input('tin'));
-        $valid = preg_match('/^[0-9\s-]+$/', $r->input('tin')) && strlen($tin) === 12 && $tin !== '000000000000';
+        $valid = preg_match('/^[0-9\s-]+$/', $r->input('tin')) && in_array(strlen($tin), [12, 14], true) && ! preg_match('/^0+$/', $tin);
 
         return response()->json(['normalized' => $tin, 'format_valid' => (bool) $valid, 'in_registry' => $valid ? $this->duplicate($tin) : false, 'bir_verified' => false, 'message' => 'Local format and NUERS registry check only. No authenticated BIR TIN verification service is configured.']);
     }
@@ -287,17 +347,40 @@ class BusinessRegistryController extends Controller
     public function export(Request $r)
     {
         $u = $this->actor($r);
-        [$rows] = $this->filtered($r);
-        $this->audit('exported', 'registry', $u, ['filters' => $r->query(), 'records' => $rows->count()]);
+        [$q, $v] = $this->filteredQuery($r);
+        $total = (clone $q)->count();
+        if ($r->has('report_limit')) {
+            \App\Services\ReportCsv::limit($r, $total);
+        }
+        abort_if($total > 10000, 422, 'Narrow the registry filters to at most 10,000 merchants per export.');
+        $canFinancial = in_array(DB::table('profiles')->where('id', $u->id)->value('role'), ['admin', 'super_admin'])
+            && app(\App\Services\RegistryMerchantOverview::class)->available();
+        $this->audit('exported', 'registry', $u, ['filters' => $r->query(), 'records' => $total]);
 
-        return response()->streamDownload(function () use ($rows) {
+        return response()->streamDownload(function () use ($q, $v, $canFinancial) {
             $f = fopen('php://output', 'w');
             fwrite($f, "\xEF\xBB\xBF");
-            $keys = array_merge(self::CSV, ['status', 'eis_status', 'registration_date', 'stage', 'application_type']);
-            fputcsv($f, $keys);
-            foreach ($rows as $row) {
-                fputcsv($f, array_map(fn ($k) => $this->cell($row[$k] ?? ''), $keys));
-            }fclose($f);
+            $keys = array_merge(self::CSV, ['status', 'registration_date', 'stage', 'application_type']);
+            $financialKeys = ['available_centavos', 'reserved_centavos', 'transactions', 'transaction_amount_centavos',
+                'successful_transactions', 'failed_transactions', 'pending_transactions', 'charged_centavos', 'charged_transactions',
+                'deposits_centavos', 'withdrawals_centavos', 'pending_topups', 'pending_topups_centavos',
+                'live_keys', 'sandbox_keys', 'sandbox_events', 'last_transaction_at'];
+            fputcsv($f, array_merge($keys, $canFinancial ? array_map(fn ($k) => str_replace('_centavos', '_PHP', $k), $financialKeys) : []));
+            $this->ordered((clone $q)->select('m.*'), $v)->chunk(200, function ($merchants) use ($f, $keys, $financialKeys, $canFinancial) {
+                $financial = $canFinancial ? app(\App\Services\RegistryMerchantOverview::class)->rows($merchants->pluck('id')->all()) : [];
+                foreach ($merchants as $merchant) {
+                    $row = $this->present($merchant, false);
+                    $cells = array_map(fn ($k) => $this->cell($row[$k] ?? ''), $keys);
+                    if ($canFinancial) {
+                        foreach ($financialKeys as $key) {
+                            $value = $financial[$merchant->id][$key] ?? '';
+                            $cells[] = str_ends_with($key, '_centavos') ? number_format((int) $value / 100, 2, '.', '') : $value;
+                        }
+                    }
+                    fputcsv($f, $cells);
+                }
+            });
+            fclose($f);
         }, 'NUERS-business-registry-'.now()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8', 'Cache-Control' => 'private, no-store']);
     }
 
@@ -326,6 +409,7 @@ class BusinessRegistryController extends Controller
     {
         $u = $this->actor($r, true);
         $r->validate(['file' => 'required|file|max:2048', 'request_id' => 'required|uuid']);
+        app(\App\Services\UploadScanner::class)->file($r->file('file')->getRealPath());
         $raw = file_get_contents($r->file('file')->getRealPath());
         abort_unless(mb_check_encoding($raw, 'UTF-8'), 422, 'Use UTF-8 CSV encoding.');
         $f = fopen('php://temp', 'r+');
@@ -430,6 +514,7 @@ class BusinessRegistryController extends Controller
             DB::table('business_registry_requests')->where('purpose', 'invitation')->where('merchant_id', $id)->whereNull('completed_at')->update(['revoked_at' => now()]);
             $token = Str::random(64);
             DB::table('business_registry_requests')->insert(['id' => $r->input('request_id'), 'actor_id' => $u->id, 'purpose' => 'invitation', 'merchant_id' => $id, 'request_hash' => hash('sha256', $m->email), 'token_hash' => hash('sha256', $token), 'payload' => Crypt::encryptString(json_encode(['token' => $token, 'email' => $m->email])), 'expires_at' => now()->addHours(48), 'created_at' => now(), 'updated_at' => now()]);
+            app(\App\Services\PlatformNotifications::class)->queue($m->email, 'business.invitation', (string)$r->input('request_id'), 'Set up your NUERS business account', 'You have been invited to set up your NUERS business account. Use the secure link within 48 hours. This link works once. If you were not expecting this invitation, contact NUERS support.', action:app(\App\Services\PlatformNotifications::class)->url('activate-business').'#token='.$token, expires:now()->addHours(48), context:['invitation_id' => $r->input('request_id')]);
             $this->audit('invitation.created', $id, $u, ['reason' => $r->input('reason'), 'expires_at' => now()->addHours(48)->toIso8601String()]);
 
             return response()->json(['url' => url('/activate-business').'#token='.$token, 'expires_at' => now()->addHours(48)->toIso8601String()]);
@@ -464,6 +549,7 @@ class BusinessRegistryController extends Controller
             Profile::create(['id' => $u->id, 'email' => $u->email, 'role' => 'merchant', 'full_name' => $u->name, 'organization' => $m->business_name, 'tin' => $m->tin, 'tin_bound_at' => now()]);
             DB::table('merchants')->where('id', $m->id)->update(['merchant_account_id' => $u->id, 'merchant_account_email' => $u->email, 'registry_revision' => $m->registry_revision + 1, 'updated_at' => now()]);
             DB::table('business_registry_requests')->where('id', $inv->id)->update(['completed_at' => now(), 'payload' => Crypt::encryptString(json_encode(['email' => $m->email, 'consented_at' => now()->toIso8601String(), 'notice_version' => $v['notice_version']])), 'updated_at' => now()]);
+            app(\App\Services\PlatformNotifications::class)->verification($u);
             $this->audit('account.activated', $m->id, $u, ['terms_version' => $v['notice_version'], 'privacy_version' => $v['notice_version'], 'email_verified' => false]);
 
             return response()->json(['message' => 'Account created. Sign in with your business contact email. Platform approval and BIR permissions remain separate.']);

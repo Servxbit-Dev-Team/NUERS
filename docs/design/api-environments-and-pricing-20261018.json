@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-18",
+  "status": "tested locally; live deployment pending",
+  "key_environment": [
+    "live",
+    "sandbox"
+  ],
+  "environment_immutable": true,
+  "sandbox_store": "integration_sandbox_events; encrypted JSON, tenant/location/identity guards",
+  "sandbox_effects": {
+    "financial_records": false,
+    "wallet_debits": false,
+    "numbering": false,
+    "bir_queue": false,
+    "sales_reports": false
+  },
+  "portal_views": {
+    "merchant": "/merchant/invoices?environment=sandbox",
+    "admin": "/super-admin/transactions?environment=sandbox"
+  },
+  "manual_retry": "Separate encrypted queue namespaces; matching key environment enforced",
+  "pricing": {
+    "initial_minimum_centavos": 50000,
+    "initial_fee_centavos": 300,
+    "admin_configurable": [
+      "minimum_transaction_centavos",
+      "fee_centavos"
+    ],
+    "optimistic_revision": true,
+    "prospective": true,
+    "audit_required": true,
+    "insufficient_funds": "402; all new financial effects rolled back",
+    "sandbox": "simulation only"
+  },
+  "limits": "Sandbox is not source-profile, legal issuance, load-test or BIR certification evidence."
+}

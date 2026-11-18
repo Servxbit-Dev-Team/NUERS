@@ -121,6 +121,8 @@ class TransactionController extends Controller
 
     private function applyFilters(Builder $query, Request $request): Builder
     {
+        \Illuminate\Support\Facades\Validator::make($request->query(), ['status' => 'nullable|string|max:255', 'region' => 'nullable|string|max:255', 'payment' => 'nullable|string|max:255', 'rdo' => 'nullable|string|max:255', 'date_from' => 'nullable|string|max:255', 'date_to' => 'nullable|string|max:255', 'search' => 'nullable|string|max:255'])->validate();
+
         $status = (string) $request->query('status', 'all');
         $region = (string) $request->query('region', 'all');
         $payment = (string) $request->query('payment', 'all');
@@ -600,8 +602,10 @@ class TransactionController extends Controller
 
     private function taxByRegion(Builder $query): array
     {
-        return (clone $query)
-            ->selectRaw("COALESCE(NULLIF(t.region, ''), 'Unclassified') as region, COUNT(*) as count, COALESCE(SUM(t.amount), 0) as gross, COALESCE(SUM(t.vat_amount), 0) as vat")
+        $regions = (clone $query)->selectRaw("COALESCE(NULLIF(t.region, ''), 'Unclassified') as region, t.amount, t.vat_amount");
+
+        return DB::query()->fromSub($regions, 'region_source')
+            ->selectRaw('region, COUNT(*) as count, COALESCE(SUM(amount), 0) as gross, COALESCE(SUM(vat_amount), 0) as vat')
             ->groupBy('region')
             ->orderByDesc('vat')
             ->get()

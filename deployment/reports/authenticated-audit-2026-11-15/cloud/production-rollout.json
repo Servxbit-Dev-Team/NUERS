@@ -1,0 +1,68 @@
+{
+  "started_at": "2026-11-15T02:42:39.747251+00:00",
+  "base": "/srv/nuers/releases/production-20261115-input1",
+  "candidate": "/srv/nuers/releases/production-20261115-auth1",
+  "events": [
+    {
+      "time": "2026-11-15T02:42:40.096518+00:00",
+      "stage": "draining",
+      "node": "i-0694f0738afd178ce"
+    },
+    {
+      "time": "2026-11-15T02:43:12.362787+00:00",
+      "stage": "drained",
+      "node": "i-0694f0738afd178ce"
+    },
+    {
+      "time": "2026-11-15T02:43:12.413733+00:00",
+      "stage": "switch-smoke",
+      "node": "i-0694f0738afd178ce",
+      "command_id": "447a36dd-b6cb-4bcc-8961-182985c2b27d"
+    },
+    {
+      "time": "2026-11-15T02:43:38.842379+00:00",
+      "stage": "registering",
+      "node": "i-0694f0738afd178ce"
+    },
+    {
+      "time": "2026-11-15T02:43:42.904031+00:00",
+      "stage": "healthy",
+      "node": "i-0694f0738afd178ce"
+    },
+    {
+      "time": "2026-11-15T02:43:42.975023+00:00",
+      "stage": "draining",
+      "node": "i-0fe793f3af7b0c49b"
+    },
+    {
+      "time": "2026-11-15T02:44:15.249490+00:00",
+      "stage": "drained",
+      "node": "i-0fe793f3af7b0c49b"
+    },
+    {
+      "time": "2026-11-15T02:44:15.275979+00:00",
+      "stage": "switch-smoke",
+      "node": "i-0fe793f3af7b0c49b",
+      "command_id": "1fd44979-3e30-46af-92a1-5851acba434a"
+    },
+    {
+      "time": "2026-11-15T02:44:41.739117+00:00",
+      "stage": "registering",
+      "node": "i-0fe793f3af7b0c49b"
+    },
+    {
+      "time": "2026-11-15T02:44:45.804604+00:00",
+      "stage": "healthy",
+      "node": "i-0fe793f3af7b0c49b"
+    },
+    {
+      "time": "2026-11-15T02:44:45.854395+00:00",
+      "stage": "rollout_complete",
+      "targets": {
+        "i-0694f0738afd178ce": "healthy",
+        "i-0fe793f3af7b0c49b": "healthy"
+      }
+    }
+  ],
+  "complete": true
+}

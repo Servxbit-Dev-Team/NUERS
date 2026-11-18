@@ -1,0 +1,278 @@
+.mfa-devices {
+  padding: 20px 22px;
+  border-top: 1px solid #dfebfc;
+  color: #12386b;
+}
+.mfa-devices-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: space-between;
+}
+.mfa-devices-heading > div,
+.mfa-disable-row > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.mfa-devices-heading p {
+  font-size: 12px;
+  color: #738bad;
+  margin: 5px 0 0;
+  max-width: 440px;
+}
+.mfa-devices button {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #bfd4f4;
+  border-radius: 6px;
+  padding: 9px 14px;
+  font-size: 14px;
+  background: #fff;
+  color: #0757c7;
+}
+.mfa-disable-row {
+  margin-top: 20px;
+  padding: 18px;
+  border: 1px solid #edcbd1;
+  border-radius: 8px;
+  background: #fff8f9;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+}
+.mfa-disable-row p {
+  font-size: 14px;
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+.mfa-disable-row button.ms-danger,
+.nauth-security .mfa-disable-row button.ms-danger {
+  color: #a6233b;
+  background: #fff3f4;
+  border-color: #dfadb7;
+  flex-shrink: 0;
+}
+.mfa-device-dialog label.mfa-disable-confirm {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  line-height: 1.5;
+}
+.mfa-device-dialog .mfa-disable-confirm input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.mfa-device-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+}
+.mfa-device-list li {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 0;
+  border-top: 1px solid #e5edfa;
+}
+.mfa-device-list li > div {
+  flex: 1;
+  min-width: 0;
+}
+.mfa-device-list strong {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.mfa-device-list small {
+  display: block;
+  color: #738bad;
+  margin-top: 5px;
+  font-size: 11px;
+}
+.mfa-device-list .ms-badge {
+  margin-left: 8px;
+}
+.mfa-device-notice,
+.mfa-device-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.mfa-device-notice {
+  background: #ebfaf2;
+  color: #207744;
+}
+.mfa-device-error {
+  background: #fff0f1;
+  color: #a6233b;
+}
+.mfa-device-dialog {
+  width: calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)) !important;
+  left: calc(50% + (env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)) / 2);
+  max-width: 490px !important;
+  max-height: calc(100dvh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-padding-block: 20px;
+  transition-property: opacity, transform;
+  color: #12386b;
+}
+.mfa-device-dialog [data-slot="dialog-header"] {
+  padding-right: 24px;
+  overflow-wrap: anywhere;
+}
+.mfa-device-dialog [data-slot="dialog-close"] {
+  width: 44px;
+  height: 44px;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+}
+.mfa-device-dialog label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 14px 0;
+}
+.mfa-device-dialog input {
+  display: block;
+  width: 100%;
+  height: 44px;
+  margin-top: 6px;
+  border: 1px solid #bfd4f4;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-weight: 400;
+  font-size: 16px;
+  background: #fbfdff;
+}
+.mfa-device-dialog input:focus {
+  outline: 2px solid #0066ff;
+  outline-offset: 2px;
+}
+.mfa-device-dialog footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+.mfa-device-dialog footer button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #c5d8fa;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-size: 13px;
+  min-height: 44px;
+}
+.mfa-device-dialog footer .ms-primary {
+  background: #0063ff;
+  color: white;
+  border-color: #0063ff;
+}
+.mfa-device-dialog footer .ms-danger {
+  color: #b6233f;
+  background: #fff3f4;
+  border-color: #edb5c0;
+}
+.mfa-device-dialog button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.mfa-device-dialog .ms-caption {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #738bad;
+}
+.mfa-device-qr {
+  display: flex;
+  justify-content: center;
+  min-height: 220px;
+}
+.mfa-device-secret {
+  display: block;
+  overflow-wrap: anywhere;
+  background: #edf4ff;
+  padding: 12px;
+  margin-top: 10px;
+  user-select: all;
+}
+.mfa-device-dialog details {
+  font-size: 12px;
+}
+.mfa-device-dialog summary {
+  cursor: pointer;
+  color: #0063ff;
+}
+@media (max-width: 580px) {
+  .mfa-device-dialog {
+    padding: 20px 16px;
+  }
+  .mfa-device-dialog footer {
+    flex-direction: column-reverse;
+  }
+  .mfa-device-dialog footer button,
+  .mfa-disable-row button {
+    width: 100%;
+    white-space: normal;
+    min-height: 44px;
+  }
+  .mfa-devices button {
+    min-height: 44px;
+  }
+  .mfa-disable-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .mfa-devices {
+    padding: 16px;
+  }
+  .mfa-devices-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .mfa-device-list li {
+    flex-wrap: wrap;
+  }
+  .mfa-device-list li > div {
+    flex-basis: 65%;
+  }
+  .mfa-device-list li > button {
+    margin-left: 49px;
+  }
+}
+
+@media (max-height: 520px) {
+  .mfa-device-dialog {
+    top: max(12px, env(safe-area-inset-top, 0px));
+    translate: -50% 0;
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Keep the form inside a visible segment when a browser exposes a physical hinge. */
+@media (horizontal-viewport-segments: 2) {
+  .mfa-device-dialog {
+    left: calc(env(viewport-segment-left 0 0, 0px) + env(viewport-segment-width 0 0, 100vw) / 2);
+    width: calc(env(viewport-segment-width 0 0, 100vw) - 32px) !important;
+  }
+}
+@media (vertical-viewport-segments: 2) {
+  .mfa-device-dialog {
+    top: calc(env(viewport-segment-top 0 0, 0px) + 12px);
+    translate: -50% 0;
+    max-height: calc(env(viewport-segment-height 0 0, 100dvh) - 24px);
+  }
+}

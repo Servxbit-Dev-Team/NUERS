@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     public function up(): void
     {
         Schema::create('taxpayer_authorizations', function (Blueprint $t) {
@@ -50,8 +49,8 @@ return new class extends Migration
             $t->text('evidence');
             $t->text('reason');
             $t->string('recorded_by');
-            $t->timestamp('observed_at');
-            $t->timestamp('created_at');
+            $t->dateTime('observed_at');
+            $t->dateTime('created_at');
         });
     }
 

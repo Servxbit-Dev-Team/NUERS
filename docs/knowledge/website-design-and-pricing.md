@@ -1,5 +1,12 @@
 # Website, invoice design and subscription implementation
 
+## Current pricing update — 18 October 2026
+
+The operator superseded the historical PHP500 threshold described below. The current default is one PHP3 fee per newly accepted primary Live sale with a PHP0 minimum. Super Admin can change the minimum prospectively under Wallets & Transaction Pricing; zero charges every sale, and a positive minimum exempts amounts strictly below it. API and portal use the same published policy. Identical retries, supplementary payment copies and Sandbox records do not cause another Live sale debit. Previous ledger entries remain unchanged.
+
+The following earlier notes remain historical evidence.
+
+
 Implemented locally on 15 October 2026. User references: `NUERS Electronic Receipts Dashboard.png`, `Philippine Digital Receipt Layout.png`, and `NUERS_ A Stronger Digital Philippines.png` from the user's Downloads directory. These are visual references, not evidence of authority approval or live statistics.
 
 ## Delivered paths

@@ -1,0 +1,93 @@
+{
+  "release": "production-20261115-input1",
+  "final_verification": {
+    "verified_at": "2026-11-15T02:08:00.686927+00:00",
+    "release": "production-20261115-input1",
+    "targets": {
+      "i-0fe793f3af7b0c49b": "healthy",
+      "i-0694f0738afd178ce": "healthy"
+    },
+    "nodes": {
+      "i-0694f0738afd178ce": {
+        "release": "production-20261115-input1",
+        "patch_files_verified": 250,
+        "env_unchanged": true,
+        "env_mode": "0640",
+        "code_root_owned": true,
+        "runtime_archive_access": "denied"
+      },
+      "i-0fe793f3af7b0c49b": {
+        "release": "production-20261115-input1",
+        "patch_files_verified": 250,
+        "env_unchanged": true,
+        "env_mode": "0640",
+        "code_root_owned": true,
+        "runtime_archive_access": "denied"
+      }
+    },
+    "public_http": {
+      "/": 200,
+      "/login": 200,
+      "/api/health": 200
+    },
+    "public_assets_verified": [
+      "/build/assets/main-CSHsCHiG.css",
+      "/build/assets/main-CtvHtHrq.js"
+    ],
+    "temporary_staging": {
+      "i-0c1a905d6656ce491": "stopped",
+      "i-0fd5169e6c271bf76": "stopped"
+    }
+  },
+  "live_probe_summary": {
+    "started_at": "2026-11-15T02:08:11.967885+00:00",
+    "finished_at": "2026-11-15T02:08:57.395900+00:00",
+    "scope": "https://nuers.net",
+    "completed": true,
+    "request_count": 59,
+    "passed": 59,
+    "failed": 0,
+    "edge_blocked": 7,
+    "limits": [
+      "No live authenticated customer mutation or brute-force stress test",
+      "Edge-blocked requests do not establish backend payload coverage",
+      "Local suites cover authenticated tenant, upload, replay and mutation cases"
+    ]
+  },
+  "local_tests": {
+    "tests": 810,
+    "assertions": 10055,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "frontend_session_checks": 37,
+  "native_checks_per_node": 13,
+  "endpoint_method_probes": 557,
+  "handler_shadowed_routes": 2,
+  "independent_vapt_approved": false,
+  "source_recovery_is_reconstruction": true,
+  "evidence_files": {
+    "nuers-security-evidence-20261115.zip": "d9037285fa0b267c220fad628e606f3a32a54d02bea53a15d6d285f7ccc4d234",
+    "composer-audit.json": "3d68c4566587606c21e4bcd82b55d322ddb79158f657d9fb90bf0d24ab5bccdf",
+    "npm-audit.json": "456deb9ff572726c46ea2dcb4b835e8345c497b8c9033e7694282cbe63c865ee",
+    "test-inventory.json": "53537083abea7b16dfa838423f07efe5d39343fefb65c8b712079724cf6bf6a5",
+    "input-manifest.json": "58151b3c312c0fd90787c766802ca7409e6b45f7d8bc6a6f0384fc0b77207855",
+    "local-test-gate.json": "2d91940a8b12eb5fb02c4ab324cbf7debc5147c72acbe2d874e926d97175fad4",
+    "phpunit-final.xml": "0ab0689b557ff4660183c198908d33315844c581bff1faaec96398469e46972e",
+    "cloud/frontend/security-probes.json": "cbe550e24cf1921b2e6a8711ff19000f224fdfd0559112ca36a707ce6886dca2",
+    "cloud/frontend/production-rollout.json": "6f6f7e4995857fc5c3c7aa19c0170f66f3dc9de75e22870c617b754abe4a9e70",
+    "cloud/frontend/tls-cookie-checks.json": "cf61fc806a81c675f4f7dcda27abff5d3a69d5c62c00ca299195344d29009d2e",
+    "cloud/frontend/final-verification.json": "4412f5185535fd4723b0b45e3ebd73dcf28c76f833c84ebbf2f99c9eff9aaa68",
+    "cloud/input/prepare-i-0fe793f3af7b0c49b.json": "a6f9e2665506d167b63b59941cc2af66d161b3271332480e6fb68bad4f0a891a",
+    "cloud/input/native-retest-i-0694f0738afd178ce.json": "c3a8960d67094455605943d8aa69c9c353d2bb66f9970ef5c667d1f5eacfedcd",
+    "cloud/input/switch-smoke-i-0694f0738afd178ce.json": "1b8ab9fd35f4a42a6b56f72dc7ce664a7230c6825e1eb4d8d189a9cb9b512901",
+    "cloud/input/security-probes.json": "bbc795620ca9a87b66e4b30bd3f4727490284d210210e8446111360d1ef26cf6",
+    "cloud/input/production-rollout.json": "322436692db5af67bac278cf915f550281819b8070dabcc2062dc551f5f7f223",
+    "cloud/input/final-verification.json": "47c7f1a5c9b89cc54197fba200554a08a2e84d85dc4da1779d10229525be4442",
+    "cloud/input/local-test-gate.json": "2d91940a8b12eb5fb02c4ab324cbf7debc5147c72acbe2d874e926d97175fad4",
+    "cloud/input/prepare-i-0694f0738afd178ce.json": "d7e83e2c447a7c2924b658caed869536602eb4f3eed5070677ace8effac7a6a4",
+    "cloud/input/native-retest-i-0fe793f3af7b0c49b.json": "c3aea6760ca35622c45266f86025bd96745fdbbd35b0b6149558b1b7fee7449f",
+    "cloud/input/switch-smoke-i-0fe793f3af7b0c49b.json": "74cc0c18c92dd67b84926a128edabcd9f3f06b68fc03ed64cae75c0ed2884747"
+  }
+}

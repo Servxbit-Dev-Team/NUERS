@@ -1,0 +1,19 @@
+{
+  "live": {
+    "worker.py": "d36e6b0208903817dd1646d3902b5ba592f4a803b6f92dabb81a4f8726c8449f",
+    "client.py": "a08fcc6aa60f885676f5257f899510a980ba04448d1c697d0253cd2ff59ab920",
+    "nuers-pdf.service": "0f7144975e7681d5d0975c35842af66cf6a4da194bf458b4c53ce8adabd47c21",
+    "nuers-pdf.socket": "d259110bcc60d5b26aa97e41f5495c7c4a2ebd4dce8b15a390d6268b0bca5f0a"
+  },
+  "staging": {
+    "worker.py": "d36e6b0208903817dd1646d3902b5ba592f4a803b6f92dabb81a4f8726c8449f",
+    "client.py": "3bf363c36809403eac37c62aedf739e1aa403650838e187f6048c3f04646b6d1",
+    "nuers-pdf.service": "751d9cd5785ab9fa1265bb6a8086e7589749f6eabb1f481b7d42ce7e1158c79f",
+    "nuers-pdf.socket": "c7532c984afc354951170c7c31031aabbe8b8aeba129041074ef49600f58dc4c"
+  },
+  "changes": [
+    "test private path",
+    "test caller UID 33",
+    "deny worker access to staging application directory"
+  ]
+}

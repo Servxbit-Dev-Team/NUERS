@@ -1,0 +1,14 @@
+{
+  "base_release": "production-20261115-frontend1",
+  "candidate": "production-20261115-input1",
+  "contains_env": false,
+  "file_hashes": {
+    "app/Http/Middleware/ApiBoundary.php": "77728ce434cdaa1adb1cfd8ceb472a61ee1116caba6fa660a60d8fc73aab6b96",
+    "app/Http/Controllers/Api/TableController.php": "b082e880522f44c448655aef32a170e3af7fa6be31968d68d6131dc2cde6fa2d",
+    "tests/Feature/SecurityInputMatrixTest.php": "d52b6019f6855f396a402797474862defdca21dc698e6afc4b5bdede63dbdf33"
+  },
+  "baseline_hashes": {
+    "app/Http/Middleware/ApiBoundary.php": "9386539b5788047ccb5886626db77330c170b329f3369b8282bd366852bc51ad",
+    "app/Http/Controllers/Api/TableController.php": "5a6ed073620dda46a30c3007ec816f12fa3b3904ba852956466f57bd0caf60bc"
+  }
+}

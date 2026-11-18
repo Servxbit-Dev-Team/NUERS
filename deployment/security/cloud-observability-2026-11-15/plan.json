@@ -1,0 +1,114 @@
+{
+  "region": "ap-southeast-1",
+  "account": "289829301267",
+  "bucket": "nuers-289829301267-network-audit-sg",
+  "encryption": "AES256",
+  "public_access_block": {
+    "BlockPublicAcls": true,
+    "IgnorePublicAcls": true,
+    "BlockPublicPolicy": true,
+    "RestrictPublicBuckets": true
+  },
+  "ownership": "BucketOwnerEnforced",
+  "policy": {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "RequireTLS",
+        "Effect": "Deny",
+        "Principal": "*",
+        "Action": "s3:*",
+        "Resource": [
+          "arn:aws:s3:::nuers-289829301267-network-audit-sg",
+          "arn:aws:s3:::nuers-289829301267-network-audit-sg/*"
+        ],
+        "Condition": {
+          "Bool": {
+            "aws:SecureTransport": "false"
+          }
+        }
+      },
+      {
+        "Sid": "ALBWrite",
+        "Effect": "Allow",
+        "Principal": {
+          "Service": "logdelivery.elasticloadbalancing.amazonaws.com"
+        },
+        "Action": "s3:PutObject",
+        "Resource": "arn:aws:s3:::nuers-289829301267-network-audit-sg/alb/AWSLogs/289829301267/*",
+        "Condition": {
+          "ArnLike": {
+            "aws:SourceArn": "arn:aws:elasticloadbalancing:ap-southeast-1:289829301267:loadbalancer/*"
+          }
+        }
+      },
+      {
+        "Sid": "FlowWrite",
+        "Effect": "Allow",
+        "Principal": {
+          "Service": "delivery.logs.amazonaws.com"
+        },
+        "Action": "s3:PutObject",
+        "Resource": "arn:aws:s3:::nuers-289829301267-network-audit-sg/flow/AWSLogs/289829301267/*",
+        "Condition": {
+          "StringEquals": {
+            "aws:SourceAccount": "289829301267",
+            "s3:x-amz-acl": "bucket-owner-full-control"
+          },
+          "ArnLike": {
+            "aws:SourceArn": "arn:aws:logs:ap-southeast-1:289829301267:*"
+          }
+        }
+      },
+      {
+        "Sid": "FlowACL",
+        "Effect": "Allow",
+        "Principal": {
+          "Service": "delivery.logs.amazonaws.com"
+        },
+        "Action": "s3:GetBucketAcl",
+        "Resource": "arn:aws:s3:::nuers-289829301267-network-audit-sg",
+        "Condition": {
+          "StringEquals": {
+            "aws:SourceAccount": "289829301267"
+          },
+          "ArnLike": {
+            "aws:SourceArn": "arn:aws:logs:ap-southeast-1:289829301267:*"
+          }
+        }
+      }
+    ]
+  },
+  "lifecycle": {
+    "Rules": [
+      {
+        "ID": "NewNetworkLogs90Days",
+        "Status": "Enabled",
+        "Filter": {
+          "Prefix": ""
+        },
+        "Expiration": {
+          "Days": 90
+        }
+      }
+    ]
+  },
+  "alb": "arn:aws:elasticloadbalancing:ap-southeast-1:289829301267:loadbalancer/app/nuers-prod/bafa8634a13ab2b9",
+  "alb_prefix": "alb",
+  "flow": {
+    "ResourceIds": [
+      "vpc-06225f1a965755eb1"
+    ],
+    "ResourceType": "VPC",
+    "TrafficType": "ALL",
+    "LogDestinationType": "s3",
+    "LogDestination": "arn:aws:s3:::nuers-289829301267-network-audit-sg/flow",
+    "MaxAggregationInterval": 600,
+    "DestinationOptions": {
+      "FileFormat": "plain-text",
+      "HiveCompatiblePartitions": false,
+      "PerHourPartition": true
+    }
+  },
+  "monthly_budget_usd": 1300
+}

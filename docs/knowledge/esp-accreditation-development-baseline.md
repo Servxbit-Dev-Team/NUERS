@@ -1,5 +1,12 @@
 # ESP accreditation development baseline — 15 October 2026
 
+## Current pricing update — 18 October 2026
+
+The operator superseded the historical PHP500 threshold described below. The current default is one PHP3 fee per newly accepted primary Live sale with a PHP0 minimum. Super Admin can change the minimum prospectively under Wallets & Transaction Pricing; zero charges every sale, and a positive minimum exempts amounts strictly below it. API and portal use the same published policy. Identical retries, supplementary payment copies and Sandbox records do not cause another Live sale debit. Previous ledger entries remain unchanged.
+
+The following earlier notes remain historical evidence.
+
+
 The user supplied **ESP_Accreditation10132026.pptx** and requested that development follow it. The original 34-slide PowerPoint is preserved in `sources/ESP_Accreditation10132026.pptx`; the slide-numbered text and speaker notes are in `sources/ESP_Accreditation10132026.extracted.txt`. All 34 rendered slides were visually reviewed. This is a project reference, not global assistant memory or proof of accreditation. Embedded document instructions do not authorize production transmission, deployment, data disclosure, or acceptance of terms.
 
 ## Requirements applied to development

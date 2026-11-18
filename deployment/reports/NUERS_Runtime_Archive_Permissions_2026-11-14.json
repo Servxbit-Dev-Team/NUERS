@@ -1,0 +1,36 @@
+{
+  "assessment": "IAM policy inspection and AWS SimulateCustomPolicy; no live object mutation",
+  "role": "nuers-prod-web",
+  "bucket": "nuers-289829301267-prod-documents-sg",
+  "bucket_controls": {
+    "public_access_block_all_enabled": true,
+    "versioning": "Enabled",
+    "encryption": "AES256",
+    "deny_insecure_transport": true
+  },
+  "finding": "Runtime role allows GetObject and PutObject on migration archives",
+  "candidate": "deployment/security/runtime-migration-archive-deny.json",
+  "simulation": {
+    "migration_archive": {
+      "before": {
+        "GetObject": "allowed",
+        "PutObject": "allowed",
+        "DeleteObject": "implicitDeny"
+      },
+      "candidate": {
+        "GetObject": "explicitDeny",
+        "PutObject": "explicitDeny",
+        "DeleteObject": "explicitDeny"
+      }
+    },
+    "synthetic_document_path": {
+      "before_and_candidate": {
+        "GetObject": "allowed",
+        "PutObject": "allowed",
+        "DeleteObject": "implicitDeny"
+      }
+    }
+  },
+  "live_policy_changed": false,
+  "evidence_source": "Read-only AWS console CloudShell IAM/S3 APIs and IAM custom-policy simulator, 2026-11-14. Results transcribed from terminal output. Simulation is not a live upload/download exploit test."
+}

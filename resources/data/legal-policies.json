@@ -1,6 +1,6 @@
 {
-  "version": "2026-10-15.2",
-  "effective_date": "15 October 2026",
+  "version": "2026-10-17.2",
+  "effective_date": "17 October 2026",
   "operator": "NUERS",
   "contact_email": "nuersofficial@gmail.com",
   "terms": [
@@ -31,13 +31,13 @@
       ]
     },
     {
-      "id": "subscriptions",
-      "title": "Subscriptions, fees and storage",
+      "id": "pricing",
+      "title": "Transaction fees and record storage",
       "paragraphs": [
-        "The published plan catalogue below shows current advertised terms. A plan selected during registration is stored as a preference and snapshot; registration itself does not process a payment, activate recurring billing, enforce a storage quota or charge a transaction fee.",
-        "Under the initial published offer, Subscription 1 has a ₱2 fee per eligible transaction with 500 MB included storage. Subscription 2 has a ₱3 fee per eligible transaction with unlimited storage for five years. Transactions below ₱500 have no service fee; at exactly ₱500 and above, the flat fee for the selected plan applies. The fee is not a percentage. For example, a ₱499.99 transaction has no service fee; a ₱500 transaction has a ₱2 or ₱3 fee under those initial plans.",
-        "An administrator can revise the public offer for future selections. Your saved registration snapshot is not silently replaced by a new advertised price. Any paid activation, renewal, billing frequency, applicable taxes, refunds or changes affecting an existing paid arrangement must be communicated and agreed before a charge is made.",
-        "The five-year storage offer is a plan term, not a declaration of a statutory retention period. Unlimited storage describes capacity during the offered term; renewal, export and end-of-term handling require the applicable service arrangement. Keep an independent copy of records you are legally required to retain."
+        "NUERS uses transaction-based pricing with no subscription or recurring subscription fee. The current published service fee applies once per eligible finalized sale of ₱500 and above, deducted from the merchant’s prepaid wallet at NUERS acceptance. Super Admin rate changes apply prospectively; previous ledger entries retain their original fee and pricing revision. Transactions below ₱500 have no NUERS transaction service fee. This is a flat fee, not a percentage: ₱499.99 has no service fee; ₱500 and ₱5,000 each have the same published flat service fee. A request with insufficient funds is not accepted; the client must retain the original source and retry after funding. Payment copies, adjustments and accepted retries do not create an additional sale fee.",
+        "All NUERS business accounts include unlimited record storage with five-year record retention. No subscription plan or storage tier is required. The registration workflow records the applicable pricing terms; registration and the public fee calculator do not process payment.",
+        "NUERS service fees are separate from the transaction amount. Any payment-provider charges are separate. Charges or changes affecting an existing paid arrangement must be communicated and agreed before collection.",
+        "The five-year storage offer is a service term. It does not override applicable recordkeeping obligations, lawful holds or authorized migration requirements. Preserve independent copies where required and contact NUERS for record export or end-of-term arrangements. Records are not automatically deleted solely because this advertised term changes."
       ]
     },
     {
@@ -87,7 +87,7 @@
       "id": "collected",
       "title": "What the system collects",
       "paragraphs": [
-        "Account and registration information: name, email, password hash, business name, TIN and branch code, structured address and ZIP code, industry/activity, business type, RDO, VAT status, representative name and position, mobile number, subscription preference, notice versions and agreement timestamps.",
+        "Account and registration information: name, email, password hash, business name, TIN and branch code, structured address and ZIP code, industry/activity, business type, RDO, VAT status, representative name and position, mobile number, pricing-terms snapshot, notice versions and agreement timestamps.",
         "Document information, when supplied: seller and buyer identifiers and contact details, invoice or receipt numbers, line items, amounts, taxes, payment method and transaction status. The system may also store related import, transmission, acknowledgment, exception and audit records where those workflows are used.",
         "Support information: optional name and email, topic, message contents, timestamps, associated signed-in account where available, message identifiers, read markers, assignment, priority, status and administrator action history.",
         "Technical information: session and API credentials used by the application, browser-held preferences and chat access credentials, security/audit events and server logs generated by the installation. Email verification records contain code hashes, attempt counts, expiry, verification proof hashes and delivery mode."
@@ -99,7 +99,7 @@
       "paragraphs": [
         "NUERS uses information to create and administer accounts, review business registrations, organize records, provide invoice and receipt workflows, show verification results, support enabled integrations, respond to support requests, reconcile errors and protect the service.",
         "Processing must have an appropriate lawful basis. Depending on the activity, this may include providing a requested service or preparing an agreement, complying with a legal obligation, proportionate legitimate interests such as security, or specific consent where required. TINs and other protected identifiers require the applicable safeguards and lawful basis; one registration checkbox does not authorize every later use.",
-        "Required registration fields are needed to complete the business-account workflow. Subscription choice and chat name/email are optional. A chat message and topic are needed to ask for support. Do not provide another person’s information unless you are authorized and have given any required notice."
+        "Required registration fields are needed to complete the business-account workflow. Chat name/email are optional. No subscription selection is required. A chat message and topic are needed to ask for support. Do not provide another person’s information unless you are authorized and have given any required notice."
       ]
     },
     {
@@ -119,7 +119,7 @@
         "This installation stores operational records in its configured database and server files. Hosting country, production processors, cross-border arrangements and backup locations depend on the actual deployment; these pages do not represent a certification of Philippine-only hosting.",
         "Records should be kept only for the relevant service, security, accounting, dispute or legal purpose and any required retention or legal hold. Account closure or resolution of a support thread is not automatic deletion. This implementation does not yet run an automatic purge schedule for chat, account records or expired verification rows.",
         "Email codes stop working after ten minutes and are limited to five attempts; expired code records may remain until administrator cleanup. Chat access tokens expire after ninety days; expiry removes token access, not the underlying message history. Browser storage may retain the token until it is cleared or a new conversation is started.",
-        "The initial Subscription 1 offer includes 500 MB storage; Subscription 2 advertises unlimited storage for five years. These are service offers, distinct from lawful data-retention requirements. The current registration catalogue does not itself enforce quotas or automatically delete records at a plan’s end. Contact NUERS for the applicable retention, export or closure process."
+        "NUERS includes unlimited storage with five-year record retention for all business accounts, without a subscription. This service offer is distinct from lawful data-retention requirements. A pricing update does not automatically delete records. Contact NUERS for retention, export or closure arrangements."
       ]
     },
     {

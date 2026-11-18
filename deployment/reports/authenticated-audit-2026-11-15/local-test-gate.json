@@ -1,0 +1,25 @@
+{
+  "created_at": "2026-11-15T02:40:55.669610+00:00",
+  "full": {
+    "tests": 819,
+    "assertions": 11207,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "evidence_sha256": "b04953259b7471bbd461fe9561c1b790db73f06a606cda92f5f680d73b1324bd"
+  },
+  "mariadb": {
+    "tests": 9,
+    "assertions": 1145,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "evidence_sha256": "77cac90a898be5b9a4c98fa3e570b20def7b151df12be092f51fd2c046044eed"
+  },
+  "artifact": {
+    "runtime_files": 10,
+    "files": 12,
+    "bytes": 51339,
+    "sha256": "edca95f1e73b2529071de3b3a8bca71f645b67635e75a461f05290f003297d41"
+  }
+}

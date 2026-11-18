@@ -1,0 +1,748 @@
+{
+  "base_release": "production-20261106-analytics-grouping2",
+  "status": "Scoped runtime candidate deployed as production-20261114-vapt1 after local and isolated Linux multi-node acceptance",
+  "files": [
+    {
+      "path": "composer.json",
+      "kind": "runtime",
+      "base_sha256": "991ba748c59d7848e4410dea0fa890d0d444eba6842ee5b5aad237f87fcfa69a",
+      "candidate_sha256": "7e93a74e04022b093e145e5c1fd83f1c5606148ae6ab3a1068b84fd9120ca3fb"
+    },
+    {
+      "path": "composer.lock",
+      "kind": "runtime",
+      "base_sha256": "8874b8e533787089a273def1836bca6d68b78b4135d0d76102442a9eab3b1890",
+      "candidate_sha256": "e674bdadfe1a6134b4f8ebebdf2235a058c6fce8f48feb52b8211d7bdba49924"
+    },
+    {
+      "path": "config/security.php",
+      "kind": "runtime",
+      "base_sha256": "1c2d71190eb2a09b9c59efe6e0df428833631674b27da747c6006cb6818845cf",
+      "candidate_sha256": "3a8b274812d062fa38b7e4649d1591567a7319815138bc7f11793a3954e2f895"
+    },
+    {
+      "path": "app/Services/SessionPolicy.php",
+      "kind": "runtime",
+      "base_sha256": null,
+      "candidate_sha256": "f522d34ee9cb339ff124c46b4851d4ba64674f48e01bef16bbeb44379c6f0de5"
+    },
+    {
+      "path": "app/Services/ApiAccess.php",
+      "kind": "runtime",
+      "base_sha256": "962ef6fc7576664b737a4b9e45f1a80288a8b89d27bc5192d980db1b9892bd14",
+      "candidate_sha256": "7741e5de921888b8c0d3e1ccfd12ffe178f37cb2e93655ab3e61d149e6621ff0"
+    },
+    {
+      "path": "app/Services/DeviceSession.php",
+      "kind": "runtime",
+      "base_sha256": "fb39d9bc8604608895c3959f3c0f6f2bbfa6de83ba503a7d581677babba8afd7",
+      "candidate_sha256": "6d33876d82d5a46eda648e3ffe54020a22e0b44f06885869644395467c7d3afb"
+    },
+    {
+      "path": "app/Services/MfaSession.php",
+      "kind": "runtime",
+      "base_sha256": "98b83996c468f69ff152a7e6b54a2c4e7fbf72ff47ae322e7ebf9844b1a23ac9",
+      "candidate_sha256": "1d2ccd734b062456d824cf7969dcba4d43afb61a5eeea8b9b2a3ab654da57754"
+    },
+    {
+      "path": "app/Models/User.php",
+      "kind": "runtime",
+      "base_sha256": "451c7445ba9be80db4d15c4317d28be29e9696cf6293bae3ce3aca407e9122e7",
+      "candidate_sha256": "f2eb0032008789eda55b301822e1b76dd9b630b0e11ac004c8001ff7c733fe07"
+    },
+    {
+      "path": "app/Http/Middleware/ApiBoundary.php",
+      "kind": "runtime",
+      "base_sha256": "38afd7411f1459198ce9846b803d2835065a44ea89a7b2fbd73c216d4a06346b",
+      "candidate_sha256": "9386539b5788047ccb5886626db77330c170b329f3369b8282bd366852bc51ad"
+    },
+    {
+      "path": "app/Http/Controllers/Api/MfaController.php",
+      "kind": "runtime",
+      "base_sha256": "c6e05ed6267218f3d7b89254263740f56028d144a9d8183e6671fc2e30cb3ed9",
+      "candidate_sha256": "652d51e101052716c3459bc2515fb671bed2a4561a3e43c8b13463ec55dbc2ca"
+    },
+    {
+      "path": "app/Http/Controllers/Api/AccountSecurityController.php",
+      "kind": "runtime",
+      "base_sha256": "df220ac2b11f5f96eae386567eb9f5517cfce94ec47399a7a95d9f2bcdd23834",
+      "candidate_sha256": "20b46fbb85820d49439f04f2e640d0f21492f2a6cb05258bb6e369b44cb1ed7f"
+    },
+    {
+      "path": "app/Http/Controllers/Api/AdminAccountProfileController.php",
+      "kind": "runtime",
+      "base_sha256": "fb5d9af6cc51636fadcb74c7212e3b34e5f8520bfea24bad1df6c39d4bf6e88b",
+      "candidate_sha256": "37ceed0f4644649659f3fc3d7d14b5d14f2d32939991fc4d92958a5932b9461b"
+    },
+    {
+      "path": "app/Http/Controllers/Api/MerchantTeamController.php",
+      "kind": "runtime",
+      "base_sha256": "4f116683011978f0bcff2ef0675d2dbc45fb88503d7b97a2fa0514db3ba7bf90",
+      "candidate_sha256": "8cc20fe085c5545fd6d9099751942ab8fe61004b887de59dd47f6c16264a6027"
+    },
+    {
+      "path": "app/Http/Controllers/Api/ServerManagementController.php",
+      "kind": "runtime",
+      "base_sha256": "daec51cbc79ddfc56e87dd5a8f644cb3d4280ac93326d9509c3d535d102ccc63",
+      "candidate_sha256": "328a03594b2d3395d26b0b506568ab82250b68ab892c951c0f5408d3392dc6c9"
+    },
+    {
+      "path": "database/migrations/2026_11_14_000001_add_privileged_session_policy.php",
+      "kind": "runtime",
+      "base_sha256": null,
+      "candidate_sha256": "23c2c38d77397f0ce2745bd6eef9d83388632a405c91b2180bd53c4d9d1762f4"
+    },
+    {
+      "path": "database/factories/UserFactory.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "50bdc543f1b09d1a57260be55ad0e1a68aee4b34f63e1109dc94d9bcd3080526"
+    },
+    {
+      "path": "tests/Feature/SecurityBoundaryTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "6c0159779e7b7d2999e3de2ed1557f55d056ca099e814a7574a9c91091398e57"
+    },
+    {
+      "path": "tests/Feature/PrivilegedSessionTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "234e4969ec4706387f2a19d3c1340307a1ec2e8f89a6c3f7ec7162acb9e0c8d5"
+    },
+    {
+      "path": "tests/Feature/EndpointSecurityTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "fc2ed9eba5504c6977741ca9bc0640a7a91618de01c06e14565583105c4c646d"
+    },
+    {
+      "path": "tests/Support/IsolatedSecurityDatabase.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "4bd1c36576a2c62e04cf9a24a07486c1ccd33d8d4117807ff444d8ef667915fa"
+    },
+    {
+      "path": "app/Http/Controllers/Api/AuthController.php",
+      "kind": "runtime",
+      "base_sha256": "a33321b9efe7b3442a9d53ddee5ec9c005719f344ac110908ff8bfb0d7b92016",
+      "candidate_sha256": "8f04e3a0f9f595aaecf6fac720cd8d9e2def30368f1f392c9169d2f3fa798c9e"
+    },
+    {
+      "path": "phpunit.xml",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "11c972a7caba2d3a1fbb2310b84122369b7d79544b6b5a7983ef0779684b21be"
+    },
+    {
+      "path": "database/seeders/DatabaseSeeder.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "eeda2241e5ae6feddcc4311e3a39c7f963a75c3bd2664ab50a653b67b4ba87d0"
+    },
+    {
+      "path": "tests/WalletConcurrencyTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "6fc812d178e4420b88e77b873af719c86ae54e2195f75e2b843b60150d1d5dea"
+    },
+    {
+      "path": "tests/Support/FakeInfrastructureController.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "ed0d9930d1ef0b6c584599a934e884807ce329d604f5f0993eb8f82deb65892f"
+    },
+    {
+      "path": "tests/Support/storage-recovery-lab.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "2bfd6dd290cf9a50dc3f6c445462d6e53ddb3dc40bdcea6c22d1d9341081ec16"
+    },
+    {
+      "path": "tests/Support/run-isolated-mariadb.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "97d7c5304f4ff2907a7c1075cf97b81e187ffb75cce122d989ddf39b320313d8"
+    },
+    {
+      "path": "tests/Support/wallet-concurrency-worker.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "bccfb6d3430cacf7cd1954c6253b27355ac923395a28f26060b6f8824990fc2e"
+    },
+    {
+      "path": "tests/Support/storage-operations-ui.cjs",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "998eccf07451b0254df80abd1998f77412301202ef2da2dcb288ed1f149b0023"
+    },
+    {
+      "path": "tests/Recovered/provenance.json",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "eeb6e8f333a206beb30f51b3033cced5813a1279ef4ffd689de1470f1cf6e3e5"
+    },
+    {
+      "path": "tests/Recovered/README.md",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "9740d15ff652b39563760b1aaa0b0492ca1c45a84025b8a43cc82bc7152c732c"
+    },
+    {
+      "path": "tests/Recovered/RecoveredDomainTestCase.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "e3f75f4947ad3b9d61591ef6628abc17ca06375bf76da56dfa3d1b7c36b8efa3"
+    },
+    {
+      "path": "tests/Recovered/Unit/RuntimeDatabasePrivilegesTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "065e1d6ed42425af34bdec97048837db23725c76ae10b9ee250c792a103a329e"
+    },
+    {
+      "path": "tests/Recovered/Unit/BirProtocolTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "9d6aefb87815832b2db360f4ef8ba7fdb9f0a2f9355e4da21b54b6c9a6770900"
+    },
+    {
+      "path": "tests/Recovered/Feature/IndexedMerchantTeamTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "ac5011136cc10f689266946c878358a84e4bb677569a5046c6577e551ff24c7a"
+    },
+    {
+      "path": "tests/Recovered/Feature/IndexedRegistryTransactionActivityTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "678244650e5e50ee057fc2e69165422325896f72f35e1316c9612ccbd53b6484"
+    },
+    {
+      "path": "tests/Recovered/Feature/BirWireTransportTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "2125902aa87016e8862bfac725eed102194aa31ace671260d512925a6ba3d80c"
+    },
+    {
+      "path": "tests/Recovered/Feature/TenantBoundaryAuditTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "c17b39e1b0db037c1bc71065328db987863f0c60368be62d3d4be4a35d510b4d"
+    },
+    {
+      "path": "tests/Recovered/Feature/SecurityRemediationTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "03a1629d29c6ea9f50ea62848a2982767e2b16e6c20357c503654d24c0e5b23b"
+    },
+    {
+      "path": "tests/Recovered/Feature/ApiCustomerReceiptTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "65181242d425947b31f909ff9c19cb195c34f23a5081d019091c6dd5dc0b11bd"
+    },
+    {
+      "path": "tests/Recovered/Feature/AdminBusinessWalletTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "9e8680dd865e0983a4cf4206dc19f6fe824ad8cab7194e5431b5f6de9d248881"
+    },
+    {
+      "path": "tests/Recovered/Feature/ApiEnvironmentIsolationTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "9d2e2e0bfc571ea8082a6ebc68c4b48ba436a51387dda48026c7c6ad80fa60bd"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantInvoiceSettingsTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "b3088bcfc7e599efabd35735804f5a2ae273a085126947e8fea3d8d556b117a1"
+    },
+    {
+      "path": "tests/Recovered/Feature/IndexedTransactionReportTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "b9b342848b11a3ebf1f067d1b99c0a6b1a922e4ee7fa95aee86701737a37d27b"
+    },
+    {
+      "path": "tests/Recovered/Feature/ApiProductionSecurityTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "09a02f772fb13a066d178ab0cbd4e11bedde54873e791e5d0943e6b9f0eda2ab"
+    },
+    {
+      "path": "tests/Recovered/Feature/EnterpriseDashboardTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "c847be7a60155fefbe04f0821ddc43d563adec1f048f7ed1afadfc0e64d57782"
+    },
+    {
+      "path": "tests/Recovered/Feature/BusinessProfileChangeTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "e8246a7913dccfbeb6d8436cc14076315c52cc841b10d0ecfdff7ede3dd49d5d"
+    },
+    {
+      "path": "tests/Recovered/Feature/WebhookSecurityTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "aeb9418067055a928ad4e4adf585b26ab9ea7b373bc03e1e4e719191018b0140"
+    },
+    {
+      "path": "tests/Recovered/Feature/RmcComplianceTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "3a98fc0ce17cdaef2af3a1ec60df8a9f7243fa89038605e566ffd73481391bc1"
+    },
+    {
+      "path": "tests/Recovered/Feature/ExampleTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "86f70976248fa1b5241a9221973ed4a6d1772833e7d24df2c572c564d7c94903"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantVerificationDocumentTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "b1b789d0e8b740b896431df041b61ba4520d9e9d413126cd4b0294aca65d8062"
+    },
+    {
+      "path": "tests/Recovered/Feature/BusinessRegistryTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "50fe92e5fac8dee20a90ece7d6f03e62d4d4d4b3d21a9937255a4e2d84e11005"
+    },
+    {
+      "path": "tests/Recovered/Feature/DatabaseSeederSafetyTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "b9a1f19b6d814a7f57ebcd5f670b974027c418c3171591872bea15def891b1c3"
+    },
+    {
+      "path": "tests/Recovered/Feature/ManualDiscountTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "f5a259d187befb6ffc9a7cfe147e8f91326739797c39ca2218b5b41c87d49987"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantTeamTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "2419f0db5c2d27799d6dfffd5c81d4bb363477f4e5a5323e6bb66d15843ba083"
+    },
+    {
+      "path": "tests/Recovered/Feature/IndexedEisTransmissionCenterTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "1b3784975766791d625497cbf294bd15a0deeeb5a56bab6c90c0ad877d2f23d9"
+    },
+    {
+      "path": "tests/Recovered/Feature/AdminAccountProfileTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "aff34df0332172100221c27373c8d8a214026da3e4e4c314bd5780aa07a81520"
+    },
+    {
+      "path": "tests/Recovered/Feature/StatutorySalesTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "4c5f59051bfa18a1c6acbb2981cb66b6533a4a2afe7285b4498a242b026e48f5"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantWebhookTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "741e38b8e2456395817028163e3d1b485dd115ee77572fa30051aa7cf80b167b"
+    },
+    {
+      "path": "tests/Recovered/Feature/PublicDocumentationAssetsTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "3e3cda87bc4c033450e1a69ad57e273405e6966cf26be2f2ace5724c52442767"
+    },
+    {
+      "path": "tests/Recovered/Feature/InfrastructureGatewayTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "6dba916c554d947aeae30e24fd4d2b974c80954a74c7a9b416e4bc02b7feec6f"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantBranchRegistryTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "b0bc5b73344239f5c5437a03511afee369a650486e8db154ce2c05fb5d45e7ba"
+    },
+    {
+      "path": "tests/Recovered/Feature/BackupRecoveryTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "85fab1a2331459ba1e3bb03c7283cfaafb7dbd35bb76cc22db63db921f6a7524"
+    },
+    {
+      "path": "tests/Recovered/Feature/VaptResponseSecurityTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "ba085d473200ece0f7ef2f4311ecd87bbacd1223b0ec49178f100d40384e2920"
+    },
+    {
+      "path": "tests/Recovered/Feature/DashboardRevisionTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "2407bf70f69579962040b38b78ba9e318a6d5489d13953920d18658b63e685d8"
+    },
+    {
+      "path": "tests/Recovered/Feature/BusinessRegistrationTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "2273853034c8c920b118c1eb7c516a4a2744b3c2b353e36efff866ad54c0f461"
+    },
+    {
+      "path": "tests/Recovered/Feature/TransactionReportTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "e715d45a31e6faced2dce44dc83d58a73f9e701f63befd8798e5a8edded57bba"
+    },
+    {
+      "path": "tests/Recovered/Feature/IndexedInvoiceCenterAndSubscriptionsTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "a70798aef99c9bcb9909ce49771896007b67e600b3cf9c6dd42689e039729992"
+    },
+    {
+      "path": "tests/Recovered/Feature/DurableWorkflowTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "8a6471df4b43f463361b1e0c1fbfab67dfda9f406d3259f05c32bcc5fe7d74c0"
+    },
+    {
+      "path": "tests/Recovered/Feature/ComplianceOperationsTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "e5aeb632b327137916385e310d1db5bdfed73f44aa91fb5a7a70b13bfae0734b"
+    },
+    {
+      "path": "tests/Recovered/Feature/SystemReportExportTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "17d93b0f675febb777ff8dcdb48dc183654fc84a312cbf88538e054cb119576d"
+    },
+    {
+      "path": "tests/Recovered/Feature/IndexedMerchantSalesReportTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "43ff38211f4958b8ad87651463899deb097c6411e4d407d8eaf7e760aebfe1b2"
+    },
+    {
+      "path": "tests/Recovered/Feature/WebhookReceiverExampleTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "d4536ff40b86ba7f129282abb57314d2693c093f179a44bac510614091e3fa82"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantBusinessProfileTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "dd1906bc6578809700e0ba30f49d36474668dc36efa16e1ced92274bec93dbba"
+    },
+    {
+      "path": "tests/Recovered/Feature/DeviceSessionTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "b428ddfe128b66138ee65cf56f74e67b28b11b7074e2295cbfd063b38b3a2c65"
+    },
+    {
+      "path": "tests/Recovered/Feature/OperationsWorkspaceTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "d658c574e77ab4387544d01b9a4b731016277e2270d01cc781f1fb483859657f"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantCustomerTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "0c428532164a427bbe057fbbe99bd4112ff6432e885589d07d948b98ef374d8a"
+    },
+    {
+      "path": "tests/Recovered/Feature/EisTransmissionCenterTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "64707babcbadc5eb377467b69af6043a99c4fe8143527ecb8289edceac17b63e"
+    },
+    {
+      "path": "tests/Recovered/Feature/AdminFinancialSummaryTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "658dd3c7e7a96e9ade2278dbdd1a5a65d12d35a2e2ad9bc08918f8426abc4824"
+    },
+    {
+      "path": "tests/Recovered/Feature/IndexedSalesReadinessAlignmentTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "3c805ebfe25941c05bdfec124a20a1c80e7ad1692313d4d85e349109b8f5f828"
+    },
+    {
+      "path": "tests/Recovered/Feature/AdminMerchantReceiptTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "ad3d3e80c5465af3ea09c5181bbd46e480c0e4a8ee66ee0aa6150a269cf0ea64"
+    },
+    {
+      "path": "tests/Recovered/Feature/InvoiceCenterAndSubscriptionsTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "7ab493e879b390b18b36305e3226bf79bca6a8a5a7112271cdfaddbf1fa240ec"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantApiIntegrationTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "94a382f6a743b7ca0518333937575b5458b8343cdfa8b097ade62123f59e0dc2"
+    },
+    {
+      "path": "tests/Recovered/Feature/RegistryTransactionActivityTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "c7a247e6a4291458b14b94c29fc124d19348a180f965614a7c201c1c3de23f6b"
+    },
+    {
+      "path": "tests/Recovered/Feature/IndexedOperationsWorkspaceTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "a4a9b0547dd6715e93c82d36a00d36cc7f98d2e27118eb4a078d07df4b1783de"
+    },
+    {
+      "path": "tests/Recovered/Feature/SessionPersistenceTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "08f343f7ae5b33d1433831b8f1e388f872ee8bf8d49bef571bb4069527d160d3"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantSalesReportTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "45dcc69e619b2834bab0cc744c314795f4120cc38fa66b56b959436d13d66f82"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantAccountSecurityTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "cb7f76fc17df6fc250c8c8101e41579c690daf3072c7570335d3af9acc3696dc"
+    },
+    {
+      "path": "tests/Recovered/Feature/EisReadinessAlignmentTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "509234e3dd1bea3f754640182eac4569bfbdce9724dafa06354233862ee1fd36"
+    },
+    {
+      "path": "tests/Recovered/Feature/OperationsSalesPerformanceTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "2c5309aa877b73d0f80d8b2c20bd1b15fb7913b4022783657a48315adbd51378"
+    },
+    {
+      "path": "tests/Recovered/Feature/PlatformNotificationsTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "e9f48581da18b8eefc2957e686bfb94b50ec4f733b3e3c376ceb93715c68e533"
+    },
+    {
+      "path": "tests/Recovered/Feature/GoogleAuthTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "48acf1cc9cc3090942d8540b39fe022c7796f22851eccd37227d212f6d08e92f"
+    },
+    {
+      "path": "tests/Recovered/Feature/MfaDevicesTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "7b4e4fb4b9842f2eb01487aedbd32a72f4bb57acb91b3b03c79c33af8532482e"
+    },
+    {
+      "path": "tests/Recovered/Feature/DocumentPdfRuntimeTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "86d1aafc5d194a6236e1dc7a5996c664de85db6b9f6a52279186deb50ad37f69"
+    },
+    {
+      "path": "tests/Recovered/Feature/ServerManagementTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "8a3377623b0f6f7cb9c3ec7675c8ed93c884f820f39f9e944ba7bbe3f2a41d16"
+    },
+    {
+      "path": "tests/Recovered/Feature/DeveloperPortalTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "4c0249f7258e66f3cbc60af4c3a9c03f6ec3f4c73ec67a833cdfaeb9519d0b28"
+    },
+    {
+      "path": "tests/Recovered/Feature/SupportChatTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "2efc780c38c40fcedb49ce78fb90eabac78238fe45bd467477666e455675717a"
+    },
+    {
+      "path": "tests/Recovered/Feature/LedgerProjectionTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "6fb910a00e07c4549890fed851559d47000bda365d7805344c888665910d814c"
+    },
+    {
+      "path": "tests/Recovered/Feature/PageLoadingPerformanceTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "624ad0ffd631c22517b52bab12e5b55147c4f81e200f4cc833a0de6a4aa12c09"
+    },
+    {
+      "path": "tests/Recovered/Feature/AdminMerchantConnectionsTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "ed1909739e21c0d668faa376e1eabc000d83d005ac4e539eb0e2629fc2d7c43d"
+    },
+    {
+      "path": "tests/Recovered/Feature/DocumentCopyMailTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "3e741f74304e846b6c0b0bc517fbe64f31148b768ff3dccc974b3488f0092d4e"
+    },
+    {
+      "path": "tests/Recovered/Feature/InvoiceDocumentComplianceTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "40152e862d6db99e777f70da092698181de8761b1e5ea2fd610759e8a0df207d"
+    },
+    {
+      "path": "tests/Recovered/Feature/FormRateLimitTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "5e4f9fc28546fe16739a85a039b761841487923a00a280407e0c1a16deea82c6"
+    },
+    {
+      "path": "tests/Recovered/Feature/SalesExportQueueTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "f914693b383023860c075127b4a02732fdde8baf30e33bacd9e268a02d2ed792"
+    },
+    {
+      "path": "tests/Recovered/Feature/SubmissionAttemptsTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "0abf9b546c4d16c0c528114d874df8b8bde900d4847803dcc581a316207a9dc2"
+    },
+    {
+      "path": "tests/Recovered/Feature/TaxpayerWorkspaceTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "feb4877d01420e1ce6c925a11627cbd82290357077ae53f68278e7386def926a"
+    },
+    {
+      "path": "tests/Recovered/Feature/BusinessReviewNotificationTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "1c45101f5ec1b97c4775275408cff365937e350e41866baf4e6a14ec6cb860cd"
+    },
+    {
+      "path": "tests/Recovered/Feature/PtiApplicationsTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "03c2fb8c6e223b74c56bf36cbb7839ea595e5925f7213bf51e8255f34b16e20f"
+    },
+    {
+      "path": "tests/Recovered/Feature/RegistryMerchantOverviewTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "70f34c6e7e6c8b6ef7dc9e1e64b8510801655438800e80df302f21c8efc892dd"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantWalletTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "332d9653f2ebb2702385617931927af2ab66b52faacd851dfdc65b9224a0e79c"
+    },
+    {
+      "path": "docs/knowledge/mfa-login-session.md",
+      "kind": "documentation-or-reviewed-plan",
+      "base_sha256": null,
+      "candidate_sha256": "619b99a6372bf46f706f8991b0ad1592a0b273221d64d91364a34a133b7e3297"
+    },
+    {
+      "path": "deployment/security/VAPT_ROLLOUT_2026-11-14.md",
+      "kind": "documentation-or-reviewed-plan",
+      "base_sha256": null,
+      "candidate_sha256": "d3a7e1faefba1bf914e19edc8991742a266d08fdf9be4613a4e014951e29e995"
+    },
+    {
+      "path": "deployment/security/production-runtime-grants.sql",
+      "kind": "documentation-or-reviewed-plan",
+      "base_sha256": null,
+      "candidate_sha256": "4d26b8fd88e653edb88be2ee77dd2a9c38f1ad590c383e607b34a0fcf554f8a6"
+    },
+    {
+      "path": "deployment/security/privileged-session.env.example",
+      "kind": "documentation-or-reviewed-plan",
+      "base_sha256": null,
+      "candidate_sha256": "a471cdccf59fd6276553a87005d58d0a159d8daffe6f4143bf382a0df8e196b4"
+    },
+    {
+      "path": "tests/RegistrationConcurrencyTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "c409af021124c88c6c1c0575dd5cf6898d0209efc1ee50673bd1449e2ef4cfbe"
+    },
+    {
+      "path": "tests/Support/registration-concurrency-worker.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "a673a01d7276294cc4e3a062afb3aeedfcdf5147e44876ce4a30db96ceddfa39"
+    },
+    {
+      "path": "deployment/security/runtime-migration-archive-deny.json",
+      "kind": "documentation-or-reviewed-plan",
+      "base_sha256": null,
+      "candidate_sha256": "72aa77423deaf69cd1c909af39a13c0eafded184e956f2f5eed7cf8d82525c47"
+    },
+    {
+      "path": "tests/Feature/InfrastructurePowerConfirmationTest.php",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "994c685161f560dc85be3a94ae39b6b9f56e572af5e6e463e2a5bd484c522d15"
+    },
+    {
+      "path": "tests/Frontend/reconstruction.test.tsx",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "bde934b4bc21019c4c3a7caf70646e582599674dbf17808ad5d2c9fdf1a50b35"
+    },
+    {
+      "path": "scripts/test-frontend-reconstruction.mjs",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "d7312f1320b4cfe1f3a67eae5d9fc7d153811da526edb24e61ae30a7e4d3e6cb"
+    },
+    {
+      "path": "scripts/test-session-client.mjs",
+      "kind": "test-support",
+      "base_sha256": null,
+      "candidate_sha256": "1ba1d88dd661c1d34068f5bea4bf44aef313ff8da29240747dbe43ab9e3d34d1"
+    }
+  ],
+  "preserved_assets": [
+    {
+      "path": "public/build/assets/main-DCofh3HT.js",
+      "sha256": "3f9ca845be861c4d4d31ae1999fcaa968f4fb17b99bf0b16fc29993ebb764b36",
+      "matches_live_snapshot": true
+    },
+    {
+      "path": "public/build/assets/main-mwrEibA1.css",
+      "sha256": "cb827ae6486fa98d606f7fd3558124418038bbb7fab032cf92fdd8d1a10f1ab1",
+      "matches_live_snapshot": true
+    }
+  ],
+  "scope_note": "Only runtime entries form the application patch. Test-support files are local/CI evidence; reviewed production SQL is not an automatic deployment action. Vendor must be installed from the lock file. Frontend output must come only from the separately verified reconstruction build archive and provenance inventory; original source was not recovered. Do not deploy accumulated public/build files wholesale.",
+  "frontend_provenance": "NUERS_Frontend_Reconstruction_Provenance_2026-11-14.json",
+  "preserved_assets_note": "Retained baseline evidence only; current local manifest selects the reconstructed candidate assets.",
+  "production_rollout_evidence": "NUERS_Production_Rollout_2026-11-14.json"
+}

@@ -10,11 +10,14 @@ use App\Models\Profile;
 use App\Models\SystemNotification;
 use App\Models\TransactionReceipt;
 use App\Models\User;
+use App\Services\ApiAccess;
+use App\Services\BirCompliance;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class TableController extends Controller
 {
@@ -30,6 +33,33 @@ class TableController extends Controller
     public function handle(Request $request, string $table): JsonResponse
     {
         abort_unless(isset(self::TABLES[$table]), 404, 'Unknown table.');
+        $actor = $this->userFromRequest($request);
+        abort_unless($actor, 401, 'An authenticated session is required.');
+        $actorRole = DB::table('profiles')->where('id', $actor->id)->value('role');
+        // RDO accounts need their own profile to bootstrap the portal and MFA screen.
+        // scope() restricts this read to the actor; all other generic RDO access stays denied.
+        $rdoProfileRead = $actorRole === 'rdo' && $request->isMethod('GET') && $table === 'profiles';
+        abort_unless($rdoProfileRead || in_array($actorRole, ['admin', 'super_admin', 'bir', 'merchant', 'client', 'consumer'], true), 403);
+        $request->attributes->set('table_actor', $actor);
+        $request->attributes->set('table_role', $actorRole);
+        if ($request->method() !== 'GET') {
+            abort_if($request->method() === 'DELETE', 409, 'Records and linked identities are preserved. Use controlled deactivation instead.');
+            $request->validate(['values' => 'sometimes|array']);
+            $values = $request->input('values', []);
+            abort_if($values !== [] && Arr::isList($values), 422, 'Use a single field/value object.');
+            foreach (['id', 'role', 'email'] as $identity) {
+                abort_if(isset($values[$identity]) && ! is_scalar($values[$identity]), 422, 'Identity fields require scalar values.');
+            }
+            if ($table === 'client_accounts') {
+                abort_unless(in_array($request->method(), ['PATCH', 'PUT'], true), 409, 'Use the verified registration workflow to create accounts.');
+                $allowed = in_array($actorRole, ['admin', 'super_admin'], true) ? ['status', 'full_name', 'mobile', 'notification_preferences'] : ['full_name', 'mobile', 'notification_preferences'];
+                abort_if(array_diff(array_keys($request->input('values', [])), $allowed), 403, 'Identity, TIN, wallet balance and security state require dedicated verified workflows.');
+            }
+            if ($table === 'notifications') {
+                abort_unless(in_array($actorRole, ['admin', 'super_admin'], true), 403);
+                abort_unless(in_array($request->method(), ['PATCH', 'PUT'], true) && array_diff(array_keys($request->input('values', [])), ['is_read']) === [], 403, 'Only read state may change through this endpoint.');
+            }
+        }
 
         if ($table === 'merchants') {
             $actor = $this->userFromRequest($request);
@@ -47,6 +77,8 @@ class TableController extends Controller
             abort_unless($actor, 401, 'An authenticated session is required.');
             $role = DB::table('profiles')->where('id', $actor->id)->value('role');
             $administrator = in_array($role, ['admin', 'super_admin'], true);
+            abort_unless(in_array($request->method(), ['PATCH', 'PUT'], true), 409, 'Use the verified account provisioning workflow.');
+            abort_if($role === 'merchant', 403, 'Merchant identity changes require administrator review through Business Profile.');
             if (! $administrator) {
                 abort_unless(in_array($request->method(), ['PATCH', 'PUT'], true), 403, 'Only administrators may create or remove profiles.');
                 $values = $request->input('values', []);
@@ -57,6 +89,7 @@ class TableController extends Controller
             }
             $values = $request->input('values', []);
             foreach (Arr::isList($values) ? $values : [$values] as $value) {
+                abort_if(array_diff(array_keys($value), ['id', 'role', 'email', 'full_name', 'organization']), 403, 'Use the verified identity workflow for TIN and security changes.');
                 // BIR review authority requires a separately verified staff provisioning process.
                 abort_if(($value['role'] ?? null) === 'bir', 403, 'BIR review authority cannot be self-assigned through the generic profile endpoint.');
             }
@@ -77,10 +110,18 @@ class TableController extends Controller
     {
         /** @var Builder $query */
         $query = $model::query();
-        if ($request->attributes->has('merchant_registry_owner')) {
-            $query->where('merchant_account_id', $request->attributes->get('merchant_registry_owner'));
-        }
+        $this->scope($query, $request, $model);
+        $this->validateQuery($query, $request);
         $this->applyFilters($query, $request);
+
+        if ($model === Profile::class && $request->filled('search')) {
+            $term = '%'.trim($request->query('search')).'%';
+            $query->where(function ($q) use ($term) {
+                foreach (['full_name', 'email', 'organization', 'tin'] as $column) {
+                    $q->orWhere($column, 'like', $term);
+                }
+            });
+        }
 
         $count = null;
         if ($request->query('count') === 'exact') {
@@ -93,9 +134,7 @@ class TableController extends Controller
 
         $this->applyOrdering($query, $request);
 
-        if ($limit = $request->integer('limit')) {
-            $query->limit($limit);
-        }
+        $query->orderBy($query->getModel()->getKeyName())->offset($request->integer('offset', 0))->limit($request->integer('limit', 100));
 
         $single = $request->boolean('single') || $request->boolean('maybeSingle');
         $data = $single ? $query->first() : $query->get();
@@ -123,13 +162,48 @@ class TableController extends Controller
     {
         /** @var Builder $query */
         $query = $model::query();
+        $this->scope($query, $request, $model);
+        $this->validateQuery($query, $request);
         $this->applyFilters($query, $request);
 
         if ($model === Profile::class && $request->attributes->has('profile_scope_id')) {
             $query->where('id', $request->attributes->get('profile_scope_id'));
         }
+        $request->validate(['values' => 'required|array', 'values.full_name' => 'sometimes|string|max:255', 'values.organization' => 'sometimes|string|max:255', 'values.email' => 'sometimes|email|max:255', 'values.mobile' => 'sometimes|nullable|string|max:80', 'values.is_read' => 'sometimes|boolean', 'values.role' => 'sometimes|in:admin,super_admin,merchant,client,consumer', 'values.status' => 'sometimes|in:pending,under_review,suspended,inactive,rejected']);
         $payload = $this->normalizePayload($request->input('values', []));
-        $affected = (clone $query)->update($payload);
+        $affected = DB::transaction(function () use ($query, $payload, $request, $model) {
+            if ($model === Profile::class) {
+                $actor = $request->attributes->get('table_actor');
+                $actorRole = $request->attributes->get('table_role');
+                $targets = (clone $query)->lockForUpdate()->get();
+                abort_unless($targets->count() === 1, 422, 'Select one existing profile for each audited update.');
+                $target = $targets->first();
+                $privileged = ['admin', 'super_admin', 'bir', 'rdo'];
+                abort_if($actorRole === 'admin'
+                    && (in_array($target->role, $privileged, true) || in_array($payload['role'] ?? '', $privileged, true)), 403, 'Only a Super Administrator can manage privileged profiles.');
+                abort_if(isset($payload['role']) && $payload['role'] !== $target->role && (string) $target->id === (string) $actor->id, 403, 'You cannot change your own platform role.');
+                foreach (['id', 'email'] as $identity) {
+                    abort_if(isset($payload[$identity]) && (string) $payload[$identity] !== (string) $target->$identity, 403, 'Login identity changes require the verified account workflow.');
+                }
+                foreach (['full_name', 'organization'] as $identity) {
+                    abort_if($target->role === 'merchant' && array_key_exists($identity, $payload) && (string) $payload[$identity] !== (string) $target->$identity, 403, 'Change merchant identity in Registered Businesses so the business profile and owner directory remain aligned.');
+                }
+            }
+            $roleChangedIds = $model === Profile::class && isset($payload['role']) ? (clone $query)->where('role', '!=', $payload['role'])->pluck('id')->all() : [];
+            $affected = (clone $query)->update($payload);
+            if ($model === Profile::class && array_key_exists('full_name', $payload)) {
+                User::where('id', $target->id)->update(['name' => $payload['full_name']]);
+            }
+            if ($roleChangedIds) {
+                foreach ($roleChangedIds as $changedId) {
+                    app(\App\Services\PlatformNotifications::class)->user($changedId, 'security.role.changed', (string)\Illuminate\Support\Str::uuid(), 'Account access changed', 'An administrator changed your NUERS account permissions. Existing application sessions were revoked. If you were not expecting this change, contact NUERS support.', 'security');
+                }
+                User::whereIn('id', $roleChangedIds)->update(app(ApiAccess::class)->revocation());
+            }
+            app(BirCompliance::class)->audit('account.table.updated', $model, (string) $request->attributes->get('table_actor')->id, ['fields' => array_keys($payload), 'count' => $affected]);
+
+            return $affected;
+        });
 
         return response()->json([
             'data' => $query->get(),
@@ -141,6 +215,8 @@ class TableController extends Controller
     {
         /** @var Builder $query */
         $query = $model::query();
+        $this->scope($query, $request, $model);
+        $this->validateQuery($query, $request);
         $this->applyFilters($query, $request);
 
         if ($model === Profile::class) {
@@ -173,6 +249,7 @@ class TableController extends Controller
         }
 
         DB::transaction(function () use ($ids, $query): void {
+            $this->notifyRemoval($ids->all());
             $query->delete();
             User::whereIn('id', $ids)->delete();
         });
@@ -198,6 +275,7 @@ class TableController extends Controller
         }
 
         DB::transaction(function () use ($query, $userIds): void {
+            $this->notifyRemoval($userIds->all());
             $query->delete();
 
             if ($userIds->isNotEmpty()) {
@@ -210,6 +288,86 @@ class TableController extends Controller
             'data' => null,
             'count' => $ids->count(),
         ]);
+    }
+
+    private function notifyRemoval(array $ids): void
+    {
+        foreach (User::whereIn('id', $ids)->get() as $u) {
+            app(\App\Services\PlatformNotifications::class)->queue($u->email, 'security.account.removed', (string)\Illuminate\Support\Str::uuid(), 'NUERS account removed', 'An administrator removed your NUERS account. If this was unexpected, contact NUERS support.', 'security');
+        }
+    }
+
+    private function scope(Builder $query, Request $request, string $model): void
+    {
+        $actor = $request->attributes->get('table_actor');
+        $role = $request->attributes->get('table_role');
+        if (in_array($role, ['admin', 'super_admin'], true)) {
+            return;
+        }
+        if ($model === Profile::class) {
+            $query->where('id', $actor->id);
+
+            return;
+        }
+        if ($model === ClientAccount::class) {
+            $query->where('user_id', $actor->id);
+
+            return;
+        }
+        if ($model === Merchant::class) {
+            if ($role === 'bir') {
+                return;
+            }
+            abort_unless($role === 'merchant', 403);
+            $query->where(fn ($q) => $q->where('merchant_account_id', $actor->id));
+
+            return;
+        }
+        if (in_array($model, [MerchantTransaction::class, TransactionReceipt::class], true)) {
+            if ($role === 'bir') {
+                return;
+            }
+            if ($role === 'merchant') {
+                $query->whereIn('merchant_id', DB::table('merchants')->where(fn ($q) => $q->where('merchant_account_id', $actor->id))->select('id'));
+
+                return;
+            }
+            $tin = app(ApiAccess::class)->taxpayerTin($actor);
+            if (! $tin) {
+                $query->whereRaw('1=0');
+
+                return;
+            }
+            $query->where($model === MerchantTransaction::class ? 'customer_tin' : 'buyer_tin', $tin);
+
+            return;
+        }
+        abort(403, 'Use an explicitly scoped notification or account API.');
+    }
+
+    private function validateQuery(Builder $query, Request $request): void
+    {
+        $request->validate(['offset' => 'nullable|integer|min:0|max:1000000', 'search' => 'nullable|string|max:200', 'limit' => 'nullable|integer|min:1|max:500', 'order' => 'nullable|string|max:80', 'eq' => 'nullable', 'in' => 'nullable', 'or' => 'nullable|string|max:2000']);
+        $allowed = Schema::getColumnListing($query->getModel()->getTable());
+        $columns = [...array_keys($this->jsonQuery($request, 'eq')), ...array_keys($this->jsonQuery($request, 'in'))];
+        if ($request->filled('order')) {
+            $columns[] = $request->query('order');
+        }
+        foreach (explode(',', (string) $request->query('or', '')) as $part) {
+            if ($part !== '') {
+                $columns[] = explode('.', $part, 3)[0];
+            }
+        }
+        abort_if(count($columns) > 50 || array_diff($columns, $allowed), 422, 'Unsupported filter or sort field.');
+        foreach ($this->jsonQuery($request, 'eq') as $value) {
+            abort_unless($value === null || is_scalar($value), 422, 'Equality filters require a scalar value.');
+        }
+        foreach ($this->jsonQuery($request, 'in') as $values) {
+            abort_unless(is_array($values) && count($values) <= 100, 422, 'Use at most 100 filter values.');
+            foreach ($values as $value) {
+                abort_unless($value === null || is_scalar($value), 422, 'List filters require scalar values.');
+            }
+        }
     }
 
     private function applyFilters(Builder $query, Request $request): void
@@ -276,6 +434,6 @@ class TableController extends Controller
             return null;
         }
 
-        return User::where('api_token', $token)->first();
+        return app(ApiAccess::class)->user($request);
     }
 }

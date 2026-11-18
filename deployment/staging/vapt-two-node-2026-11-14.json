@@ -1,0 +1,345 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Isolated synthetic NUERS VAPT two-node Linux staging; no production access or public ingress; four-hour automatic stop",
+  "Resources": {
+    "HostRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "ssm-and-isolated-test-artifacts",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ssm:UpdateInstanceInformation",
+                    "ssm:ListInstanceAssociations",
+                    "ssm:DescribeAssociation",
+                    "ssm:GetDocument",
+                    "ssm:DescribeDocument",
+                    "ssm:ListAssociations",
+                    "ssm:UpdateAssociationStatus",
+                    "ssm:UpdateInstanceAssociationStatus",
+                    "ssm:PutInventory",
+                    "ssm:PutComplianceItems",
+                    "ssm:PutConfigurePackageResult",
+                    "ssm:GetDeployablePatchSnapshotForInstance",
+                    "ssm:GetManifest",
+                    "ssmmessages:CreateControlChannel",
+                    "ssmmessages:CreateDataChannel",
+                    "ssmmessages:OpenControlChannel",
+                    "ssmmessages:OpenDataChannel",
+                    "ec2messages:AcknowledgeMessage",
+                    "ec2messages:DeleteMessage",
+                    "ec2messages:FailMessage",
+                    "ec2messages:GetEndpoint",
+                    "ec2messages:GetMessages",
+                    "ec2messages:SendReply"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": "arn:aws:s3:::nuers-289829301267-staging-documents-sg/vapt-20261114/candidate/*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:PutObject"
+                  ],
+                  "Resource": "arn:aws:s3:::nuers-289829301267-staging-documents-sg/vapt-20261114/results/*"
+                }
+              ]
+            }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "NUERS"
+          },
+          {
+            "Key": "Purpose",
+            "Value": "VAPT synthetic staging 2026-11-14"
+          },
+          {
+            "Key": "ManagedBy",
+            "Value": "nuers-vapt-20261114"
+          }
+        ]
+      }
+    },
+    "HostProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Roles": [
+          {
+            "Ref": "HostRole"
+          }
+        ]
+      }
+    },
+    "TestSecurity": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "NUERS disposable VAPT nodes; no public inbound; synthetic peer traffic only",
+        "VpcId": "vpc-050c7723c3bec78e0",
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80,
+            "CidrIp": "0.0.0.0/0",
+            "Description": "OS package repositories"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443,
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Package registry and SSM HTTPS"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "NUERS"
+          },
+          {
+            "Key": "Purpose",
+            "Value": "VAPT synthetic staging 2026-11-14"
+          },
+          {
+            "Key": "ManagedBy",
+            "Value": "nuers-vapt-20261114"
+          }
+        ]
+      }
+    },
+    "PeerIngress8080": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "TestSecurity"
+        },
+        "SourceSecurityGroupId": {
+          "Ref": "TestSecurity"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": 8080,
+        "ToPort": 8080,
+        "Description": "Synthetic test nodes only"
+      }
+    },
+    "PeerEgress8080": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "TestSecurity"
+        },
+        "DestinationSecurityGroupId": {
+          "Ref": "TestSecurity"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": 8080,
+        "ToPort": 8080,
+        "Description": "Synthetic test nodes only"
+      }
+    },
+    "PeerIngress3306": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "TestSecurity"
+        },
+        "SourceSecurityGroupId": {
+          "Ref": "TestSecurity"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": 3306,
+        "ToPort": 3306,
+        "Description": "Synthetic test nodes only"
+      }
+    },
+    "PeerEgress3306": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "TestSecurity"
+        },
+        "DestinationSecurityGroupId": {
+          "Ref": "TestSecurity"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": 3306,
+        "ToPort": 3306,
+        "Description": "Synthetic test nodes only"
+      }
+    },
+    "NodeA": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "ami-0403d346e3210afd6",
+        "InstanceType": "t3.large",
+        "IamInstanceProfile": {
+          "Ref": "HostProfile"
+        },
+        "NetworkInterfaces": [
+          {
+            "DeviceIndex": "0",
+            "AssociatePublicIpAddress": true,
+            "SubnetId": "subnet-00eaf2f6c80544d32",
+            "GroupSet": [
+              {
+                "Ref": "TestSecurity"
+              }
+            ]
+          }
+        ],
+        "MetadataOptions": {
+          "HttpTokens": "required",
+          "HttpPutResponseHopLimit": 1,
+          "HttpEndpoint": "enabled"
+        },
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "Encrypted": true,
+              "VolumeSize": 30,
+              "VolumeType": "gp3",
+              "DeleteOnTermination": true
+            }
+          }
+        ],
+        "CreditSpecification": {
+          "CPUCredits": "standard"
+        },
+        "InstanceInitiatedShutdownBehavior": "stop",
+        "UserData": {
+          "Fn::Base64": "#!/bin/bash\nset -euo pipefail\nexport DEBIAN_FRONTEND=noninteractive\nsystemd-run --unit=nuers-vapt-stop --on-active=4h /sbin/shutdown -h now\napt-get update\napt-get install -y docker.io python3-boto3 ca-certificates curl unzip\nsystemctl enable --now docker\ninstall -d -m 0750 /srv/nuers-vapt /var/log/nuers-vapt\nprintf 'ready\\n' > /srv/nuers-vapt/bootstrap-ready\n"
+        },
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "NUERS"
+          },
+          {
+            "Key": "Purpose",
+            "Value": "VAPT synthetic staging 2026-11-14"
+          },
+          {
+            "Key": "ManagedBy",
+            "Value": "nuers-vapt-20261114"
+          },
+          {
+            "Key": "Name",
+            "Value": "nuers-vapt-20261114-a"
+          }
+        ]
+      }
+    },
+    "NodeB": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "ami-0403d346e3210afd6",
+        "InstanceType": "t3.large",
+        "IamInstanceProfile": {
+          "Ref": "HostProfile"
+        },
+        "NetworkInterfaces": [
+          {
+            "DeviceIndex": "0",
+            "AssociatePublicIpAddress": true,
+            "SubnetId": "subnet-00eaf2f6c80544d32",
+            "GroupSet": [
+              {
+                "Ref": "TestSecurity"
+              }
+            ]
+          }
+        ],
+        "MetadataOptions": {
+          "HttpTokens": "required",
+          "HttpPutResponseHopLimit": 1,
+          "HttpEndpoint": "enabled"
+        },
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "Encrypted": true,
+              "VolumeSize": 30,
+              "VolumeType": "gp3",
+              "DeleteOnTermination": true
+            }
+          }
+        ],
+        "CreditSpecification": {
+          "CPUCredits": "standard"
+        },
+        "InstanceInitiatedShutdownBehavior": "stop",
+        "UserData": {
+          "Fn::Base64": "#!/bin/bash\nset -euo pipefail\nexport DEBIAN_FRONTEND=noninteractive\nsystemd-run --unit=nuers-vapt-stop --on-active=4h /sbin/shutdown -h now\napt-get update\napt-get install -y docker.io python3-boto3 ca-certificates curl unzip\nsystemctl enable --now docker\ninstall -d -m 0750 /srv/nuers-vapt /var/log/nuers-vapt\nprintf 'ready\\n' > /srv/nuers-vapt/bootstrap-ready\n"
+        },
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "NUERS"
+          },
+          {
+            "Key": "Purpose",
+            "Value": "VAPT synthetic staging 2026-11-14"
+          },
+          {
+            "Key": "ManagedBy",
+            "Value": "nuers-vapt-20261114"
+          },
+          {
+            "Key": "Name",
+            "Value": "nuers-vapt-20261114-b"
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "NodeA": {
+      "Value": {
+        "Ref": "NodeA"
+      }
+    },
+    "NodeB": {
+      "Value": {
+        "Ref": "NodeB"
+      }
+    },
+    "TestSecurity": {
+      "Value": {
+        "Ref": "TestSecurity"
+      }
+    },
+    "HostRole": {
+      "Value": {
+        "Ref": "HostRole"
+      }
+    }
+  }
+}

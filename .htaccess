@@ -1,16 +1,18 @@
+Options -Indexes
 <IfModule mod_rewrite.c>
-    <IfModule mod_negotiation.c>
-        Options -MultiViews -Indexes
-    </IfModule>
-
-    RewriteEngine On
-
-    # If this repository root is used as the web root, serve the static Vite
-    # artifact from dist/ instead of the development-only root index.html.
-    RewriteCond %{DOCUMENT_ROOT}/dist/$1 -f [OR]
-    RewriteCond %{DOCUMENT_ROOT}/dist/$1 -d
-    RewriteRule ^(.+)$ dist/$1 [L]
-
-    RewriteRule ^$ dist/index.html [L]
-    RewriteRule ^.*$ dist/index.html [L]
+RewriteEngine On
+RewriteRule ^\.well-known/acme-challenge/ - [L]
+RewriteCond %{DOCUMENT_ROOT}/.nuers-deploying -f
+RewriteRule ^ - [R=503,L]
+RewriteRule (^|/)\. - [F,L]
+RewriteRule ^(?:app|bootstrap|config|database|deployment|docs|node_modules|resources|routes|scripts|src|storage|supabase|tests|vendor)(?:/|$) - [F,L,NC]
+# Public, fictional document samples only; private archives remain denied.
+RewriteRule ^(?:public/)?guides/NUERS-Document-Sample-Copies-v1\.0\.0\.zip$ - [L]
+RewriteRule ^(?:artisan|composer\.(?:json|lock)|package(?:-lock)?\.json|phpunit\.xml|tsconfig.*|vite\..*|.*\.(?:sql|zip|env|log))$ - [F,L,NC]
+RewriteRule ^public/ - [L]
+RewriteRule ^(api|auth)(/.*)?$ public/$1$2 [L]
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+RewriteRule ^ dist/index.html [L]
 </IfModule>

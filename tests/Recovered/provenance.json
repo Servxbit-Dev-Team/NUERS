@@ -1,0 +1,474 @@
+{
+  "source_commit": "02bbfb5967dd680a598e0794d84dba440a58091b",
+  "note": "Historical regression tests recovered from Oct 30 source. Not proof of exact Nov 6 source provenance. Namespaced separately; current endpoint/session security tests retain MFA enforcement.",
+  "files": [
+    {
+      "path": "tests/Recovered/Unit/RuntimeDatabasePrivilegesTest.php",
+      "original_path": "Unit/RuntimeDatabasePrivilegesTest.php",
+      "source_sha256": "ec04535451ee8bc206ec6db506f3bb904e33ca7c70458bd99304e674b0d0712b",
+      "candidate_sha256": "065e1d6ed42425af34bdec97048837db23725c76ae10b9ee250c792a103a329e"
+    },
+    {
+      "path": "tests/Recovered/Unit/BirProtocolTest.php",
+      "original_path": "Unit/BirProtocolTest.php",
+      "source_sha256": "2e3ac4ed183184a1f11c4aa0b72a90d30862a88e5b8fed77a7ce04602ccab2ff",
+      "candidate_sha256": "9d6aefb87815832b2db360f4ef8ba7fdb9f0a2f9355e4da21b54b6c9a6770900"
+    },
+    {
+      "path": "tests/Recovered/Feature/IndexedMerchantTeamTest.php",
+      "original_path": "Feature/IndexedMerchantTeamTest.php",
+      "source_sha256": "787592bb933b5cc3a449104f03e1fa9d689d79a512b539ca2c96363e7dd5ebbd",
+      "candidate_sha256": "ac5011136cc10f689266946c878358a84e4bb677569a5046c6577e551ff24c7a"
+    },
+    {
+      "path": "tests/Recovered/Feature/IndexedRegistryTransactionActivityTest.php",
+      "original_path": "Feature/IndexedRegistryTransactionActivityTest.php",
+      "source_sha256": "5854f288c5c2b19c8ec64548e8d7af962dc055a4c14043a53ffb41c754b8bdfa",
+      "candidate_sha256": "678244650e5e50ee057fc2e69165422325896f72f35e1316c9612ccbd53b6484"
+    },
+    {
+      "path": "tests/Recovered/Feature/BirWireTransportTest.php",
+      "original_path": "Feature/BirWireTransportTest.php",
+      "source_sha256": "926658ff7c8d39538c11a54b4e38cb5f7a382d3a98dd3038669e04811d5c1310",
+      "candidate_sha256": "2125902aa87016e8862bfac725eed102194aa31ace671260d512925a6ba3d80c"
+    },
+    {
+      "path": "tests/Recovered/Feature/TenantBoundaryAuditTest.php",
+      "original_path": "Feature/TenantBoundaryAuditTest.php",
+      "source_sha256": "4371c77e9ecd680d4d84500a4498c60a32ea6b32448061af521819cc04ebe6af",
+      "candidate_sha256": "c17b39e1b0db037c1bc71065328db987863f0c60368be62d3d4be4a35d510b4d"
+    },
+    {
+      "path": "tests/Recovered/Feature/SecurityRemediationTest.php",
+      "original_path": "Feature/SecurityRemediationTest.php",
+      "source_sha256": "8472a96435f2b8a8df5bb73b46c6e7462cb1b77c97b42162a3345b4ce8604261",
+      "candidate_sha256": "03a1629d29c6ea9f50ea62848a2982767e2b16e6c20357c503654d24c0e5b23b"
+    },
+    {
+      "path": "tests/Recovered/Feature/ApiCustomerReceiptTest.php",
+      "original_path": "Feature/ApiCustomerReceiptTest.php",
+      "source_sha256": "4a7269e8fc97e783735c657d2ca96baf49c553e842e65451b7905860fd3a9463",
+      "candidate_sha256": "65181242d425947b31f909ff9c19cb195c34f23a5081d019091c6dd5dc0b11bd"
+    },
+    {
+      "path": "tests/Recovered/Feature/AdminBusinessWalletTest.php",
+      "original_path": "Feature/AdminBusinessWalletTest.php",
+      "source_sha256": "f23d8e8f0e94e9cfe2f681b7ae68fc8b529cae94921d6ac048fc79044f222e00",
+      "candidate_sha256": "9e8680dd865e0983a4cf4206dc19f6fe824ad8cab7194e5431b5f6de9d248881"
+    },
+    {
+      "path": "tests/Recovered/Feature/ApiEnvironmentIsolationTest.php",
+      "original_path": "Feature/ApiEnvironmentIsolationTest.php",
+      "source_sha256": "34ae781a4a28439209583ee63fe057c04756b0ef0c21f709600ce688d7929481",
+      "candidate_sha256": "9d2e2e0bfc571ea8082a6ebc68c4b48ba436a51387dda48026c7c6ad80fa60bd"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantInvoiceSettingsTest.php",
+      "original_path": "Feature/MerchantInvoiceSettingsTest.php",
+      "source_sha256": "cc63451cbb013b19080f78984937feb291febd9016b0ebec220a4a7847fa8308",
+      "candidate_sha256": "b3088bcfc7e599efabd35735804f5a2ae273a085126947e8fea3d8d556b117a1"
+    },
+    {
+      "path": "tests/Recovered/Feature/IndexedTransactionReportTest.php",
+      "original_path": "Feature/IndexedTransactionReportTest.php",
+      "source_sha256": "344c6b5f10d2c585d151b582714d993cdd00326c6eb1ed21c10b7ce0b1ca0ccf",
+      "candidate_sha256": "b9b342848b11a3ebf1f067d1b99c0a6b1a922e4ee7fa95aee86701737a37d27b"
+    },
+    {
+      "path": "tests/Recovered/Feature/ApiProductionSecurityTest.php",
+      "original_path": "Feature/ApiProductionSecurityTest.php",
+      "source_sha256": "9700c7971a5b7d5712b9955799adadde426507a760ea0b9608089086a19c8c68",
+      "candidate_sha256": "09a02f772fb13a066d178ab0cbd4e11bedde54873e791e5d0943e6b9f0eda2ab"
+    },
+    {
+      "path": "tests/Recovered/Feature/EnterpriseDashboardTest.php",
+      "original_path": "Feature/EnterpriseDashboardTest.php",
+      "source_sha256": "72d81dd8968f05a6d5e8a480683268c5a5a318b6f7bbc71044018ea01e82d524",
+      "candidate_sha256": "c847be7a60155fefbe04f0821ddc43d563adec1f048f7ed1afadfc0e64d57782"
+    },
+    {
+      "path": "tests/Recovered/Feature/BusinessProfileChangeTest.php",
+      "original_path": "Feature/BusinessProfileChangeTest.php",
+      "source_sha256": "7ae194c4a96c7a992464b29f13a936e26920334086de87807503a46650a8413d",
+      "candidate_sha256": "e8246a7913dccfbeb6d8436cc14076315c52cc841b10d0ecfdff7ede3dd49d5d"
+    },
+    {
+      "path": "tests/Recovered/Feature/WebhookSecurityTest.php",
+      "original_path": "Feature/WebhookSecurityTest.php",
+      "source_sha256": "ce3aebffc2c3147e6abcd78275e4195425b93c502f77574a11c0c68d99fbf83d",
+      "candidate_sha256": "aeb9418067055a928ad4e4adf585b26ab9ea7b373bc03e1e4e719191018b0140"
+    },
+    {
+      "path": "tests/Recovered/Feature/RmcComplianceTest.php",
+      "original_path": "Feature/RmcComplianceTest.php",
+      "source_sha256": "08600f7883ea514c2ea268f407a2871163103c0f0a9915201e4533fcc31db401",
+      "candidate_sha256": "3a98fc0ce17cdaef2af3a1ec60df8a9f7243fa89038605e566ffd73481391bc1"
+    },
+    {
+      "path": "tests/Recovered/Feature/ExampleTest.php",
+      "original_path": "Feature/ExampleTest.php",
+      "source_sha256": "aaa4a192fb4aa96d4e81eda06a29968da3d9a73b71026b87a67297e66dd985b8",
+      "candidate_sha256": "86f70976248fa1b5241a9221973ed4a6d1772833e7d24df2c572c564d7c94903"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantVerificationDocumentTest.php",
+      "original_path": "Feature/MerchantVerificationDocumentTest.php",
+      "source_sha256": "5207419a9cdb884957a0870cd46bfa1083e47db565a0eba022e98b79d06b12db",
+      "candidate_sha256": "b1b789d0e8b740b896431df041b61ba4520d9e9d413126cd4b0294aca65d8062"
+    },
+    {
+      "path": "tests/Recovered/Feature/BusinessRegistryTest.php",
+      "original_path": "Feature/BusinessRegistryTest.php",
+      "source_sha256": "5a1d0c9ee2d8a70454807b716d52e4e9b4da892bb8c36a74478fda4cc7da8c8e",
+      "candidate_sha256": "50fe92e5fac8dee20a90ece7d6f03e62d4d4d4b3d21a9937255a4e2d84e11005"
+    },
+    {
+      "path": "tests/Recovered/Feature/DatabaseSeederSafetyTest.php",
+      "original_path": "Feature/DatabaseSeederSafetyTest.php",
+      "source_sha256": "0ad04f508c353a8c76d4d73992adb9a5d57b348482698a3c37caa929af30be8b",
+      "candidate_sha256": "b9a1f19b6d814a7f57ebcd5f670b974027c418c3171591872bea15def891b1c3"
+    },
+    {
+      "path": "tests/Recovered/Feature/ManualDiscountTest.php",
+      "original_path": "Feature/ManualDiscountTest.php",
+      "source_sha256": "bfb7544d2546a117f146e564699332669a87f107085f1b354427841393232546",
+      "candidate_sha256": "f5a259d187befb6ffc9a7cfe147e8f91326739797c39ca2218b5b41c87d49987"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantTeamTest.php",
+      "original_path": "Feature/MerchantTeamTest.php",
+      "source_sha256": "0a699ee83876fcfe6bb134844366c6232b0f9dcb6e308f6ae52fa44c350b4848",
+      "candidate_sha256": "2419f0db5c2d27799d6dfffd5c81d4bb363477f4e5a5323e6bb66d15843ba083"
+    },
+    {
+      "path": "tests/Recovered/Feature/IndexedEisTransmissionCenterTest.php",
+      "original_path": "Feature/IndexedEisTransmissionCenterTest.php",
+      "source_sha256": "17fad8b53b2da2cdd3b491e4e39a1fb599eb9090b9da8fe003e709fb8a9e9fb0",
+      "candidate_sha256": "1b3784975766791d625497cbf294bd15a0deeeb5a56bab6c90c0ad877d2f23d9"
+    },
+    {
+      "path": "tests/Recovered/Feature/AdminAccountProfileTest.php",
+      "original_path": "Feature/AdminAccountProfileTest.php",
+      "source_sha256": "648178949dc9abc4b62171b4e8e1d815c845d7443ad7e0e87f6e366e8d2dd62d",
+      "candidate_sha256": "aff34df0332172100221c27373c8d8a214026da3e4e4c314bd5780aa07a81520"
+    },
+    {
+      "path": "tests/Recovered/Feature/StatutorySalesTest.php",
+      "original_path": "Feature/StatutorySalesTest.php",
+      "source_sha256": "1ae8998cfbdbb0563eb5c30a5f809ee5db3b78002a3cf14bbf3db4e067a2de25",
+      "candidate_sha256": "4c5f59051bfa18a1c6acbb2981cb66b6533a4a2afe7285b4498a242b026e48f5"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantWebhookTest.php",
+      "original_path": "Feature/MerchantWebhookTest.php",
+      "source_sha256": "705967e6832909ac8cca686873db073c5dd6cdd850f413a3fff3d4cf48b8832f",
+      "candidate_sha256": "741e38b8e2456395817028163e3d1b485dd115ee77572fa30051aa7cf80b167b"
+    },
+    {
+      "path": "tests/Recovered/Feature/PublicDocumentationAssetsTest.php",
+      "original_path": "Feature/PublicDocumentationAssetsTest.php",
+      "source_sha256": "0199a5a0e3fc37c4984a1315ffade558da10f9df03a7dd7ff3f0f381661598a7",
+      "candidate_sha256": "3e3cda87bc4c033450e1a69ad57e273405e6966cf26be2f2ace5724c52442767"
+    },
+    {
+      "path": "tests/Recovered/Feature/InfrastructureGatewayTest.php",
+      "original_path": "Feature/InfrastructureGatewayTest.php",
+      "source_sha256": "c06fa945970e90a6882a432bc760c3a289777cc38f868162bcfd0389fb9c2729",
+      "candidate_sha256": "6dba916c554d947aeae30e24fd4d2b974c80954a74c7a9b416e4bc02b7feec6f"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantBranchRegistryTest.php",
+      "original_path": "Feature/MerchantBranchRegistryTest.php",
+      "source_sha256": "650006a5f7e18452183759c0d394c7376e8ae46a1de39c0edd9ac933d4d0eca8",
+      "candidate_sha256": "b0bc5b73344239f5c5437a03511afee369a650486e8db154ce2c05fb5d45e7ba"
+    },
+    {
+      "path": "tests/Recovered/Feature/BackupRecoveryTest.php",
+      "original_path": "Feature/BackupRecoveryTest.php",
+      "source_sha256": "be150c868c8da7344c98f083489b1171e88c7ee40ee54a06d75938e662fc84d7",
+      "candidate_sha256": "f744ba444098a3d1b0f8c20f9c67043edbd099ff7a2b2bbc75273b7cd31c5c57"
+    },
+    {
+      "path": "tests/Recovered/Feature/VaptResponseSecurityTest.php",
+      "original_path": "Feature/VaptResponseSecurityTest.php",
+      "source_sha256": "5bc50868107f3ef84ec1e1cce00f459635331e414586356070fed0361eb864f0",
+      "candidate_sha256": "ba085d473200ece0f7ef2f4311ecd87bbacd1223b0ec49178f100d40384e2920"
+    },
+    {
+      "path": "tests/Recovered/Feature/DashboardRevisionTest.php",
+      "original_path": "Feature/DashboardRevisionTest.php",
+      "source_sha256": "a03421654364ed439aa6ee2b5e0a966b189f372a275a3096a2d52740f46bc7cf",
+      "candidate_sha256": "2407bf70f69579962040b38b78ba9e318a6d5489d13953920d18658b63e685d8"
+    },
+    {
+      "path": "tests/Recovered/Feature/BusinessRegistrationTest.php",
+      "original_path": "Feature/BusinessRegistrationTest.php",
+      "source_sha256": "b44b8d40da214d3a46cb566b6d7a44b7e416eabf996507fb36deadc1acf523ab",
+      "candidate_sha256": "2273853034c8c920b118c1eb7c516a4a2744b3c2b353e36efff866ad54c0f461"
+    },
+    {
+      "path": "tests/Recovered/Feature/TransactionReportTest.php",
+      "original_path": "Feature/TransactionReportTest.php",
+      "source_sha256": "00463fc06eee604aa6c21dd0c3d48e9d8d09015ae2a06103cea9751ae8065577",
+      "candidate_sha256": "e715d45a31e6faced2dce44dc83d58a73f9e701f63befd8798e5a8edded57bba"
+    },
+    {
+      "path": "tests/Recovered/Feature/IndexedInvoiceCenterAndSubscriptionsTest.php",
+      "original_path": "Feature/IndexedInvoiceCenterAndSubscriptionsTest.php",
+      "source_sha256": "d13b38c698e8e59fb922b5f4cda5a9da56a98651d9c73e91f95be307291ccf7d",
+      "candidate_sha256": "a70798aef99c9bcb9909ce49771896007b67e600b3cf9c6dd42689e039729992"
+    },
+    {
+      "path": "tests/Recovered/Feature/DurableWorkflowTest.php",
+      "original_path": "Feature/DurableWorkflowTest.php",
+      "source_sha256": "043e7efe478bed55c9a6162f6914097461ffcf832eed81b401dc0f39ba87f0d6",
+      "candidate_sha256": "8a6471df4b43f463361b1e0c1fbfab67dfda9f406d3259f05c32bcc5fe7d74c0"
+    },
+    {
+      "path": "tests/Recovered/Feature/ComplianceOperationsTest.php",
+      "original_path": "Feature/ComplianceOperationsTest.php",
+      "source_sha256": "b733cf134ad54294ffd36233c54a73a366e428aaeeb6abde3b07edeed941034d",
+      "candidate_sha256": "e5aeb632b327137916385e310d1db5bdfed73f44aa91fb5a7a70b13bfae0734b"
+    },
+    {
+      "path": "tests/Recovered/Feature/SystemReportExportTest.php",
+      "original_path": "Feature/SystemReportExportTest.php",
+      "source_sha256": "6906976fab1fc0bd083c74b2df89d8082b670c697edaa2900ea21642d3e9b193",
+      "candidate_sha256": "17d93b0f675febb777ff8dcdb48dc183654fc84a312cbf88538e054cb119576d"
+    },
+    {
+      "path": "tests/Recovered/Feature/IndexedMerchantSalesReportTest.php",
+      "original_path": "Feature/IndexedMerchantSalesReportTest.php",
+      "source_sha256": "4d1fa2db3b1cbe57f3989fdc1aec935bac95a6d96e27a32e741eec4d95e85c6b",
+      "candidate_sha256": "43ff38211f4958b8ad87651463899deb097c6411e4d407d8eaf7e760aebfe1b2"
+    },
+    {
+      "path": "tests/Recovered/Feature/WebhookReceiverExampleTest.php",
+      "original_path": "Feature/WebhookReceiverExampleTest.php",
+      "source_sha256": "b52909bd77543aa52b4e073c4254dfd282f5bb826b351905c4deae604937058a",
+      "candidate_sha256": "d4536ff40b86ba7f129282abb57314d2693c093f179a44bac510614091e3fa82"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantBusinessProfileTest.php",
+      "original_path": "Feature/MerchantBusinessProfileTest.php",
+      "source_sha256": "037a87f42232a742047d5fd837214e2d6c2cf2f4bda0634bdef3d19663a75dd3",
+      "candidate_sha256": "dd1906bc6578809700e0ba30f49d36474668dc36efa16e1ced92274bec93dbba"
+    },
+    {
+      "path": "tests/Recovered/Feature/DeviceSessionTest.php",
+      "original_path": "Feature/DeviceSessionTest.php",
+      "source_sha256": "2217d0d70ad3c2ac2d1f9c7281f1cb5645258df49d47f88fcbcb3f003fc8e092",
+      "candidate_sha256": "b428ddfe128b66138ee65cf56f74e67b28b11b7074e2295cbfd063b38b3a2c65"
+    },
+    {
+      "path": "tests/Recovered/Feature/OperationsWorkspaceTest.php",
+      "original_path": "Feature/OperationsWorkspaceTest.php",
+      "source_sha256": "50e432eff1bf960d37dce91dcafd1bab1ce351467fd3ae14ad60e3839fb73f02",
+      "candidate_sha256": "d658c574e77ab4387544d01b9a4b731016277e2270d01cc781f1fb483859657f"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantCustomerTest.php",
+      "original_path": "Feature/MerchantCustomerTest.php",
+      "source_sha256": "9390e146d0049b7361c6ecf4c242ebe0c775c38ab43c5ca1dfb43b63c5d56649",
+      "candidate_sha256": "0c428532164a427bbe057fbbe99bd4112ff6432e885589d07d948b98ef374d8a"
+    },
+    {
+      "path": "tests/Recovered/Feature/EisTransmissionCenterTest.php",
+      "original_path": "Feature/EisTransmissionCenterTest.php",
+      "source_sha256": "783072c1e295f68404d3175a30cde53182e5e7414c21d207f58bdae688527dbd",
+      "candidate_sha256": "64707babcbadc5eb377467b69af6043a99c4fe8143527ecb8289edceac17b63e"
+    },
+    {
+      "path": "tests/Recovered/Feature/AdminFinancialSummaryTest.php",
+      "original_path": "Feature/AdminFinancialSummaryTest.php",
+      "source_sha256": "f035367b6bc34cd3de8dbd471b1eb8917d438721c22989407f04d1efe3c1e039",
+      "candidate_sha256": "658dd3c7e7a96e9ade2278dbdd1a5a65d12d35a2e2ad9bc08918f8426abc4824"
+    },
+    {
+      "path": "tests/Recovered/Feature/IndexedSalesReadinessAlignmentTest.php",
+      "original_path": "Feature/IndexedSalesReadinessAlignmentTest.php",
+      "source_sha256": "1804aca48a3afa46addb3b1f4fba8d5233e1585c201df0e2f92890f449f9e812",
+      "candidate_sha256": "3c805ebfe25941c05bdfec124a20a1c80e7ad1692313d4d85e349109b8f5f828"
+    },
+    {
+      "path": "tests/Recovered/Feature/AdminMerchantReceiptTest.php",
+      "original_path": "Feature/AdminMerchantReceiptTest.php",
+      "source_sha256": "5bf0be9e54192e7eeae30c4a41f626bf2ceb7901d8eb520ea66d9bf936fe733f",
+      "candidate_sha256": "ad3d3e80c5465af3ea09c5181bbd46e480c0e4a8ee66ee0aa6150a269cf0ea64"
+    },
+    {
+      "path": "tests/Recovered/Feature/InvoiceCenterAndSubscriptionsTest.php",
+      "original_path": "Feature/InvoiceCenterAndSubscriptionsTest.php",
+      "source_sha256": "5b5c7dfc605e301cffd1087ff1ccf3196696f65cbaeb06249f2c86bbbaa23b2a",
+      "candidate_sha256": "7ab493e879b390b18b36305e3226bf79bca6a8a5a7112271cdfaddbf1fa240ec"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantApiIntegrationTest.php",
+      "original_path": "Feature/MerchantApiIntegrationTest.php",
+      "source_sha256": "d294e72a1e9d289e6e75037e6adabbdb099213af92e86a74640bd6eb999d40e3",
+      "candidate_sha256": "94a382f6a743b7ca0518333937575b5458b8343cdfa8b097ade62123f59e0dc2"
+    },
+    {
+      "path": "tests/Recovered/Feature/RegistryTransactionActivityTest.php",
+      "original_path": "Feature/RegistryTransactionActivityTest.php",
+      "source_sha256": "fc734f3c1e43caa55c5504d7867818002be34c52baf25b945d539541e8b35457",
+      "candidate_sha256": "c7a247e6a4291458b14b94c29fc124d19348a180f965614a7c201c1c3de23f6b"
+    },
+    {
+      "path": "tests/Recovered/Feature/IndexedOperationsWorkspaceTest.php",
+      "original_path": "Feature/IndexedOperationsWorkspaceTest.php",
+      "source_sha256": "e6caae397e0c5976641dc2db3651a7d4c787ef133e188142f737e40f05dd577a",
+      "candidate_sha256": "a4a9b0547dd6715e93c82d36a00d36cc7f98d2e27118eb4a078d07df4b1783de"
+    },
+    {
+      "path": "tests/Recovered/Feature/SessionPersistenceTest.php",
+      "original_path": "Feature/SessionPersistenceTest.php",
+      "source_sha256": "b68b772f60eead64e9c3d088d58c3f6bee7492512a87905495bb3e84b15be536",
+      "candidate_sha256": "08f343f7ae5b33d1433831b8f1e388f872ee8bf8d49bef571bb4069527d160d3"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantSalesReportTest.php",
+      "original_path": "Feature/MerchantSalesReportTest.php",
+      "source_sha256": "6a0480b6203f6f174912eedb17d9183e58b107792292c07efb58002095017d78",
+      "candidate_sha256": "45dcc69e619b2834bab0cc744c314795f4120cc38fa66b56b959436d13d66f82"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantAccountSecurityTest.php",
+      "original_path": "Feature/MerchantAccountSecurityTest.php",
+      "source_sha256": "636e255a996b394f1bdfedfd663d6ce4fb2deb40e55ec319880509b437d2d74a",
+      "candidate_sha256": "cb7f76fc17df6fc250c8c8101e41579c690daf3072c7570335d3af9acc3696dc"
+    },
+    {
+      "path": "tests/Recovered/Feature/EisReadinessAlignmentTest.php",
+      "original_path": "Feature/EisReadinessAlignmentTest.php",
+      "source_sha256": "532fe1d25304fde3118e11739dab230bd22feaf620b20670499572441499e7b0",
+      "candidate_sha256": "509234e3dd1bea3f754640182eac4569bfbdce9724dafa06354233862ee1fd36"
+    },
+    {
+      "path": "tests/Recovered/Feature/OperationsSalesPerformanceTest.php",
+      "original_path": "Feature/OperationsSalesPerformanceTest.php",
+      "source_sha256": "73dcb55aba28406a5fbcf3a0922aebdf42d2bf35a1a0b7ec6e0cf4db5c7a57e9",
+      "candidate_sha256": "2c5309aa877b73d0f80d8b2c20bd1b15fb7913b4022783657a48315adbd51378"
+    },
+    {
+      "path": "tests/Recovered/Feature/PlatformNotificationsTest.php",
+      "original_path": "Feature/PlatformNotificationsTest.php",
+      "source_sha256": "b4c2c42e4c1a9e37c6f3c48c82ce6b9fc401c86323037535af3d5f5b182d1280",
+      "candidate_sha256": "e9f48581da18b8eefc2957e686bfb94b50ec4f733b3e3c376ceb93715c68e533"
+    },
+    {
+      "path": "tests/Recovered/Feature/GoogleAuthTest.php",
+      "original_path": "Feature/GoogleAuthTest.php",
+      "source_sha256": "439cc992428176f34d4acd2be4f94e80c79bf60f74298cc644f7696ba29cbb82",
+      "candidate_sha256": "48acf1cc9cc3090942d8540b39fe022c7796f22851eccd37227d212f6d08e92f"
+    },
+    {
+      "path": "tests/Recovered/Feature/MfaDevicesTest.php",
+      "original_path": "Feature/MfaDevicesTest.php",
+      "source_sha256": "1e57b5e400f4a8aa975411e9cc36f20197d2e4b11d76252392a2825850c31e73",
+      "candidate_sha256": "7b4e4fb4b9842f2eb01487aedbd32a72f4bb57acb91b3b03c79c33af8532482e"
+    },
+    {
+      "path": "tests/Recovered/Feature/DocumentPdfRuntimeTest.php",
+      "original_path": "Feature/DocumentPdfRuntimeTest.php",
+      "source_sha256": "13e58a3c83e61b813b39ab47aa4512992c2d3270eca3e2962fb4fbda9f60cd0f",
+      "candidate_sha256": "86d1aafc5d194a6236e1dc7a5996c664de85db6b9f6a52279186deb50ad37f69"
+    },
+    {
+      "path": "tests/Recovered/Feature/ServerManagementTest.php",
+      "original_path": "Feature/ServerManagementTest.php",
+      "source_sha256": "5923445eff4939401f9cfe4ebc881f6b25333e37fa25d7067548a75ac48950f9",
+      "candidate_sha256": "8a3377623b0f6f7cb9c3ec7675c8ed93c884f820f39f9e944ba7bbe3f2a41d16"
+    },
+    {
+      "path": "tests/Recovered/Feature/DeveloperPortalTest.php",
+      "original_path": "Feature/DeveloperPortalTest.php",
+      "source_sha256": "b86b1a0a1558ff8bdd8eeddadd5dd2f81c917fa286ab08be7b97176c4e6d14bc",
+      "candidate_sha256": "4c0249f7258e66f3cbc60af4c3a9c03f6ec3f4c73ec67a833cdfaeb9519d0b28"
+    },
+    {
+      "path": "tests/Recovered/Feature/SupportChatTest.php",
+      "original_path": "Feature/SupportChatTest.php",
+      "source_sha256": "3248ce94474c6ea231f7fd7793e182c1bc860d119f71999aac990b37ea5cc436",
+      "candidate_sha256": "2efc780c38c40fcedb49ce78fb90eabac78238fe45bd467477666e455675717a"
+    },
+    {
+      "path": "tests/Recovered/Feature/LedgerProjectionTest.php",
+      "original_path": "Feature/LedgerProjectionTest.php",
+      "source_sha256": "fc1b2c24ef02483cbf9abf9f15690f3bf101d6120cad2d49941b7fc113fae99f",
+      "candidate_sha256": "6fb910a00e07c4549890fed851559d47000bda365d7805344c888665910d814c"
+    },
+    {
+      "path": "tests/Recovered/Feature/PageLoadingPerformanceTest.php",
+      "original_path": "Feature/PageLoadingPerformanceTest.php",
+      "source_sha256": "159c0c3a7d3ea3530a6699ce39a6175e2caf083d4ce58a6ab66da9455601df9b",
+      "candidate_sha256": "624ad0ffd631c22517b52bab12e5b55147c4f81e200f4cc833a0de6a4aa12c09"
+    },
+    {
+      "path": "tests/Recovered/Feature/AdminMerchantConnectionsTest.php",
+      "original_path": "Feature/AdminMerchantConnectionsTest.php",
+      "source_sha256": "70cd128eef8a08e3b15f6de1177b05b19829f343238d9aff913871aacf7e12cf",
+      "candidate_sha256": "ed1909739e21c0d668faa376e1eabc000d83d005ac4e539eb0e2629fc2d7c43d"
+    },
+    {
+      "path": "tests/Recovered/Feature/DocumentCopyMailTest.php",
+      "original_path": "Feature/DocumentCopyMailTest.php",
+      "source_sha256": "a06dc1570686d340aa59454bb2bc8ccf193059d7daee968b4d725892b7641c3f",
+      "candidate_sha256": "3e741f74304e846b6c0b0bc517fbe64f31148b768ff3dccc974b3488f0092d4e"
+    },
+    {
+      "path": "tests/Recovered/Feature/InvoiceDocumentComplianceTest.php",
+      "original_path": "Feature/InvoiceDocumentComplianceTest.php",
+      "source_sha256": "a58c1c7a0a24307dfa8d0201c1c9c296b9525f8c2fc993563316539877375aa8",
+      "candidate_sha256": "40152e862d6db99e777f70da092698181de8761b1e5ea2fd610759e8a0df207d"
+    },
+    {
+      "path": "tests/Recovered/Feature/FormRateLimitTest.php",
+      "original_path": "Feature/FormRateLimitTest.php",
+      "source_sha256": "55ba21301c5d6a6b4f3d9eec0829ee8a08d49fdeb96ca91297b36afc28458f97",
+      "candidate_sha256": "5e4f9fc28546fe16739a85a039b761841487923a00a280407e0c1a16deea82c6"
+    },
+    {
+      "path": "tests/Recovered/Feature/SalesExportQueueTest.php",
+      "original_path": "Feature/SalesExportQueueTest.php",
+      "source_sha256": "f8ca07d78813eb196d66f83e5b26b74eb3517c151465b26c2ac6e4d62c69b26f",
+      "candidate_sha256": "f914693b383023860c075127b4a02732fdde8baf30e33bacd9e268a02d2ed792"
+    },
+    {
+      "path": "tests/Recovered/Feature/SubmissionAttemptsTest.php",
+      "original_path": "Feature/SubmissionAttemptsTest.php",
+      "source_sha256": "dc3007f6b1f81828b4e9faf66e402fe4bad6d6ac1ec409fd3e8ee78c3bb163d1",
+      "candidate_sha256": "0abf9b546c4d16c0c528114d874df8b8bde900d4847803dcc581a316207a9dc2"
+    },
+    {
+      "path": "tests/Recovered/Feature/TaxpayerWorkspaceTest.php",
+      "original_path": "Feature/TaxpayerWorkspaceTest.php",
+      "source_sha256": "199e5683e8816f52bbb458125234335b6c70716e2b97e4a2bfe36f7fa1cca008",
+      "candidate_sha256": "feb4877d01420e1ce6c925a11627cbd82290357077ae53f68278e7386def926a"
+    },
+    {
+      "path": "tests/Recovered/Feature/BusinessReviewNotificationTest.php",
+      "original_path": "Feature/BusinessReviewNotificationTest.php",
+      "source_sha256": "db7b164908f35361c96a7600bb61fa2e99335a0b8d327cd700df9a91b26b2d02",
+      "candidate_sha256": "1c45101f5ec1b97c4775275408cff365937e350e41866baf4e6a14ec6cb860cd"
+    },
+    {
+      "path": "tests/Recovered/Feature/PtiApplicationsTest.php",
+      "original_path": "Feature/PtiApplicationsTest.php",
+      "source_sha256": "7b3291286b95875b6fa76398669aaa1f8e5857098787632e3fc415a77b97b6d1",
+      "candidate_sha256": "03c2fb8c6e223b74c56bf36cbb7839ea595e5925f7213bf51e8255f34b16e20f"
+    },
+    {
+      "path": "tests/Recovered/Feature/RegistryMerchantOverviewTest.php",
+      "original_path": "Feature/RegistryMerchantOverviewTest.php",
+      "source_sha256": "8dc836e7baffef8e7eb09b1c87de6c8a047b16b8ea7b2b2c487cf1b7f69b2e29",
+      "candidate_sha256": "70f34c6e7e6c8b6ef7dc9e1e64b8510801655438800e80df302f21c8efc892dd"
+    },
+    {
+      "path": "tests/Recovered/Feature/MerchantWalletTest.php",
+      "original_path": "Feature/MerchantWalletTest.php",
+      "source_sha256": "7dc96d9c2edc9a0972b1daedd4cdc8f6434e541df5b0e0b5d558ca2053951a49",
+      "candidate_sha256": "332d9653f2ebb2702385617931927af2ab66b52faacd851dfdc65b9224a0e79c"
+    }
+  ]
+}

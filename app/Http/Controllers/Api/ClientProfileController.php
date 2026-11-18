@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\ApiAccess;
+use App\Services\PlatformNotifications;
+use App\Services\SafeImage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +33,8 @@ class ClientProfileController extends Controller
 
         abort_unless($user, 401, 'Authenticated Client session is required.');
 
+        app(ApiAccess::class)->require($request, ['client', 'consumer']);
+
         $validated = $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
             'organization' => ['nullable', 'string', 'max:255'],
@@ -37,11 +42,17 @@ class ClientProfileController extends Controller
             'mobile' => ['nullable', 'string', 'max:80'],
         ]);
 
+        $oldContact = DB::table('profiles')->where('id', $user->id)->value('email');
+        // Optional contact email must not turn a valid name-only edit into a 500,
+        // or silently replace an existing contact with the sign-in address.
+        $contactEmail = array_key_exists('email', $validated)
+            ? ($validated['email'] ?: $user->email)
+            : ($oldContact ?: $user->email);
         $now = now();
         $profileUpdates = [
             'full_name' => $validated['full_name'],
             'organization' => $validated['organization'] ?? 'Citizen Account',
-            'email' => $validated['email'] ?: $user->email,
+            'email' => $contactEmail,
             'updated_at' => $now,
         ];
 
@@ -59,7 +70,7 @@ class ClientProfileController extends Controller
         $accountQuery = DB::table('client_accounts')->where('user_id', $user->id);
 
         if (! empty($user->email)) {
-            $accountQuery->orWhere('email', $user->email);
+
         }
 
         $account = $accountQuery->first();
@@ -67,10 +78,14 @@ class ClientProfileController extends Controller
         if ($account) {
             DB::table('client_accounts')->where('id', $account->id)->update([
                 'full_name' => $validated['full_name'],
-                'email' => $validated['email'] ?: $user->email,
+                'email' => $contactEmail,
                 'mobile' => $validated['mobile'] ?? null,
                 'updated_at' => $now,
             ]);
+        }
+
+        if ($oldContact !== $contactEmail) {
+            app(PlatformNotifications::class)->user($user->id, 'security.contact.changed', (string) Str::uuid(), 'Profile contact email changed', 'The contact email on your NUERS profile was changed. Your sign-in email has not changed. If this was unexpected, contact NUERS support.', 'security');
         }
 
         return response()->json([
@@ -95,9 +110,7 @@ class ClientProfileController extends Controller
 
         $profile = DB::table('profiles')->where('id', $user->id)->first();
         $displayName = $profile?->full_name ?: $user->email ?: 'client-account';
-        $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'png');
-        $fileName = Str::slug($displayName).'-'.Str::uuid().'.'.$extension;
-        $file->move($directory, $fileName);
+        $fileName = app(SafeImage::class)->store($file, $directory);
 
         DB::table('profiles')->where('id', $user->id)->update([
             'profile_photo_url' => '/uploads/client-avatars/'.$fileName,
@@ -117,7 +130,7 @@ class ClientProfileController extends Controller
             return null;
         }
 
-        return DB::table('users')->where('api_token', $token)->first();
+        return app(ApiAccess::class)->user($request);
     }
 
     private function clientPayload(object $user, Request $request): array
@@ -126,12 +139,13 @@ class ClientProfileController extends Controller
         $accountQuery = DB::table('client_accounts')->where('user_id', $user->id);
 
         if (! empty($user->email)) {
-            $accountQuery->orWhere('email', $user->email);
+
         }
 
         $account = $accountQuery->first();
 
         return [
+            'verified_tin' => app(ApiAccess::class)->taxpayerTin($user),
             'profile' => $profile ? [
                 'id' => (int) $profile->id,
                 'email' => $profile->email,

@@ -1,4 +1,5 @@
-import {storedToken,browserDevice,invalidateToken,TOKEN_KEY} from "./session-store";
+import { apiFetch } from "./api-url";
+import { storedToken, browserDevice, invalidateToken, clearPrivateBrowserState, TOKEN_KEY } from "./session-store";
 export type LaravelUser = {
   id: string;
   email: string;
@@ -8,6 +9,9 @@ export type LaravelUser = {
 export type LaravelSession = {
   access_token: string;
   token_type: string;
+  mfa_required?: boolean;
+  expires_at?: string | null;
+  absolute_expires_at?: string | null;
   user: LaravelUser;
 };
 
@@ -15,10 +19,10 @@ type ApiError = { message: string };
 type ApiResult<T> = { data: T | null; error: ApiError | null; count?: number | null };
 type AuthListener = (event: string, session: LaravelSession | null) => void;
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 const listeners = new Set<AuthListener>();
 
 function storeSession(session: LaravelSession | null) {
+  if (storedToken() !== (session?.access_token ?? null)) clearPrivateBrowserState();
   try {
     if (typeof window === "undefined" || !window.localStorage) return;
     if (session?.access_token) window.localStorage.setItem(TOKEN_KEY, session.access_token);
@@ -38,11 +42,12 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<ApiResu
   headers.set("Accept", "application/json");
 
   const token = storedToken();
-  const device=browserDevice();if(device)headers.set("X-NUERS-Device",device);
+  const device = browserDevice();
+  if (device) headers.set("X-NUERS-Device", device);
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
   try {
-    const response = await fetch(`${API_BASE_URL}${path}`, { cache:"no-store", ...init, headers });
+    const response = await apiFetch(path, { ...init, headers });
     const contentType = response.headers.get("Content-Type") ?? "";
 
     if (!contentType.toLowerCase().includes("application/json")) {
@@ -52,14 +57,17 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<ApiResu
       };
     }
 
-    const payload = await response.json().catch(() => ({}));
+    const payload = await response.json();
 
-    if(response.status===401&&!path.startsWith("/api/auth/login")&&!path.startsWith("/auth/google"))invalidateToken(token);
+    if (
+      response.status === 401 &&
+      !path.startsWith("/api/auth/login") &&
+      !path.startsWith("/auth/google")
+    )
+      invalidateToken(token);
     if (!response.ok) {
       const message =
-        payload?.message ||
-        Object.values(payload?.errors ?? {})?.flat()?.[0] ||
-        "Request failed.";
+        payload?.message || Object.values(payload?.errors ?? {})?.flat()?.[0] || "Request failed.";
 
       return { data: null, error: { message: String(message) } };
     }
@@ -91,6 +99,8 @@ class LaravelQuery<T = any> implements PromiseLike<ApiResult<T>> {
   private orderColumn = "";
   private ascending = false;
   private limitValue?: number;
+  private offsetValue?: number;
+  private searchValue = "";
   private countMode?: string;
   private headOnly = false;
   private singleRow = false;
@@ -149,6 +159,17 @@ class LaravelQuery<T = any> implements PromiseLike<ApiResult<T>> {
     return this;
   }
 
+  range(from: number, to: number) {
+    this.offsetValue = from;
+    this.limitValue = to - from + 1;
+    return this;
+  }
+
+  search(value: string) {
+    this.searchValue = value;
+    return this;
+  }
+
   maybeSingle() {
     this.maybeSingleRow = true;
     return this.execute();
@@ -174,6 +195,8 @@ class LaravelQuery<T = any> implements PromiseLike<ApiResult<T>> {
       params.set("order", this.orderColumn);
       params.set("ascending", this.ascending ? "1" : "0");
     }
+    if (this.offsetValue !== undefined) params.set("offset", String(this.offsetValue));
+    if (this.searchValue) params.set("search", this.searchValue);
     if (this.limitValue) params.set("limit", String(this.limitValue));
     if (this.singleRow) params.set("single", "1");
     if (this.maybeSingleRow) params.set("maybeSingle", "1");
@@ -198,9 +221,14 @@ class LaravelQuery<T = any> implements PromiseLike<ApiResult<T>> {
 export const supabase = {
   auth: {
     async completeGoogleSignIn() {
-      const { data, error } = await request<{ session: LaravelSession; user: LaravelUser; role: string }>(
-        "/auth/google/session", { credentials: "same-origin" },
-      );
+      const expectedToken = storedToken();
+      const { data, error } = await request<{
+        session: LaravelSession;
+        user: LaravelUser;
+        role: string;
+      }>("/auth/google/session", { credentials: "same-origin" });
+      if (storedToken() !== expectedToken)
+        return { data: { session: null, user: null, role: null }, error: { message: "Your session changed. Please sign in again if needed." } };
       const session = data?.session ?? null;
       if (session) {
         storeSession(session);
@@ -209,16 +237,23 @@ export const supabase = {
       return { data: { session, user: data?.user ?? null, role: data?.role ?? null }, error };
     },
 
-    async getSession() {
-      const token=storedToken();
-      if(!token)return {data:{session:null},error:null,stale:false};
-      const {data,error}=await request<{session:LaravelSession|null}>("/api/auth/session");
-      if(storedToken()!==token)return {data:{session:null},error:null,stale:true};
-      if(error)return {data:{session:null},error,stale:false};
-      const session=data?.session??null;
-      if(!session)invalidateToken(token);
+    async getSession(options: { active?: boolean } = {}) {
+      const token = storedToken();
+      if (!token) return { data: { session: null }, error: null, stale: false };
+      const { data, error } = await request<{ session: LaravelSession | null }>(
+        "/api/auth/session",
+        { headers: options.active ? { "X-NUERS-Activity": "1" } : undefined },
+      );
+      if (storedToken() !== token) return { data: { session: null }, error: null, stale: true };
+      if (error) return { data: { session: null }, error, stale: false };
+      if (!data || !Object.prototype.hasOwnProperty.call(data, "session"))
+        return { data: { session: null }, error: { message: "Unable to verify the server session response. Please retry." }, stale: false };
+      const session = data.session;
+      if (session !== null && (!session || typeof session !== "object" || typeof session.access_token !== "string" || !session.access_token || typeof session.user?.id !== "string" || !session.user.id))
+        return { data: { session: null }, error: { message: "Unable to verify the server session response. Please retry." }, stale: false };
+      if (session === null) invalidateToken(token);
       else storeSession(session);
-      return {data:{session},error:null,stale:false};
+      return { data: { session }, error: null, stale: false };
     },
 
     onAuthStateChange(callback: AuthListener) {
@@ -235,33 +270,48 @@ export const supabase = {
     },
 
     async signInWithPassword(credentials: { email: string; password: string }) {
+      const expectedToken = storedToken();
       const { data, error } = await request<{ session: LaravelSession; user: LaravelUser }>(
         "/api/auth/login",
         { method: "POST", body: JSON.stringify(credentials) },
       );
 
+      if (storedToken() !== expectedToken)
+        return { data: { session: null, user: null, role: null }, error: { message: "Your session changed. Please sign in again if needed." } };
       const session = data?.session ?? null;
-      if (session) {storeSession(session);notify("SIGNED_IN", session);}
+      if (session) {
+        storeSession(session);
+        notify("SIGNED_IN", session);
+      }
 
       return { data: { session, user: data?.user ?? null }, error };
     },
 
     async signUp(credentials: { email: string; password: string; meta?: Record<string, string> }) {
+      const expectedToken = storedToken();
       const { data, error } = await request<{ session: LaravelSession; user: LaravelUser }>(
         "/api/auth/signup",
         { method: "POST", body: JSON.stringify(credentials) },
       );
 
+      if (storedToken() !== expectedToken)
+        return { data: { session: null, user: null, role: null }, error: { message: "Your session changed. Please sign in again if needed." } };
       const session = data?.session ?? null;
-      if (session) {storeSession(session);notify("SIGNED_IN", session);}
+      if (session) {
+        storeSession(session);
+        notify("SIGNED_IN", session);
+      }
 
       return { data: { session, user: data?.user ?? null }, error };
     },
 
     async signOut() {
-      const token=storedToken();
+      const token = storedToken();
       await request("/api/auth/logout", { method: "POST", body: "{}" });
-      if(!storedToken()||storedToken()===token){storeSession(null);notify("SIGNED_OUT", null);}
+      if (!storedToken() || storedToken() === token) {
+        storeSession(null);
+        notify("SIGNED_OUT", null);
+      }
     },
   },
 

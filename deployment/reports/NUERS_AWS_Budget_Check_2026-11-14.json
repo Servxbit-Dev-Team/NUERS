@@ -1,0 +1,97 @@
+{
+  "scope": "User monthly ceiling interpreted as total NUERS AWS infrastructure",
+  "monthly_budget_php": 100000,
+  "aws_account": "289829301267",
+  "observed_date": "2026-11-14",
+  "source": "Authenticated AWS Cost Explorer and Pricing APIs through CloudShell; estimated unblended USD spend",
+  "month_to_date": {
+    "start": "2026-11-01",
+    "end_exclusive": "2026-11-14",
+    "usd": 164.475783062,
+    "included_tax_usd": 17.6
+  },
+  "daily_usd": {
+    "2026-11-07": 18.2497795003,
+    "2026-11-08": 18.2861098704,
+    "2026-11-09": 18.2578417909,
+    "2026-11-10": 18.2610176622,
+    "2026-11-11": 18.2737247471,
+    "2026-11-12": 18.289887801,
+    "2026-11-13": 16.9136880321
+  },
+  "aws_forecast": {
+    "available": false,
+    "reason": "DataUnavailableException: Insufficient amount of historical data"
+  },
+  "planning_only": {
+    "daily_usd_rounded": 18.3,
+    "30_day_run_rate_usd": 549,
+    "assumed_php_per_usd": 65,
+    "30_day_run_rate_php": 35685,
+    "note": "Arithmetic run rate, not an AWS forecast or verified FX quote; allow extra headroom for tax, transfer, changing usage and FX",
+    "superseded": true,
+    "reason": "Historical spend is not representative of the currently provisioned production resources; use current-configuration baseline."
+  },
+  "approved_test_compute": {
+    "nodes": 2,
+    "type": "t3.large",
+    "region": "ap-southeast-1",
+    "usd_per_node_hour": 0.1056,
+    "maximum_hours": 4,
+    "compute_usd": 0.8448,
+    "excluded": [
+      "EBS storage",
+      "public IPv4",
+      "data transfer",
+      "tax"
+    ]
+  },
+  "controls": [
+    "Standard CPU credits, not unlimited",
+    "Four-hour instance auto-stop",
+    "Stop after testing",
+    "No further scaling without budget-headroom check",
+    "Preserve production availability"
+  ],
+  "hard_aws_billing_cap_configured": false,
+  "budget_alarm_configured": false,
+  "current_configuration_baseline": {
+    "monthly_hours": 730,
+    "components_usd": {
+      "ec2_2_m6a_xlarge": 315.36,
+      "rds_m6g_xlarge_multi_az": 610.28,
+      "rds_gp3_250gb_multi_az": 69.0,
+      "nat_2": 86.14,
+      "ebs_500gb_including_stopped_and_test_disks": 48.0,
+      "alb_1_base": 18.396
+    },
+    "subtotal_usd": 1147.176,
+    "assumed_php_per_usd": 65,
+    "assumed_tax_buffer_percent": 12,
+    "php_with_assumed_tax": 83514.4128,
+    "excluded_variable_costs": [
+      "ALB LCU",
+      "public IPv4",
+      "NAT data processing",
+      "internet data transfer",
+      "S3",
+      "snapshots and excess RDS backups",
+      "CloudWatch",
+      "WAF",
+      "Secrets Manager",
+      "KMS",
+      "other regions/services"
+    ],
+    "note": "On-demand Singapore prices read through authenticated AWS Pricing API. Baseline, not an all-inclusive forecast. Variable costs and FX can exceed remaining headroom."
+  },
+  "automatic_capacity_growth_observed": {
+    "ec2_autoscaling_groups": 0,
+    "rds_max_allocated_storage": null,
+    "scope": "Singapore region; application-level controls not changed"
+  },
+  "production_application_budget_ceiling_php": 100000,
+  "temporary_staging_instances_verified_stopped": true,
+  "aws_billing_hard_cap_configured": false,
+  "aws_budget_notification_subscription_configured": false,
+  "production_capacity_increased": false
+}

@@ -1,0 +1,17 @@
+{
+  "change": "Merchant dashboard Available Wallet card and direct Top-Up entry",
+  "balance": "Read-only available_centavos from authenticated merchant wallet, displayed as PHP",
+  "refresh": "Existing dashboard refresh every 60 seconds while visible, plus manual refresh",
+  "topup": "Navigate to /merchant/wallet?action=topup, open the existing funding request dialog and consume the query parameter",
+  "authorization": "Existing merchant owner, team permissions and top-up verification controls preserved",
+  "validation": {
+    "feature_tests": 19,
+    "assertions": 229,
+    "scope": "Own balance despite foreign merchant_id query; restricted staff denied; zero for uninitialized wallet without writes",
+    "build": "npm run build:all passed",
+    "ui": "Actual dashboard and wallet components: peso balance visible; Top-Up opens the funding form; dialog closes normally"
+  },
+  "schema_changes": false,
+  "financial_mutations": false,
+  "live_payment_or_topup_submitted": false
+}

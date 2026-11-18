@@ -1,0 +1,3726 @@
+{
+  "scanner_digest": [
+    "ghcr.io/aquasecurity/trivy@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa"
+  ],
+  "scope": "OS package inventory only; no application files; third-party vendor advisories assessed separately",
+  "nodes": {
+    "i-0694f0738afd178ce": {
+      "metadata": {
+        "OS": {
+          "Family": "ubuntu",
+          "Name": "24.04"
+        }
+      },
+      "packages_scanned": 895,
+      "severity": {
+        "MEDIUM": 10154,
+        "LOW": 6472,
+        "CRITICAL": 155,
+        "HIGH": 3072
+      },
+      "fixable": 16320,
+      "by_package": {
+        "amd64-microcode": {
+          "installed": "3.20251202.1ubuntu0.24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 10,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 11
+          }
+        },
+        "binutils": {
+          "installed": "2.42-4ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 9
+          }
+        },
+        "binutils-common:amd64": {
+          "installed": "2.42-4ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 9
+          }
+        },
+        "binutils-x86-64-linux-gnu": {
+          "installed": "2.42-4ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 9
+          }
+        },
+        "bsdextrautils": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "bsdutils": {
+          "installed": "1:2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "busybox-initramfs": {
+          "installed": "1:1.36.1-6ubuntu3.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 4
+          },
+          "status": {
+            "affected": 4
+          }
+        },
+        "busybox-static": {
+          "installed": "1:1.36.1-6ubuntu3.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 4
+          },
+          "status": {
+            "affected": 4
+          }
+        },
+        "cpio": {
+          "installed": "2.15+dfsg-1ubuntu2.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "dash": {
+          "installed": "0.5.12-6ubuntu5",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "dmeventd": {
+          "installed": "2:1.02.185-3ubuntu3.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "dmsetup": {
+          "installed": "2:1.02.185-3ubuntu3.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "eject": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "fdisk": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "gir1.2-glib-2.0:amd64": {
+          "installed": "2.80.0-6ubuntu3.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "gir1.2-packagekitglib-1.0": {
+          "installed": "1.2.8-2ubuntu1.5",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "git": {
+          "installed": "1:2.43.0-1ubuntu7.4",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "git-man": {
+          "installed": "1:2.43.0-1ubuntu7.4",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "jq": {
+          "installed": "1.7.1-3ubuntu0.24.04.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 5,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 6
+          }
+        },
+        "krb5-locales": {
+          "installed": "1.20.1-6ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libasound2-data": {
+          "installed": "1.2.11-1ubuntu0.3",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libasound2t64:amd64": {
+          "installed": "1.2.11-1ubuntu0.3",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libavahi-client3:amd64": {
+          "installed": "0.8-13ubuntu6.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 3
+          }
+        },
+        "libavahi-common-data:amd64": {
+          "installed": "0.8-13ubuntu6.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 3
+          }
+        },
+        "libavahi-common3:amd64": {
+          "installed": "0.8-13ubuntu6.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 3
+          }
+        },
+        "libbinutils:amd64": {
+          "installed": "2.42-4ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 9
+          }
+        },
+        "libblkid1:amd64": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libbpf1:amd64": {
+          "installed": "1:1.3.0-2build2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libcairo-gobject2:amd64": {
+          "installed": "1.18.0-3build1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libcairo2:amd64": {
+          "installed": "1.18.0-3build1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libclang-cpp18": {
+          "installed": "1:18.1.3-1ubuntu1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libclang1-18": {
+          "installed": "1:18.1.3-1ubuntu1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libctf-nobfd0:amd64": {
+          "installed": "2.42-4ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 9
+          }
+        },
+        "libctf0:amd64": {
+          "installed": "2.42-4ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 9
+          }
+        },
+        "libcups2t64:amd64": {
+          "installed": "2.4.7-1.2ubuntu7.14",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libdebuginfod-common": {
+          "installed": "0.190-1.1ubuntu0.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libdebuginfod1t64:amd64": {
+          "installed": "0.190-1.1ubuntu0.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libdevmapper-event1.02.1:amd64": {
+          "installed": "2:1.02.185-3ubuntu3.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libdevmapper1.02.1:amd64": {
+          "installed": "2:1.02.185-3ubuntu3.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libduktape207:amd64": {
+          "installed": "2.7.0+tests-0ubuntu3",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libdw1t64:amd64": {
+          "installed": "0.190-1.1ubuntu0.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libefiboot1t64:amd64": {
+          "installed": "38-3.1build1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libefivar1t64:amd64": {
+          "installed": "38-3.1build1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libelf1t64:amd64": {
+          "installed": "0.190-1.1ubuntu0.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libexpat1:amd64": {
+          "installed": "2.6.1-2ubuntu0.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libfdisk1:amd64": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libgdk-pixbuf-2.0-0:amd64": {
+          "installed": "2.42.10+dfsg-3ubuntu3.3",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libgdk-pixbuf2.0-bin": {
+          "installed": "2.42.10+dfsg-3ubuntu3.3",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libgdk-pixbuf2.0-common": {
+          "installed": "2.42.10+dfsg-3ubuntu3.3",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libglib2.0-0t64:amd64": {
+          "installed": "2.80.0-6ubuntu3.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libglib2.0-bin": {
+          "installed": "2.80.0-6ubuntu3.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libglib2.0-data": {
+          "installed": "2.80.0-6ubuntu3.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libgnutls30t64:amd64": {
+          "installed": "3.8.3-1.1ubuntu3.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 5
+          },
+          "status": {
+            "affected": 5
+          }
+        },
+        "libgprofng0:amd64": {
+          "installed": "2.42-4ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 9
+          }
+        },
+        "libgssapi-krb5-2:amd64": {
+          "installed": "1.20.1-6ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libgstreamer1.0-0:amd64": {
+          "installed": "1.24.2-1ubuntu0.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libharfbuzz0b:amd64": {
+          "installed": "8.3.0-2build2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libicu74:amd64": {
+          "installed": "74.2-1ubuntu3.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libjq1:amd64": {
+          "installed": "1.7.1-3ubuntu0.24.04.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 5,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 6
+          }
+        },
+        "libk5crypto3:amd64": {
+          "installed": "1.20.1-6ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libkrb5-3:amd64": {
+          "installed": "1.20.1-6ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libkrb5support0:amd64": {
+          "installed": "1.20.1-6ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libllvm18:amd64": {
+          "installed": "1:18.1.3-1ubuntu1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libllvm19:amd64": {
+          "installed": "1:19.1.1-1ubuntu1~24.04.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "liblmdb0:amd64": {
+          "installed": "0.9.31-1build1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "liblvm2cmd2.03:amd64": {
+          "installed": "2.03.16-3ubuntu3.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libmariadb3:amd64": {
+          "installed": "1:10.11.14-0ubuntu0.24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7
+          },
+          "status": {
+            "affected": 7
+          }
+        },
+        "libmount1:amd64": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libmspack0t64:amd64": {
+          "installed": "0.11-1.1ubuntu0.24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libnss-systemd:amd64": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libpackagekit-glib2-18:amd64": {
+          "installed": "1.2.8-2ubuntu1.5",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libpam-systemd:amd64": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libpixman-1-0:amd64": {
+          "installed": "0.42.2-1build1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libpolkit-agent-1-0:amd64": {
+          "installed": "124-2ubuntu1.24.04.4",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libpolkit-gobject-1-0:amd64": {
+          "installed": "124-2ubuntu1.24.04.4",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libpython3.12-minimal:amd64": {
+          "installed": "3.12.3-1ubuntu0.17",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libpython3.12-stdlib:amd64": {
+          "installed": "3.12.3-1ubuntu0.17",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libpython3.12t64:amd64": {
+          "installed": "3.12.3-1ubuntu0.17",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libsasl2-2:amd64": {
+          "installed": "2.1.28+dfsg1-5ubuntu3.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libsasl2-modules-db:amd64": {
+          "installed": "2.1.28+dfsg1-5ubuntu3.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libsasl2-modules:amd64": {
+          "installed": "2.1.28+dfsg1-5ubuntu3.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libsframe1:amd64": {
+          "installed": "2.42-4ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 9
+          }
+        },
+        "libslang2:amd64": {
+          "installed": "2.3.3-3build2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libsmartcols1:amd64": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libsystemd-shared:amd64": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libsystemd0:amd64": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libudev1:amd64": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libuuid1:amd64": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libxrender1:amd64": {
+          "installed": "1:0.9.10-1.1build1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libxslt1.1:amd64": {
+          "installed": "1.1.39-0exp1ubuntu0.24.04.3",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "linux-aws-7.0-headers-7.0.0-1014": {
+          "installed": "7.0.0-1014.14~24.04.1",
+          "fixed_versions": [
+            "",
+            "7.0.0-1017.18~24.04.1"
+          ],
+          "severity": {
+            "CRITICAL": 30,
+            "HIGH": 570,
+            "MEDIUM": 1719,
+            "LOW": 1173
+          },
+          "status": {
+            "fixed": 3264,
+            "affected": 228
+          }
+        },
+        "linux-aws-7.0-headers-7.0.0-1017": {
+          "installed": "7.0.0-1017.18~24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "HIGH": 9,
+            "MEDIUM": 181,
+            "LOW": 38
+          },
+          "status": {
+            "affected": 228
+          }
+        },
+        "linux-aws-7.0-tools-7.0.0-1014": {
+          "installed": "7.0.0-1014.14~24.04.1",
+          "fixed_versions": [
+            "",
+            "7.0.0-1017.18~24.04.1"
+          ],
+          "severity": {
+            "CRITICAL": 30,
+            "HIGH": 570,
+            "MEDIUM": 1719,
+            "LOW": 1173
+          },
+          "status": {
+            "fixed": 3264,
+            "affected": 228
+          }
+        },
+        "linux-aws-7.0-tools-7.0.0-1017": {
+          "installed": "7.0.0-1017.18~24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "HIGH": 9,
+            "MEDIUM": 181,
+            "LOW": 38
+          },
+          "status": {
+            "affected": 228
+          }
+        },
+        "linux-headers-7.0.0-1014-aws": {
+          "installed": "7.0.0-1014.14~24.04.1",
+          "fixed_versions": [
+            "",
+            "7.0.0-1017.18~24.04.1"
+          ],
+          "severity": {
+            "CRITICAL": 30,
+            "HIGH": 570,
+            "MEDIUM": 1719,
+            "LOW": 1173
+          },
+          "status": {
+            "fixed": 3264,
+            "affected": 228
+          }
+        },
+        "linux-headers-7.0.0-1017-aws": {
+          "installed": "7.0.0-1017.18~24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "HIGH": 9,
+            "MEDIUM": 181,
+            "LOW": 38
+          },
+          "status": {
+            "affected": 228
+          }
+        },
+        "linux-modules-7.0.0-1014-aws": {
+          "installed": "7.0.0-1014.14~24.04.1",
+          "fixed_versions": [
+            "",
+            "7.0.0-1017.18~24.04.1"
+          ],
+          "severity": {
+            "CRITICAL": 30,
+            "HIGH": 570,
+            "MEDIUM": 1719,
+            "LOW": 1173
+          },
+          "status": {
+            "fixed": 3264,
+            "affected": 228
+          }
+        },
+        "linux-modules-7.0.0-1017-aws": {
+          "installed": "7.0.0-1017.18~24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "HIGH": 9,
+            "MEDIUM": 181,
+            "LOW": 38
+          },
+          "status": {
+            "affected": 228
+          }
+        },
+        "linux-tools-7.0.0-1014-aws": {
+          "installed": "7.0.0-1014.14~24.04.1",
+          "fixed_versions": [
+            "",
+            "7.0.0-1017.18~24.04.1"
+          ],
+          "severity": {
+            "CRITICAL": 30,
+            "HIGH": 570,
+            "MEDIUM": 1719,
+            "LOW": 1173
+          },
+          "status": {
+            "fixed": 3264,
+            "affected": 228
+          }
+        },
+        "linux-tools-7.0.0-1017-aws": {
+          "installed": "7.0.0-1017.18~24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "HIGH": 9,
+            "MEDIUM": 181,
+            "LOW": 38
+          },
+          "status": {
+            "affected": 228
+          }
+        },
+        "linux-tools-common": {
+          "installed": "6.8.0-149.149",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "CRITICAL": 5,
+            "HIGH": 177,
+            "MEDIUM": 453,
+            "LOW": 341
+          },
+          "status": {
+            "affected": 976
+          }
+        },
+        "login": {
+          "installed": "1:4.13+dfsg1-4ubuntu3.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "lvm2": {
+          "installed": "2.03.16-3ubuntu3.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "mariadb-client": {
+          "installed": "1:10.11.14-0ubuntu0.24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7
+          },
+          "status": {
+            "affected": 7
+          }
+        },
+        "mariadb-client-core": {
+          "installed": "1:10.11.14-0ubuntu0.24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7
+          },
+          "status": {
+            "affected": 7
+          }
+        },
+        "mariadb-common": {
+          "installed": "1:10.11.14-0ubuntu0.24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7
+          },
+          "status": {
+            "affected": 7
+          }
+        },
+        "mount": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "openssh-client": {
+          "installed": "1:9.6p1-3ubuntu13.20",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "openssh-server": {
+          "installed": "1:9.6p1-3ubuntu13.20",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "openssh-sftp-server": {
+          "installed": "1:9.6p1-3ubuntu13.20",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "packagekit": {
+          "installed": "1.2.8-2ubuntu1.5",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "packagekit-tools": {
+          "installed": "1.2.8-2ubuntu1.5",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "passwd": {
+          "installed": "1:4.13+dfsg1-4ubuntu3.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "patch": {
+          "installed": "2.7.6-7build3",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 5
+          },
+          "status": {
+            "affected": 5
+          }
+        },
+        "polkitd": {
+          "installed": "124-2ubuntu1.24.04.4",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "python3-jwt": {
+          "installed": "2.7.0-1ubuntu0.4",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "python3-pkg-resources": {
+          "installed": "68.1.2-2ubuntu1.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "python3-setuptools": {
+          "installed": "68.1.2-2ubuntu1.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "python3-setuptools-whl": {
+          "installed": "68.1.2-2ubuntu1.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "python3.12": {
+          "installed": "3.12.3-1ubuntu0.17",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "python3.12-minimal": {
+          "installed": "3.12.3-1ubuntu0.17",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "rpcbind": {
+          "installed": "1.2.6-7ubuntu2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "snapd": {
+          "installed": "2.77.1+ubuntu24.04",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "systemd": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "systemd-dev": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "systemd-resolved": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "systemd-sysv": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "tar": {
+          "installed": "1.35+dfsg-3ubuntu0.4",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "udev": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "util-linux": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "uuid-runtime": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "wget": {
+          "installed": "1.21.4-1ubuntu4.5",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "xdg-utils": {
+          "installed": "1.1.3-4.1ubuntu3",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        }
+      },
+      "unfixed_critical_high": [
+        {
+          "VulnerabilityID": "CVE-2014-4323",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2014-4323"
+        },
+        {
+          "VulnerabilityID": "CVE-2022-50240",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2022-50240"
+        },
+        {
+          "VulnerabilityID": "CVE-2025-40190",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2025-40190"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-68103",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-68103"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-72198",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-72198"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-74578",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-74578"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-89805",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-89805"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-98376",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-98376"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-98420",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-98420"
+        },
+        {
+          "VulnerabilityID": "CVE-2014-4323",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1017",
+          "InstalledVersion": "7.0.0-1017.18~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2014-4323"
+        },
+        {
+          "VulnerabilityID": "CVE-2022-50240",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1017",
+          "InstalledVersion": "7.0.0-1017.18~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2022-50240"
+        },
+        {
+          "VulnerabilityID": "CVE-2025-40190",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1017",
+          "InstalledVersion": "7.0.0-1017.18~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2025-40190"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-68103",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1017",
+          "InstalledVersion": "7.0.0-1017.18~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-68103"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-72198",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1017",
+          "InstalledVersion": "7.0.0-1017.18~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-72198"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-74578",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1017",
+          "InstalledVersion": "7.0.0-1017.18~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-74578"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-89805",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1017",
+          "InstalledVersion": "7.0.0-1017.18~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-89805"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-98376",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1017",
+          "InstalledVersion": "7.0.0-1017.18~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-98376"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-98420",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1017",
+          "InstalledVersion": "7.0.0-1017.18~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-98420"
+        },
+        {
+          "VulnerabilityID": "CVE-2014-4323",
+          "PkgName": "linux-aws-7.0-tools-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2014-4323"
+        },
+        {
+          "VulnerabilityID": "CVE-2022-50240",
+          "PkgName": "linux-aws-7.0-tools-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2022-50240"
+        }
+      ]
+    },
+    "i-0fe793f3af7b0c49b": {
+      "metadata": {
+        "OS": {
+          "Family": "ubuntu",
+          "Name": "24.04"
+        }
+      },
+      "packages_scanned": 895,
+      "severity": {
+        "MEDIUM": 10154,
+        "LOW": 6472,
+        "CRITICAL": 155,
+        "HIGH": 3072
+      },
+      "fixable": 16320,
+      "by_package": {
+        "amd64-microcode": {
+          "installed": "3.20251202.1ubuntu0.24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 10,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 11
+          }
+        },
+        "binutils": {
+          "installed": "2.42-4ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 9
+          }
+        },
+        "binutils-common:amd64": {
+          "installed": "2.42-4ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 9
+          }
+        },
+        "binutils-x86-64-linux-gnu": {
+          "installed": "2.42-4ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 9
+          }
+        },
+        "bsdextrautils": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "bsdutils": {
+          "installed": "1:2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "busybox-initramfs": {
+          "installed": "1:1.36.1-6ubuntu3.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 4
+          },
+          "status": {
+            "affected": 4
+          }
+        },
+        "busybox-static": {
+          "installed": "1:1.36.1-6ubuntu3.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 4
+          },
+          "status": {
+            "affected": 4
+          }
+        },
+        "cpio": {
+          "installed": "2.15+dfsg-1ubuntu2.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "dash": {
+          "installed": "0.5.12-6ubuntu5",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "dmeventd": {
+          "installed": "2:1.02.185-3ubuntu3.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "dmsetup": {
+          "installed": "2:1.02.185-3ubuntu3.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "eject": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "fdisk": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "gir1.2-glib-2.0:amd64": {
+          "installed": "2.80.0-6ubuntu3.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "gir1.2-packagekitglib-1.0": {
+          "installed": "1.2.8-2ubuntu1.5",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "git": {
+          "installed": "1:2.43.0-1ubuntu7.4",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "git-man": {
+          "installed": "1:2.43.0-1ubuntu7.4",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "jq": {
+          "installed": "1.7.1-3ubuntu0.24.04.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 5,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 6
+          }
+        },
+        "krb5-locales": {
+          "installed": "1.20.1-6ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libasound2-data": {
+          "installed": "1.2.11-1ubuntu0.3",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libasound2t64:amd64": {
+          "installed": "1.2.11-1ubuntu0.3",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libavahi-client3:amd64": {
+          "installed": "0.8-13ubuntu6.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 3
+          }
+        },
+        "libavahi-common-data:amd64": {
+          "installed": "0.8-13ubuntu6.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 3
+          }
+        },
+        "libavahi-common3:amd64": {
+          "installed": "0.8-13ubuntu6.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 3
+          }
+        },
+        "libbinutils:amd64": {
+          "installed": "2.42-4ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 9
+          }
+        },
+        "libblkid1:amd64": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libbpf1:amd64": {
+          "installed": "1:1.3.0-2build2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libcairo-gobject2:amd64": {
+          "installed": "1.18.0-3build1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libcairo2:amd64": {
+          "installed": "1.18.0-3build1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libclang-cpp18": {
+          "installed": "1:18.1.3-1ubuntu1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libclang1-18": {
+          "installed": "1:18.1.3-1ubuntu1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libctf-nobfd0:amd64": {
+          "installed": "2.42-4ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 9
+          }
+        },
+        "libctf0:amd64": {
+          "installed": "2.42-4ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 9
+          }
+        },
+        "libcups2t64:amd64": {
+          "installed": "2.4.7-1.2ubuntu7.14",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libdebuginfod-common": {
+          "installed": "0.190-1.1ubuntu0.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libdebuginfod1t64:amd64": {
+          "installed": "0.190-1.1ubuntu0.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libdevmapper-event1.02.1:amd64": {
+          "installed": "2:1.02.185-3ubuntu3.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libdevmapper1.02.1:amd64": {
+          "installed": "2:1.02.185-3ubuntu3.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libduktape207:amd64": {
+          "installed": "2.7.0+tests-0ubuntu3",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libdw1t64:amd64": {
+          "installed": "0.190-1.1ubuntu0.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libefiboot1t64:amd64": {
+          "installed": "38-3.1build1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libefivar1t64:amd64": {
+          "installed": "38-3.1build1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libelf1t64:amd64": {
+          "installed": "0.190-1.1ubuntu0.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libexpat1:amd64": {
+          "installed": "2.6.1-2ubuntu0.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libfdisk1:amd64": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libgdk-pixbuf-2.0-0:amd64": {
+          "installed": "2.42.10+dfsg-3ubuntu3.3",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libgdk-pixbuf2.0-bin": {
+          "installed": "2.42.10+dfsg-3ubuntu3.3",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libgdk-pixbuf2.0-common": {
+          "installed": "2.42.10+dfsg-3ubuntu3.3",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libglib2.0-0t64:amd64": {
+          "installed": "2.80.0-6ubuntu3.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libglib2.0-bin": {
+          "installed": "2.80.0-6ubuntu3.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libglib2.0-data": {
+          "installed": "2.80.0-6ubuntu3.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libgnutls30t64:amd64": {
+          "installed": "3.8.3-1.1ubuntu3.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 5
+          },
+          "status": {
+            "affected": 5
+          }
+        },
+        "libgprofng0:amd64": {
+          "installed": "2.42-4ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 9
+          }
+        },
+        "libgssapi-krb5-2:amd64": {
+          "installed": "1.20.1-6ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libgstreamer1.0-0:amd64": {
+          "installed": "1.24.2-1ubuntu0.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libharfbuzz0b:amd64": {
+          "installed": "8.3.0-2build2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libicu74:amd64": {
+          "installed": "74.2-1ubuntu3.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libjq1:amd64": {
+          "installed": "1.7.1-3ubuntu0.24.04.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 5,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 6
+          }
+        },
+        "libk5crypto3:amd64": {
+          "installed": "1.20.1-6ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libkrb5-3:amd64": {
+          "installed": "1.20.1-6ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libkrb5support0:amd64": {
+          "installed": "1.20.1-6ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libllvm18:amd64": {
+          "installed": "1:18.1.3-1ubuntu1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libllvm19:amd64": {
+          "installed": "1:19.1.1-1ubuntu1~24.04.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "liblmdb0:amd64": {
+          "installed": "0.9.31-1build1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "liblvm2cmd2.03:amd64": {
+          "installed": "2.03.16-3ubuntu3.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libmariadb3:amd64": {
+          "installed": "1:10.11.14-0ubuntu0.24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7
+          },
+          "status": {
+            "affected": 7
+          }
+        },
+        "libmount1:amd64": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libmspack0t64:amd64": {
+          "installed": "0.11-1.1ubuntu0.24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libnss-systemd:amd64": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libpackagekit-glib2-18:amd64": {
+          "installed": "1.2.8-2ubuntu1.5",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libpam-systemd:amd64": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libpixman-1-0:amd64": {
+          "installed": "0.42.2-1build1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libpolkit-agent-1-0:amd64": {
+          "installed": "124-2ubuntu1.24.04.4",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libpolkit-gobject-1-0:amd64": {
+          "installed": "124-2ubuntu1.24.04.4",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libpython3.12-minimal:amd64": {
+          "installed": "3.12.3-1ubuntu0.17",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libpython3.12-stdlib:amd64": {
+          "installed": "3.12.3-1ubuntu0.17",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libpython3.12t64:amd64": {
+          "installed": "3.12.3-1ubuntu0.17",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libsasl2-2:amd64": {
+          "installed": "2.1.28+dfsg1-5ubuntu3.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libsasl2-modules-db:amd64": {
+          "installed": "2.1.28+dfsg1-5ubuntu3.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libsasl2-modules:amd64": {
+          "installed": "2.1.28+dfsg1-5ubuntu3.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libsframe1:amd64": {
+          "installed": "2.42-4ubuntu2.10",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7,
+            "LOW": 2
+          },
+          "status": {
+            "affected": 9
+          }
+        },
+        "libslang2:amd64": {
+          "installed": "2.3.3-3build2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libsmartcols1:amd64": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libsystemd-shared:amd64": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libsystemd0:amd64": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libudev1:amd64": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "libuuid1:amd64": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libxrender1:amd64": {
+          "installed": "1:0.9.10-1.1build1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "libxslt1.1:amd64": {
+          "installed": "1.1.39-0exp1ubuntu0.24.04.3",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "linux-aws-7.0-headers-7.0.0-1014": {
+          "installed": "7.0.0-1014.14~24.04.1",
+          "fixed_versions": [
+            "",
+            "7.0.0-1017.18~24.04.1"
+          ],
+          "severity": {
+            "CRITICAL": 30,
+            "HIGH": 570,
+            "MEDIUM": 1719,
+            "LOW": 1173
+          },
+          "status": {
+            "fixed": 3264,
+            "affected": 228
+          }
+        },
+        "linux-aws-7.0-headers-7.0.0-1017": {
+          "installed": "7.0.0-1017.18~24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "HIGH": 9,
+            "MEDIUM": 181,
+            "LOW": 38
+          },
+          "status": {
+            "affected": 228
+          }
+        },
+        "linux-aws-7.0-tools-7.0.0-1014": {
+          "installed": "7.0.0-1014.14~24.04.1",
+          "fixed_versions": [
+            "",
+            "7.0.0-1017.18~24.04.1"
+          ],
+          "severity": {
+            "CRITICAL": 30,
+            "HIGH": 570,
+            "MEDIUM": 1719,
+            "LOW": 1173
+          },
+          "status": {
+            "fixed": 3264,
+            "affected": 228
+          }
+        },
+        "linux-aws-7.0-tools-7.0.0-1017": {
+          "installed": "7.0.0-1017.18~24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "HIGH": 9,
+            "MEDIUM": 181,
+            "LOW": 38
+          },
+          "status": {
+            "affected": 228
+          }
+        },
+        "linux-headers-7.0.0-1014-aws": {
+          "installed": "7.0.0-1014.14~24.04.1",
+          "fixed_versions": [
+            "",
+            "7.0.0-1017.18~24.04.1"
+          ],
+          "severity": {
+            "CRITICAL": 30,
+            "HIGH": 570,
+            "MEDIUM": 1719,
+            "LOW": 1173
+          },
+          "status": {
+            "fixed": 3264,
+            "affected": 228
+          }
+        },
+        "linux-headers-7.0.0-1017-aws": {
+          "installed": "7.0.0-1017.18~24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "HIGH": 9,
+            "MEDIUM": 181,
+            "LOW": 38
+          },
+          "status": {
+            "affected": 228
+          }
+        },
+        "linux-modules-7.0.0-1014-aws": {
+          "installed": "7.0.0-1014.14~24.04.1",
+          "fixed_versions": [
+            "",
+            "7.0.0-1017.18~24.04.1"
+          ],
+          "severity": {
+            "CRITICAL": 30,
+            "HIGH": 570,
+            "MEDIUM": 1719,
+            "LOW": 1173
+          },
+          "status": {
+            "fixed": 3264,
+            "affected": 228
+          }
+        },
+        "linux-modules-7.0.0-1017-aws": {
+          "installed": "7.0.0-1017.18~24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "HIGH": 9,
+            "MEDIUM": 181,
+            "LOW": 38
+          },
+          "status": {
+            "affected": 228
+          }
+        },
+        "linux-tools-7.0.0-1014-aws": {
+          "installed": "7.0.0-1014.14~24.04.1",
+          "fixed_versions": [
+            "",
+            "7.0.0-1017.18~24.04.1"
+          ],
+          "severity": {
+            "CRITICAL": 30,
+            "HIGH": 570,
+            "MEDIUM": 1719,
+            "LOW": 1173
+          },
+          "status": {
+            "fixed": 3264,
+            "affected": 228
+          }
+        },
+        "linux-tools-7.0.0-1017-aws": {
+          "installed": "7.0.0-1017.18~24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "HIGH": 9,
+            "MEDIUM": 181,
+            "LOW": 38
+          },
+          "status": {
+            "affected": 228
+          }
+        },
+        "linux-tools-common": {
+          "installed": "6.8.0-149.149",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "CRITICAL": 5,
+            "HIGH": 177,
+            "MEDIUM": 453,
+            "LOW": 341
+          },
+          "status": {
+            "affected": 976
+          }
+        },
+        "login": {
+          "installed": "1:4.13+dfsg1-4ubuntu3.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "lvm2": {
+          "installed": "2.03.16-3ubuntu3.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "mariadb-client": {
+          "installed": "1:10.11.14-0ubuntu0.24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7
+          },
+          "status": {
+            "affected": 7
+          }
+        },
+        "mariadb-client-core": {
+          "installed": "1:10.11.14-0ubuntu0.24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7
+          },
+          "status": {
+            "affected": 7
+          }
+        },
+        "mariadb-common": {
+          "installed": "1:10.11.14-0ubuntu0.24.04.1",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 7
+          },
+          "status": {
+            "affected": 7
+          }
+        },
+        "mount": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "openssh-client": {
+          "installed": "1:9.6p1-3ubuntu13.20",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "openssh-server": {
+          "installed": "1:9.6p1-3ubuntu13.20",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "openssh-sftp-server": {
+          "installed": "1:9.6p1-3ubuntu13.20",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "packagekit": {
+          "installed": "1.2.8-2ubuntu1.5",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "packagekit-tools": {
+          "installed": "1.2.8-2ubuntu1.5",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "passwd": {
+          "installed": "1:4.13+dfsg1-4ubuntu3.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "patch": {
+          "installed": "2.7.6-7build3",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 5
+          },
+          "status": {
+            "affected": 5
+          }
+        },
+        "polkitd": {
+          "installed": "124-2ubuntu1.24.04.4",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "python3-jwt": {
+          "installed": "2.7.0-1ubuntu0.4",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "python3-pkg-resources": {
+          "installed": "68.1.2-2ubuntu1.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "python3-setuptools": {
+          "installed": "68.1.2-2ubuntu1.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "python3-setuptools-whl": {
+          "installed": "68.1.2-2ubuntu1.2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "python3.12": {
+          "installed": "3.12.3-1ubuntu0.17",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "python3.12-minimal": {
+          "installed": "3.12.3-1ubuntu0.17",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "rpcbind": {
+          "installed": "1.2.6-7ubuntu2",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "snapd": {
+          "installed": "2.77.1+ubuntu24.04",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "LOW": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "systemd": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "systemd-dev": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "systemd-resolved": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "systemd-sysv": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "tar": {
+          "installed": "1.35+dfsg-3ubuntu0.4",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 2
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "udev": {
+          "installed": "255.4-1ubuntu8.18",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        },
+        "util-linux": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "uuid-runtime": {
+          "installed": "2.39.3-9ubuntu6.6",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "wget": {
+          "installed": "1.21.4-1ubuntu4.5",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1
+          },
+          "status": {
+            "affected": 1
+          }
+        },
+        "xdg-utils": {
+          "installed": "1.1.3-4.1ubuntu3",
+          "fixed_versions": [
+            ""
+          ],
+          "severity": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "status": {
+            "affected": 2
+          }
+        }
+      },
+      "unfixed_critical_high": [
+        {
+          "VulnerabilityID": "CVE-2014-4323",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2014-4323"
+        },
+        {
+          "VulnerabilityID": "CVE-2022-50240",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2022-50240"
+        },
+        {
+          "VulnerabilityID": "CVE-2025-40190",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2025-40190"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-68103",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-68103"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-72198",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-72198"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-74578",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-74578"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-89805",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-89805"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-98376",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-98376"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-98420",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-98420"
+        },
+        {
+          "VulnerabilityID": "CVE-2014-4323",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1017",
+          "InstalledVersion": "7.0.0-1017.18~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2014-4323"
+        },
+        {
+          "VulnerabilityID": "CVE-2022-50240",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1017",
+          "InstalledVersion": "7.0.0-1017.18~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2022-50240"
+        },
+        {
+          "VulnerabilityID": "CVE-2025-40190",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1017",
+          "InstalledVersion": "7.0.0-1017.18~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2025-40190"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-68103",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1017",
+          "InstalledVersion": "7.0.0-1017.18~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-68103"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-72198",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1017",
+          "InstalledVersion": "7.0.0-1017.18~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-72198"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-74578",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1017",
+          "InstalledVersion": "7.0.0-1017.18~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-74578"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-89805",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1017",
+          "InstalledVersion": "7.0.0-1017.18~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-89805"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-98376",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1017",
+          "InstalledVersion": "7.0.0-1017.18~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-98376"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-98420",
+          "PkgName": "linux-aws-7.0-headers-7.0.0-1017",
+          "InstalledVersion": "7.0.0-1017.18~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-98420"
+        },
+        {
+          "VulnerabilityID": "CVE-2014-4323",
+          "PkgName": "linux-aws-7.0-tools-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2014-4323"
+        },
+        {
+          "VulnerabilityID": "CVE-2022-50240",
+          "PkgName": "linux-aws-7.0-tools-7.0.0-1014",
+          "InstalledVersion": "7.0.0-1014.14~24.04.1",
+          "FixedVersion": null,
+          "Severity": "HIGH",
+          "Status": "affected",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2022-50240"
+        }
+      ]
+    }
+  }
+}

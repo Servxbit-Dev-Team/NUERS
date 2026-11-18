@@ -1,0 +1,57 @@
+{
+  "staging_host": "vapt.nuers.net",
+  "active_test_aliases": [
+    "admin",
+    "merchant_a",
+    "merchant_b"
+  ],
+  "disabled_test_aliases": [
+    "super_admin",
+    "bir",
+    "rdo_a",
+    "rdo_b",
+    "client_a",
+    "client_b",
+    "consumer"
+  ],
+  "retirement_ssm_command": "0b871b58-9419-4596-9be6-3f8621adf34d",
+  "retained_passwords_and_totp_unchanged": true,
+  "production_changed": false,
+  "rdo_profile_bug": {
+    "confirmed": true,
+    "local_and_isolated_linux_tests": {
+      "tests": 23,
+      "assertions": 450
+    },
+    "deployed": false,
+    "reason": "User narrowed handoff to Admin and Merchant; RDO account access retired."
+  },
+  "pdf_scope": {
+    "handbook_pages": 26,
+    "credential_pages": 3,
+    "roles": [
+      "admin",
+      "merchant"
+    ]
+  },
+  "public_browser_verification": {
+    "admin": {
+      "password_login": true,
+      "original_totp": true,
+      "dashboard_loaded": true,
+      "permissions_error": false
+    },
+    "merchant_a": {
+      "password_login": true,
+      "original_totp": true,
+      "dashboard_loaded": true,
+      "permissions_error": false
+    },
+    "merchant_b": {
+      "password_login": true,
+      "original_totp": true,
+      "dashboard_loaded": true,
+      "permissions_error": false
+    }
+  }
+}

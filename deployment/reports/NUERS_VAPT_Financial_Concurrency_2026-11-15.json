@@ -1,0 +1,66 @@
+{
+  "date": "2026-11-15",
+  "findings_fixed": [
+    "FC-01 stale suspension preflight",
+    "FC-02 stale repeatable-read funding snapshot"
+  ],
+  "local_full_suite": {
+    "tests": 912,
+    "assertions": 13333,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "concurrency_runs": [
+      {
+        "tests": 17,
+        "assertions": 223,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "tests": 17,
+        "assertions": 223,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "tests": 17,
+        "assertions": 223,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "source_hashes": {
+      "app/Http/Controllers/Api/BusinessInvoiceController.php": "f8a1a21e530aef5d27e0452c800f2e5cd7b6a06b37dcf6fbc2f9acba8aa4fcd5",
+      "app/Http/Controllers/Api/MerchantWalletController.php": "ad81ea370b8743e822e10c197d6d9f43c785f6a5c814179b73a1256575276bee"
+    }
+  },
+  "live": {
+    "state": "deployed",
+    "release": "/srv/nuers/releases/production-20261115-races1",
+    "base": "/srv/nuers/releases/production-20261115-positive1",
+    "completed_at": "2026-11-15T13:44:03.132708+00:00",
+    "targets": {
+      "i-0694f0738afd178ce": "healthy",
+      "i-0fe793f3af7b0c49b": "healthy"
+    },
+    "runtime_files": 2,
+    "schema_changes": false,
+    "mfa_enrollment_changes": false,
+    "post_deployment_public_checks": {
+      "passed": 79,
+      "failed": 0,
+      "edge_blocked": 7,
+      "completed_at": "2026-11-15T13:45:40.148351+00:00"
+    }
+  },
+  "limits": [
+    "InnoDB process races ran locally, up to four workers",
+    "Linux probes used isolated in-memory data",
+    "No production customer mutation or payment transfer",
+    "No blanket VAPT certification"
+  ]
+}

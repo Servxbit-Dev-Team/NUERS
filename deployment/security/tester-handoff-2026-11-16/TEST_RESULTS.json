@@ -1,0 +1,37 @@
+{
+  "suite_tests": 947,
+  "suite_assertions": 13641,
+  "initial_failures": 6,
+  "initial_risky": 2,
+  "cause": "local PDF browser blocked by filesystem/process sandbox",
+  "affected_classes_retested": 4,
+  "retest_tests": 34,
+  "retest_assertions": 433,
+  "retest_failures": 0,
+  "retest_risky": 0,
+  "all_initial_failures_retested_passed": true,
+  "fix_suite_local": {
+    "tests": 77,
+    "assertions": 984
+  },
+  "fix_suite_linux": {
+    "tests": 77,
+    "assertions": 984
+  },
+  "frontend_build": "passed",
+  "frontend_reconstruction": "passed",
+  "live_deployed": true,
+  "password_rotation": {
+    "accounts": 10,
+    "mfa_preserved": true,
+    "sessions_revoked": true,
+    "production_changed": false,
+    "public_browser_login_verified": [
+      "super_admin",
+      "merchant_a"
+    ]
+  },
+  "production_release": "production-20261116-report-mfa1",
+  "native_checks_per_web_node": 8372,
+  "existing_production_mfa_preserved": true
+}

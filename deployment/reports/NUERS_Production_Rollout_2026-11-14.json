@@ -1,0 +1,234 @@
+{
+  "final_verification": {
+    "verified_at": "2026-11-14T13:41:24.222414+00:00",
+    "release": "production-20261114-vapt1",
+    "production_targets": {
+      "i-0fe793f3af7b0c49b": "healthy",
+      "i-0694f0738afd178ce": "healthy"
+    },
+    "staging_instances": {
+      "i-0c1a905d6656ce491": "stopped",
+      "i-0fd5169e6c271bf76": "stopped"
+    },
+    "runtime_permission_probes": {
+      "i-0694f0738afd178ce": "{\"production_read_allowed\":true,\"rehearsal_access_denied\":true}\n{\"runtime_archive_head_denied\": true}",
+      "i-0fe793f3af7b0c49b": "{\"production_read_allowed\":true,\"rehearsal_access_denied\":true}\n{\"runtime_archive_head_denied\": true}"
+    },
+    "iam_simulation": [
+      {
+        "action": "s3:GetObject",
+        "resource": "arn:aws:s3:::nuers-289829301267-prod-documents-sg/documents/synthetic-policy-check-only",
+        "decision": "allowed"
+      },
+      {
+        "action": "s3:PutObject",
+        "resource": "arn:aws:s3:::nuers-289829301267-prod-documents-sg/documents/synthetic-policy-check-only",
+        "decision": "allowed"
+      },
+      {
+        "action": "s3:GetObject",
+        "resource": "arn:aws:s3:::nuers-289829301267-prod-documents-sg/migration/vapt-20261114/release-payload.tar.gz",
+        "decision": "explicitDeny"
+      },
+      {
+        "action": "s3:PutObject",
+        "resource": "arn:aws:s3:::nuers-289829301267-prod-documents-sg/migration/vapt-20261114/release-payload.tar.gz",
+        "decision": "explicitDeny"
+      }
+    ],
+    "rds_status": "available",
+    "latest_restorable_time": "2026-11-14 13:35:00+00:00",
+    "audit_tunnels_closed": {
+      "13316": true,
+      "13317": true
+    },
+    "monthly_budget_ceiling_php": 100000,
+    "aws_billing_hard_cap_configured": false
+  },
+  "rollout": {
+    "started_at": "2026-11-14T13:32:35.748285+00:00",
+    "base": "/srv/nuers/releases/production-20261106-analytics-grouping2",
+    "candidate": "/srv/nuers/releases/production-20261114-vapt1",
+    "events": [
+      {
+        "time": "2026-11-14T13:32:35.994986+00:00",
+        "stage": "draining",
+        "node": "i-0694f0738afd178ce"
+      },
+      {
+        "time": "2026-11-14T13:33:08.255434+00:00",
+        "stage": "drained",
+        "node": "i-0694f0738afd178ce"
+      },
+      {
+        "time": "2026-11-14T13:33:08.295014+00:00",
+        "stage": "switch-smoke",
+        "node": "i-0694f0738afd178ce",
+        "command_id": "9d5873fd-fde4-4066-a0c7-0d6dc561e5a1"
+      },
+      {
+        "time": "2026-11-14T13:33:12.526870+00:00",
+        "stage": "registering",
+        "node": "i-0694f0738afd178ce"
+      },
+      {
+        "time": "2026-11-14T13:33:16.583588+00:00",
+        "stage": "healthy",
+        "node": "i-0694f0738afd178ce"
+      },
+      {
+        "time": "2026-11-14T13:33:16.652456+00:00",
+        "stage": "draining",
+        "node": "i-0fe793f3af7b0c49b"
+      },
+      {
+        "time": "2026-11-14T13:33:48.906740+00:00",
+        "stage": "drained",
+        "node": "i-0fe793f3af7b0c49b"
+      },
+      {
+        "time": "2026-11-14T13:33:48.955784+00:00",
+        "stage": "switch-smoke",
+        "node": "i-0fe793f3af7b0c49b",
+        "command_id": "6ba4a358-dce1-43dd-8326-1354c75d6abc"
+      },
+      {
+        "time": "2026-11-14T13:33:53.191473+00:00",
+        "stage": "registering",
+        "node": "i-0fe793f3af7b0c49b"
+      },
+      {
+        "time": "2026-11-14T13:33:57.247865+00:00",
+        "stage": "healthy",
+        "node": "i-0fe793f3af7b0c49b"
+      },
+      {
+        "time": "2026-11-14T13:33:57.304740+00:00",
+        "stage": "rollout_complete",
+        "targets": {
+          "i-0694f0738afd178ce": "healthy",
+          "i-0fe793f3af7b0c49b": "healthy"
+        }
+      }
+    ],
+    "complete": true
+  },
+  "migration": {
+    "version": "10.11.19-MariaDB-log",
+    "migration": "2026_11_14_000001_add_privileged_session_policy",
+    "columns": [
+      [
+        "api_last_activity_at",
+        "YES",
+        "timestamp"
+      ],
+      [
+        "api_mfa_challenged_at",
+        "YES",
+        "timestamp"
+      ]
+    ],
+    "method": "separate managed operator; verified TLS; instant additive DDL",
+    "customer_records_rewritten": false
+  },
+  "database_grants": {
+    "before": [
+      [
+        "nuers_production_20261106",
+        "DELETE",
+        "NO"
+      ],
+      [
+        "nuers_production_20261106",
+        "INSERT",
+        "NO"
+      ],
+      [
+        "nuers_production_20261106",
+        "SELECT",
+        "NO"
+      ],
+      [
+        "nuers_production_20261106",
+        "UPDATE",
+        "NO"
+      ],
+      [
+        "nuers_rehearsal_20261106",
+        "DELETE",
+        "NO"
+      ],
+      [
+        "nuers_rehearsal_20261106",
+        "INSERT",
+        "NO"
+      ],
+      [
+        "nuers_rehearsal_20261106",
+        "SELECT",
+        "NO"
+      ],
+      [
+        "nuers_rehearsal_20261106",
+        "UPDATE",
+        "NO"
+      ]
+    ],
+    "after": [
+      [
+        "nuers_production_20261106",
+        "DELETE",
+        "NO"
+      ],
+      [
+        "nuers_production_20261106",
+        "INSERT",
+        "NO"
+      ],
+      [
+        "nuers_production_20261106",
+        "SELECT",
+        "NO"
+      ],
+      [
+        "nuers_production_20261106",
+        "UPDATE",
+        "NO"
+      ]
+    ],
+    "global_grants": [
+      [
+        "USAGE"
+      ]
+    ],
+    "active_rehearsal_consumers": 0,
+    "applied": true,
+    "no_new_identity_created": true
+  },
+  "archive_deny": {
+    "role": "nuers-prod-web",
+    "policy_name": "NuersDenyRuntimeMigrationArchives",
+    "policy": {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Sid": "DenyRuntimeMigrationArchiveAccess",
+          "Effect": "Deny",
+          "Action": "s3:*",
+          "Resource": "arn:aws:s3:::nuers-289829301267-prod-documents-sg/migration/*"
+        }
+      ]
+    },
+    "applied": true,
+    "operator_artifact_head": 200,
+    "ordinary_document_permissions_unchanged": true
+  },
+  "first_attempt_retained": ".local/linux-staging-2026-11-14/production-evidence/production-rollout-attempt1.json",
+  "evidence_archive_sha256": "9724b8cb67b8819beb24e2833e8845bbb812bf5136a02986e87f8d2e71c9c10e",
+  "release_payload_sha256": "72fc77ae33ffd0dbc94b0069dc89db22a0fc181a15f082349a4ea56057bc362f",
+  "live_customer_mutations": false,
+  "public_browser_smoke": [
+    "home rendered",
+    "login rendered"
+  ]
+}

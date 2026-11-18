@@ -1,0 +1,249 @@
+{
+  "date": "2026-11-14",
+  "candidate": "production-20261114-vapt1",
+  "live_deployment_performed": true,
+  "full_frontend_source_recovered": false,
+  "test_runs": {
+    "expanded-retest": {
+      "tests": 800,
+      "assertions": 9990,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "24380cbb04fcfd9bfe768610067034943069556db930729ebf19f0e064c6690c"
+    },
+    "mariadb-retest": {
+      "tests": 21,
+      "assertions": 1632,
+      "failures": 2,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "b68cdb683171be3316866f2177061a85a122a2a7837cb43ca353ed5df87c57fd",
+      "note": "Intermediate run: 15 boundary/endpoint tests passed; 2 session-status failures caused by a class loaded before concurrent code edits. Replaced by the stable final session run; failure evidence retained."
+    },
+    "mariadb-session-final": {
+      "tests": 8,
+      "assertions": 56,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "a3e0e99644853dd628a1f917a916066b117c8339367da3f349d29f8db7be1f3a"
+    },
+    "mariadb-concurrency": {
+      "tests": 2,
+      "assertions": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "7acdd808a8d093a05adc89d5b54f0a615ab3ed8f565383b5db61eb67df2073e3"
+    },
+    "mariadb-registration": {
+      "tests": 2,
+      "assertions": 39,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "6eb98648297b2a1206ee033aa3998c2290a09e2ac56bf3bc9cd01852f11da8b4"
+    },
+    "reconstructed-final": {
+      "tests": 805,
+      "assertions": 10022,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "fbf2340cf5c665fae254a2cd8489038d7e0c80ecb604f99e0094650f45e9eac3",
+      "evidence_path": ".local/frontend-reconstruction-2026-11-14/phpunit-final.xml"
+    },
+    "pdf-renderer-final": {
+      "tests": 28,
+      "assertions": 314,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "0b9add083686cb5acec569f5d92ba802150ca2f599c37272ad9fe71e7ec6ab85",
+      "evidence_path": ".local/frontend-reconstruction-2026-11-14/pdf-retest.xml"
+    },
+    "power-confirmation": {
+      "tests": 5,
+      "assertions": 32,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "3067823d8d9696f5643ba97fe4efdc383734d262452d291c9748e4e9558f9516",
+      "evidence_path": ".local/frontend-reconstruction-2026-11-14/power-confirmation.xml"
+    },
+    "mariadb-security-reconstructed-final": {
+      "tests": 23,
+      "assertions": 1648,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "51099c1661e4ded033a1f8a93ca033ba78a63fcce77517b17dda86e5c6c8423a",
+      "evidence_path": ".local/vapt-remediation-2026-11-14/mariadb-security.xml"
+    },
+    "mariadb-wallet-reconstructed-final": {
+      "tests": 2,
+      "assertions": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "64de40e8a3f9b6366797d0fa0a9ea4b16dd802b3c0ef25c593c7b705049b1b39",
+      "evidence_path": ".local/vapt-remediation-2026-11-14/mariadb-wallet.xml"
+    },
+    "mariadb-registration-reconstructed-final": {
+      "tests": 2,
+      "assertions": 39,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "5bf09ba33ed5a30ad781deea6c8735eb599a92d73ce1972dd8064a55a4ebecc3",
+      "evidence_path": ".local/vapt-remediation-2026-11-14/mariadb-registration.xml"
+    },
+    "linux-full-utc": {
+      "tests": 805,
+      "assertions": 10022,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "4f2d3205384f1b78c073585a49cca205cd4cc01d3b78757d098be95314f38c51",
+      "evidence_path": ".local/linux-staging-2026-11-14/aws-evidence/sanitized-evidence-i-0fd5169e6c271bf76/evidence/full-utc/linux-full-utc.xml"
+    },
+    "linux-full-manila": {
+      "tests": 805,
+      "assertions": 10022,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "0d3c7fe76dd4fb91d26adfb472e5bae9d47d065d00059b1278a2c3c332b01c3c",
+      "evidence_path": ".local/linux-staging-2026-11-14/aws-evidence/sanitized-evidence-i-0c1a905d6656ce491/evidence/full-final/linux-full-final.xml"
+    },
+    "linux-mariadb-security": {
+      "tests": 23,
+      "assertions": 1648,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "34161cf799797c3c61f7e47555d063a0325a31633cbf1ac2c8b5c00afe9fd1be",
+      "evidence_path": ".local/linux-staging-2026-11-14/aws-evidence/sanitized-evidence-i-0c1a905d6656ce491/evidence/mariadb-security.xml"
+    },
+    "linux-mariadb-wallet": {
+      "tests": 2,
+      "assertions": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "7d19cf1b1ceb50764ab6b373634afbdf081dcd801be81ff06f617923f084457d",
+      "evidence_path": ".local/linux-staging-2026-11-14/aws-evidence/sanitized-evidence-i-0c1a905d6656ce491/evidence/mariadb-wallet.xml"
+    },
+    "linux-mariadb-registration": {
+      "tests": 2,
+      "assertions": 39,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "51f6e0cd9e375d08f67b5eb64dea0b2cb56069f65e0b300488398bab137aedf9",
+      "evidence_path": ".local/linux-staging-2026-11-14/aws-evidence/sanitized-evidence-i-0c1a905d6656ce491/evidence/mariadb-registration.xml"
+    }
+  },
+  "local_health_status": 200,
+  "scoped_php_syntax_checks": 104,
+  "temporary_mariadb_databases_remaining": 0,
+  "temporary_mariadb_users_remaining": 0,
+  "composer_advisories": 0,
+  "npm_vulnerabilities": 0,
+  "production_grants_applied": true,
+  "session_race_before_fix": {
+    "tests": 2,
+    "assertions": 6,
+    "failures": 2
+  },
+  "remaining_gates": [
+    "Independent authenticated VAPT and full infrastructure coverage",
+    "Original frontend source unavailable; reconstructed baseline does not prove full historical 1:1 equivalence"
+  ],
+  "live_health_status_after_disk_inspection": 200,
+  "temporary_recovery_volumes_remaining": 0,
+  "temporary_recovery_snapshots_remaining": 0,
+  "stopped_staging_source_inspected": true,
+  "runtime_archive_deny_policy_simulation_passed": true,
+  "runtime_archive_deny_policy_applied": true,
+  "reconstructed_frontend_source_buildable": true,
+  "frontend_checks": {
+    "typecheck": "passed",
+    "build": "passed",
+    "regression_tests": 9,
+    "session_client_scenarios": 11,
+    "repeat_build_files": 233,
+    "repeat_build_mismatches": 0,
+    "source_manifest_entries_missing": 0,
+    "manifest_integrity_missing_references": 0,
+    "browser_console_errors": 0,
+    "browser_console_warnings": 4,
+    "browser_warning_note": "Transient Recharts initial container-size warnings",
+    "provenance": "NUERS_Frontend_Reconstruction_Provenance_2026-11-14.json",
+    "linux_build_hosts": 2,
+    "cross_platform_build_files": 233,
+    "cross_platform_build_mismatches": 0,
+    "fresh_mac_repeat_build_mismatches": 0
+  },
+  "synthetic_browser_server_stopped": true,
+  "dedicated_mariadb_server_stopped": true,
+  "linux_multi_node": {
+    "checks": 28,
+    "passed": true,
+    "evidence_path": ".local/linux-staging-2026-11-14/aws-evidence/sanitized-evidence-i-0c1a905d6656ce491/evidence/multi-node.json"
+  },
+  "cross_node_wallet": {
+    "checks": {
+      "cross_node_overdraft_prevented": true,
+      "withdrawal_ledger_integrity": true,
+      "four_replays_return_same_entry": true,
+      "credit_posted_once_with_valid_chain": true
+    },
+    "withdrawal_statuses": [
+      409,
+      200
+    ],
+    "audits": [
+      {
+        "valid": true,
+        "entries": 2,
+        "balance_centavos": 300
+      },
+      {
+        "valid": true,
+        "entries": 1,
+        "balance_centavos": 1000
+      }
+    ],
+    "ssm_commands": [
+      [
+        "457d06e9-0f8f-45c3-b568-a68f474ff4e5",
+        "i-0c1a905d6656ce491"
+      ],
+      [
+        "4590a71a-930d-4721-8eb5-c7449305aa59",
+        "i-0fd5169e6c271bf76"
+      ]
+    ],
+    "synthetic_only": true
+  },
+  "linux_runtime_security": {
+    "i-0c1a905d6656ce491": {
+      "scanner_mandatory": true,
+      "loaded_signatures_fresh": true,
+      "clean_content_accepted": true,
+      "eicar_rejected": true,
+      "unavailable_scanner_fails_closed": true
+    },
+    "i-0fd5169e6c271bf76": {
+      "scanner_mandatory": true,
+      "loaded_signatures_fresh": true,
+      "clean_content_accepted": true,
+      "eicar_rejected": true,
+      "unavailable_scanner_fails_closed": true
+    }
+  },
+  "temporary_linux_staging_instances_stopped": true,
+  "production_verification_report": "NUERS_Production_Rollout_2026-11-14.json"
+}

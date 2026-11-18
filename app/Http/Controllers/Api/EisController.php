@@ -117,6 +117,10 @@ class EisController extends Controller
     {
         app(BirCompliance::class)->administrativeUser($request);
         $query = $this->transmissionQuery();
+        $request->validate(['merchant' => 'nullable|string|max:80', 'search' => 'nullable|string|max:160']);
+        if ($request->filled('merchant') && $request->input('merchant') !== 'all') {
+            $query->where('t.merchant_id', $request->input('merchant'));
+        }
 
         if ($request->filled('status') && $request->string('status')->value() !== 'all') {
             $query->where('t.status', $request->string('status')->value());
@@ -210,6 +214,8 @@ class EisController extends Controller
 
         return response()->json([
             'status' => empty($result['errors']) ? 'valid' : 'invalid',
+            'validation_scope' => 'local_preflight_only',
+            'official_schema_verified' => false,
             'errors' => $result['errors'],
             'warnings' => $result['warnings'],
             'invoice_count' => $this->payloadInvoiceCount($payload),
@@ -310,7 +316,7 @@ class EisController extends Controller
                     'environment' => $environment,
                     'document_identity_hash' => $identity,
                     'api_version' => $request->input('api_version', $integration?->api_version ?? 'v2'),
-                    'endpoint_url' => rtrim($integration?->endpoint_base_url ?? 'https://eis.bir.gov.ph', '/').'/api/eis/transmissions',
+                    'endpoint_url' => 'nuers:certification-simulator',
                     'request_id' => (string) Str::uuid(),
                     'created_at' => $now,
                     'updated_at' => $now,
@@ -790,7 +796,7 @@ class EisController extends Controller
 
     private function audit(string $eventType, ?string $auditableType, ?string $auditableId, Request $request, array $metadata): void
     {
-        $actor = $request->bearerToken() ? DB::table('users')->where('api_token', $request->bearerToken())->value('id') : null;
+        $actor = $request->bearerToken() ? app(\App\Services\ApiAccess::class)->user($request)?->id : null;
         app(BirCompliance::class)->audit($eventType, $auditableId, (string) ($actor ?? 'system'), $metadata);
         if (! Schema::hasTable('audit_events')) {
             return;

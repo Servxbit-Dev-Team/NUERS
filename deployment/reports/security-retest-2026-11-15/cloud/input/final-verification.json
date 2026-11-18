@@ -1,0 +1,39 @@
+{
+  "verified_at": "2026-11-15T02:08:00.686927+00:00",
+  "release": "production-20261115-input1",
+  "targets": {
+    "i-0fe793f3af7b0c49b": "healthy",
+    "i-0694f0738afd178ce": "healthy"
+  },
+  "nodes": {
+    "i-0694f0738afd178ce": {
+      "release": "production-20261115-input1",
+      "patch_files_verified": 250,
+      "env_unchanged": true,
+      "env_mode": "0640",
+      "code_root_owned": true,
+      "runtime_archive_access": "denied"
+    },
+    "i-0fe793f3af7b0c49b": {
+      "release": "production-20261115-input1",
+      "patch_files_verified": 250,
+      "env_unchanged": true,
+      "env_mode": "0640",
+      "code_root_owned": true,
+      "runtime_archive_access": "denied"
+    }
+  },
+  "public_http": {
+    "/": 200,
+    "/login": 200,
+    "/api/health": 200
+  },
+  "public_assets_verified": [
+    "/build/assets/main-CSHsCHiG.css",
+    "/build/assets/main-CtvHtHrq.js"
+  ],
+  "temporary_staging": {
+    "i-0c1a905d6656ce491": "stopped",
+    "i-0fd5169e6c271bf76": "stopped"
+  }
+}

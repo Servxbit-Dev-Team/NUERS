@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class LocationController extends Controller
@@ -21,6 +22,7 @@ class LocationController extends Controller
 
     public function cities(Request $request): array
     {
+        Validator::make($request->query(), ['country' => 'nullable|string|size:2|alpha:ascii'])->validate();
         $country = strtoupper((string) $request->query('country', 'PH'));
 
         if ($country !== 'PH') {
@@ -31,7 +33,7 @@ class LocationController extends Controller
             try {
                 $response = Http::timeout(4)->acceptJson()->get('https://psgc.gitlab.io/api/cities-municipalities/');
 
-                if (!$response->successful()) {
+                if (! $response->successful()) {
                     throw new \RuntimeException('PSGC city API unavailable.');
                 }
 
@@ -53,15 +55,19 @@ class LocationController extends Controller
 
     public function barangays(Request $request): array
     {
+        Validator::make($request->query(), [
+            'cityCode' => ['nullable', 'string', 'max:100', 'regex:/\A(?:[0-9]{9,10}|LOCAL-[A-Z0-9]+(?:-[A-Z0-9]+)*)\z/'],
+            'city' => 'nullable|string|max:255',
+        ])->validate();
         $cityCode = (string) $request->query('cityCode', '');
         $city = (string) $request->query('city', '');
 
-        if ($cityCode && !Str::startsWith($cityCode, 'LOCAL-')) {
+        if ($cityCode && ! Str::startsWith($cityCode, 'LOCAL-')) {
             $barangays = Cache::remember("locations.psgc.barangays.{$cityCode}", now()->addDay(), function () use ($cityCode) {
                 try {
                     $response = Http::timeout(4)->acceptJson()->get("https://psgc.gitlab.io/api/cities-municipalities/{$cityCode}/barangays/");
 
-                    if (!$response->successful()) {
+                    if (! $response->successful()) {
                         return null;
                     }
 
@@ -90,6 +96,10 @@ class LocationController extends Controller
 
     public function rdo(Request $request): array
     {
+        Validator::make($request->query(), [
+            'city' => 'nullable|string|max:255', 'region' => 'nullable|string|max:255',
+            'province' => 'nullable|string|max:255', 'barangay' => 'nullable|string|max:255',
+        ])->validate();
         $city = (string) $request->query('city', '');
         $region = (string) $request->query('region', '');
         $province = (string) $request->query('province', '');
@@ -220,7 +230,7 @@ class LocationController extends Controller
         foreach ($this->fallbackCities() as $fallback) {
             $canonical = $this->canonicalCityName((string) $fallback['name']);
 
-            if (!$existing->has($canonical)) {
+            if (! $existing->has($canonical)) {
                 $merged->push($fallback);
                 $existing->put($canonical, true);
             }

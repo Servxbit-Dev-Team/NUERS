@@ -1,0 +1,11 @@
+{
+  "state": "activated_ssh_and_database_verified_private_handoff_complete",
+  "python_compile": "passed",
+  "shell_syntax": "passed",
+  "files": {
+    "provision.py": "6f214bda89ba2ba948a62986a32abcf2e0d4acc8390f9e891c3bc280d8d49d2e",
+    "expire.py": "0197fe560b872b558a5b880505f80a11c5fce5b988de55aeea61ed6ca2d6eb5b",
+    "guard-egress.sh": "faf9dff2be25838d2613d7c72e84ceb0cc8d5435cf4a724d86a5334ced14632f",
+    "sshd_config": "ffc63e65f5284f53564c5b085fb3ca07ffcd2e18421a977a72c0e504fc96d326"
+  }
+}

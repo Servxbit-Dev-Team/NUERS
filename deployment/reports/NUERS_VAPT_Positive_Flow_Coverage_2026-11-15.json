@@ -1,0 +1,205 @@
+{
+  "full_suite": {
+    "tests": 893,
+    "assertions": 13158,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0
+  },
+  "additional_tenant_test": {
+    "tests": 1,
+    "assertions": 49,
+    "failures": 0
+  },
+  "target_endpoint_methods": 65,
+  "role_endpoint_combinations": 455,
+  "roles": [
+    "admin",
+    "bir",
+    "client",
+    "consumer",
+    "merchant",
+    "rdo",
+    "super_admin"
+  ],
+  "supported_positive_endpoints": 60,
+  "explicit_fail_closed_contracts": 5,
+  "remaining_unclassified_target_gaps": 0,
+  "target_5xx": 0,
+  "positive_role_combinations": 133,
+  "blocked_contracts": [
+    {
+      "method": "POST",
+      "route": "api/admin/eis-center/batches/{id}/release",
+      "reason": "Legacy adapter deliberately unavailable; 409; signed wire transport is separately tested"
+    },
+    {
+      "method": "PUT",
+      "route": "api/admin/subscription-plans/{id}",
+      "reason": "Legacy mutation retired; 422; use reviewed plan policy workflow"
+    },
+    {
+      "method": "POST",
+      "route": "api/merchant-accounts",
+      "reason": "Legacy account creation retired; 410; use registration workflow"
+    },
+    {
+      "method": "POST",
+      "route": "api/tables/{table}",
+      "reason": "Generic writes blocked; 409; use dedicated mutation controllers"
+    },
+    {
+      "method": "DELETE",
+      "route": "api/tables/{table}",
+      "reason": "Generic deletes blocked; 409; financial evidence preserved"
+    }
+  ],
+  "native_local": {
+    "native_authenticated_probe": "passed",
+    "php": "8.5.10",
+    "database": ":memory:",
+    "stateful_regressions": 52,
+    "checks": 8372,
+    "explicit_admin_denials": 906,
+    "roles": [
+      "super_admin",
+      "admin",
+      "bir",
+      "rdo",
+      "merchant",
+      "client",
+      "consumer"
+    ],
+    "unavailable": {
+      "api/bir-eis/receive_invoice_result/{id}": 14,
+      "api/auth/resend-verification": 14
+    }
+  },
+  "limits": [
+    "This closes the named 65 gaps, not every possible business scenario or exploit.",
+    "Third-party BIR, cloud and outbound communications are simulated or blocked in successful-flow tests.",
+    "Authenticated mutations use synthetic isolated databases; no real customer accounts were modified.",
+    "Successful test flows and edge protection do not constitute independent VAPT certification."
+  ],
+  "full_api_inventory": {
+    "non_head_endpoint_methods": 366,
+    "behavioral_observed": 366,
+    "successful_behavioral_flows": 361,
+    "explicit_fail_closed_contracts": 5
+  },
+  "deployment": {
+    "release": "production-20261115-positive1",
+    "base": "production-20261115-stateful1",
+    "completed_at": "2026-11-15T13:09:39.792117+00:00",
+    "targets": {
+      "i-0694f0738afd178ce": "healthy",
+      "i-0fe793f3af7b0c49b": "healthy"
+    },
+    "native_linux": {
+      "i-0694f0738afd178ce": {
+        "native_authenticated_probe": "passed",
+        "php": "8.4.27",
+        "database": ":memory:",
+        "stateful_regressions": 52,
+        "checks": 8372,
+        "explicit_admin_denials": 906,
+        "roles": [
+          "super_admin",
+          "admin",
+          "bir",
+          "rdo",
+          "merchant",
+          "client",
+          "consumer"
+        ],
+        "unavailable": {
+          "api/bir-eis/receive_invoice_result/{id}": 14,
+          "api/auth/resend-verification": 14
+        }
+      },
+      "i-0fe793f3af7b0c49b": {
+        "native_authenticated_probe": "passed",
+        "php": "8.4.27",
+        "database": ":memory:",
+        "stateful_regressions": 52,
+        "checks": 8372,
+        "explicit_admin_denials": 906,
+        "roles": [
+          "super_admin",
+          "admin",
+          "bir",
+          "rdo",
+          "merchant",
+          "client",
+          "consumer"
+        ],
+        "unavailable": {
+          "api/bir-eis/receive_invoice_result/{id}": 14,
+          "api/auth/resend-verification": 14
+        }
+      }
+    },
+    "live_node_verification": {
+      "i-0694f0738afd178ce": {
+        "release": "production-20261115-positive1",
+        "files": 2,
+        "http": {
+          "/": 200,
+          "/login": 200,
+          "/api/health": 200,
+          "/api/auth/mfa/disable": 401,
+          "/api/auth/mfa/devices": 401,
+          "/api/locations/cities?country%5B%5D=PH": 422,
+          "/api/locations/barangays?cityCode=..%2Fcities": 422,
+          "/api/locations/rdo?city%5B%5D=Makati": 422,
+          "/api/locations/countries": 200,
+          "/api/merchant/receipts": 401,
+          "/api/merchant/transactions": 401,
+          "/api/merchant/receipts/verify?receipt%5B%5D=SYN": 401
+        },
+        "environment_unchanged": true,
+        "code_root_owned": true
+      },
+      "i-0fe793f3af7b0c49b": {
+        "release": "production-20261115-positive1",
+        "files": 2,
+        "http": {
+          "/": 200,
+          "/login": 200,
+          "/api/health": 200,
+          "/api/auth/mfa/disable": 401,
+          "/api/auth/mfa/devices": 401,
+          "/api/locations/cities?country%5B%5D=PH": 422,
+          "/api/locations/barangays?cityCode=..%2Fcities": 422,
+          "/api/locations/rdo?city%5B%5D=Makati": 422,
+          "/api/locations/countries": 200,
+          "/api/merchant/receipts": 401,
+          "/api/merchant/transactions": 401,
+          "/api/merchant/receipts/verify?receipt%5B%5D=SYN": 401
+        },
+        "environment_unchanged": true,
+        "code_root_owned": true
+      }
+    },
+    "public_probes": {
+      "started_at": "2026-11-15T13:09:50.064978+00:00",
+      "finished_at": "2026-11-15T13:10:59.504328+00:00",
+      "scope": "https://nuers.net",
+      "completed": true,
+      "request_count": 71,
+      "passed": 71,
+      "failed": 0,
+      "edge_blocked": 7,
+      "limits": [
+        "No live authenticated customer mutation or brute-force stress test",
+        "Edge-blocked requests do not establish backend payload coverage",
+        "Local suites cover authenticated tenant, upload, replay and mutation cases"
+      ]
+    },
+    "runtime_files": [
+      "app/Http/Controllers/Api/MerchantReceiptController.php",
+      "app/Http/Controllers/Api/MerchantTransactionController.php"
+    ],
+    "account_mfa_enrollments_modified": false
+  }
+}

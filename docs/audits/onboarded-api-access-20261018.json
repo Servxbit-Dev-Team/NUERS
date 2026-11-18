@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-18",
+  "issue": "An onboarded active merchant saw a disabled API key button and an initial-approval warning.",
+  "findings": [
+    "Live read-only inspection confirmed the owner account is active/onboarded, has a valid matching active source profile and login-session MFA. No additional source review is required.",
+    "The API page retained metadata loaded before approval until a manual reload.",
+    "The document review panel inferred account approval solely from document completion and displayed a hard-coded initial-approval warning."
+  ],
+  "changes": [
+    "Refresh API metadata on focus, visibility return and every 30 seconds while visible; do not interrupt dialogs or credential operations.",
+    "Provide Refresh Status and an explicit active-account API creation message.",
+    "Return actual account status with the document checklist, show the saved account decision and refetch when its registry revision changes."
+  ],
+  "validation": {
+    "focused_php_tests": 58,
+    "assertions": 847,
+    "scenarios": ["pending owner remains blocked", "existing owner login can create a key after account approval", "initial verification differs from activation", "active and suspended notices follow the saved decision", "focus refresh enables API form", "manual refresh enables API form", "named form is enabled", "document revision refreshes the active notice"],
+    "production_build": "passed",
+    "browser_fixture": "Isolated synthetic state using real page components; no live key generated."
+  },
+  "security": "No changes to key scopes, ownership, MFA, credential lifetime, financial records or account approvals. No migration, real key creation, sale, email or BIR submission is part of this release."
+}

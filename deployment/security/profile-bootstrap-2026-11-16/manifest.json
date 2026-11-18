@@ -1,0 +1,8 @@
+{
+  "previous_controller_sha256": "2a74250c6928aabececff8575b7a1cc8f38162862a6c040cee8d5c78156acaa9",
+  "candidate_sha256": "d0c5919d5bfdcfbe5e5b0721eb2fdde2ff96129e6ea3fca339f0ca880b263978",
+  "local_tests": {
+    "tests": 23,
+    "assertions": 450
+  }
+}

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\DashboardReadCache;
 use Carbon\Carbon;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
@@ -25,12 +26,22 @@ class MerchantReceiptController extends Controller
         $base = $this->baseReceiptQuery($merchant);
         $filtered = $this->applyFilters(clone $base, $request);
 
-        $receipts = $filtered
-            ->orderByRaw('COALESCE(r.issued_at, r.created_at) DESC')
-            ->limit(500)
+        $size = min(100, max(5, $request->integer('per_page', 15)));
+        $total = app(DashboardReadCache::class)->remember('legacy-receipt-count', (string) $merchant->id, $request->except(['page', 'per_page']), fn () => (clone $filtered)->count());
+        $selection = app(\App\Services\ReportPagination::class)->page($filtered, $total, $request->integer('page', 1), $size, DB::raw('COALESCE(r.issued_at, r.created_at)'), key: 'r.id');
+        $receipts = (clone $filtered)->whereIn('r.id', $selection['ids'])
+            ->orderByRaw('COALESCE(r.issued_at, r.created_at) DESC')->orderByDesc('r.id')->limit($size)
             ->get()
             ->map(fn ($row) => $this->receiptPayload($row))
             ->values();
+
+        $overview = app(DashboardReadCache::class)->remember('legacy-receipt-overview', (string) $merchant->id, [], fn () => [
+            'summary' => $this->summary(clone $base),
+            'filters' => [
+                'channels' => $this->channels(clone $base),
+                'sources' => $this->sources(clone $base),
+            ],
+        ]);
 
         return response()->json([
             'merchant' => [
@@ -38,18 +49,16 @@ class MerchantReceiptController extends Controller
                 'business_name' => (string) $merchant->business_name,
                 'tin' => (string) ($merchant->tin ?? ''),
             ],
-            'summary' => $this->summary(clone $base),
-            'filters' => [
-                'channels' => $this->channels(clone $base),
-                'sources' => $this->sources(clone $base),
-            ],
+            ...$overview,
             'receipts' => $receipts,
+            'pagination' => ['page' => $selection['page'], 'per_page' => $size, 'total' => $total, 'total_pages' => $selection['last_page']],
         ]);
     }
 
     public function verify(Request $request): JsonResponse
     {
         $merchant = $this->currentMerchant($request);
+        \Illuminate\Support\Facades\Validator::make($request->query(), ['receipt' => 'required|string|max:255'])->validate();
         $needle = trim((string) $request->query('receipt', ''));
 
         abort_if($needle === '', 422, 'Receipt number or series number is required.');
@@ -76,7 +85,7 @@ class MerchantReceiptController extends Controller
 
         abort_unless($token && Schema::hasTable('users'), 401, 'Authenticated Business Account session is required.');
 
-        $user = DB::table('users')->where('api_token', $token)->first();
+        $user = app(\App\Services\ApiAccess::class)->require($request, ['merchant', 'admin', 'super_admin']);
 
         abort_unless($user, 401, 'Authenticated Business Account session is required.');
         abort_unless(Schema::hasTable('merchants'), 500, 'merchants table is not migrated.');
@@ -84,9 +93,7 @@ class MerchantReceiptController extends Controller
         $merchant = DB::table('merchants')
             ->where(function ($query) use ($user) {
                 $query
-                    ->where('merchant_account_id', $user->id)
-                    ->orWhere('merchant_account_email', $user->email)
-                    ->orWhere('email', $user->email);
+                    ->where('merchant_account_id', $user->id);
             })
             ->orderByRaw(
                 'CASE WHEN merchant_account_id = ? THEN 0 WHEN merchant_account_email = ? THEN 1 WHEN email = ? THEN 2 ELSE 3 END',
@@ -223,6 +230,8 @@ class MerchantReceiptController extends Controller
 
     private function applyFilters(Builder $query, Request $request): Builder
     {
+        \Illuminate\Support\Facades\Validator::make($request->query(), ['search' => 'nullable|string|max:255', 'status' => 'nullable|string|max:255', 'channel' => 'nullable|string|max:255'])->validate();
+
         $search = trim((string) $request->query('search', ''));
         $status = (string) $request->query('status', 'all');
         $channel = (string) $request->query('channel', 'all');
@@ -259,45 +268,45 @@ class MerchantReceiptController extends Controller
         return $query;
     }
 
+    private function aggregateQuery(Builder $query): Builder
+    {
+        return DB::query()->fromSub($query, 'activity');
+    }
+
+    private function statusExpression(): string
+    {
+        $void = "'".implode("','", self::VOID_STATUSES)."'";
+        $valid = "'".implode("','", self::VALID_STATUSES)."'";
+        $value = "LOWER(TRIM(COALESCE(status,transaction_status,'')))";
+        return "CASE WHEN $value IN ($void) THEN 'voided' WHEN $value IN ($valid) THEN 'valid' ELSE 'pending' END";
+    }
+
     private function summary(Builder $query): array
     {
-        $rows = $query->get();
-        $valid = $rows->filter(fn ($row) => $this->statusGroup((string) ($row->status ?? $row->transaction_status ?? '')) === 'valid');
-        $voided = $rows->filter(fn ($row) => $this->statusGroup((string) ($row->status ?? $row->transaction_status ?? '')) === 'voided');
-
-        return [
-            'total_receipts' => $rows->count(),
-            'valid_receipts' => $valid->count(),
-            'voided_receipts' => $voided->count(),
-            'pending_receipts' => max(0, $rows->count() - $valid->count() - $voided->count()),
-            'total_revenue' => round((float) $valid->sum(fn ($row) => (float) ($row->total_due ?: $row->gross_amount)), 2),
-            'total_vat' => round((float) $valid->sum(fn ($row) => (float) $row->vat_amount), 2),
-            'void_rate' => $rows->count() > 0 ? round(($voided->count() / $rows->count()) * 100, 1) : 0.0,
-        ];
+        $state = $this->statusExpression();
+        $rows = $this->aggregateQuery($query)->selectRaw("$state as state, COUNT(*) as total, COALESCE(SUM(COALESCE(NULLIF(total_due,0),gross_amount)),0) as revenue, COALESCE(SUM(vat_amount),0) as vat")
+            ->groupByRaw($state)->get()->keyBy('state');
+        $total = (int) $rows->sum('total');
+        $valid = (int) ($rows->get('valid')?->total ?? 0);
+        $voided = (int) ($rows->get('voided')?->total ?? 0);
+        return ['total_receipts' => $total, 'valid_receipts' => $valid, 'voided_receipts' => $voided,
+            'pending_receipts' => $total - $valid - $voided,
+            'total_revenue' => round((float) ($rows->get('valid')?->revenue ?? 0), 2),
+            'total_vat' => round((float) ($rows->get('valid')?->vat ?? 0), 2),
+            'void_rate' => $total ? round($voided / $total * 100, 1) : 0.0];
     }
 
     private function channels(Builder $query): array
     {
-        return $query
-            ->get()
-            ->map(fn ($row) => $this->channel($row))
-            ->filter()
-            ->unique()
-            ->sort()
-            ->values()
-            ->all();
+        $value = "LOWER(REPLACE(REPLACE(COALESCE(NULLIF(channel,''),NULLIF(source_system,''),'api'),'_',' '),'-',' '))";
+        $channel = "CASE WHEN $value LIKE '%pos%' THEN 'POS' WHEN $value LIKE '%e commerce%' OR $value LIKE '%ecommerce%' OR $value LIKE '%online%' THEN 'E-Commerce' WHEN $value LIKE '%mobile%' THEN 'Mobile' ELSE 'API' END";
+        return $this->aggregateQuery($query)->selectRaw("$channel as value")->distinct()->orderBy('value')->pluck('value')->all();
     }
 
     private function sources(Builder $query): array
     {
-        return $query
-            ->get()
-            ->map(fn ($row) => (string) (($row->source_system ?? null) ?: ($row->api_key_name ?? null) ?: 'NUERS API'))
-            ->filter()
-            ->unique()
-            ->sort()
-            ->values()
-            ->all();
+        return $this->aggregateQuery($query)->selectRaw("COALESCE(NULLIF(source_system,''),NULLIF(api_key_name,''),'NUERS API') as value")
+            ->distinct()->orderBy('value')->limit(200)->pluck('value')->all();
     }
 
     private function receiptPayload(object $row): array

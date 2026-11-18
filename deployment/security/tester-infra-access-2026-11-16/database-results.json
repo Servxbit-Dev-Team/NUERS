@@ -1,0 +1,33 @@
+{
+    "login_and_identity": {
+        "success": true,
+        "rows": [
+            [
+                "nuers_vapt_multi",
+                "vapt_reader@10.85.0.70",
+                10
+            ]
+        ]
+    },
+    "synthetic_schema_read": {
+        "success": true,
+        "rows": [
+            [
+                16
+            ]
+        ]
+    },
+    "write_denied": {
+        "success": false,
+        "sqlstate": "42000",
+        "error_code": 1142,
+        "message": "UPDATE command denied to user 'vapt_reader'@'10.85.0.70' for table `nuers_vapt_multi`.`profiles`"
+    },
+    "system_schema_denied": {
+        "success": false,
+        "sqlstate": "42000",
+        "error_code": 1142,
+        "message": "SELECT command denied to user 'vapt_reader'@'10.85.0.70' for table `mysql`.`user`"
+    },
+    "passed": true
+}

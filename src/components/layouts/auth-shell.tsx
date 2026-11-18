@@ -33,7 +33,7 @@ export function AuthShell({
       <div className="grid min-h-screen lg:grid-cols-[minmax(0,1.04fr)_minmax(480px,0.96fr)]">
         <section className="relative hidden overflow-hidden bg-[#082844] text-white lg:flex">
           <img
-            src="/nuers_wBG.jpg"
+            src="/auth-assets/nuers-login-background.png"
             alt=""
             className="absolute inset-0 h-full w-full object-cover opacity-15"
           />
@@ -42,7 +42,7 @@ export function AuthShell({
 
           <div className="relative z-10 flex min-h-screen w-full flex-col justify-between px-14 py-10 xl:px-20 xl:py-12 2xl:px-24">
             <div className="flex items-center justify-between">
-              <img src="/NUERSLOGOWHITE.png" alt="NUERS" className="h-12 w-auto" />
+              <img src="/brand/nuers-official-logo.png" alt="NUERS" className="h-12 w-auto" />
               <Badge className="rounded-md border-white/20 bg-white/10 text-white hover:bg-white/10">
                 Secure Access
               </Badge>
@@ -56,15 +56,16 @@ export function AuthShell({
               <h2 className="text-4xl font-semibold leading-tight tracking-normal text-white xl:text-5xl">
                 {heroTitle}
               </h2>
-              <p className="mt-5 max-w-xl text-sm leading-6 text-white/72">
-                {heroDescription}
-              </p>
+              <p className="mt-5 max-w-xl text-sm leading-6 text-white/72">{heroDescription}</p>
 
               <div className="mt-8 grid max-w-xl grid-cols-2 gap-3">
                 {assuranceItems.map((item) => {
                   const Icon = item.icon;
                   return (
-                    <div key={item.label} className="rounded-lg border border-white/12 bg-white/[0.07] p-4">
+                    <div
+                      key={item.label}
+                      className="rounded-lg border border-white/12 bg-white/[0.07] p-4"
+                    >
                       <Icon className="h-4 w-4 text-amber-300" />
                       <p className="mt-3 text-sm font-medium text-white">{item.value}</p>
                       <p className="mt-1 text-xs text-white/55">{item.label}</p>
@@ -85,7 +86,7 @@ export function AuthShell({
 
         <section className="flex min-h-screen flex-col bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_62%,#eff6ff_100%)] px-5 py-6 sm:px-8 lg:px-12">
           <div className="flex items-center justify-between lg:hidden">
-            <img src="/NUERSLOGO.png" alt="NUERS" className="h-9 w-auto" />
+            <img src="/brand/nuers-official-logo.png" alt="NUERS" className="h-9 w-auto" />
             <Link to="/verify" className="text-xs font-medium text-primary hover:underline">
               Verify receipt
             </Link>
@@ -94,10 +95,15 @@ export function AuthShell({
           <div className="mx-auto flex w-full max-w-[520px] flex-1 flex-col justify-center py-8">
             <div className="rounded-lg border border-slate-200/80 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.08)] sm:p-8">
               <div className="mb-7">
-                <Badge variant="secondary" className="rounded-md bg-amber-50 text-amber-700 hover:bg-amber-50">
+                <Badge
+                  variant="secondary"
+                  className="rounded-md bg-amber-50 text-amber-700 hover:bg-amber-50"
+                >
                   {eyebrow}
                 </Badge>
-                <h1 className="mt-4 text-3xl font-semibold tracking-normal text-slate-950">{title}</h1>
+                <h1 className="mt-4 text-3xl font-semibold tracking-normal text-slate-950">
+                  {title}
+                </h1>
                 <p className="mt-3 text-sm leading-6 text-slate-600">{description}</p>
               </div>
 

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
@@ -29,131 +28,52 @@ class BusinessAccountController extends Controller
 
     public function update(Request $request): JsonResponse
     {
-        $user = $this->userFromRequest($request);
-
-        abort_unless($user, 401, 'Authenticated Business Account session is required.');
-
-        $merchant = $this->merchantForUser($user);
-
-        abort_unless($merchant, 404, 'No Business Account registry record is linked to this login.');
-
-        $validated = $request->validate([
-            'business_name' => ['required', 'string', 'max:255'],
-            'owner_name' => ['nullable', 'string', 'max:255'],
-            'tin' => ['nullable', 'string', 'max:80'],
-            'sector' => ['nullable', 'string', 'max:120'],
-            'business_type' => ['nullable', 'string', 'max:120'],
-            'bir_registration_date' => ['nullable', 'date'],
-            'vat_registered' => ['nullable', 'boolean'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:80'],
-            'address' => ['nullable', 'string'],
-            'country' => ['nullable', 'string', 'max:80'],
-            'country_code' => ['nullable', 'string', 'max:8'],
-            'city' => ['nullable', 'string', 'max:255'],
-            'city_code' => ['nullable', 'string', 'max:80'],
-            'barangay' => ['nullable', 'string', 'max:255'],
-            'barangay_code' => ['nullable', 'string', 'max:80'],
-            'zip_code' => ['nullable', 'string', 'max:40'],
-            'region' => ['nullable', 'string', 'max:120'],
-            'rdo_code' => ['nullable', 'string', 'max:20'],
-            'rdo_name' => ['nullable', 'string', 'max:255'],
-            'website' => ['nullable', 'string', 'max:255'],
-            'employee_count' => ['nullable', 'integer', 'min:0'],
-            'annual_revenue' => ['nullable', 'numeric', 'min:0'],
-            'pos_system' => ['nullable', 'string', 'max:255'],
-            'branch_count' => ['nullable', 'integer', 'min:0'],
-            'notes' => ['nullable', 'string'],
-        ]);
-
-        $updates = [
-            ...$validated,
-            'compliance_score' => $this->computedComplianceScore((object) [...(array) $merchant, ...$validated]),
-            'updated_at' => now(),
-        ];
-
-        DB::table('merchants')->where('id', $merchant->id)->update($updates);
-
-        $this->audit('business_account.profile.updated', $merchant->id, $user, $request, [
-            'updated_fields' => array_keys($validated),
-            'notes' => $validated['notes'] ?? null,
-        ]);
-
-        $fresh = DB::table('merchants')->where('id', $merchant->id)->first();
-
-        return response()->json([
-            'data' => $this->merchantPayload($fresh, $request),
-        ]);
+        // Legacy clients must use the same strict owner/revision boundary as Business Profile.
+        app(MerchantBusinessProfileController::class)->update($request);
+        return $this->current($request);
     }
 
     public function uploadLogo(Request $request): JsonResponse
     {
-        $user = $this->userFromRequest($request);
-
-        abort_unless($user, 401, 'Authenticated Business Account session is required.');
-        abort_unless(Schema::hasColumn('merchants', 'logo_url'), 500, 'Business Account logo storage is not migrated yet.');
-
-        $merchant = $this->merchantForUser($user);
-
-        abort_unless($merchant, 404, 'No Business Account registry record is linked to this login.');
-
-        $request->validate([
-            'logo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
-        ]);
-
-        $file = $request->file('logo');
-        $directory = public_path('uploads/business-logos');
-        File::ensureDirectoryExists($directory);
-
-        $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'png');
-        $fileName = Str::slug($merchant->business_name ?: 'business-account').'-'.Str::uuid().'.'.$extension;
-        $file->move($directory, $fileName);
-
-        $logoUrl = '/uploads/business-logos/'.$fileName;
-
-        DB::table('merchants')->where('id', $merchant->id)->update([
-            'logo_url' => $logoUrl,
-            'updated_at' => now(),
-        ]);
-
-        $this->audit('business_account.logo.updated', $merchant->id, $user, $request, [
-            'logo_url' => $logoUrl,
-            'original_name' => $file->getClientOriginalName(),
-        ]);
-
-        $fresh = DB::table('merchants')->where('id', $merchant->id)->first();
-
-        return response()->json([
-            'data' => $this->merchantPayload($fresh, $request),
-        ]);
+        $merchant = $this->merchantForUser($this->userFromRequest($request) ?? abort(401));
+        abort_unless($merchant, 404, 'Business account not found.');
+        if (!$request->exists('expected_logo')) {
+            $request->merge(['expected_logo' => $merchant->logo_url ?? null]);
+        }
+        app(MerchantBrandController::class)->update($request);
+        return response()->json(['data' => $this->merchantPayload(DB::table('merchants')->where('id', $merchant->id)->first(), $request)]);
     }
 
     public function lookupByTin(Request $request): JsonResponse
     {
-        abort_unless($this->userFromRequest($request), 401, 'Authenticated NUERS session is required.');
+        $access = app(\App\Services\ApiAccess::class);
+        $user = $access->require($request);
 
         $tin = $this->normalizeTin((string) $request->query('tin', ''));
 
         abort_if(strlen($tin) < 9, 422, 'Enter at least 9 TIN digits.');
 
-        $merchant = DB::table('merchants')
+        // A known TIN is a search term, never a grant to another tenant's registry.
+        $query = in_array($request->attributes->get('api_role'), ['admin', 'super_admin', 'bir'], true)
+            ? DB::table('merchants') : $access->merchants($user);
+        $merchant = $query
             ->whereRaw($this->normalizedTinSql('tin').' = ?', [$tin])
             ->first();
 
         if ($merchant) {
             return response()->json([
                 'data' => [
-                    ...$this->merchantPayload($merchant, $request),
+                    'id' => $merchant->id,'business_name' => $merchant->business_name,'tin' => $merchant->tin,'address' => $merchant->address,'vat_registered' => (bool)$merchant->vat_registered,
                     'type' => 'business_account',
                 ],
             ]);
         }
 
-        $profile = DB::table('profiles')
+        $profile = DB::table('profiles')->where('id', $this->userFromRequest($request)->id)
             ->whereRaw($this->normalizedTinSql('tin').' = ?', [$tin])
             ->first();
 
-        abort_unless($profile, 404, 'No registered NUERS account was found for this TIN.');
+        abort_unless($profile, 404, 'No account available within your authorized scope for this TIN.');
 
         return response()->json([
             'data' => [
@@ -180,39 +100,19 @@ class BusinessAccountController extends Controller
             return null;
         }
 
-        return DB::table('users')->where('api_token', $token)->first();
+        return app(\App\Services\ApiAccess::class)->user($request);
     }
 
     private function merchantForUser(object $user): ?object
     {
-        $merchant = DB::table('merchants')
-            ->where(function ($query) use ($user) {
-                $query
-                    ->where('merchant_account_id', $user->id)
-                    ->orWhere('merchant_account_email', $user->email)
-                    ->orWhere('email', $user->email);
-            })
-            ->first();
-
-        if ($merchant) {
-            return $merchant;
-        }
-
-        $profile = DB::table('profiles')->where('id', $user->id)->first();
-
-        if (! $profile?->organization) {
-            return null;
-        }
-
-        return DB::table('merchants')
-            ->where('business_name', $profile->organization)
-            ->orWhere('business_name', $profile->full_name)
-            ->first();
+        return app(\App\Services\ApiAccess::class)->merchants($user)->orderBy('id')->first();
     }
 
     private function merchantPayload(object $merchant, ?Request $request = null): array
     {
         return [
+            'sales_benefit_policy' => app(\App\Services\IndustrySalesBenefits::class)->catalog($merchant),
+            'invoice_preferences' => app(\App\Services\MerchantInvoiceSettings::class)->get($merchant)['settings'],
             'id' => (string) $merchant->id,
             'business_name' => (string) $merchant->business_name,
             'owner_name' => $merchant->owner_name,
@@ -328,62 +228,8 @@ class BusinessAccountController extends Controller
 
     private function profileDocuments(object $merchant): array
     {
-        return [
-            [
-                'id' => 'bir-registration',
-                'name' => 'BIR Business Registration',
-                'type' => 'TIN / BIR registration date',
-                'status' => $merchant->tin && $merchant->bir_registration_date ? 'verified' : 'missing',
-                'uploaded' => $merchant->bir_registration_date,
-                'expires' => null,
-                'size' => null,
-            ],
-            [
-                'id' => 'vat-registration',
-                'name' => 'VAT Registration',
-                'type' => 'BIR VAT status',
-                'status' => $merchant->vat_registered ? 'verified' : 'missing',
-                'uploaded' => $merchant->bir_registration_date,
-                'expires' => null,
-                'size' => null,
-            ],
-            [
-                'id' => 'business-address',
-                'name' => 'Business Registration Address',
-                'type' => 'Registered address',
-                'status' => $this->merchantAddress($merchant) ? 'verified' : 'missing',
-                'uploaded' => $merchant->updated_at,
-                'expires' => null,
-                'size' => null,
-            ],
-            [
-                'id' => 'rdo-assignment',
-                'name' => 'RDO Assignment',
-                'type' => 'BIR RDO branch mapping',
-                'status' => $merchant->rdo_code ? 'verified' : 'missing',
-                'uploaded' => $merchant->updated_at,
-                'expires' => null,
-                'size' => null,
-            ],
-            [
-                'id' => 'pos-system',
-                'name' => 'POS / Device Registration',
-                'type' => 'POS system on record',
-                'status' => $merchant->pos_system ? 'verified' : 'missing',
-                'uploaded' => $merchant->updated_at,
-                'expires' => null,
-                'size' => null,
-            ],
-            [
-                'id' => 'contact-email',
-                'name' => 'Business Contact Email',
-                'type' => 'Portal account contact',
-                'status' => ($merchant->email ?: $merchant->merchant_account_email) ? 'verified' : 'missing',
-                'uploaded' => $merchant->updated_at,
-                'expires' => null,
-                'size' => null,
-            ],
-        ];
+        $state = app(\App\Services\MerchantVerificationDocuments::class)->present($merchant->id);
+        return array_map(fn ($d) => ['id' => $d['kind'],'name' => $d['name'],'type' => $d['description'],'status' => $d['status'] === 'needs_changes' ? 'expired' : $d['status'],'uploaded' => $d['created_at'],'expires' => null,'size' => $d['bytes'] ? round($d['bytes'] / 1024).' KB' : null], $state['items']);
     }
 
     private function profileAuditEvents(object $merchant): array

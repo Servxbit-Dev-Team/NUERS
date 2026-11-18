@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\DashboardReadCache;
 use Carbon\Carbon;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
@@ -26,22 +27,17 @@ class MerchantTransactionController extends Controller
         $perPage = min(100, max(5, $request->integer('per_page', 15)));
         $base = $this->baseTransactionQuery($merchant);
         $filtered = $this->applyFilters(clone $base, $request);
-        $totalFiltered = (clone $filtered)->count();
+        $totalFiltered = app(DashboardReadCache::class)->remember('legacy-transaction-count', (string) $merchant->id, $request->except(['page', 'per_page']), fn () => (clone $filtered)->count());
 
-        $transactions = (clone $filtered)
-            ->orderByDesc('t.created_at')
-            ->offset(($page - 1) * $perPage)
-            ->limit($perPage)
+        $selection = app(\App\Services\ReportPagination::class)->page($filtered, $totalFiltered, $page, $perPage, 't.created_at', key: 't.id');
+        $page = $selection['page'];
+        $transactions = (clone $filtered)->whereIn('t.id', $selection['ids'])
+            ->orderByDesc('t.created_at')->orderByDesc('t.id')->limit($perPage)
             ->get()
             ->map(fn ($row) => $this->transactionPayload($row))
             ->values();
 
-        return response()->json([
-            'merchant' => [
-                'id' => (string) $merchant->id,
-                'business_name' => (string) $merchant->business_name,
-                'tin' => (string) ($merchant->tin ?? ''),
-            ],
+        $overview = app(DashboardReadCache::class)->remember('legacy-transaction-overview', (string) $merchant->id, [], fn () => [
             'summary' => $this->summary(clone $base),
             'weekly' => $this->weeklySeries(clone $base),
             'channel_revenue' => $this->channelRevenue(clone $base),
@@ -51,6 +47,15 @@ class MerchantTransactionController extends Controller
                 'payments' => $this->optionList(clone $base, 'payment_method'),
                 'statuses' => $this->statuses(clone $base),
             ],
+        ]);
+
+        return response()->json([
+            'merchant' => [
+                'id' => (string) $merchant->id,
+                'business_name' => (string) $merchant->business_name,
+                'tin' => (string) ($merchant->tin ?? ''),
+            ],
+            ...$overview,
             'transactions' => $transactions,
             'pagination' => [
                 'page' => $page,
@@ -67,7 +72,7 @@ class MerchantTransactionController extends Controller
 
         abort_unless($token && Schema::hasTable('users'), 401, 'Authenticated Business Account session is required.');
 
-        $user = DB::table('users')->where('api_token', $token)->first();
+        $user = app(\App\Services\ApiAccess::class)->require($request, ['merchant', 'admin', 'super_admin']);
 
         abort_unless($user, 401, 'Authenticated Business Account session is required.');
         abort_unless(Schema::hasTable('merchants'), 500, 'merchants table is not migrated.');
@@ -75,9 +80,7 @@ class MerchantTransactionController extends Controller
         $merchant = DB::table('merchants')
             ->where(function ($query) use ($user) {
                 $query
-                    ->where('merchant_account_id', $user->id)
-                    ->orWhere('merchant_account_email', $user->email)
-                    ->orWhere('email', $user->email);
+                    ->where('merchant_account_id', $user->id);
             })
             ->orderByRaw(
                 'CASE WHEN merchant_account_id = ? THEN 0 WHEN merchant_account_email = ? THEN 1 WHEN email = ? THEN 2 ELSE 3 END',
@@ -220,6 +223,8 @@ class MerchantTransactionController extends Controller
 
     private function applyFilters(Builder $query, Request $request): Builder
     {
+        \Illuminate\Support\Facades\Validator::make($request->query(), ['search' => 'nullable|string|max:255', 'status' => 'nullable|string|max:255', 'channel' => 'nullable|string|max:255', 'branch' => 'nullable|string|max:255', 'payment' => 'nullable|string|max:255'])->validate();
+
         $search = trim((string) $request->query('search', ''));
         $status = (string) $request->query('status', 'all');
         $channel = (string) $request->query('channel', 'all');
@@ -307,99 +312,85 @@ class MerchantTransactionController extends Controller
         });
     }
 
+    private function aggregateQuery(Builder $query): Builder
+    {
+        return DB::query()->fromSub($query, 'activity');
+    }
+
+    private function statusExpression(): string
+    {
+        $void = "'".implode("','", self::VOID_STATUSES)."'";
+        $success = "'".implode("','", self::SUCCESS_STATUSES)."'";
+        return "CASE WHEN LOWER(TRIM(COALESCE(status,''))) IN ($void) THEN 'voided' WHEN LOWER(TRIM(COALESCE(status,''))) IN ($success) THEN 'completed' ELSE 'pending' END";
+    }
+
+    private function channelExpression(): string
+    {
+        $value = "LOWER(REPLACE(REPLACE(COALESCE(NULLIF(channel,''),NULLIF(source_system,''),'api'),'_',' '),'-',' '))";
+        return "CASE WHEN $value LIKE '%pos%' THEN 'POS' WHEN $value LIKE '%e commerce%' OR $value LIKE '%ecommerce%' OR $value LIKE '%online%' THEN 'E-Commerce' WHEN $value LIKE '%mobile%' THEN 'Mobile' WHEN $value LIKE '%corp%' OR $value LIKE '%b2b%' THEN 'Corporate' ELSE 'API' END";
+    }
+
     private function summary(Builder $query): array
     {
-        $rows = $query->get();
-        $completed = $rows->filter(fn ($row) => $this->statusGroup((string) ($row->status ?? '')) === 'completed');
-        $voided = $rows->filter(fn ($row) => $this->statusGroup((string) ($row->status ?? '')) === 'voided');
-        $pending = $rows->filter(fn ($row) => $this->statusGroup((string) ($row->status ?? '')) === 'pending');
-        $revenue = (float) $completed->sum(fn ($row) => (float) $row->amount);
-        $vat = (float) $completed->sum(fn ($row) => (float) $row->vat_amount);
-
+        $state = $this->statusExpression();
+        $rows = $this->aggregateQuery($query)->selectRaw("$state as state, COUNT(*) as total, COALESCE(SUM(amount),0) as revenue, COALESCE(SUM(vat_amount),0) as vat")->groupByRaw($state)->get()->keyBy('state');
+        $total = (int) $rows->sum('total');
+        $completed = (int) ($rows->get('completed')?->total ?? 0);
+        $voided = (int) ($rows->get('voided')?->total ?? 0);
+        $revenue = (float) ($rows->get('completed')?->revenue ?? 0);
         return [
-            'total_transactions' => $rows->count(),
-            'completed_transactions' => $completed->count(),
-            'voided_transactions' => $voided->count(),
-            'pending_transactions' => $pending->count(),
-            'total_revenue' => round($revenue, 2),
-            'total_vat' => round($vat, 2),
-            'average_transaction' => $completed->count() > 0 ? round($revenue / $completed->count(), 2) : 0,
-            'void_rate' => $rows->count() > 0 ? round(($voided->count() / $rows->count()) * 100, 1) : 0.0,
+            'total_transactions' => $total, 'completed_transactions' => $completed,
+            'voided_transactions' => $voided, 'pending_transactions' => $total - $completed - $voided,
+            'total_revenue' => round($revenue, 2), 'total_vat' => round((float) ($rows->get('completed')?->vat ?? 0), 2),
+            'average_transaction' => $completed ? round($revenue / $completed, 2) : 0,
+            'void_rate' => $total ? round($voided / $total * 100, 1) : 0.0,
         ];
     }
 
     private function weeklySeries(Builder $query): array
     {
-        $rows = $query->get();
-        $latest = $rows->max('created_at');
+        $latest = $this->aggregateQuery(clone $query)->max('created_at');
         $anchor = $latest ? Carbon::parse($latest)->startOfDay() : now()->startOfDay();
         $start = $anchor->copy()->subDays(6);
-
+        $state = $this->statusExpression();
+        $rows = $this->aggregateQuery($query)->whereBetween('created_at', [$start->toDateTimeString(), $anchor->copy()->endOfDay()->toDateTimeString()])
+            ->selectRaw("DATE(created_at) as day, $state as state, COUNT(*) as total, COALESCE(SUM(amount),0) as revenue")
+            ->groupByRaw("DATE(created_at), $state")->get()->groupBy('day');
         return collect(range(0, 6))->map(function (int $offset) use ($rows, $start) {
             $day = $start->copy()->addDays($offset);
-            $dayRows = $rows->filter(fn ($row) => Carbon::parse($row->created_at)->isSameDay($day));
-
-            return [
-                'day' => $day->format('D'),
-                'date' => $day->format('Y-m-d'),
-                'completed' => $dayRows->filter(fn ($row) => $this->statusGroup((string) ($row->status ?? '')) === 'completed')->count(),
-                'voided' => $dayRows->filter(fn ($row) => $this->statusGroup((string) ($row->status ?? '')) === 'voided')->count(),
-                'pending' => $dayRows->filter(fn ($row) => $this->statusGroup((string) ($row->status ?? '')) === 'pending')->count(),
-                'revenue' => round((float) $dayRows->filter(fn ($row) => $this->statusGroup((string) ($row->status ?? '')) === 'completed')->sum(fn ($row) => (float) $row->amount), 2),
-            ];
-        })->values()->all();
+            $groups = $rows->get($day->format('Y-m-d'), collect())->keyBy('state');
+            return ['day' => $day->format('D'), 'date' => $day->format('Y-m-d'),
+                'completed' => (int) ($groups->get('completed')?->total ?? 0),
+                'voided' => (int) ($groups->get('voided')?->total ?? 0),
+                'pending' => (int) ($groups->get('pending')?->total ?? 0),
+                'revenue' => round((float) ($groups->get('completed')?->revenue ?? 0), 2)];
+        })->all();
     }
 
     private function channelRevenue(Builder $query): array
     {
-        return $query
-            ->get()
-            ->filter(fn ($row) => $this->statusGroup((string) ($row->status ?? '')) === 'completed')
-            ->groupBy(fn ($row) => $this->channel($row))
-            ->map(fn ($rows, $channel) => [
-                'channel' => $channel,
-                'amount' => round((float) $rows->sum(fn ($row) => (float) $row->amount), 2),
-                'transactions' => $rows->count(),
-            ])
-            ->sortByDesc('amount')
-            ->values()
-            ->all();
+        $channel = $this->channelExpression();
+        return $this->aggregateQuery($query)->whereRaw($this->statusExpression()." = 'completed'")
+            ->selectRaw("$channel as channel, COALESCE(SUM(amount),0) as amount, COUNT(*) as transactions")
+            ->groupByRaw($channel)->orderByDesc('amount')->get()
+            ->map(fn ($row) => ['channel' => $row->channel, 'amount' => round((float) $row->amount, 2), 'transactions' => (int) $row->transactions])->all();
     }
 
     private function optionList(Builder $query, string $column): array
     {
-        return $query
-            ->get()
-            ->map(fn ($row) => $column === 'channel' ? $this->channel($row) : (string) ($row->{$column} ?? ''))
-            ->filter()
-            ->unique()
-            ->sort()
-            ->values()
-            ->all();
+        $expression = $column === 'channel' ? $this->channelExpression() : "COALESCE(payment_method,'')";
+        return $this->aggregateQuery($query)->selectRaw("$expression as value")->distinct()->orderBy('value')->limit(200)->pluck('value')->filter()->values()->all();
     }
 
     private function branches(Builder $query): array
     {
-        return $query
-            ->get()
-            ->map(fn ($row) => (string) (($row->api_branch_name ?? null) ?: ($row->branch ?? null) ?: 'Main Office'))
-            ->filter()
-            ->unique()
-            ->sort()
-            ->values()
-            ->all();
+        return $this->aggregateQuery($query)->selectRaw("COALESCE(NULLIF(api_branch_name,''),NULLIF(branch,''),'Main Office') as value")
+            ->distinct()->orderBy('value')->limit(200)->pluck('value')->all();
     }
 
     private function statuses(Builder $query): array
     {
-        return $query
-            ->get()
-            ->map(fn ($row) => $this->statusGroup((string) ($row->status ?? '')))
-            ->filter()
-            ->unique()
-            ->sort()
-            ->values()
-            ->all();
+        return $this->aggregateQuery($query)->selectRaw($this->statusExpression().' as value')->distinct()->orderBy('value')->pluck('value')->all();
     }
 
     private function transactionPayload(object $row): array
