@@ -1,0 +1,38 @@
+{
+  "scope": [
+    "Registered-email Google sign-in",
+    "Independent merchant authenticator devices"
+  ],
+  "tests": {
+    "suite_tests": 493,
+    "assertions": 5537,
+    "result": "passed",
+    "frontend_build": "passed"
+  },
+  "security": [
+    "OAuth state and verified email checks",
+    "Registered email and stable subject both required",
+    "Single-use handoff rechecks password, email and Google link",
+    "Current password and existing factor for device changes",
+    "Five-device cap and final-device removal prevention",
+    "Encrypted independent secrets and per-device replay counters",
+    "Setup expires in ten minutes and is tied to current token/password",
+    "Account-scoped queries, audit entries and security notices",
+    "Expired setup pruning through existing scheduler"
+  ],
+  "deployment": "verified on nuers.net",
+  "real_authenticator_enrollment_performed": false,
+  "package_sha256": "09b63a37e85719f9836f9471995aa50fb87e0ad956ef7dc8c0a937568ee1da4f",
+  "preservation_verified": [
+    "accounts",
+    "Google links and registered emails",
+    "passwords and MFA credentials",
+    "session tokens",
+    "roles and permissions",
+    "wallet balances and ledger",
+    "merchant records",
+    "SMTP and pricing"
+  ],
+  "local_migration": "applied",
+  "live_login_notice": "verified in browser"
+}

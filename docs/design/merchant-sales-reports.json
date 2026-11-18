@@ -1,0 +1,174 @@
+{
+  "page": "Merchant Sales Reports",
+  "route": "/merchant/sales-reports",
+  "reference": "NUERS Sales Summary Dashboard.png",
+  "navigation": {
+    "removed": "Merchant Sales Summary (Draft) / Summary List of Sales",
+    "canonical": "Sales Reports",
+    "legacy_redirects": [
+      "/merchant/b2b-tax",
+      "/merchant/vat-reports"
+    ],
+    "admin_summary_preserved": true
+  },
+  "source_documents": [
+    {
+      "path": "docs/knowledge/sources/NUERS_EIS_Complete_System_Documentation.extracted.txt",
+      "lines": [
+        200,
+        202,
+        207,
+        327
+      ],
+      "controls": [
+        "period/branch/type reports",
+        "source reconciliation",
+        "no double counting",
+        "credit/debit/void treatment",
+        "tenant scope",
+        "secure exports and audit"
+      ]
+    },
+    {
+      "path": "docs/knowledge/sources/ESP_Accreditation10132026.extracted.txt",
+      "controls": [
+        "accuracy, completeness, integrity and non-duplication",
+        "retain originals and evidence"
+      ]
+    }
+  ],
+  "implementation": {
+    "app/Services/MerchantSalesReport.php": [
+      "tenant scope before canonical identity ranking",
+      "bounded original-date PHT filtering",
+      "integer centavo aggregation",
+      "reconciled primary invoices only",
+      "linked active reconciled original for adjustments",
+      "signed credit/debit contributions",
+      "separate VATable/VAT/exempt/zero/non-VAT classifications",
+      "current explicit customer registry classification without changing source buyers",
+      "valid branch evidence fingerprint",
+      "verified production BIR evidence only",
+      "excluded source records contribute zero"
+    ],
+    "app/Http/Controllers/Api/MerchantSalesReportController.php": [
+      "authenticated owned business",
+      "server validation",
+      "paginated full-report totals",
+      "private no-store responses",
+      "durable export budget and single-business concurrency lock",
+      "tamper-evident export audit with snapshot hash"
+    ],
+    "app/Services/SalesReportExport.php": [
+      "full filtered CSV/XLSX/PDF with exclusion appendix",
+      "CSV formula escaping",
+      "typed numeric cells and inline strings in actual XLSX ZIP package",
+      "private temporary files removed"
+    ],
+    "resources/views/reports/merchant-sales.blade.php": [
+      "escaped source values",
+      "no remote content",
+      "landscape print layout",
+      "repeating table headers and one grand total at end"
+    ],
+    "app/Http/Controllers/Api/MerchantRecordsController.php": [
+      "scope preview canonical identity selection to owned business before deduplication"
+    ],
+    "src/pages/merchant/sales-reports.tsx": [
+      "reference layout with existing NUERS skyline and Lucide icons",
+      "explicit draft/applied filter state",
+      "loading/error/empty states",
+      "race-safe data loads",
+      "source preview and existing document-copy actions",
+      "no fabricated KPI trends",
+      "signed-adjustment-aware distribution",
+      "mobile layout with contained horizontal table scrolling"
+    ]
+  },
+  "limits": {
+    "report_days_max_inclusive": 367,
+    "source_records_max": 2000,
+    "pdf_source_records_max": 500,
+    "exports_per_business_per_minute": 5,
+    "concurrent_exports_per_business": 1
+  },
+  "verification": {
+    "backend": {
+      "tests": 245,
+      "assertions": 2532,
+      "passed": true
+    },
+    "new_report_tests": 15,
+    "client_tests": 13,
+    "laravel_and_static_builds": "passed; existing large-bundle warning remains",
+    "downloads": {
+      "pdf_pages": 2,
+      "xlsx_rows": 26,
+      "csv_rows": 26,
+      "matching_sales_documents": 16,
+      "gross_php": 1934640,
+      "full_result_export": true
+    },
+    "filtered_pdf": "VAT-exempt-only export checked",
+    "final_pdf": "2 pages, all 16 synthetic records, grand total only at end; pages rendered and visually reviewed",
+    "browser_console_errors": [],
+    "mobile": {
+      "viewport": [
+        390,
+        844
+      ],
+      "body_width": 390,
+      "kpi_text_no_overflow": true
+    },
+    "desktop_viewport": [
+      1672,
+      941
+    ],
+    "legacy_redirect": "/merchant/b2b-tax -> /merchant/sales-reports",
+    "pagination": "page 2 displays 11\u201316; report total remains 16"
+  },
+  "main_local_data": {
+    "source_tables": {
+      "business_invoices": {
+        "count": 3,
+        "sha256": "c9db7beda92b92310b3440fdb407904153769ed5a62208d0e3ca95b9ee84901a"
+      },
+      "business_invoice_items": {
+        "count": 3,
+        "sha256": "b33e5d810f1f6994f24db66d0f5f695f808416b616a6c2c873c9dc33ac3530f2"
+      },
+      "transaction_receipts": {
+        "count": 13,
+        "sha256": "c1fdcb37da1d7177ff04f0cd334f3cd8a3c614bc662ccf478f1965e764dfc6ab"
+      },
+      "merchant_transactions": {
+        "count": 13,
+        "sha256": "8392805b54a0b19c49fb8fe5f4f4a5403ff4dc9e729e61cecd01de600a1a6e80"
+      },
+      "merchant_customers": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "eis_transmissions": {
+        "count": 1,
+        "sha256": "b733e6edce64ddb4fd5f7ff994137e1ab46de1830a0417d2555e596e6f41e7c1"
+      },
+      "eis_document_outbox": {
+        "count": 48,
+        "sha256": "6ef82efeb941ae12ef0eccc2191a62d3ef233084923399cff5ff0dd3ced41cdb"
+      }
+    },
+    "read_only_unchanged": true,
+    "matched_sales_count": 13,
+    "excluded_count": 0,
+    "acknowledged": 0,
+    "exclusion_reasons": []
+  },
+  "evidence_images": [
+    "docs/design/merchant-sales-reports-desktop.png",
+    "docs/design/merchant-sales-reports-mobile.png",
+    "docs/design/merchant-sales-report-pdf-qa-page-1.png",
+    "docs/design/merchant-sales-report-pdf-qa-page-2.png"
+  ],
+  "scope": "Local implementation and isolated synthetic QA. No production writes, real test email, BIR transmission, load test or accreditation claim. Reports are internal sales reports; prescribed SLS filing format and live EIS verification remain dependent on official access and approvals."
+}

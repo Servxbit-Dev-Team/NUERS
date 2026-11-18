@@ -1,0 +1,64 @@
+{
+  "at": "2026-10-16T21:57:43+08:00",
+  "scope": "localhost; real financial data read-only",
+  "tables": 76,
+  "pending_migrations": 0,
+  "raw_transactions": 13,
+  "raw_successful_payment_amount": 750400,
+  "canonical_document_records": 16,
+  "internal_sales_draft_records": 13,
+  "internal_sales_draft_amount": 750400,
+  "canonical_document_sources": {
+    "receipt": 13,
+    "invoice": 3
+  },
+  "duplicate_identity_groups": 0,
+  "bir_status_counts": {
+    "not_submitted": 16
+  },
+  "internal_schema": "NUERS-normalized-document-3",
+  "current_preparation_records": 16,
+  "older_preparation_evidence_preserved": 32,
+  "local_source_checks_passed": 0,
+  "source_review_reason_counts": {
+    "Verified five-digit seller branch snapshot is missing.": 16,
+    "Supplementary payment/delivery documents cannot be submitted as primary invoice sales.": 2,
+    "Stored line arithmetic, tax allocation or document total does not reconcile; source review is required.": 3,
+    "Tax classifications plus VAT do not reconcile to the document total.": 3
+  },
+  "prepared_hash_mismatches": 0,
+  "historical_branch_review_records": 0,
+  "official_interface_verified": false,
+  "production_response_verification_implemented": false,
+  "production_transport_implemented": false,
+  "eis_transmission_records": 1,
+  "applicable_coverage_records": 0,
+  "accreditation_records": 0,
+  "audit_chain_valid": true,
+  "result": "Local pre-accreditation controls implemented and regression-tested; production EIS acceptance remains pending.",
+  "verification": {
+    "phpunit_tests": 114,
+    "assertions": 1290,
+    "frontend_laravel_build": "passed",
+    "frontend_static_build": "passed",
+    "original_records_preserved": true,
+    "live_deployment_performed": false,
+    "bir_delivery_performed": false
+  },
+  "findings": {
+    "T01": "External authorized API contract, transport, cryptography and authentic-response verification pending; production blocked.",
+    "T02": "Local canonical issued-document population covers both issuance paths.",
+    "T03": "Historical identity preserved from source; append-only supplemental branch evidence workflow.",
+    "T04": "Original-date and documented-coverage operational targets; no asserted overdue for unknown coverage.",
+    "T05": "Production and certification histories separated; unverified ACK cannot establish production acceptance.",
+    "T06": "Payments separate from invoice sales; duplicates and inconsistent source totals excluded from internal sales draft.",
+    "T07": "Shared server calculator validates authoritative amounts across issuance paths."
+  },
+  "unresolved_prerequisites": [
+    "Verified branch/COR/PTI and taxpayer coverage evidence when available",
+    "Review of three inconsistent imported invoice source records",
+    "Authorized BIR interface/schema mapping and signing/encryption implementation",
+    "End-to-end BIR interoperability/certification and authentic responses",
+    "Independent security, continuity and capacity evidence from broader accreditation audit"
+  ]
+}

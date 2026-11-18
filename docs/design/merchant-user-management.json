@@ -1,0 +1,248 @@
+{
+  "feature": "Merchant User Management",
+  "date": "2026-10-17",
+  "implementation": "Completed on localhost; private release prepared. Live publication awaits authenticated Chrome Plesk session.",
+  "reference_design": "/Users/marksioson/Downloads/NUERS User Management Dashboard.png",
+  "documentation": "docs/knowledge/sources/NUERS_Functional_Specification_v1_1.extracted.txt",
+  "requirements": [
+    {
+      "requirement": "Role-dependent navigation and consistent merchant layout",
+      "document_lines": [
+        27,
+        31
+      ],
+      "evidence": [
+        {
+          "file": "src/components/enterprise/enterprise-shell.tsx",
+          "line": 114
+        },
+        {
+          "file": "src/pages/merchant/users.tsx",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "requirement": "Users, roles, scopes, account state, search, details and export (section 3.16)",
+      "document_lines": [
+        395,
+        397,
+        398,
+        399
+      ],
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/Api/MerchantTeamController.php",
+          "line": 91
+        },
+        {
+          "file": "app/Http/Controllers/Api/MerchantTeamController.php",
+          "line": 295
+        },
+        {
+          "file": "src/pages/merchant/users.tsx",
+          "line": 47
+        }
+      ]
+    },
+    {
+      "requirement": "Server-side RBAC, tenant isolation and validation",
+      "document_lines": [
+        37,
+        401,
+        402
+      ],
+      "evidence": [
+        {
+          "file": "app/Services/MerchantTeamAccess.php",
+          "line": 67
+        },
+        {
+          "file": "app/Services/MerchantTeamAccess.php",
+          "line": 139
+        },
+        {
+          "file": "app/Http/Controllers/Api/MerchantTeamController.php",
+          "line": 116
+        },
+        {
+          "file": "app/Http/Controllers/Api/DocumentCopyController.php",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "requirement": "MFA for sensitive changes, secure recovery and bounded sessions",
+      "document_lines": [
+        37,
+        52
+      ],
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/Api/MerchantTeamController.php",
+          "line": 24
+        },
+        {
+          "file": "app/Services/MerchantTeamAccess.php",
+          "line": 132
+        },
+        {
+          "file": "app/Http/Controllers/Api/MerchantTeamController.php",
+          "line": 188
+        },
+        {
+          "file": "app/Http/Controllers/Api/MerchantTeamController.php",
+          "line": 201
+        },
+        {
+          "file": "config/security.php",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "requirement": "Concurrency, append-only activity, actor/role/tenant/outcome/correlation/reason",
+      "document_lines": [
+        56,
+        400,
+        401,
+        402
+      ],
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/Api/MerchantTeamController.php",
+          "line": 142
+        },
+        {
+          "file": "app/Services/MerchantTeamAccess.php",
+          "line": 49
+        },
+        {
+          "file": "app/Services/MerchantTeamAccess.php",
+          "line": 176
+        },
+        {
+          "file": "app/Http/Controllers/Api/MerchantTeamController.php",
+          "line": 200
+        }
+      ]
+    },
+    {
+      "requirement": "Real account state, loading, empty/error feedback and unsaved-form protection",
+      "document_lines": [
+        27,
+        31,
+        398
+      ],
+      "evidence": [
+        {
+          "file": "src/pages/merchant/users.tsx",
+          "line": 17
+        },
+        {
+          "file": "src/pages/merchant/users.tsx",
+          "line": 43
+        },
+        {
+          "file": "app/Http/Controllers/Api/MerchantTeamController.php",
+          "line": 68
+        }
+      ]
+    }
+  ],
+  "implemented": [
+    "Owner-controlled invitations, role editing, suspension, restoration, membership revocation and session revocation.",
+    "Single-use hashed invitation tokens, 72-hour expiry, trusted-origin fragment links and work-email verification.",
+    "Dedicated work-account acceptance with versioned terms/privacy acknowledgment; existing personal or privileged identities cannot be converted.",
+    "NUERS-branded encrypted email outbox, stale invitation validation, resend/cancel and standard password-recovery links; owner cannot choose or read staff passwords.",
+    "Global platform roles and registered business owners are protected from merchant-controlled password resets or session revocation.",
+    "Nine allowlisted capabilities and seven editable presets; grants never derive from role display names.",
+    "Branch / terminal document reads, detail lookups, PDF and CSV access enforce tenant, exact branch and source-terminal scope.",
+    "Terminal provenance is recorded only for a unique active API key/terminal/branch association; missing historical provenance is excluded from narrow scopes.",
+    "Delegated invoice/customer mutations recheck token and permissions after acquiring the merchant lock.",
+    "Joined user metadata avoids directory N+1 queries; bounded directory of 1,000 work records and up to 25 roles.",
+    "Formula-safe, owner-authorized directory export; real statistics and timezone-qualified timestamps."
+  ],
+  "intentional_limits": [
+    "Team grants are controlled by the registered business owner. Merchant Admin does not grant platform administration or ownership.",
+    "Branch/terminal-scoped roles currently support document reads/exports only. Creation, customers, reports, wallet and integration metadata require business-wide scope; unsupported routes fail closed.",
+    "API credential mutation, wallet funding/settings, fee changes, taxpayer authority and BIR submission approvals are not delegated by these roles.",
+    "Existing personal or privileged NUERS accounts require a separate work email for invitation.",
+    "This feature does not certify BIR accreditation, issuance authority, official connectivity or production acknowledgment."
+  ],
+  "verification": {
+    "php": {
+      "tests": 290,
+      "assertions": 3039,
+      "result": "passed"
+    },
+    "javascript": {
+      "tests": 16,
+      "result": "passed"
+    },
+    "build": "TypeScript, Laravel Vite, static Vite and document renderer passed",
+    "mysql": {
+      "database": "NUERS_team_qa_20261017",
+      "member_revision": 2,
+      "member_status": "suspended",
+      "events": 1,
+      "revoked_session_status": 401,
+      "audit_chain_valid": true,
+      "external_email_sent": false,
+      "race_results": [
+        {
+          "status": 200
+        },
+        {
+          "status": 409
+        }
+      ]
+    },
+    "local_migration": {
+      "migration_applied": true,
+      "application_counts_preserved": true,
+      "credentials_preserved": true,
+      "environment_preserved": true,
+      "pricing_preserved": true,
+      "fee_centavos": 300,
+      "team_counts": {
+        "merchant_team_roles": 0,
+        "merchant_team_members": 0,
+        "merchant_team_events": 0
+      },
+      "staff_grants_created": false,
+      "external_email_sent": false
+    },
+    "browser": [
+      "Reference-size desktop in Chrome; mobile 390px has no document overflow.",
+      "Header search finds role names; pinned action controls open the correct user actions.",
+      "Invitation dialog and in-page unsaved-change confirmation verified without sending invitations.",
+      "Viewer navigation contains Dashboard, Invoices & Receipts and Account Security only; no create or export controls.",
+      "Empty forms close immediately; changed forms show an in-page warning and Keep Editing retains entered values."
+    ],
+    "screenshots": [
+      ".local/team-20261017/desktop-reference.jpg",
+      ".local/team-20261017/staff-access.jpg"
+    ],
+    "real_accounts_created": false,
+    "external_email_sent": false,
+    "disruptive_security_or_load_tests": false,
+    "http": {
+      "/api/health": 200,
+      "/api/merchant/team": 401,
+      "/merchant/users": 200
+    }
+  },
+  "release": {
+    "sha256": "a4d267ee336d4110c0209767948d5e2af61539ef44af268cb6eeacd3a9913bd3",
+    "files": 57
+  },
+  "live_status": "Deployed and verified on nuers.net with the combined team access and button contrast release.",
+  "live_release": {
+    "sha256": "0b93ecec1524e1d2d4a1ed41a8e3413bc04ba2c46e18acd0fb01630260ac4b3e",
+    "team_schema_verified": true,
+    "team_routes_verified": true,
+    "backup_directory": "/var/www/vhosts/nuers.net/nuers-hover-backup-20261017-084553",
+    "production_fixtures_created": false
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "feature": "Registration pricing card and email verification recovery",
+  "date": "2026-10-17",
+  "published_url": "https://nuers.net/register",
+  "changes": [
+    "Responsive pricing card with live published fee/threshold, no subscription, unlimited storage, five-year retention, no duplicate fee for accepted retries/payment copies",
+    "Send new code available before and after verification with 60-second cooldown",
+    "Wall-clock expiry refreshed after tab suspension/focus; stale verification cannot remain ready to submit",
+    "Ten-minute code validity; successful verification grants a fresh 15-minute submission window",
+    "Server expiry/mismatch from registration or document upload clears client proof, preserves entered details and selected files, and offers new code",
+    "New code revokes the preceding matching-email challenge only after delivery queueing succeeds; old verified codes cannot rotate or extend proof",
+    "Separate route throttle buckets retain each endpoint limit without cross-action false throttling"
+  ],
+  "verification": {
+    "php_tests": 302,
+    "assertions": 3142,
+    "javascript_tests": 19,
+    "targeted_registration_document_tests": 21,
+    "targeted_assertions": 232,
+    "build": "npm run build:all passed; existing chunk-size advisory remains",
+    "ui": [
+      "Desktop pricing card visual review",
+      "390px mobile pricing and verification: no horizontal overflow",
+      "Expired verified state clears; Create account disabled",
+      "Send new code -> verify -> Create account enabled",
+      "Simulated server expiry recovers and retains form details",
+      "Resend remains available after successful verification",
+      "Browser error logs empty"
+    ],
+    "test_safety": "Synthetic private local preview mocked registration POSTs; PHP tests use isolated database/Mail fake; no external emails or live test registrations",
+    "http": {
+      "http://localhost:8001": {
+        "page": 200,
+        "assets": [
+          {
+            "path": "/build/assets/main-Drxdqttp.css",
+            "status": 200,
+            "hash_match": true
+          },
+          {
+            "path": "/build/assets/main-CUeQiYYp.js",
+            "status": 200,
+            "hash_match": true
+          },
+          {
+            "path": "/build/assets/main-Drxdqttp.css",
+            "status": 200,
+            "hash_match": true
+          },
+          {
+            "path": "/build/assets/main-CUeQiYYp.js",
+            "status": 200,
+            "hash_match": true
+          }
+        ],
+        "unauthenticated_profile_denied": true,
+        "health": 200
+      },
+      "https://nuers.net": {
+        "page": 200,
+        "assets": [
+          {
+            "path": "/assets/index-DDc2zGMb.js",
+            "status": 200,
+            "hash_match": true
+          },
+          {
+            "path": "/assets/index-0sur3si-.css",
+            "status": 200,
+            "hash_match": true
+          }
+        ],
+        "unauthenticated_profile_denied": true,
+        "health": 200
+      }
+    }
+  },
+  "deployment": {
+    "deployed": true,
+    "registration_interface_verified": true,
+    "verification_and_routes_verified": {
+      "verification_recovery_verified": true,
+      "routes_verified": true,
+      "php": "8.4.26",
+      "privileged_mfa": true,
+      "step_up_minutes": 15,
+      "pricing_preserved": true,
+      "external_email_sent": false,
+      "production_fixtures_created": false
+    },
+    "no_migrations": true,
+    "source_and_assets_verified": true,
+    "accounts_and_mfa_credentials_preserved": true,
+    "roles_preserved": true,
+    "environment_preserved": true,
+    "security_policy_preserved": true,
+    "privileged_mfa": true,
+    "step_up_minutes": 15,
+    "application_records_preserved": true,
+    "smtp_preserved": true,
+    "pricing_preserved": true,
+    "synthetic_fixtures_deployed": false,
+    "php": "8.4.26",
+    "backup_directory": "/var/www/vhosts/nuers.net/nuers-registration-recovery-backup-20261017-175004",
+    "package_sha256": "1c5ea49c0ab27e996bab874bc52ec9da49be43652ce45344b80425567d6612ab"
+  },
+  "evidence": {
+    "src/pages/auth/register.tsx": {
+      "sha256": "78da4b4aeea3d0d9b4c22ad0b27b3b3b554d7887b83915842f1b317e4573a56c"
+    },
+    "src/pages/auth/register.css": {
+      "sha256": "eddf52a00f27bb22bdd36cafdd9ca3ad59842af0c48401c046a438f18a8f6926"
+    },
+    "src/lib/registration-verification.ts": {
+      "sha256": "8cf80a14b5af614e324e28d7e4dbcef718565bcf7f0f9a3066c3754b003db4e5"
+    },
+    "app/Services/RegistrationVerification.php": {
+      "sha256": "1f5b020331f2922dce1b2c5067eab06b478c7d64c755490b175f9bf36252abce"
+    },
+    "app/Http/Controllers/Api/BusinessRegistrationController.php": {
+      "sha256": "5a32a366e063e5117a2070dddfaf67f9ba847395ebcc1d101080f616291fb777"
+    },
+    "app/Http/Controllers/Api/MerchantVerificationDocumentController.php": {
+      "sha256": "8140074d3870a42dcd198e9696af31178847fff9aaf2be0608ccc90f2510965d"
+    },
+    "routes/api.php": {
+      "sha256": "17fb093890d9e0d830672b2f35d5714ca623959cf873daa829272b39d2bf713d"
+    },
+    "tests/Feature/BusinessRegistrationTest.php": {
+      "sha256": "39ff73c8d3966e160f496baec3630e97d8abb487705166611441217a0f5628a7"
+    },
+    "tests/js/registration-verification.test.mjs": {
+      "sha256": "a64d50906e3dc7687f2e7659d1a4bd112a475d86ddb720155601bf0771a720ed"
+    }
+  },
+  "screenshots": {
+    "pricing-desktop.png": "/Users/marksioson/Desktop/NUERS/.local/registration-recovery-20261017/pricing-desktop.png",
+    "pricing-mobile.png": "/Users/marksioson/Desktop/NUERS/.local/registration-recovery-20261017/pricing-mobile.png",
+    "verification-mobile.png": "/Users/marksioson/Desktop/NUERS/.local/registration-recovery-20261017/verification-mobile.png"
+  }
+}

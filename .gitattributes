@@ -1,0 +1,3 @@
+# Preserve the generated QA deliverables as binary documents.
+output/pdf/NUERS_Detailed_QA_Test_Manual_v1.0.0.pdf binary
+outputs/nuers-qa-20261029/NUERS_QA_Master_Checklist_v1.0.0.xlsx binary

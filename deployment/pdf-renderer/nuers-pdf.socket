@@ -1,0 +1,9 @@
+[Unit]
+Description=NUERS private PDF renderer socket
+[Socket]
+ListenStream=/run/nuers-pdf.sock
+SocketUser=nuers.net_6r9gw36fpkr
+SocketMode=0600
+RemoveOnStop=true
+[Install]
+WantedBy=sockets.target

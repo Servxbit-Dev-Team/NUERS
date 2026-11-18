@@ -1,0 +1,82 @@
+{
+  "verdict": "Partially aligned operational transaction ledger; not verified BIR EIS production compliance",
+  "scope": "localhost only; read-only real DB aggregates; isolated SQLite diagnostic fixtures",
+  "runtime": {
+    "at": "2026-10-16T21:20:34+08:00",
+    "scope": "localhost MySQL read-only transaction; aggregate values only",
+    "transactions": 13,
+    "success_count": 13,
+    "success_amount": 750400,
+    "bir_status_counts": [
+      {
+        "bir_status": "not_submitted",
+        "count": 13
+      }
+    ],
+    "transmission_count": 1,
+    "transport_implemented": false,
+    "accreditation_records": 0,
+    "annex_verified": 0,
+    "stages_verified": 0,
+    "orphan_transactions": 0,
+    "current_registry_vs_snapshot_identity_mismatch": 0,
+    "duplicate_receipt_identity_groups": 0,
+    "standalone_issued_business_invoices": 3
+  },
+  "probes": [
+    {
+      "finding": "T02",
+      "environment": "isolated SQLite memory",
+      "issued_document_count": 1,
+      "transaction_workspace_count": 0
+    },
+    {
+      "finding": "T03",
+      "environment": "isolated SQLite memory",
+      "historical_receipt_tin_unchanged": true,
+      "transaction_display_uses_current_registry": true
+    },
+    {
+      "finding": "T04",
+      "environment": "isolated SQLite memory",
+      "document_issued_at": "2026-10-01 09:00:00",
+      "transaction_imported_at": "2026-10-15 11:00:00",
+      "computed_target": "2026-10-18T23:59:59+08:00",
+      "document_based_target": "2026-10-04T23:59:59+08:00"
+    },
+    {
+      "finding": "T05",
+      "environment": "isolated SQLite memory",
+      "production_row_preserved": true,
+      "newer_certification_masks_production_processing": true,
+      "processing_filter_count": 0
+    },
+    {
+      "finding": "T06",
+      "environment": "isolated SQLite memory",
+      "duplicate_invoice_identity_count": 2,
+      "displayed_success_total": 224,
+      "single_invoice_amount": 112
+    },
+    {
+      "finding": "T07",
+      "environment": "isolated SQLite memory",
+      "quantity": 2,
+      "unit_price_centavos": 10000,
+      "accepted_total_php": 0.01,
+      "expected_total_php": 200,
+      "invoice_created": false
+    }
+  ],
+  "existing_tests": {
+    "passed": 5,
+    "assertions": 58
+  },
+  "diagnostic_reproductions": {
+    "passed": 6,
+    "assertions": 31,
+    "passing_means": "reported gaps reproduced"
+  },
+  "report": "docs/knowledge/transactions-bir-eis-audit-2026-10-16.md",
+  "application_fixes_applied": false
+}

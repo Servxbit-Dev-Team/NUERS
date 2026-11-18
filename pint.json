@@ -1,0 +1,4 @@
+{
+  "preset": "psr12",
+  "exclude": ["vendor", "node_modules", "output", "outputs", "tmp", ".local", "storage", "bootstrap/cache", "bootstrap/ssr"]
+}

@@ -1,0 +1,138 @@
+{
+  "feature": "Registered business wallet operations",
+  "date": "2026-10-18",
+  "entry_points": [
+    "Registered Businesses \u2192 Actions \u2192 Wallet",
+    "Wallets & Transaction Pricing \u2192 Open Wallet"
+  ],
+  "source_files": [
+    "app/Http/Controllers/Api/AdminBusinessWalletController.php",
+    "app/Http/Controllers/Api/MerchantWalletController.php",
+    "app/Services/MerchantWallet.php",
+    "app/Services/NotificationEvents.php",
+    "app/Services/TenantPortability.php",
+    "database/migrations/2026_10_18_000003_create_merchant_wallet_adjustments.php",
+    "routes/api.php",
+    "src/components/admin/business-wallet.tsx",
+    "src/components/admin/business-wallet.css",
+    "src/pages/business-registry/index.tsx",
+    "src/pages/merchant/wallet.tsx",
+    "docs/knowledge/admin-business-wallet.md"
+  ],
+  "controls": [
+    "Super Admin + fresh MFA for money adjustments; no own-business adjustment",
+    "Locked atomic ledger + settlement details + audit + notification intent",
+    "Positive integer centavos, overdraft rejection and reviewed balance/sequence match",
+    "Request UUID exact retry and shared funding settlement duplicate guards",
+    "Encrypted reasons and payment references; no update/delete API",
+    "All ledger entries in filtered paginated history + CSV; tenant-owned portability",
+    "Merchant chart subtracts withdrawals and filters include withdrawals"
+  ],
+  "verification": {
+    "php_tests": 345,
+    "php_assertions": 3647,
+    "focused_wallet_tests": 24,
+    "focused_assertions": 250,
+    "build_all": true,
+    "browser_synthetic_topup_centavos": 150025,
+    "browser_synthetic_withdrawal_centavos": 50025,
+    "browser_resulting_balance_centavos": 2600000,
+    "mobile_viewport": 390,
+    "mobile_dialog_width": 374,
+    "mobile_document_width": 390,
+    "no_live_adjustment": true,
+    "no_external_test_email": true,
+    "package_checksums_verified": true
+  },
+  "package": {
+    "sha256": "7f53b1960a3c7827a86ce253f4a2eb986ee3356955984225e0933f6fc0f31f3f",
+    "files": 48
+  },
+  "live_deployment": {
+    "deployed": true,
+    "business_wallet_workspace_verified": true,
+    "schema_and_routes_verified": {
+      "business_wallet_verified": true,
+      "history_table_verified": true,
+      "manual_adjustment_routes_verified": true,
+      "existing_ledgers_reconcile": true,
+      "super_admin_and_mfa_guards": true,
+      "pricing_preserved": true,
+      "privileged_mfa": true,
+      "step_up_minutes": 15,
+      "no_live_financial_adjustment": true,
+      "external_email_sent": false,
+      "production_fixtures_created": false,
+      "php": "8.4.26"
+    },
+    "additive_history_migration": true,
+    "existing_wallet_balances_and_ledger_preserved": true,
+    "source_and_assets_verified": true,
+    "accounts_and_mfa_credentials_preserved": true,
+    "roles_preserved": true,
+    "environment_preserved": true,
+    "security_policy_preserved": true,
+    "privileged_mfa": true,
+    "step_up_minutes": 15,
+    "application_records_preserved": true,
+    "smtp_preserved": true,
+    "pricing_preserved": true,
+    "synthetic_fixtures_deployed": false,
+    "php": "8.4.26",
+    "backup_directory": "/var/www/vhosts/nuers.net/nuers-admin-business-wallet-backup-20261018-115221",
+    "package_sha256": "7f53b1960a3c7827a86ce253f4a2eb986ee3356955984225e0933f6fc0f31f3f"
+  },
+  "http_verification": {
+    "http://localhost:8001": {
+      "page": 200,
+      "assets": [
+        {
+          "path": "/build/assets/main-CQ2wbWQX.css",
+          "status": 200,
+          "hash_match": true
+        },
+        {
+          "path": "/build/assets/main-HoWkBTOz.js",
+          "status": 200,
+          "hash_match": true
+        },
+        {
+          "path": "/build/assets/main-CQ2wbWQX.css",
+          "status": 200,
+          "hash_match": true
+        },
+        {
+          "path": "/build/assets/main-HoWkBTOz.js",
+          "status": 200,
+          "hash_match": true
+        }
+      ],
+      "unauthenticated_wallet_denied": true,
+      "health": 200
+    },
+    "https://nuers.net": {
+      "page": 200,
+      "assets": [
+        {
+          "path": "/assets/index-BrqP5S79.js",
+          "status": 200,
+          "hash_match": true
+        },
+        {
+          "path": "/assets/index-9DZL0orA.css",
+          "status": 200,
+          "hash_match": true
+        }
+      ],
+      "unauthenticated_wallet_denied": true,
+      "health": 200
+    }
+  },
+  "local_migration": {
+    "migration_applied": true,
+    "existing_records_and_balances_preserved": true,
+    "environment_preserved": true,
+    "adjustments_created": 0,
+    "no_financial_adjustment_executed": true
+  }
+}

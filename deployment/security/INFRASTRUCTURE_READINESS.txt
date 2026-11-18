@@ -1,0 +1,135 @@
+NUERS - REMAINING INFRASTRUCTURE EXECUTION PACKAGE
+29 October 2026 | Restricted | Prepared, not proof of provisioned infrastructure
+
+CONTACT
+Mark Sioson, CTO
+siosonmarkdavid@gmail.com | 09216926051
+Primary technical/incident contact supplied by owner. No message or call was sent.
+Backup contact, incident commander, VAPT provider, test window, source IPs and formal
+signatures remain to be assigned/approved. This runbook is not signed VAPT authorization.
+
+APPLIED ON THE CURRENT HOST
+1. nuers.net + www.nuers.net origin certificate: both SANs valid, expires 27 January
+   2027. Both Cloudflare URL rules use SSL Strict. TLS edge minimum remains 1.2.
+   Daily nuers-renew-tls.timer checks the existing ACME certificate, validates key,
+   hostnames and trust chain, preserves a private rollback copy and gracefully reloads
+   nginx/Apache. Plesk's expired license prevented its installer; no license was bypassed
+   or changed. Restore the Plesk license for supported panel management.
+2. nuers_runtime@localhost has SELECT/INSERT/UPDATE/DELETE on NUERS only. The web app
+   uses the Unix socket. Actual DML, row locks and trigger probes passed and rolled back;
+   CREATE TABLE and mysql.user access denied. Application checks and integrity passed.
+3. Standalone root-owned backup runner is installed under /usr/local/lib/nuers-operator;
+   it never loads application PHP, vendor code, .env or caches as root. Credentials, key,
+   archives and rollback records are under /var/lib/nuers-operator with root-only access.
+   The daily 02:30 PHT timer is active. Capture took 19.051 seconds; archive authentication
+   and all 14 file hashes passed. Temporary plaintext was removed. This verifies archive
+   recovery, not a new database import or production RTO. The app backup schedule is off.
+   Historical prepare/apply scripts are retired and refuse execution; do not replay them.
+4. The prior nuers@% identity remains the definer of 48 triggers and operator/migration
+   identity. Database ingress is limited to the two approved IPv4 clients and loopback.
+   Its password/host grant must not be rotated or removed blindly: identify legitimate
+   remote consumers and migrate trigger definers first. Runtime separation is complete;
+   full operator credential retirement is a separate open change.
+
+OWNER-CONFIRMED BLOCKER
+No separate server/storage is available. No cloud resource, subscription, hostname,
+bucket, public staging service or offsite copy has been created. Production remains
+Ubuntu 20.04.6 + MariaDB 10.3.39. Do not mark those lifecycle findings closed.
+
+A. OS / DATABASE MIGRATION
+Proposed target: separate Ubuntu 24.04 LTS VM, a maintained MariaDB LTS branch, PHP 8.4,
+and current supported Plesk if the panel is retained. MariaDB 10.11 or a newer Plesk-
+compatible LTS must be selected only after schema/workload rehearsal. Do not choose
+10.6 as a new community-maintained target: its community maintenance ended July 2026.
+No size recommendation here establishes production capacity; size from measured peak
+CPU/RAM, database growth, concurrent requests, working-set indexes and backup headroom.
+
+Provisioning inputs: target host/IP/region; owner and billing approval; SSH access via
+approved private key; provider console access; private network; monitoring destination;
+maintenance window; existing hosted-site/database consumer inventory; rollback owner.
+Record package versions, OS security support, PHP modules, scheduler units, firewall,
+nginx/Apache config, TLS hostnames, PDF renderer, cron, mail/webhook egress and storage.
+
+Rehearsal on the new target:
+ - Install only official supported packages, security updates and the reproducible NUERS
+   release. Use explicit separate runtime and migration credentials; no DB port exposed.
+ - Import an approved encrypted recovery copy into an isolated database. Preserve source
+   schema, character set, collation, trigger semantics and time-zone handling. Inspect
+   all 48 trigger definers; never import a nonexistent or overprivileged remote definer.
+ - Reconcile row counts and integrity: receipts, transactions, wallets and wallet entries,
+   audit chains, object hashes, exports and queue state. Do not replay real notifications.
+ - Exercise login/MFA, merchant A/B authorization, idempotent API intake, invoice sequence,
+   discount totals, receipt rendering, CSV/PDF exports and scheduled jobs. Run MySQL-
+   specific queries/index plans and a bounded representative performance test.
+ - Record failed checks and exact fix. A successful empty migration is not production-
+   data migration evidence. No live traffic until the rehearsal is accepted.
+
+Controlled cutover:
+ - Approve exact outage window and thresholds. Verify provider-console and rollback access.
+ - Freeze writes and drains, capture final encrypted DB/objects and timestamp the last
+   committed business record. Keep old host intact and prevent simultaneous writers.
+ - Import delta/final snapshot, reconcile, switch endpoint/DNS/worker ownership, test
+   authenticated operations, capture recovery completion and latest recovered commit.
+ - Before target writes begin, rollback can restore traffic to the untouched old host.
+   After target writes begin, reconcile/capture new commits first; a blind DNS rollback
+   can lose financial records. No automatic destructive rollback after new writes.
+ - Obtain acceptance before retiring old resources. Retain encrypted recovery evidence
+   according to the approved retention policy. Record measured RTO/RPO with limitations.
+
+B. REMOTE VAPT STAGING
+Use a separate host and proposed hostname staging.nuers.net; it is not deployed today.
+Use staging.env.example as an input checklist, not a ready-to-run environment file.
+Generate new APP_KEY/checkpoint key and separate DB credentials. Use a new database and
+object directory, independent cookies, restricted tester IPs/VPN and valid TLS. Do not
+allow public DB/Plesk access. Deny outbound customer email, webhooks and BIR transport.
+Use a local mail sink if email workflows must be tested; retain synthetic recipients.
+Create six synthetic roles with two merchants using the local lab fixtures as a model;
+do not expose the development PHP server or copy real customers into the test system.
+The current prepare-vapt-lab.php creates a SQLite loopback lab only. Its output is not
+remote MariaDB staging and does not prove database version compatibility.
+Acceptance: hostname/access boundary, TLS, synthetic account enrollment, MFA, A/B tenant
+denial, no production secrets, no real egress, database parity, backup/restore and signed
+testing rules. Record facts before handing access to an assessor.
+
+C. OFFSITE BACKUP / RECOVERY
+Provision storage in a separate account/failure domain and approved data region. Set
+private access, versioning, retention and provider-side object lock where applicable.
+Use a service credential limited to the NUERS encrypted-archive prefix, with no delete
+or retention-bypass permission. Separate backup writer, recovery reader and key custody.
+Do not keep the only APP_KEY/archive-key recovery copies on the production server.
+Transfer keys through a separately approved secret manager/offline custody process;
+do not include them in this repository, PDF, email attachment or archive upload.
+
+Prepared tool: offsite-copy.py plus offsite.json.example. It is disabled by default and
+not installed as a live scheduled transfer. Configure a root-owned mode-0600 rclone
+profile for the approved destination only; TLS verification must remain enabled. A
+named remote must be an actual independent provider/host, not a local folder alias.
+The tool accepts one generated archive ID and its checksum, rejects plaintext envelopes
+and unsafe destinations, copies without overwriting changed objects, and streams remote
+encrypted bytes for SHA-256 comparison. The two local guard tests pass. Neither a real
+provider transfer nor clean-host recovery has been tested. Client --immutable alone is
+not proof of provider-side WORM/Object Lock.
+
+After approved destination setup:
+  python3 offsite-copy.py ARCHIVE_ID RECORDED_SHA256          (validate/plan only)
+  python3 offsite-copy.py ARCHIVE_ID RECORDED_SHA256 --execute (encrypted copy/readback)
+No APP_KEY, archive key, plaintext database or credential profile is uploaded by this tool.
+Record remote object ID/version, retention, region, checksum and time. Then restore from
+the REMOTE copy on a clean isolated host with separately retrieved keys; reconcile DB,
+objects, audit and wallet state; exercise the application and measure recovery/data loss.
+Until that succeeds, offsite recovery and production RTO/RPO remain unverified.
+
+D. OPERATIONS / AUTHORIZATION
+Complete provider, dates/time zone, exact assets, allowed tester IPs, rate limits, stop
+conditions, escalation backup, incident commander, evidence retention and signatures.
+Send a test alert only when explicitly authorized; record actual receipt/acknowledgment.
+CTO contact details or a general security-fix request do not constitute a signed third-
+party penetration-testing authorization or permission to attack external BIR systems.
+
+PRIMARY VENDOR REFERENCES (recheck before provisioning)
+https://doc.plesk.com/en-US/obsidian/administrator-guide/server-administration/distupgrade-support.74627/
+https://docs.plesk.com/release-notes/obsidian/system-requirements/
+https://support.plesk.com/hc/en-us/articles/12388091703703-How-to-upgrade-MariaDB-on-Plesk-for-Linux
+https://mariadb.org/about/
+https://rclone.org/commands/rclone_copyto/
+https://rclone.org/commands/rclone_cat/

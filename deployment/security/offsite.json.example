@@ -1,0 +1,8 @@
+{
+  "enabled": false,
+  "destination": "",
+  "rclone_binary": "/usr/bin/rclone",
+  "rclone_config": "/var/lib/nuers-operator/rclone.conf",
+  "provider_and_region": "OWNER TO PROVISION",
+  "separate_account_and_key_custodian": "OWNER TO ASSIGN"
+}

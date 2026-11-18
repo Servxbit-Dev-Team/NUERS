@@ -1,0 +1,52 @@
+// Isolated localhost test. Start prepare-server-management-preview.php first.
+const {chromium}=require(process.env.NUERS_PLAYWRIGHT_PATH||'playwright');
+const fs=require('fs');const crypto=require('crypto');
+const base='http://127.0.0.1:8098';
+function code(){const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';let bits='';for(const c of 'JBSWY3DPEHPK3PXP')bits+=alphabet.indexOf(c).toString(2).padStart(5,'0');const key=Buffer.from(bits.match(/.{8}/g).map(x=>parseInt(x,2)));const b=Buffer.alloc(8);b.writeBigUInt64BE(BigInt(Math.floor(Date.now()/30000)));const h=crypto.createHmac('sha1',key).update(b).digest();return String((h.readUInt32BE(h[19]&15)&0x7fffffff)%1000000).padStart(6,'0')}
+(async()=>{
+ const browser=await chromium.launch({headless:true,executablePath:process.env.NUERS_TEST_CHROME||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
+ const context=await browser.newContext({viewport:{width:1672,height:1100},deviceScaleFactor:1});
+ const s=JSON.parse(fs.readFileSync('/private/tmp/nuers-infra-preview-session.json','utf8'));
+ await context.addInitScript(s=>{localStorage.setItem('nuers_api_token',s.token);localStorage.setItem('nuers_browser_device',s.device)},s);
+ const page=await context.newPage();const errors=[];const checks=[];
+ page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(base+'/super-admin/server-management');
+ await page.getByRole('button',{name:'Manage WEB-01',exact:true}).waitFor();
+ if(await page.locator('.sm-node').count()!==9)throw Error('Expected nine planned nodes');checks.push('Nine planned nodes; unknown metrics');
+ await page.screenshot({path:'output/server-management/desktop-unconfigured.png',fullPage:true});
+ await page.getByRole('button',{name:'Table View',exact:true}).click();
+ if(await page.locator('.sm-page table').first().locator('tbody tr').count()!==9)throw Error('Table row mismatch');
+ await page.getByRole('textbox',{name:'Search servers'}).fill('WEB-01');
+ if(await page.locator('.sm-page table').first().locator('tbody tr').count()!==1)throw Error('Search not applied');
+ await page.getByRole('textbox',{name:'Search servers'}).fill('');checks.push('Grid/table and server search');
+ await page.getByRole('button',{name:'Grid View',exact:true}).click();
+ await page.getByRole('button',{name:'Reboot',exact:true}).click();
+ let dialog=page.getByRole('dialog');await dialog.getByLabel('Reason / change reference').fill('UI isolated safety inspection only');
+ await dialog.getByRole('button',{name:'Run Safety Preflight'}).click();await dialog.getByText('Action blocked by preflight',{exact:true}).waitFor();
+ if(await dialog.getByRole('button',{name:'Submit Controlled Request'}).isEnabled())throw Error('Blocked request unexpectedly enabled');
+ await page.screenshot({path:'output/server-management/preflight-blocked.png',fullPage:true});
+ await dialog.getByRole('button',{name:'Close',exact:true}).first().click();checks.push('Reboot preflight blocked without controller');
+ await page.getByRole('button',{name:'Add Server',exact:true}).click();await page.getByRole('dialog').getByLabel('Server Code').fill('WEB-03');
+ await page.screenshot({path:'output/server-management/enrollment-modal.png',fullPage:true});await page.getByRole('dialog').getByRole('button',{name:'Close',exact:true}).first().click();
+ for(const name of ['Services','Console Access','Backups','Monitoring','Logs','Security','Settings','Action History']){await page.getByRole('navigation',{name:'Server management sections'}).getByRole('button',{name,exact:true}).click();await page.locator('.sm-panel').first().waitFor();}
+ checks.push('All nine section tabs');
+ await page.getByRole('navigation',{name:'Server management sections'}).getByRole('button',{name:'Servers',exact:true}).click();
+ await page.getByLabel('More server actions').selectOption('maintenance');dialog=page.getByRole('dialog');
+ await dialog.getByLabel('Reason / change reference').fill('Synthetic localhost maintenance UI verification');
+ await dialog.getByLabel('Current Password').fill('Synthetic-preview-only-123!');await dialog.getByLabel('Authenticator Code').fill(code());
+ await dialog.getByRole('button',{name:'Save Maintenance Window',exact:true}).click();
+ await page.getByRole('status').filter({hasText:'Maintenance window recorded'}).waitFor();checks.push('Real local maintenance save with MFA');
+ await page.locator('.sm-more summary').click();const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Export Inventory',exact:true}).click();const download=await downloadPromise;await download.saveAs('output/server-management/inventory-test.csv');checks.push('Authenticated CSV export');await page.locator('.sm-more summary').click();await page.getByRole('button',{name:'Dismiss notification'}).click();
+ await page.setViewportSize({width:390,height:844});await page.screenshot({path:'output/server-management/mobile-unconfigured.png',fullPage:true});
+ const overflow=await page.evaluate(()=>({document:document.documentElement.scrollWidth,width:innerWidth,page:document.querySelector('.sm-page').scrollWidth,client:document.querySelector('.sm-page').clientWidth}));
+ if(overflow.document>overflow.width||overflow.page>overflow.client+1)throw Error('Mobile horizontal overflow '+JSON.stringify(overflow));checks.push('390px responsive layout without horizontal overflow');await page.getByRole('button',{name:'Manage WEB-01',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:'output/server-management/mobile-server-cards.png',fullPage:true});await page.getByRole('heading',{name:'Server Management',exact:true}).scrollIntoViewIfNeeded();
+ await page.getByRole('button',{name:'Add Server',exact:true}).click();await page.screenshot({path:'output/server-management/mobile-enrollment.png',fullPage:true});await page.getByRole('dialog').getByRole('button',{name:'Close',exact:true}).first().click();checks.push('Mobile accessible modal');
+ await page.setViewportSize({width:1672,height:1300});
+ await page.route('**/api/admin/infrastructure/servers',async route=>{const response=await route.fetch();const d=await response.json();d.nodes=d.nodes.map((n,i)=>({...n,enrollment:'enrolled',status:'online',fresh:true,maintenance:false,site:'SIMULATED LAB',telemetry:{hostname:n.code.toLowerCase(),ip:`192.0.2.${10+i}`,os:'Ubuntu 24.04 LTS',kernel:'6.8.0-45-generic',role:n.tier==='database'?'replica':'member',cpu_percent:14+i,memory_percent:32+i,disk_percent:28+i,cpu_cores:16,memory_bytes:64*1024**3,disk_total_bytes:960*1024**3,uptime_seconds:3900000},services:n.services.map(v=>({...v,state:'running'}))}));d.summary={...d.summary,enrolled:9,online:9,unknown:0,cpu:18,memory:36,cpu_samples:9,memory_samples:9,disk_samples:9,disk_used:2.8*1024**4,disk_total:8.4*1024**4};await route.fulfill({response,json:d})});
+ await page.reload();await page.getByText('All Servers Online',{exact:true}).waitFor();
+ await page.evaluate(()=>{const n=document.createElement('div');n.textContent='SIMULATED TELEMETRY — ISOLATED UI TEST — NOT LIVE SERVERS';n.style.cssText='background:#fff1c9;border:1px solid #e9b835;padding:10px;font-weight:bold;color:#725400;';document.querySelector('.sm-page').prepend(n)});
+ await page.screenshot({path:'output/server-management/desktop-simulated.png',fullPage:true});
+ if(errors.length)throw Error(errors.join('\n'));
+ fs.writeFileSync('output/server-management/ui-test-results.json',JSON.stringify({environment:'isolated localhost; synthetic account; no live server actions',checks,console_errors:errors,mobile_overflow:overflow},null,2));
+ console.log(JSON.stringify({passed:checks.length,errors}));await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});

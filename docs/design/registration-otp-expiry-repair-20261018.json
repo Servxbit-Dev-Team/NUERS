@@ -1,0 +1,50 @@
+{
+  "issue": "An implicit MariaDB ON UPDATE CURRENT_TIMESTAMP clause on the first TIMESTAMP column changed registration expiry when attempts were updated.",
+  "live_evidence": {
+    "expiry_type": "timestamp",
+    "automatic_update": "current_timestamp()",
+    "timezone_consistent": true,
+    "mail_accepted_before_verification": true
+  },
+  "repair": {
+    "migration": "2026_10_18_000001_fix_registration_verification_deadline",
+    "deadline_type": "DATETIME NOT NULL without automatic update/default",
+    "attempt_updates_preserve_deadline": true,
+    "distinct_failure_codes": true,
+    "expired_or_consumed_challenges_reactivated": false,
+    "attempt_limit": 5,
+    "otp_seconds": 600,
+    "verified_submission_seconds": 900
+  },
+  "validation": {
+    "registration_tests": 18,
+    "full_tests": 312,
+    "assertions": 3245,
+    "mysql_regression": {
+      "legacy_bug_reproduced": true,
+      "migration_preserves_values": true,
+      "deadline_type": "datetime",
+      "automatic_updates_removed": true,
+      "wrong_code_does_not_expire": true,
+      "correct_retry_verified": true,
+      "proof_survives_unrelated_updates": true,
+      "isolated_database": true,
+      "external_email_sent": false
+    },
+    "real_email_sent": false
+  },
+  "source": [
+    "app/Http/Controllers/Api/BusinessRegistrationController.php",
+    "database/migrations/2026_10_18_000001_fix_registration_verification_deadline.php",
+    "tests/Feature/BusinessRegistrationTest.php"
+  ],
+  "deployment": {
+    "live_verified": true,
+    "local_migration_applied": true,
+    "package_sha256": "f201cad985e44a16bef8b99a7a7671c196b14da8604b8e7f2ca742c96f17a449",
+    "existing_registration_records_preserved": true,
+    "web_handler_verified": true,
+    "public_health_status": 200,
+    "private_evidence_folder": ".local/otp-20261018"
+  }
+}

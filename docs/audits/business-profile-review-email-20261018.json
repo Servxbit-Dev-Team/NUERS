@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-18",
+  "scope": "Merchant Business Profile Submit for Review email notification",
+  "deployed": true,
+  "package_sha256": "5126dd7132ba4972c4d28755c8dac907d1893bec1c222b9c80f7ba46e65c435f",
+  "backup_directory": "/var/www/vhosts/nuers.net/nuers-review-email-backup-20261018-145438",
+  "behavior": [
+    "Atomic encrypted-outbox enqueue alongside persisted review submission and audit event",
+    "Confirmation to authoritative merchant owner sign-in address",
+    "Review notice to platform admin/super-admin accounts",
+    "Submission revision and recipient deduplication; changed submissions have separate notices",
+    "Optional workflow and operations preferences respected at queue and dispatch",
+    "Admin role rechecked at dispatch",
+    "NUERS-branded multipart email with trusted app links; no evidence attachments or TIN",
+    "No synchronous SMTP in submission request"
+  ],
+  "verification": {
+    "focused_tests": 37,
+    "focused_assertions": 311,
+    "full_tests": 373,
+    "full_assertions": 4162,
+    "live_health": 200,
+    "anonymous_business_profile_api": 401,
+    "smtp_and_dispatch_enabled": true
+  },
+  "records_preserved": true,
+  "credentials_smtp_pricing_and_wallets_preserved": true,
+  "reported_submission_confirmation": {
+    "newly_queued": 1,
+    "merchant_state": "smtp_accepted",
+    "accepted_at": "2026-10-18 14:58:06 Asia/Manila",
+    "admin_notices_replayed": false,
+    "inbox_placement_confirmed": false
+  }
+}

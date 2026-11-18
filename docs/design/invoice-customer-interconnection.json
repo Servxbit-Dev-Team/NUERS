@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-17",
+  "feature": "Invoice and customer interconnection",
+  "route": "/merchant/invoices/create",
+  "behavior": [
+    "Business / Person Name is a searchable, keyboard-accessible customer dropdown with paginated active profiles.",
+    "Selecting an own customer fills name, TIN, address, email, phone and type. Profile revision is checked on save.",
+    "Add new buyer captures details and saves the customer atomically with a successfully saved invoice or draft. Failed financial/authority validation leaves no orphan profile.",
+    "Unambiguous existing buyer profiles are reused. Conflicting identities, multiple matches and inactive profiles require explicit customer review. Name or email alone never authorizes cross-tenant data access.",
+    "New customer profiles do not create user accounts, send email or assert BIR registration.",
+    "Existing customer contacts are not silently overwritten by invoice-only address/contact changes.",
+    "Draft and issued invoice relationships are visible in the customer profile, with independent pagination. Drafts remain excluded from recorded issued-invoice sales.",
+    "A per-form save UUID and merchant-scoped request hash prevent duplicate invoice/customer creation on HTTP retries, including when the server allocates a different invoice number."
+  ],
+  "safety_controls": [
+    "All customer options, matching and links derive merchant ownership from the authenticated actor.",
+    "Matching uses merchant-scoped HMAC indexes over encrypted profiles; no matching hashes or review references are returned by the dropdown.",
+    "Merchant row lock serializes matching, creation and relationship writes in the invoice transaction.",
+    "Optional buyer-phone snapshots preserve old branch/expense review fingerprints when null; real source changes still invalidate review evidence.",
+    "Issued originals and existing review evidence are not rewritten.",
+    "Customer options, seller preview and invoice saving use the same deterministic owned-business selection and ApiAccess role/status boundary."
+  ],
+  "source_files": [
+    "src/components/invoices/invoice-customer-picker.tsx",
+    "src/pages/merchant/invoice-create.tsx",
+    "src/pages/merchant/customers.tsx",
+    "app/Services/MerchantCustomers.php",
+    "app/Http/Controllers/Api/BusinessInvoiceController.php",
+    "app/Http/Controllers/Api/MerchantCustomerController.php",
+    "app/Services/HistoricalBranchEvidence.php",
+    "app/Services/ExpenseCreditEvidence.php",
+    "app/Services/TenantPortability.php",
+    "database/migrations/2026_10_17_000005_customer_invoice_matching.php",
+    "routes/api.php",
+    "tests/Feature/MerchantCustomerTest.php",
+    "tests/Feature/RmcComplianceTest.php",
+    "app/Http/Controllers/Api/BusinessAccountController.php"
+  ],
+  "verification": {
+    "backend_tests": 230,
+    "backend_assertions": 2382,
+    "client_tests": 13,
+    "builds": [
+      "Laravel Vite passed",
+      "Static Vite passed"
+    ],
+    "browser": [
+      "Existing XYZ Enterprises profile selected from search; buyer fields prefilled.",
+      "Synthetic Automatic Buyer QA created by saving a draft; customer appeared in the directory automatically.",
+      "Customer profile showed the linked draft, with recorded issued sales still zero.",
+      "390px mobile viewport: document width equals viewport, no page overflow.",
+      "No browser console errors observed."
+    ],
+    "screenshots": [
+      "docs/design/invoice-customer-dropdown-qa.png",
+      "docs/design/invoice-customer-linked-draft-qa.png",
+      "docs/design/invoice-customer-mobile-qa.png"
+    ],
+    "local_database": {
+      "database": "mysql",
+      "matching_indexes_ready": true,
+      "buyer_phone_snapshot_ready": true,
+      "native_match_count": 0,
+      "customers": 0,
+      "customer_links": 0,
+      "invoice_save_requests": 0,
+      "invoices": 3,
+      "receipts": 13,
+      "worker_seen_at": "2026-10-17 11:52:27"
+    }
+  },
+  "scope_notes": [
+    "All manual workflow testing used the isolated SQLite QA environment with email delivery disabled.",
+    "No real customer, invoice, account or email was created during testing. Existing main database financial counts remained 3 business invoices and 13 receipts.",
+    "The implementation prepares buyer management and document relationships; it does not establish BIR approval or activate production EIS transmission."
+  ]
+}
